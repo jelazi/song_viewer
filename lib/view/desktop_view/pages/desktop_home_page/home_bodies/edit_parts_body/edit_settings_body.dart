@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../../../blocs/export_blocs.dart';
 import '../../../../../../services/constants.dart';
@@ -23,9 +24,8 @@ class _EditSettingsBodyState extends State<EditSettingsBody> {
                 width: MediaQuery.of(context).size.width - 300,
                 height: 40,
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Text(state.currentEditSong.title, style: const TextStyle(fontSize: 15)),
                     SizedBox(
                       width: 320,
                       child: Row(
@@ -42,13 +42,7 @@ class _EditSettingsBodyState extends State<EditSettingsBody> {
                                     width: 150,
                                     margin: const EdgeInsets.only(left: 5, right: 5),
                                     decoration: BoxDecoration(
-                                      color: state.isOriginalLyrics
-                                          ? state.currentText == state.currentEditSong.originalLyrics
-                                              ? AppColor.defaultBackgroundColor
-                                              : AppColor.primaryColor
-                                          : state.currentText == state.currentEditSong.lyrics
-                                              ? AppColor.defaultBackgroundColor
-                                              : AppColor.primaryColor,
+                                      color: context.read<EditSongBloc>().checkModifiedSong() ? AppColor.primaryColor : AppColor.defaultBackgroundColor,
                                       border: Border.all(color: AppColor.grey1Color),
                                       borderRadius: BorderRadius.circular(5),
                                     ),
@@ -59,6 +53,75 @@ class _EditSettingsBodyState extends State<EditSettingsBody> {
                     )
                   ],
                 )),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Text('title'.tr(), style: const TextStyle(fontSize: 15)),
+                const SizedBox(width: 10),
+                SizedBox(
+                  height: 30,
+                  width: 300,
+                  child: TextField(
+                    controller: state.titleController,
+                    style: const TextStyle(fontSize: 12),
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: (value) {
+                      context.read<EditSongBloc>().add(ChangeSongValue(nameValue: 'title', value: value, selection: state.titleController.selection));
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Text('interpret'.tr(), style: const TextStyle(fontSize: 15)),
+                const SizedBox(width: 10),
+                SizedBox(
+                  height: 30,
+                  width: 300,
+                  child: TextField(
+                    controller: state.interpretController,
+                    style: const TextStyle(fontSize: 12),
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: (value) {
+                      context.read<EditSongBloc>().add(ChangeSongValue(nameValue: 'interpret', value: value, selection: state.interpretController.selection));
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Text('indexSongBook'.tr(), style: const TextStyle(fontSize: 15)),
+                const SizedBox(width: 10),
+                SizedBox(
+                  height: 30,
+                  width: 300,
+                  child: TextField(
+                    //only number insert
+                    keyboardType: TextInputType.number,
+                    inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
+                    controller: state.indexSongBookController,
+                    style: const TextStyle(fontSize: 12),
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: (value) {
+                      context.read<EditSongBloc>().add(ChangeSongValue(nameValue: 'indexSongBook', value: value, selection: state.indexSongBookController.selection));
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [

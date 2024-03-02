@@ -49,7 +49,7 @@ Future<void> initHiveFunction() async {
   Directory directory = await pathProvider.getApplicationDocumentsDirectory();
   Hive.init(directory.path);
   //Hive.initFlutter(directory.path);
-  Hive.registerAdapter(UserAdapter());
   Hive.registerAdapter(TypeUserAdapter());
+  Hive.registerAdapter(UserAdapter());
   Hive.registerAdapter(TypeClickCardAdapter());
 }

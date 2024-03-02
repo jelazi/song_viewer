@@ -99,10 +99,8 @@ class _EditChordsBodyState extends State<EditChordsBody> {
   }
 
   void closeOverlay() {
-    if (overlayEntry != null) {
-      overlayEntry?.remove();
-    }
-    Navigator.pop(context, 'changeChord');
+    overlayEntry.remove();
+      Navigator.pop(context, 'changeChord');
   }
 
   List<TextSpan> _getCLickableText(String text, TextStyle chordStyle, TextStyle textStyle) {

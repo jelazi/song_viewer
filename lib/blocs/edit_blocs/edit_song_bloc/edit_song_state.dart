@@ -15,6 +15,9 @@ class EditSongState extends Equatable {
   final bool isOriginalLyrics;
   final List<String> listAllGroups;
   final List<String> currentGroups;
+  final TextEditingController titleController;
+  final TextEditingController interpretController;
+  final TextEditingController indexSongBookController;
 
   const EditSongState({
     required this.currentEditSong,
@@ -30,6 +33,9 @@ class EditSongState extends Equatable {
     required this.isOriginalLyrics,
     required this.listAllGroups,
     required this.currentGroups,
+    required this.titleController,
+    required this.interpretController,
+    required this.indexSongBookController,
   });
 
   @override
@@ -47,6 +53,9 @@ class EditSongState extends Equatable {
         isOriginalLyrics,
         listAllGroups,
         currentGroups,
+        titleController,
+        interpretController,
+        indexSongBookController,
       ];
 
   EditSongState copyWith({
@@ -63,6 +72,9 @@ class EditSongState extends Equatable {
     bool? isOriginalLyrics,
     List<String>? listAllGroups,
     List<String>? currentGroups,
+    TextEditingController? titleController,
+    TextEditingController? interpretController,
+    TextEditingController? indexSongBookController,
   }) {
     return EditSongState(
       currentEditSong: currentEditSong ?? this.currentEditSong,
@@ -78,6 +90,9 @@ class EditSongState extends Equatable {
       isOriginalLyrics: isOriginalLyrics ?? this.isOriginalLyrics,
       listAllGroups: listAllGroups ?? this.listAllGroups,
       currentGroups: currentGroups ?? this.currentGroups,
+      titleController: titleController ?? this.titleController,
+      interpretController: interpretController ?? this.interpretController,
+      indexSongBookController: indexSongBookController ?? this.indexSongBookController,
     );
   }
 }
@@ -96,5 +111,8 @@ class EditSongInitial extends EditSongState {
       required super.listSelectedChords,
       required super.isOriginalLyrics,
       required super.listAllGroups,
-      required super.currentGroups});
+      required super.currentGroups,
+      required super.titleController,
+      required super.interpretController,
+      required super.indexSongBookController});
 }

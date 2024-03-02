@@ -293,7 +293,7 @@ class _EditSpanDesktopState extends State<EditSpanDesktop> {
       ),
     );
 
-    overlayState.insert(widget.overlayEntry!);
+    overlayState.insert(widget.overlayEntry);
   }
 
   void _removeOverlay() {

@@ -133,14 +133,19 @@ class FirebaseProvider {
     return listSongs;
   }
 
-  Future<void> deleteSong(Song song) async {
+  Future<bool> deleteSong(String songId) async {
     try {
-      var snapshot = await songCollection.doc(song.id).get();
+      var snapshot = await songCollection.doc(songId).get();
       if (snapshot.exists) {
-        await songCollection.doc(song.id).delete();
+        await songCollection.doc(songId).delete();
+        return true;
+      } else {
+        logger.e('Song not found');
+        return false;
       }
     } catch (e) {
       logger.e('$e');
+      return false;
     }
   }
 

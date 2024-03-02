@@ -1,5 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.default_project">
+    package="com.jelazi.songs_viewer_cli">
+    <uses-permission android:name="android.permission.INTERNET"/>
    <application
         android:label="Songs viewer"
         android:name="${applicationName}"

@@ -1,7 +1,6 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:async';
 
-import 'package:uuid/uuid.dart';
 
 import '../model/song/song.dart';
 import '../providers/firebase_provider.dart';
@@ -61,6 +60,19 @@ class SongsRepository {
 
   Future<void> loadAllGroups() async {
     listAllGroups = await _firebaseProvider.getListSongGroupFromFirestore();
+  }
+
+  Future<bool> deleteSong(String id) async {
+    try {
+      final result = await _firebaseProvider.deleteSong(id);
+      if (result == false) {
+        return false;
+      }
+      _songs.removeWhere((element) => element.id == id);
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
   void selectSong(String songId) {

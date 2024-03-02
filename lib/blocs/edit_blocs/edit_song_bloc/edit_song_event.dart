@@ -23,7 +23,8 @@ class ChangeEditSong extends EditSongEvent {
 class ChangeSongValue extends EditSongEvent {
   final String value;
   final String nameValue;
-  const ChangeSongValue({required this.value, required this.nameValue});
+  TextSelection? selection;
+  ChangeSongValue({required this.value, required this.nameValue, this.selection});
 }
 
 class CheckModifiedSong extends EditSongEvent {
@@ -130,4 +131,8 @@ class ChangeGroupForCurrentSong extends EditSongEvent {
 
   @override
   List<Object> get props => [group];
+}
+
+class DeleteCurrentSong extends EditSongEvent {
+  const DeleteCurrentSong();
 }

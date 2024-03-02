@@ -1,5 +1,6 @@
 import 'package:default_project/services/constants.dart';
 import 'package:default_project/view/mobile_view/widgets/dialogs/dialogs_export.dart';
+import 'package:default_project/view/mobile_view/widgets/dialogs/question_dialog.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -169,7 +170,7 @@ class EditTabbar extends StatelessWidget {
       builder: (context, state) {
         return SizedBox(
             width: MediaQuery.of(context).size.width,
-            child: Row(
+            child: const Row(
               children: [],
             ));
       },
@@ -397,6 +398,23 @@ class HomeTabbar extends StatelessWidget {
                               },
                               isEnabled: true,
                               isSelected: state.bodyEditName == 'settings'),
+                          RibbonButton(
+                              text: 'delete'.tr(),
+                              icon: const Icon(Icons.delete),
+                              onPressed: () {
+                                showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      return QuestionDialog(
+                                          title: 'deleteSong'.tr(),
+                                          okClick: () {
+                                            context.read<EditSongBloc>().add(const DeleteCurrentSong());
+                                          },
+                                          question: 'deleteSongQuestion'.tr());
+                                    });
+                              },
+                              isEnabled: true,
+                              isSelected: state.bodyEditName == 'settings'),
                         ],
                       )
                 : Row(
@@ -414,8 +432,8 @@ class HomeTabbar extends StatelessWidget {
       text: 'newSong'.tr(),
       icon: const Icon(Icons.new_label),
       onPressed: () {
-        TextEditingController _nameController = TextEditingController();
-        TextEditingController _artistController = TextEditingController();
+        TextEditingController nameController = TextEditingController();
+        TextEditingController artistController = TextEditingController();
         showDialog(
             context: context,
             builder: (context) {
@@ -425,13 +443,13 @@ class HomeTabbar extends StatelessWidget {
                   title: 'newSong'.tr(),
                   okBack: false,
                   okClick: () {
-                    if (_nameController.text.isEmpty) {
+                    if (nameController.text.isEmpty) {
                       MyToast.showText(text: 'nameSongIsEmpty'.tr(), typeNotification: TypeNotification.error);
                       return;
                     }
                     Song song = Song.empty()
-                      ..title = _nameController.text
-                      ..interpret = _artistController.text;
+                      ..title = nameController.text
+                      ..interpret = artistController.text;
                     context.read<EditSongBloc>().add(CreateNewSong(song: song));
                     Navigator.pop(context);
                     context.read<DesktopRibbonMenuBloc>().add(ChangeIsSelectedSong(song: song));
@@ -440,7 +458,7 @@ class HomeTabbar extends StatelessWidget {
                   widgetContent: Column(
                     children: [
                       TextField(
-                        controller: _nameController,
+                        controller: nameController,
                         decoration: InputDecoration(
                           border: const OutlineInputBorder(),
                           labelText: 'songName'.tr(),
@@ -450,7 +468,7 @@ class HomeTabbar extends StatelessWidget {
                         height: 10,
                       ),
                       TextField(
-                        controller: _artistController,
+                        controller: artistController,
                         decoration: InputDecoration(
                           border: const OutlineInputBorder(),
                           labelText: 'artist'.tr(),
