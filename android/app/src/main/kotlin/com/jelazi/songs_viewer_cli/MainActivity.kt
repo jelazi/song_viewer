@@ -1,4 +1,4 @@
-package com.example.default_project
+package com.jelazi.songs_viewer_cli
 
 import io.flutter.embedding.android.FlutterActivity
 
