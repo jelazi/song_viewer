@@ -40,12 +40,21 @@ class _HomeDrawerState extends State<HomeDrawer> {
               decoration: const BoxDecoration(
                 color: AppColor.primaryColor,
               ),
-              child: Text(
-                'songsViewer'.tr(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                ),
+              child: Column(
+                children: [
+                  Text(
+                    'songsViewer'.tr(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                    ),
+                  ),
+                  Text('${'version'.tr()} ${context.read<HomePageBloc>().settingsRepository.version}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                      ))
+                ],
               ),
             ),
             BlocBuilder<HomePageBloc, HomePageState>(

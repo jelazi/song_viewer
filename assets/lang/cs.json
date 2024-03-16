@@ -215,5 +215,16 @@
     "artist": "Autor",
     "error": "Chyba: ",
     "nameSongIsEmpty": "Jméno písně musí být vyplněno.",
+    "previewFontTextSize": "Velikost písma textu pro prezentaci",
+    "previewFontChordSize": "Velikost písma akordů pro prezentaci",
+    "editFontTextSize": "Velikost písma textu pro editaci",
+    "editFontChordSize": "Velikost písma akordů pro editaci",
+    "previewColorText": "Barva textu pro prezentaci",
+    "previewColorChord": "Barva akordů pro prezentaci",
+    "editColorText": "Barva textu pro editaci",
+    "editColorChord": "Barva akordů pro editaci",
+    "editIconVisibility": "Zobrazení ikony editace",
+    "autoHideTopBar": "Automatické skrytí horního panelu",
+    "version": "Verze",
     "test": "Test"
 }

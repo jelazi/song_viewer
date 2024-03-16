@@ -38,7 +38,6 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
 
   @override
   void dispose() {
-    // TODO: implement dispose
     super.dispose();
     scrollController.dispose();
     disableAllOverlay();
@@ -46,10 +45,18 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
 
   @override
   Widget build(BuildContext context) {
+    if (context.read<PreviewChordBloc>().state.heightWindow != MediaQuery.of(context).size.height) {
+      context.read<PreviewChordBloc>().add(ChangeHeightWindow(height: MediaQuery.of(context).size.height));
+    }
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(100),
-        child: BlocBuilder<PreviewChordBloc, PreviewChordState>(
+        child: BlocConsumer<PreviewChordBloc, PreviewChordState>(
+          listener: (context, state) {
+            if (state.heightWindow != MediaQuery.of(context).size.height) {
+              context.read<PreviewChordBloc>().add(ChangeHeightWindow(height: MediaQuery.of(context).size.height));
+            }
+          },
           builder: (context, state) {
             return GestureDetector(
               onPanUpdate: (details) {
@@ -61,6 +68,7 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
                   height: state.appBarStatus ? 90.0 : 0.0,
                   duration: const Duration(milliseconds: 200),
                   child: AppBar(
+                    iconTheme: const IconThemeData(color: Colors.white),
                     backgroundColor: AppColor.primaryColor,
                     title: Column(
                       children: [
@@ -115,7 +123,7 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
                       ),
                       SizedBox(
                         height: MediaQuery.of(context).size.height - 120,
-                        child: _getLyricsRenderer(state, scrollController),
+                        child: state.twoColumns ? _getLyricsTwoColumnsRenderer(state, scrollController) : _getLyricsOneColumnRenderer(state, scrollController),
                       ),
                     ],
                   ),
@@ -175,10 +183,65 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
                                   ),
                                 ],
                               ),
+                              enabled: true),
+                          MyFloatingButton(
+                              onPressed: () {
+                                context.read<PreviewChordBloc>().add(ChangeColumnStatus(status: !state.twoColumns));
+                              },
+                              icon: Icon(
+                                state.twoColumns ? Icons.view_column : Icons.format_align_justify,
+                                size: 18,
+                              ),
                               enabled: true)
                         ],
                       )),
-                )
+                ),
+                Visibility(
+                  visible: state.twoColumns && state.lyricWithColumns(true, true, TypeLyric.translate).length > 2,
+                  child: Align(
+                    alignment: Alignment.bottomLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: ElevatedButton(
+                        style: ButtonStyle(
+                          backgroundColor:
+                              MaterialStateProperty.all<Color>(state.currentColumn > 0 ? AppColor.primaryColor.withOpacity(0.7) : AppColor.grey4Color.withOpacity(0.7)),
+                        ),
+                        onPressed: () {
+                          if (state.currentColumn <= 0) {
+                            return;
+                          }
+                          context.read<PreviewChordBloc>().add(ChangeCurrentColumn(column: state.currentColumn - 2));
+                        },
+                        child: Icon(Icons.turn_left, color: state.currentColumn > 0 ? AppColor.whiteColor : AppColor.grey2Color),
+                      ),
+                    ),
+                  ),
+                ),
+                Visibility(
+                  visible: state.twoColumns && state.lyricWithColumns(true, true, TypeLyric.translate).length > 2,
+                  child: Align(
+                    alignment: Alignment.bottomRight,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: ElevatedButton(
+                        style: ButtonStyle(
+                          backgroundColor: MaterialStateProperty.all<Color>(state.currentColumn + 2 < state.lyricWithColumns(true, true, TypeLyric.translate).length
+                              ? AppColor.primaryColor.withOpacity(0.7)
+                              : AppColor.grey4Color.withOpacity(0.7)),
+                        ),
+                        onPressed: () {
+                          if (state.currentColumn + 2 >= state.lyricWithColumns(true, true, TypeLyric.translate).length) {
+                            return;
+                          }
+                          context.read<PreviewChordBloc>().add(ChangeCurrentColumn(column: state.currentColumn + 2));
+                        },
+                        child: Icon(Icons.turn_right,
+                            color: state.currentColumn + 2 < state.lyricWithColumns(true, true, TypeLyric.translate).length ? AppColor.whiteColor : AppColor.grey2Color),
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           );
@@ -187,97 +250,32 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
     );
   }
 
-  Widget _getLyricsRenderer(PreviewChordState state, ScrollController scrollController) {
+  Widget _getLyricsOneColumnRenderer(PreviewChordState state, ScrollController scrollController) {
+    String lyric = state.data.song?.lyrics ?? '';
+    return LyricsRenderer(
+      scrollController: scrollController,
+      isVisibleNote: true,
+      lyrics: lyric,
+      textStyle: state.textStyle,
+      chordStyle: state.chordStyle,
+      appBarStatus: state.appBarStatus,
+      onTapChord: (Chord chord, Offset pos) {
+        openChordImage(chord, pos, context);
+      },
+      transposeIncrement: state.transposeIncrement,
+      scrollSpeed: state.scrollSpeed,
+      baseFontSize: state.textStyle.fontSize ?? 20,
+    );
+  }
+
+  Widget _getLyricsTwoColumnsRenderer(PreviewChordState state, ScrollController scrollController) {
     String lyric = state.data.song?.lyrics ?? '';
     List<String> list = lyric.split('\n');
-    //TODO: controller.notes.value = List.generate(list.length + 1, (index) => RxString(''));
-    if (state.twoColumns) {
-      List<String> splittedLyric = state.lyricWithColumns(true, true, TypeLyric.translate);
-      //TODO:  controller.maxColumns.value = splittedLyric.length;
-
-      if (splittedLyric.length == 1) {
-        return LyricsRenderer(
-          scrollController: scrollController,
-          lyrics: splittedLyric[0],
-          textStyle: state.textStyle,
-          chordStyle: state.chordStyle,
-          appBarStatus: state.appBarStatus,
-          onTapChord: (Chord chord, Offset pos) {
-            openChordImage(chord, pos, context);
-          },
-          transposeIncrement: state.transposeIncrement,
-          scrollSpeed: state.scrollSpeed,
-          isVisibleNote: true,
-          baseFontSize: state.textStyle.fontSize ?? 20,
-        );
-      } else {
-        int firstIndex = 0;
-        if (state.currentColumn > 0) {
-          for (String partSong in splittedLyric) {
-            if (splittedLyric.indexOf(partSong) < state.currentColumn) {
-              List<String> listLines = partSong.split('\n');
-              firstIndex += listLines.length - 1;
-            }
-          }
-        }
-        int secondIndex = 0;
-        if (state.currentColumn + 1 > 0) {
-          for (String partSong in splittedLyric) {
-            if (splittedLyric.indexOf(partSong) < state.currentColumn + 1) {
-              List<String> listLines = partSong.split('\n');
-              secondIndex += listLines.length - 1;
-            }
-          }
-        }
-        return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Flexible(
-            child: LyricsRenderer(
-              scrollController: scrollController,
-              isVisibleNote: true,
-              lyrics: splittedLyric[state.currentColumn],
-              textStyle: state.textStyle,
-              chordStyle: state.chordStyle,
-              appBarStatus: state.appBarStatus,
-              onTapChord: (Chord chord, Offset pos) {
-                openChordImage(chord, pos, context);
-              },
-              transposeIncrement: state.transposeIncrement,
-              scrollSpeed: state.scrollSpeed,
-              listNotes: state.data.song?.notes ?? [],
-              startIndex: firstIndex,
-              baseFontSize: state.textStyle.fontSize ?? 20,
-            ),
-          ),
-          const VerticalDivider(
-            color: Colors.blue,
-          ),
-          splittedLyric.length > state.currentColumn + 1
-              ? Flexible(
-                  child: LyricsRenderer(
-                    scrollController: scrollController,
-                    isVisibleNote: true,
-                    lyrics: splittedLyric[state.currentColumn + 1],
-                    textStyle: state.textStyle,
-                    chordStyle: state.chordStyle,
-                    appBarStatus: state.appBarStatus,
-                    onTapChord: (Chord chord, Offset pos) {
-                      openChordImage(chord, pos, context);
-                    },
-                    transposeIncrement: state.transposeIncrement,
-                    scrollSpeed: state.scrollSpeed,
-                    startIndex: secondIndex,
-                    baseFontSize: state.textStyle.fontSize ?? 20,
-                  ),
-                )
-              : Container(),
-        ]);
-      }
-    } else {
-      //TODO: state.maxColumns.value = 0;
+    List<String> splittedLyric = state.lyricWithColumns(true, true, TypeLyric.translate);
+    if (splittedLyric.length == 1) {
       return LyricsRenderer(
         scrollController: scrollController,
-        isVisibleNote: true,
-        lyrics: lyric,
+        lyrics: splittedLyric[0],
         textStyle: state.textStyle,
         chordStyle: state.chordStyle,
         appBarStatus: state.appBarStatus,
@@ -286,8 +284,70 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
         },
         transposeIncrement: state.transposeIncrement,
         scrollSpeed: state.scrollSpeed,
+        isVisibleNote: true,
         baseFontSize: state.textStyle.fontSize ?? 20,
       );
+    } else {
+      int firstIndex = 0;
+      if (state.currentColumn > 0) {
+        for (String partSong in splittedLyric) {
+          if (splittedLyric.indexOf(partSong) < state.currentColumn) {
+            List<String> listLines = partSong.split('\n');
+            firstIndex += listLines.length - 1;
+          }
+        }
+      }
+      int secondIndex = 0;
+      if (state.currentColumn + 1 > 0) {
+        for (String partSong in splittedLyric) {
+          if (splittedLyric.indexOf(partSong) < state.currentColumn + 1) {
+            List<String> listLines = partSong.split('\n');
+            secondIndex += listLines.length - 1;
+          }
+        }
+      }
+      return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Flexible(
+          child: LyricsRenderer(
+            scrollController: scrollController,
+            isVisibleNote: true,
+            lyrics: splittedLyric[state.currentColumn],
+            textStyle: state.textStyle,
+            chordStyle: state.chordStyle,
+            appBarStatus: state.appBarStatus,
+            onTapChord: (Chord chord, Offset pos) {
+              openChordImage(chord, pos, context);
+            },
+            transposeIncrement: state.transposeIncrement,
+            scrollSpeed: state.scrollSpeed,
+            listNotes: state.data.song?.notes ?? [],
+            startIndex: firstIndex,
+            baseFontSize: state.textStyle.fontSize ?? 20,
+          ),
+        ),
+        const VerticalDivider(
+          color: Colors.blue,
+        ),
+        splittedLyric.length > state.currentColumn + 1
+            ? Flexible(
+                child: LyricsRenderer(
+                  scrollController: scrollController,
+                  isVisibleNote: true,
+                  lyrics: splittedLyric[state.currentColumn + 1],
+                  textStyle: state.textStyle,
+                  chordStyle: state.chordStyle,
+                  appBarStatus: state.appBarStatus,
+                  onTapChord: (Chord chord, Offset pos) {
+                    openChordImage(chord, pos, context);
+                  },
+                  transposeIncrement: state.transposeIncrement,
+                  scrollSpeed: state.scrollSpeed,
+                  startIndex: secondIndex,
+                  baseFontSize: state.textStyle.fontSize ?? 20,
+                ),
+              )
+            : Container(),
+      ]);
     }
   }
 

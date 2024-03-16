@@ -2,6 +2,7 @@
 import 'package:default_project/model/user.dart';
 import 'package:default_project/services/enums.dart';
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../providers/hive_provider.dart';
 
@@ -18,12 +19,25 @@ class SettingsRepository {
   Color _editColorChord = Colors.red;
   bool _isEditIconVisible = true;
   bool _autoHideTopBar = false;
+  bool _twoColumns = false;
   User _currentUser = User.empty();
+  String version = '';
+  String buildNumber = '';
   TypeClickCard _typeClickCard = TypeClickCard.none;
 
   SettingsRepository({
     required this.hiveProvider,
   });
+
+  void getInfoApp() async {
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    version = packageInfo.version;
+    buildNumber = packageInfo.buildNumber;
+  }
+
+  bool get twoColumns {
+    return _twoColumns;
+  }
 
   double get previewFontTextSize {
     return _previewFontTextSize;
@@ -86,6 +100,7 @@ class SettingsRepository {
     _autoHideTopBar = await hiveProvider.getSettingsValue('autoHideTopBar') ?? false;
     _currentUser = await hiveProvider.getSettingsValue('currentUser') ?? User.empty();
     _typeClickCard = await hiveProvider.getSettingsValue('typeClickCard') ?? TypeClickCard.none;
+    _twoColumns = await hiveProvider.getSettingsValue('twoColumns') ?? false;
   }
 
   void setCurrentUser(User user) {
@@ -172,6 +187,12 @@ class SettingsRepository {
         {
           _typeClickCard = value;
           hiveProvider.setSettingsValue('typeClickCard', value);
+          break;
+        }
+      case 'twoColumns':
+        {
+          _twoColumns = value;
+          hiveProvider.setSettingsValue('twoColumns', value);
           break;
         }
     }

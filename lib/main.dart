@@ -105,6 +105,7 @@ class MyApp extends StatelessWidget {
           title: 'Songs viewer',
           theme: ThemeData(
             primarySwatch: getMaterialColor(AppColor.primaryColor),
+            iconTheme: const IconThemeData(color: AppColor.whiteColor),
           ),
           builder: BotToastInit(),
           navigatorObservers: [BotToastNavigatorObserver()],

@@ -14,11 +14,13 @@ class PreviewChordState extends Equatable {
   final bool appBarStatus;
   final bool visibleButtons;
   final int cap;
+  final double heightWindow;
   const PreviewChordState({
     required this.data,
     required this.textStyle,
     required this.chordStyle,
     required this.twoColumns,
+    required this.isSelectedSong,
     required this.transposeIncrement,
     required this.scrollSpeed,
     required this.currentColumn,
@@ -26,7 +28,7 @@ class PreviewChordState extends Equatable {
     required this.appBarStatus,
     required this.visibleButtons,
     required this.cap,
-    required this.isSelectedSong,
+    required this.heightWindow,
   });
 
   @override
@@ -59,6 +61,7 @@ class PreviewChordState extends Equatable {
     bool? appBarStatus,
     bool? visibleButtons,
     int? cap,
+    double? heightWindow,
   }) {
     return PreviewChordState(
       data: data ?? this.data,
@@ -73,6 +76,7 @@ class PreviewChordState extends Equatable {
       appBarStatus: appBarStatus ?? this.appBarStatus,
       visibleButtons: visibleButtons ?? this.visibleButtons,
       cap: cap ?? this.cap,
+      heightWindow: heightWindow ?? this.heightWindow,
     );
   }
 
@@ -138,17 +142,19 @@ class CurrentData {
 }
 
 class PreviewChordInitial extends PreviewChordState {
-  const PreviewChordInitial(
-      {required super.data,
-      required super.textStyle,
-      required super.chordStyle,
-      required super.twoColumns,
-      required super.transposeIncrement,
-      required super.scrollSpeed,
-      required super.currentColumn,
-      required super.maxLines,
-      required super.appBarStatus,
-      required super.visibleButtons,
-      required super.cap,
-      required super.isSelectedSong});
+  const PreviewChordInitial({
+    required super.data,
+    required super.textStyle,
+    required super.chordStyle,
+    required super.twoColumns,
+    required super.transposeIncrement,
+    required super.scrollSpeed,
+    required super.currentColumn,
+    required super.maxLines,
+    required super.appBarStatus,
+    required super.visibleButtons,
+    required super.cap,
+    required super.isSelectedSong,
+    required super.heightWindow,
+  });
 }

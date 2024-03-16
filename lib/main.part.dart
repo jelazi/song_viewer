@@ -25,6 +25,7 @@ Future<void> initProvidersRepositories() async {
   );
 
   await settingsRepository.loadLocalSettings();
+  await settingsRepository.getInfoApp();
 
   songsRepository = SongsRepository(
     firebaseProvider: firebaseProvider,

@@ -16,7 +16,7 @@ class ChangeCurrentSong extends PreviewChordEvent {
   const ChangeCurrentSong({required this.song});
 
   @override
-  List<Object> get props => [];
+  List<Object> get props => [song ?? ''];
 }
 
 class ChangeTextFontSize extends PreviewChordEvent {
@@ -37,7 +37,9 @@ class ChangeChordFontSize extends PreviewChordEvent {
 
 class ChangeFontSize extends PreviewChordEvent {
   final bool isIncrease;
-  const ChangeFontSize({required this.isIncrease});
+  const ChangeFontSize({
+    required this.isIncrease,
+  });
 
   @override
   List<Object> get props => [isIncrease];
@@ -73,4 +75,32 @@ class SelectSongInPreview extends PreviewChordEvent {
 
   @override
   List<Object> get props => [status];
+}
+
+class ChangeColumnStatus extends PreviewChordEvent {
+  final bool status;
+  const ChangeColumnStatus({
+    required this.status,
+  });
+
+  @override
+  List<Object> get props => [
+        status,
+      ];
+}
+
+class ChangeHeightWindow extends PreviewChordEvent {
+  final double height;
+  const ChangeHeightWindow({required this.height});
+
+  @override
+  List<Object> get props => [height];
+}
+
+class ChangeCurrentColumn extends PreviewChordEvent {
+  final int column;
+  const ChangeCurrentColumn({required this.column});
+
+  @override
+  List<Object> get props => [column];
 }
