@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../blocs/export_blocs.dart';
 import 'home_bodies/preview_body.dart';
+import 'home_bodies/web_body.dart';
 
 class DesktopHomePage extends StatefulWidget {
   const DesktopHomePage({super.key});
@@ -25,6 +26,9 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
               break;
             case 'edit':
               homeBody = const EditBody();
+              break;
+            case 'web':
+              homeBody = const WebBody();
               break;
             default:
               return const PreviewBody();

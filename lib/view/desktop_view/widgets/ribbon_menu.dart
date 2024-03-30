@@ -59,16 +59,27 @@ class _RibbonMenuState extends State<RibbonMenu> with SingleTickerProviderStateM
                                 Tab(text: 'settings'.tr()),
                               ],
                             )
-                          : TabBar(
-                              isScrollable: true,
-                              tabAlignment: TabAlignment.start,
-                              controller: _tabController,
-                              tabs: [
-                                Tab(text: 'home'.tr()),
-                                Tab(text: 'edit'.tr()),
-                                Tab(text: 'settings'.tr()),
-                              ],
-                            ),
+                          : state.bodyName == 'edit'
+                              ? TabBar(
+                                  isScrollable: true,
+                                  tabAlignment: TabAlignment.start,
+                                  controller: _tabController,
+                                  tabs: [
+                                    Tab(text: 'home'.tr()),
+                                    Tab(text: 'edit'.tr()),
+                                    Tab(text: 'settings'.tr()),
+                                  ],
+                                )
+                              : TabBar(
+                                  isScrollable: true,
+                                  tabAlignment: TabAlignment.start,
+                                  controller: _tabController,
+                                  tabs: [
+                                    Tab(text: 'home'.tr()),
+                                    Tab(text: 'edit'.tr()),
+                                    Tab(text: 'settings'.tr()),
+                                  ],
+                                ),
                     ),
                     SizedBox(
                       height: 60,
@@ -81,72 +92,101 @@ class _RibbonMenuState extends State<RibbonMenu> with SingleTickerProviderStateM
                                 SettingsTabbar(),
                               ],
                             )
-                          : TabBarView(
-                              controller: _tabController,
-                              children: const [
-                                HomeTabbar(),
-                                EditTabbar(),
-                                SettingsTabbar(),
-                              ],
-                            ),
+                          : state.bodyName == 'edit'
+                              ? TabBarView(
+                                  controller: _tabController,
+                                  children: const [
+                                    HomeTabbar(),
+                                    EditTabbar(),
+                                    SettingsTabbar(),
+                                  ],
+                                )
+                              : TabBarView(
+                                  controller: _tabController,
+                                  children: const [
+                                    HomeTabbar(),
+                                    EditTabbar(),
+                                    SettingsTabbar(),
+                                  ],
+                                ),
                     ),
                   ],
                 ),
               ),
               BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
                 builder: (context, state) {
-                  return Visibility(
-                    visible: state.isSelectedSong,
-                    child: GestureDetector(
-                      onTap: () {
-                        context.read<DesktopRibbonMenuBloc>().add(const ChangeHomeBody(bodyName: 'preview'));
+                  return GestureDetector(
+                    onTap: () {
+                      context.read<DesktopRibbonMenuBloc>().add(const ChangeHomeBody(bodyName: 'preview'));
+                    },
+                    child: BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
+                      builder: (context, state) {
+                        return Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: state.bodyName == 'preview' ? AppColor.primaryLightestColor : null,
+                              border: const Border(
+                                  left: BorderSide(
+                                    color: AppColor.grey3Color,
+                                  ),
+                                  bottom: BorderSide(
+                                    color: AppColor.grey3Color,
+                                  )),
+                            ),
+                            child: Text('preview'.tr()));
                       },
-                      child: BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
-                        builder: (context, state) {
-                          return Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: state.bodyName == 'preview' ? AppColor.primaryLightestColor : null,
-                                border: const Border(
-                                    left: BorderSide(
-                                      color: AppColor.grey3Color,
-                                    ),
-                                    bottom: BorderSide(
-                                      color: AppColor.grey3Color,
-                                    )),
-                              ),
-                              child: Text('preview'.tr()));
-                        },
-                      ),
                     ),
                   );
                 },
               ),
               BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
                 builder: (context, state) {
-                  return Visibility(
-                    visible: state.isSelectedSong,
-                    child: GestureDetector(
-                      onTap: () {
-                        context.read<DesktopRibbonMenuBloc>().add(const ChangeHomeBody(bodyName: 'edit'));
+                  return GestureDetector(
+                    onTap: () {
+                      context.read<DesktopRibbonMenuBloc>().add(const ChangeHomeBody(bodyName: 'edit'));
+                    },
+                    child: BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
+                      builder: (context, state) {
+                        return Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: state.bodyName == 'edit' ? AppColor.primaryLightestColor : null,
+                              border: const Border(
+                                  left: BorderSide(
+                                    color: AppColor.grey3Color,
+                                  ),
+                                  bottom: BorderSide(
+                                    color: AppColor.grey3Color,
+                                  )),
+                            ),
+                            child: Text('edit'.tr()));
                       },
-                      child: BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
-                        builder: (context, state) {
-                          return Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: state.bodyName == 'edit' ? AppColor.primaryLightestColor : null,
-                                border: const Border(
-                                    left: BorderSide(
-                                      color: AppColor.grey3Color,
-                                    ),
-                                    bottom: BorderSide(
-                                      color: AppColor.grey3Color,
-                                    )),
-                              ),
-                              child: Text('edit'.tr()));
-                        },
-                      ),
+                    ),
+                  );
+                },
+              ),
+              BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
+                builder: (context, state) {
+                  return GestureDetector(
+                    onTap: () {
+                      context.read<DesktopRibbonMenuBloc>().add(const ChangeHomeBody(bodyName: 'web'));
+                    },
+                    child: BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
+                      builder: (context, state) {
+                        return Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: state.bodyName == 'web' ? AppColor.primaryLightestColor : null,
+                              border: const Border(
+                                  left: BorderSide(
+                                    color: AppColor.grey3Color,
+                                  ),
+                                  bottom: BorderSide(
+                                    color: AppColor.grey3Color,
+                                  )),
+                            ),
+                            child: Text('web'.tr()));
+                      },
                     ),
                   );
                 },
@@ -209,7 +249,10 @@ class PreviewTabbar extends StatelessWidget {
           builder: (context, state) {
             return RibbonButton(
                 text: 'zoomIn'.tr(),
-                icon: const Icon(Icons.zoom_in),
+                icon: const Icon(
+                  Icons.zoom_in,
+                  color: Colors.black,
+                ),
                 isEnabled: state.data.song != null,
                 onPressed: () {
                   context.read<PreviewChordBloc>().add(const ChangeFontSize(isIncrease: true));
@@ -221,7 +264,10 @@ class PreviewTabbar extends StatelessWidget {
             return RibbonButton(
                 text: 'zoomOut'.tr(),
                 isEnabled: state.data.song != null,
-                icon: const Icon(Icons.zoom_out),
+                icon: const Icon(
+                  Icons.zoom_out,
+                  color: Colors.black,
+                ),
                 onPressed: () {
                   context.read<PreviewChordBloc>().add(const ChangeFontSize(isIncrease: false));
                 });
@@ -238,10 +284,12 @@ class PreviewTabbar extends StatelessWidget {
                     Icon(
                       Icons.add,
                       size: 18,
+                      color: Colors.black,
                     ),
                     Icon(
                       Icons.music_note,
                       size: 18,
+                      color: Colors.black,
                     ),
                   ],
                 ),
@@ -261,10 +309,12 @@ class PreviewTabbar extends StatelessWidget {
                     Icon(
                       Icons.remove,
                       size: 18,
+                      color: Colors.black,
                     ),
                     Icon(
                       Icons.music_note,
                       size: 18,
+                      color: Colors.black,
                     ),
                   ],
                 ),
@@ -297,7 +347,10 @@ class HomeTabbar extends StatelessWidget {
                             builder: (context, state) {
                               return RibbonButton(
                                   text: 'zoomIn'.tr(),
-                                  icon: const Icon(Icons.zoom_in),
+                                  icon: const Icon(
+                                    Icons.zoom_in,
+                                    color: Colors.black,
+                                  ),
                                   isEnabled: state.data.song != null,
                                   onPressed: () {
                                     context.read<PreviewChordBloc>().add(const ChangeFontSize(isIncrease: true));
@@ -309,7 +362,10 @@ class HomeTabbar extends StatelessWidget {
                               return RibbonButton(
                                   text: 'zoomOut'.tr(),
                                   isEnabled: state.data.song != null,
-                                  icon: const Icon(Icons.zoom_out),
+                                  icon: const Icon(
+                                    Icons.zoom_out,
+                                    color: Colors.black,
+                                  ),
                                   onPressed: () {
                                     context.read<PreviewChordBloc>().add(const ChangeFontSize(isIncrease: false));
                                   });
@@ -326,10 +382,12 @@ class HomeTabbar extends StatelessWidget {
                                       Icon(
                                         Icons.add,
                                         size: 18,
+                                        color: Colors.black,
                                       ),
                                       Icon(
                                         Icons.music_note,
                                         size: 18,
+                                        color: Colors.black,
                                       ),
                                     ],
                                   ),
@@ -349,10 +407,12 @@ class HomeTabbar extends StatelessWidget {
                                       Icon(
                                         Icons.remove,
                                         size: 18,
+                                        color: Colors.black,
                                       ),
                                       Icon(
                                         Icons.music_note,
                                         size: 18,
+                                        color: Colors.black,
                                       ),
                                     ],
                                   ),
@@ -363,64 +423,82 @@ class HomeTabbar extends StatelessWidget {
                           ),
                         ],
                       )
-                    : Row(
-                        children: [
-                          getNewSongButton(context),
-                          RibbonButton(
-                              text: 'lyrics'.tr(),
-                              icon: const Icon(Icons.edit),
-                              onPressed: () {
-                                context.read<DesktopRibbonMenuBloc>().add(const ChangeEditBody(bodyName: 'lyrics'));
-                              },
-                              isEnabled: true,
-                              isSelected: state.bodyEditName == 'lyrics'),
-                          RibbonButton(
-                              text: 'chord'.tr(),
-                              icon: const Icon(Icons.piano),
-                              onPressed: () {
-                                context.read<DesktopRibbonMenuBloc>().add(const ChangeEditBody(bodyName: 'chords'));
-                              },
-                              isEnabled: true,
-                              isSelected: state.bodyEditName == 'chords'),
-                          RibbonButton(
-                              text: 'note'.tr(),
-                              icon: const Icon(Icons.music_note),
-                              onPressed: () {
-                                context.read<DesktopRibbonMenuBloc>().add(const ChangeEditBody(bodyName: 'note'));
-                              },
-                              isEnabled: true,
-                              isSelected: state.bodyEditName == 'note'),
-                          RibbonButton(
-                              text: 'otherSettings'.tr(),
-                              icon: const Icon(Icons.settings),
-                              onPressed: () {
-                                context.read<DesktopRibbonMenuBloc>().add(const ChangeEditBody(bodyName: 'settings'));
-                              },
-                              isEnabled: true,
-                              isSelected: state.bodyEditName == 'settings'),
-                          RibbonButton(
-                              text: 'delete'.tr(),
-                              icon: const Icon(Icons.delete),
-                              onPressed: () {
-                                showDialog(
-                                    context: context,
-                                    builder: (context) {
-                                      return QuestionDialog(
-                                          title: 'deleteSong'.tr(),
-                                          okClick: () {
-                                            context.read<EditSongBloc>().add(const DeleteCurrentSong());
-                                          },
-                                          question: 'deleteSongQuestion'.tr());
-                                    });
-                              },
-                              isEnabled: true,
-                              isSelected: state.bodyEditName == 'settings'),
-                        ],
-                      )
+                    : state.bodyName == 'edit'
+                        ? Row(
+                            children: [
+                              getNewSongButton(context),
+                              RibbonButton(
+                                  text: 'lyrics'.tr(),
+                                  icon: const Icon(
+                                    Icons.edit,
+                                    color: Colors.black,
+                                  ),
+                                  onPressed: () {
+                                    context.read<DesktopRibbonMenuBloc>().add(const ChangeEditBody(bodyName: 'lyrics'));
+                                  },
+                                  isEnabled: true,
+                                  isSelected: state.bodyEditName == 'lyrics'),
+                              RibbonButton(
+                                  text: 'chord'.tr(),
+                                  icon: const Icon(
+                                    Icons.piano,
+                                    color: Colors.black,
+                                  ),
+                                  onPressed: () {
+                                    context.read<DesktopRibbonMenuBloc>().add(const ChangeEditBody(bodyName: 'chords'));
+                                  },
+                                  isEnabled: true,
+                                  isSelected: state.bodyEditName == 'chords'),
+                              RibbonButton(
+                                  text: 'note'.tr(),
+                                  icon: const Icon(
+                                    Icons.music_note,
+                                    color: Colors.black,
+                                  ),
+                                  onPressed: () {
+                                    context.read<DesktopRibbonMenuBloc>().add(const ChangeEditBody(bodyName: 'note'));
+                                  },
+                                  isEnabled: true,
+                                  isSelected: state.bodyEditName == 'note'),
+                              RibbonButton(
+                                  text: 'otherSettings'.tr(),
+                                  icon: const Icon(
+                                    Icons.settings,
+                                    color: Colors.black,
+                                  ),
+                                  onPressed: () {
+                                    context.read<DesktopRibbonMenuBloc>().add(const ChangeEditBody(bodyName: 'settings'));
+                                  },
+                                  isEnabled: true,
+                                  isSelected: state.bodyEditName == 'settings'),
+                              RibbonButton(
+                                  text: 'delete'.tr(),
+                                  icon: const Icon(
+                                    Icons.delete,
+                                    color: Colors.black,
+                                  ),
+                                  onPressed: () {
+                                    showDialog(
+                                        context: context,
+                                        builder: (context) {
+                                          return QuestionDialog(
+                                              title: 'deleteSong'.tr(),
+                                              okClick: () {
+                                                context.read<EditSongBloc>().add(const DeleteCurrentSong());
+                                              },
+                                              question: 'deleteSongQuestion'.tr());
+                                        });
+                                  },
+                                  isEnabled: true,
+                                  isSelected: state.bodyEditName == 'settings'),
+                            ],
+                          )
+                        : Row(
+                            children: [],
+                          )
                 : Row(
                     children: [
                       getNewSongButton(context),
-                      // Container(padding: const EdgeInsets.only(left: 10), child: Text('selectSong'.tr(), style: h4TextStyle)),
                     ],
                   );
           },
@@ -430,7 +508,10 @@ class HomeTabbar extends StatelessWidget {
   RibbonButton getNewSongButton(BuildContext context) {
     return RibbonButton(
       text: 'newSong'.tr(),
-      icon: const Icon(Icons.new_label),
+      icon: const Icon(
+        Icons.new_label,
+        color: Colors.black,
+      ),
       onPressed: () {
         TextEditingController nameController = TextEditingController();
         TextEditingController artistController = TextEditingController();

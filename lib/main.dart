@@ -2,6 +2,7 @@
 import 'dart:io';
 
 import 'package:bot_toast/bot_toast.dart';
+import 'package:default_project/providers/web_provider.dart';
 import 'package:default_project/repositories/settings_repository.dart';
 import 'package:default_project/services/constants.dart';
 import 'package:default_project/services/enums.dart';
@@ -26,6 +27,7 @@ import 'providers/hive_provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
 
+import 'repositories/web_repository.dart';
 import 'view/router/app_router.dart';
 
 part 'main.part.dart';
@@ -99,6 +101,9 @@ class MyApp extends StatelessWidget {
           ),
           BlocProvider(
             create: (context) => DesktopRibbonMenuBloc(),
+          ),
+          BlocProvider(
+            create: ((context) => WebBloc(webRepository: webRepository)),
           )
         ],
         child: MaterialApp(

@@ -1,7 +1,7 @@
 name: default_project
 description: A new Flutter project.
 publish_to: none
-version: 1.1.5+19
+version: 1.1.6+20
 
 environment:
   sdk: ">=2.19.2 <3.0.0"
@@ -39,6 +39,9 @@ dependencies:
   window_manager: ^0.3.8
   bot_toast: ^4.1.3
   package_info_plus: ^4.2.0
+  dio: ^5.4.2+1
+  html: ^0.15.4
+  toggle_switch: ^2.3.0
 
 dev_dependencies:
   flutter_test:

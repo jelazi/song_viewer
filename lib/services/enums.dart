@@ -25,3 +25,9 @@ enum TypeClickCard {
   @HiveField(4)
   youtube,
 }
+
+enum WebAddress {
+  velkyZpevnik,
+  superMusic,
+  proScholy,
+}

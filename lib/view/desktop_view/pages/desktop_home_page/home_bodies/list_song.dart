@@ -72,7 +72,7 @@ class _ListSongState extends State<ListSong> {
                                       context.read<EditSongBloc>().add(ChangeEditSong(song: song, isOriginalLyrics: false));
                                     } else {
                                       context.read<DesktopRibbonMenuBloc>().add(const ChangeIsSelectedSong(song: null));
-                                      context.read<PreviewChordBloc>().add(ChangeCurrentSong(song: null));
+                                      context.read<PreviewChordBloc>().add(const ChangeCurrentSong(song: null));
                                       context.read<EditSongBloc>().add(ChangeEditSong(song: Song.empty(), isOriginalLyrics: false));
                                     }
                                   },

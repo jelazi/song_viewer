@@ -4,6 +4,7 @@ dynamic settingsRepository;
 dynamic playlistRepository;
 dynamic usersRepository;
 dynamic songsRepository;
+dynamic webRepository;
 
 Future<void> initProvidersRepositories() async {
   await Firebase.initializeApp(
@@ -19,6 +20,7 @@ Future<void> initProvidersRepositories() async {
   FirebaseProvider firebaseProvider = FirebaseProvider();
   HiveProvider hiveProvider = HiveProvider();
   await hiveProvider.initHiveBox();
+  WebProvider webProvider = WebProvider();
 
   settingsRepository = SettingsRepository(
     hiveProvider: hiveProvider,
@@ -42,6 +44,11 @@ Future<void> initProvidersRepositories() async {
     firebaseProvider: firebaseProvider,
     settingsRepository: settingsRepository,
   );
+  webRepository = WebRepository(
+    webProvider: webProvider,
+  );
+
+  await webRepository.testGetSong();
   await usersRepository.loadUsersFromFirebase();
   await usersRepository.loadCurrentUser();
 }
