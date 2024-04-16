@@ -158,4 +158,8 @@ class SongsRepository {
   int getTransposeForSong(Song song) {
     return _hiveProvider.getTransposeForSong(song.id);
   }
+
+  String getListSongToJson() {
+    return _songs.map((e) => e.toJson()).toList().toString();
+  }
 }

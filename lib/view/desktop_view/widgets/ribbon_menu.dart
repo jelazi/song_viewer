@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:default_project/services/constants.dart';
 import 'package:default_project/view/mobile_view/widgets/dialogs/dialogs_export.dart';
 import 'package:default_project/view/mobile_view/widgets/dialogs/question_dialog.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:logger_pkg/logger_pkg.dart';
 
 import '../../../blocs/export_blocs.dart';
 import '../../../model/song/song.dart';
@@ -227,9 +231,27 @@ class SettingsTabbar extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
         width: MediaQuery.of(context).size.width,
-        child: const Row(
+        child: Row(
           children: [
-            Icon(Icons.settings),
+            RibbonButton(
+                text: 'exportSong'.tr(),
+                icon: const Icon(
+                  Icons.exit_to_app,
+                  color: Colors.black,
+                ),
+                isEnabled: true,
+                onPressed: () async {
+                  final listSong = context.read<HomePageBloc>().songsRepository.getListSongToJson();
+                  String? outputFile = await FilePicker.platform.saveFile(
+                    dialogTitle: 'Please select an output file:',
+                    fileName: 'list_songs.json',
+                  );
+                  if (outputFile == null) {
+                    return;
+                  }
+                  File returnedFile = File(outputFile);
+                  await returnedFile.writeAsString(listSong);
+                })
           ],
         ));
   }
