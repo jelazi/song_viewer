@@ -30,6 +30,7 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
           typeUser: TypeUser.none,
         )) {
     on<_Init>(_init);
+    on<UpdateSongData>(_updateSongData);
     on<FilterSong>(_filterSong);
     on<ChangeSelectedSong>(_changeSelectedSong);
     on<SelectSong>(_selectSong);
@@ -57,6 +58,14 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
       selectedSongId: songsRepository.selectedSongId,
       listExpandedSongs: [],
       typeUser: usersRepository.currentTypeUser,
+    ));
+  }
+
+  void _updateSongData(UpdateSongData event, Emitter<HomePageState> emit) async {
+    final state = this.state;
+    await songsRepository.updateSongsFromFirebase();
+    emit(state.copyWith(
+      listSong: List<Song>.from(songsRepository.songs),
     ));
   }
 

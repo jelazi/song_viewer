@@ -1,4 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'dart:math';
+
+import 'package:collection/collection.dart';
 import 'package:default_project/model/youtube_video.dart';
 import 'package:default_project/services/enums.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -139,6 +142,7 @@ class Song {
   }
 
   List<String> checkModifiedSong(Song otherSong, bool withBmpSongBar) {
+    Function eq = const ListEquality().equals;
     List<String> listModified = [];
     if (title != otherSong.title) {
       listModified.add('title');
@@ -167,10 +171,10 @@ class Song {
     if (sheets != otherSong.sheets) {
       listModified.add('sheets');
     }
-    if (groups != otherSong.groups) {
+    if (eq(groups, otherSong.groups) == false) {
       listModified.add('groups');
     }
-    if (tags != otherSong.tags) {
+    if (eq(tags, otherSong.tags) == false) {
       listModified.add('tags');
     }
     if (notes != otherSong.notes) {

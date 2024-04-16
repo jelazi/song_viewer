@@ -14,6 +14,13 @@ class _Init extends HomePageEvent {
   List<Object> get props => [];
 }
 
+class UpdateSongData extends HomePageEvent {
+  const UpdateSongData();
+
+  @override
+  List<Object> get props => [];
+}
+
 class FilterSong extends HomePageEvent {
   final String filter;
 

@@ -12,6 +12,9 @@ class WebState extends Equatable {
     'superMusic'.tr(),
     'velkyZpevnik'.tr(),
   ];
+  final int searchType;
+  final listSelectTypeSearch = ['song'.tr(), 'interpret'.tr()];
+
   WebState({
     this.currentSong,
     required this.songs,
@@ -19,10 +22,11 @@ class WebState extends Equatable {
     required this.interprets,
     this.currentInterpret,
     required this.searchWeb,
+    required this.searchType,
   });
 
   @override
-  List<Object> get props => [currentSong ?? '', songs, filteredSongs, currentInterpret ?? '', interprets, searchWeb];
+  List<Object> get props => [currentSong ?? '', songs, filteredSongs, currentInterpret ?? '', interprets, searchWeb, searchType];
 
   WebState copyWith({
     WebSong? currentSong,
@@ -31,6 +35,7 @@ class WebState extends Equatable {
     List<WebInterpret>? interprets,
     WebInterpret? currentInterpret,
     int? searchWeb,
+    int? searchType,
   }) {
     return WebState(
       currentSong: currentSong,
@@ -39,6 +44,7 @@ class WebState extends Equatable {
       interprets: interprets ?? this.interprets,
       currentInterpret: currentInterpret,
       searchWeb: searchWeb ?? this.searchWeb,
+      searchType: searchType ?? this.searchType,
     );
   }
 }
@@ -51,5 +57,6 @@ class WebInitial extends WebState {
     required super.currentInterpret,
     required super.interprets,
     required super.searchWeb,
+    required super.searchType,
   });
 }

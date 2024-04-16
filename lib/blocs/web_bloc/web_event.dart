@@ -34,3 +34,8 @@ class ChangeSearchWeb extends WebEvent {
   final int searchWeb;
   const ChangeSearchWeb({required this.searchWeb});
 }
+
+class ChangeSearchType extends WebEvent {
+  final int searchType;
+  const ChangeSearchType({required this.searchType});
+}

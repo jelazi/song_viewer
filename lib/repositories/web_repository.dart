@@ -61,14 +61,16 @@ class WebRepository {
       for (Element element in listSong) {
         String interpret = element.text;
         String ref = element.attributes['href'] ?? '';
+        //id find ref idpiesne to end of string
+        String id = ref.substring(ref.indexOf('idpiesne=') + 9, ref.length);
         if (ref.contains('action=piesen')) {
-          listWebSong.add(WebSong(title: '??', ref: ref, interpret: interpret));
+          listWebSong.add(WebSong(title: id, ref: ref, interpret: interpret));
         }
       }
       return listWebSong;
     } catch (e) {
-      logger.d('$e');
-      return [];
+      logger.e('$e');
+      return <WebSong>[];
     }
   }
 
@@ -260,7 +262,11 @@ class WebRepository {
                   lyric = '$lyric$chord';
                   index = lyric.length + 1;
                 } else {
-                  lyric = '${lyric.substring(0, index)}$chord${lyric.substring(index, lyric.length)}';
+                  int indexChord = (index * 1.39).round();
+                  if (indexChord > lyric.length - 1) {
+                    indexChord = lyric.length - 1;
+                  }
+                  lyric = '${lyric.substring(0, indexChord)}$chord${lyric.substring(indexChord, lyric.length)}';
                   index += chord.length;
                 }
               }

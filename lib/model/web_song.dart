@@ -5,6 +5,7 @@ class WebSong {
   String title;
   String ref;
   String interpret;
+  String id = '';
   List<dom.Node> nodes = [];
   String unformatText = '';
   String lyric = '';

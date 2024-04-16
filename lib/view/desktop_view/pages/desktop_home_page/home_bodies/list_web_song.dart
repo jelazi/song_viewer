@@ -1,4 +1,3 @@
-import 'package:default_project/model/song/song.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:toggle_switch/toggle_switch.dart';
@@ -21,6 +20,8 @@ class _ListWebSongState extends State<ListWebSong> {
     'velkyZpevnik',
   ];
 
+  final listSelectTypeSearch = ['song', 'interpret'];
+
   final TextEditingController _filter = TextEditingController();
   @override
   Widget build(BuildContext context) {
@@ -40,13 +41,31 @@ class _ListWebSongState extends State<ListWebSong> {
                   minWidth: 120.0,
                   initialLabelIndex: state.searchWeb,
                   cornerRadius: 10.0,
-                  activeBgColor: [AppColor.primaryColor],
+                  activeBgColor: const [AppColor.primaryColor],
                   activeFgColor: Colors.white,
                   inactiveBgColor: Colors.grey,
                   inactiveFgColor: Colors.white,
-                  labels: listSearchWeb,
+                  labels: state.listSearchWeb,
                   onToggle: (index) {
                     context.read<WebBloc>().add(ChangeSearchWeb(searchWeb: index ?? 0));
+                  },
+                ),
+              ),
+              // search type
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ToggleSwitch(
+                  fontSize: 11.0,
+                  minWidth: 120.0,
+                  initialLabelIndex: state.searchType,
+                  cornerRadius: 10.0,
+                  activeBgColor: const [AppColor.primaryColor],
+                  activeFgColor: Colors.white,
+                  inactiveBgColor: Colors.grey,
+                  inactiveFgColor: Colors.white,
+                  labels: state.listSelectTypeSearch,
+                  onToggle: (index) {
+                    context.read<WebBloc>().add(ChangeSearchType(searchType: index ?? 0));
                   },
                 ),
               ),
@@ -58,7 +77,7 @@ class _ListWebSongState extends State<ListWebSong> {
                   style: const TextStyle(fontSize: 12),
                   decoration: InputDecoration(
                     border: const OutlineInputBorder(),
-                    labelText: 'filterSong'.tr(),
+                    labelText: state.searchType == 0 ? 'filterSong'.tr() : 'filterInterpret'.tr(),
                   ),
                   onChanged: (value) {},
                 ),

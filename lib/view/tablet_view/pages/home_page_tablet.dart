@@ -56,69 +56,74 @@ class _HomePageTabletState extends State<HomePageTablet> {
       builder: (context, state) {
         return Scaffold(
           drawer: const HomeDrawer(),
-          body: CustomScrollView(slivers: [
-            SliverLayoutBuilder(builder: ((context, constraints) {
-              return SliverAppBar(
-                floating: true,
-                pinned: true,
-                snap: false,
-                centerTitle: false,
-                title: Align(alignment: Alignment.centerRight, child: Text('songsViewer'.tr())),
-                bottom: PreferredSize(
-                  preferredSize: const Size.fromHeight(50),
-                  child: Column(
-                    children: [
-                      Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 10),
-                        width: MediaQuery.of(context).size.width - 20,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: AppColor.primaryColor),
-                        ),
-                        child: Center(
-                          child: TextField(
-                            controller: _filter,
-                            decoration: InputDecoration(
-                              hintText: 'filterSong'.tr(),
-                              prefixIcon: const Icon(Icons.search),
-                              suffixIcon: IconButton(
-                                onPressed: (() {
-                                  _filter.clear();
-                                  context.read<HomePageBloc>().add(const FilterSong(filter: ''));
-                                }),
-                                icon: const Icon(Icons.clear),
+          body: RefreshIndicator(
+            onRefresh: () async {
+              // context.read<HomePageBloc>().add(const LoadSongs());
+            },
+            child: CustomScrollView(slivers: [
+              SliverLayoutBuilder(builder: ((context, constraints) {
+                return SliverAppBar(
+                  floating: true,
+                  pinned: true,
+                  snap: false,
+                  centerTitle: false,
+                  title: Align(alignment: Alignment.centerRight, child: Text('songsViewer'.tr())),
+                  bottom: PreferredSize(
+                    preferredSize: const Size.fromHeight(50),
+                    child: Column(
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 10),
+                          width: MediaQuery.of(context).size.width - 20,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(color: AppColor.primaryColor),
+                          ),
+                          child: Center(
+                            child: TextField(
+                              controller: _filter,
+                              decoration: InputDecoration(
+                                hintText: 'filterSong'.tr(),
+                                prefixIcon: const Icon(Icons.search),
+                                suffixIcon: IconButton(
+                                  onPressed: (() {
+                                    _filter.clear();
+                                    context.read<HomePageBloc>().add(const FilterSong(filter: ''));
+                                  }),
+                                  icon: const Icon(Icons.clear),
+                                ),
                               ),
+                              onChanged: (value) {
+                                context.read<HomePageBloc>().add(FilterSong(filter: value));
+                              },
                             ),
-                            onChanged: (value) {
-                              context.read<HomePageBloc>().add(FilterSong(filter: value));
-                            },
                           ),
                         ),
-                      ),
-                      const SizedBox(
-                        height: 10,
-                      )
-                    ],
+                        const SizedBox(
+                          height: 10,
+                        )
+                      ],
+                    ),
                   ),
+                );
+              })),
+              SliverList(
+                delegate: SliverChildListDelegate(
+                  state.listSong
+                      .map((song) => SongCard(
+                            song: song,
+                            index: state.listSong.indexOf(song),
+                            isSelectedSong: state.selectedSongId == song.id,
+                            isEditIconVisible: state.isEditIconVisible,
+                            isExpanded: state.listExpandedSongs.contains(song.id),
+                          ))
+                      .toList(),
                 ),
-              );
-            })),
-            SliverList(
-              delegate: SliverChildListDelegate(
-                state.listSong
-                    .map((song) => SongCard(
-                          song: song,
-                          index: state.listSong.indexOf(song),
-                          isSelectedSong: state.selectedSongId == song.id,
-                          isEditIconVisible: state.isEditIconVisible,
-                          isExpanded: state.listExpandedSongs.contains(song.id),
-                        ))
-                    .toList(),
-              ),
-            )
-          ]),
+              )
+            ]),
+          ),
         );
       },
     );

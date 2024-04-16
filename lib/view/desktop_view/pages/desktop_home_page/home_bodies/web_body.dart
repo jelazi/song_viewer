@@ -1,7 +1,9 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../../../../../blocs/export_blocs.dart';
-import 'list_song copy.dart';
+import 'list_web_song.dart';
 
 class WebBody extends StatefulWidget {
   const WebBody({super.key});
@@ -20,7 +22,18 @@ class _WebBodyState extends State<WebBody> {
             const ListWebSong(),
             Expanded(
                 child: Column(
-              children: [Text(state.currentSong?.title ?? ''), Text(state.currentInterpret?.name ?? ''), Text(state.currentSong?.unformatText ?? '')],
+              children: [
+                Text(state.currentSong?.title ?? ''),
+                Text(state.currentInterpret?.name ?? ''),
+                Expanded(
+                  child: Row(
+                    children: [
+                      SingleChildScrollView(child: Text(state.currentSong?.lyric ?? '')),
+                      SingleChildScrollView(child: Text(state.currentSong?.unformatText ?? '')),
+                    ],
+                  ),
+                ),
+              ],
             )),
           ],
         );

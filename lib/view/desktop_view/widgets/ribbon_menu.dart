@@ -493,7 +493,7 @@ class HomeTabbar extends StatelessWidget {
                                   isSelected: state.bodyEditName == 'settings'),
                             ],
                           )
-                        : Row(
+                        : const Row(
                             children: [],
                           )
                 : Row(

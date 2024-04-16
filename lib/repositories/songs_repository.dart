@@ -1,7 +1,6 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:async';
 
-
 import '../model/song/song.dart';
 import '../providers/firebase_provider.dart';
 import '../providers/hive_provider.dart';
@@ -54,6 +53,23 @@ class SongsRepository {
         _songs.add(song);
       } else {
         //TODO: update song from firebase;
+      }
+    }
+  }
+
+  Future<void> updateSongsFromFirebase() async {
+    final newSongs = await _firebaseProvider.getListSongsFromFirestore();
+    for (Song song in newSongs) {
+      if (_songs.firstWhereOrNull((val) => val.id == song.id) == null) {
+        _songs.add(song);
+      } else {
+        Song oldSong = _songs.firstWhere((val) => val.id == song.id);
+        final listChanged = song.checkModifiedSong(oldSong, false);
+        if (listChanged.isNotEmpty) {
+          int index = _songs.indexWhere((element) => element.id == song.id);
+          _songs.removeWhere((element) => element.id == song.id);
+          _songs.insert(index, song);
+        }
       }
     }
   }
