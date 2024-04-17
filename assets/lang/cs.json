@@ -226,5 +226,10 @@
     "editIconVisibility": "Zobrazení ikony editace",
     "autoHideTopBar": "Automatické skrytí horního panelu",
     "version": "Verze",
+    "pleaseSelectPathToSaveFile": "Vyber cestu pro uložení souboru",
+    "exportSong": "Export písně",
+    "exportAllSongs": "Export písní",
+    "web": "Web",
+    "manageGroups": "Skupiny",
     "test": "Test"
 }

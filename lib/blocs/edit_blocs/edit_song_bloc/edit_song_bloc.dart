@@ -53,6 +53,7 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
     on<CreateNewSong>(_createNewSong);
     on<ChangeGroupForCurrentSong>(_changeGroupForCurrentSong);
     on<DeleteCurrentSong>(_deleteCurrentSong);
+
     add(const _Init());
   }
 

@@ -3,6 +3,7 @@ import 'package:default_project/view/desktop_view/widgets/ribbon_menu.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../blocs/export_blocs.dart';
+import 'home_bodies/groups_body.dart';
 import 'home_bodies/preview_body.dart';
 import 'home_bodies/web_body.dart';
 
@@ -29,6 +30,9 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
               break;
             case 'web':
               homeBody = const WebBody();
+              break;
+            case 'groups':
+              homeBody = const GroupsBody();
               break;
             default:
               return const PreviewBody();

@@ -1,6 +1,8 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:async';
 
+import 'package:logger_pkg/logger_pkg.dart';
+
 import '../model/song/song.dart';
 import '../providers/firebase_provider.dart';
 import '../providers/hive_provider.dart';
@@ -161,5 +163,35 @@ class SongsRepository {
 
   String getListSongToJson() {
     return _songs.map((e) => e.toJson()).toList().toString();
+  }
+
+  Future<void> createGroup(String group) async {
+    final result = await _firebaseProvider.createNewGroup(group);
+    if (result) {
+      listAllGroups = [];
+      listAllGroups = await _firebaseProvider.getListSongGroupFromFirestore();
+    } else {
+      logger.e('Error create group');
+    }
+  }
+
+  Future<void> deleteGroup(String group) async {
+    final result = await _firebaseProvider.deleteGroup(group);
+    if (result) {
+      listAllGroups = [];
+      listAllGroups = await _firebaseProvider.getListSongGroupFromFirestore();
+    } else {
+      logger.e('Error delete group');
+    }
+  }
+
+  Future<void> updateGroup(String oldGroup, String newGroup) async {
+    final result = await _firebaseProvider.updateGroup(oldGroup, newGroup);
+    if (result) {
+      listAllGroups = [];
+      listAllGroups = await _firebaseProvider.getListSongGroupFromFirestore();
+    } else {
+      logger.e('Error update group');
+    }
   }
 }

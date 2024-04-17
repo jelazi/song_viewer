@@ -28,6 +28,7 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
           listSong: [],
           listExpandedSongs: [],
           typeUser: TypeUser.none,
+          listAllGroups: [],
         )) {
     on<_Init>(_init);
     on<UpdateSongData>(_updateSongData);
@@ -38,6 +39,9 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
     on<ChangeExpandedCard>(_changeExpandedCard);
     on<UpdateSong>(_updateSong);
     on<LoginUser>(_loginUser);
+    on<CreateGroup>(_createGroup);
+    on<DeleteGroup>(_deleteGroup);
+    on<ChangeGroup>(_changeGroup);
     songsRepository.selectSongData.listen((event) {
       add(ChangeSelectedSong(selectedSongId: event));
     });
@@ -55,6 +59,7 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
     emit(state.copyWith(
       isEditIconVisible: settingsRepository.isEditIconVisible,
       listSong: List<Song>.from(songsRepository.songs),
+      listAllGroups: songsRepository.listAllGroups,
       selectedSongId: songsRepository.selectedSongId,
       listExpandedSongs: [],
       typeUser: usersRepository.currentTypeUser,
@@ -110,5 +115,23 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
   void _loginUser(LoginUser event, Emitter<HomePageState> emit) {
     final state = this.state;
     emit(state.copyWith(typeUser: event.typeUser));
+  }
+
+  void _createGroup(CreateGroup event, Emitter<HomePageState> emit) async {
+    final state = this.state;
+    await songsRepository.createGroup(event.group);
+    emit(state.copyWith(listAllGroups: List<String>.from(songsRepository.listAllGroups)));
+  }
+
+  void _deleteGroup(DeleteGroup event, Emitter<HomePageState> emit) async {
+    final state = this.state;
+    await songsRepository.deleteGroup(event.group);
+    emit(state.copyWith(listAllGroups: List<String>.from(songsRepository.listAllGroups)));
+  }
+
+  void _changeGroup(ChangeGroup event, Emitter<HomePageState> emit) async {
+    final state = this.state;
+    await songsRepository.updateGroup(event.group, event.newGroup);
+    emit(state.copyWith(listAllGroups: List<String>.from(songsRepository.listAllGroups)));
   }
 }

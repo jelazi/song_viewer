@@ -91,3 +91,28 @@ class LoginUser extends HomePageEvent {
   @override
   List<Object> get props => [typeUser];
 }
+
+class CreateGroup extends HomePageEvent {
+  final String group;
+  const CreateGroup({required this.group});
+
+  @override
+  List<Object> get props => [group];
+}
+
+class DeleteGroup extends HomePageEvent {
+  final String group;
+  const DeleteGroup({required this.group});
+
+  @override
+  List<Object> get props => [group];
+}
+
+class ChangeGroup extends HomePageEvent {
+  final String group;
+  final String newGroup;
+  const ChangeGroup({required this.group, required this.newGroup});
+
+  @override
+  List<Object> get props => [group, newGroup];
+}

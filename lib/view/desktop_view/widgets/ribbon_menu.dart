@@ -1,8 +1,10 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:default_project/services/constants.dart';
 import 'package:default_project/view/mobile_view/widgets/dialogs/dialogs_export.dart';
 import 'package:default_project/view/mobile_view/widgets/dialogs/question_dialog.dart';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -20,8 +22,9 @@ class RibbonMenu extends StatefulWidget {
   State<RibbonMenu> createState() => _RibbonMenuState();
 }
 
-class _RibbonMenuState extends State<RibbonMenu> with SingleTickerProviderStateMixin {
+class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
   late TabController _tabController;
+
   @override
   void initState() {
     super.initState();
@@ -31,6 +34,7 @@ class _RibbonMenuState extends State<RibbonMenu> with SingleTickerProviderStateM
   @override
   void dispose() {
     _tabController.dispose();
+
     super.dispose();
   }
 
@@ -38,6 +42,18 @@ class _RibbonMenuState extends State<RibbonMenu> with SingleTickerProviderStateM
   Widget build(BuildContext context) {
     return BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
       builder: (context, state) {
+        if (state.bodyName == 'edit') {
+          _tabController = TabController(length: 2, vsync: this);
+        } else if (state.bodyName == 'preview') {
+          _tabController = TabController(length: 2, vsync: this);
+        } else if (state.bodyName == 'web') {
+          _tabController = TabController(length: 1, vsync: this);
+        } else if (state.bodyName == 'groups') {
+          _tabController = TabController(length: 2, vsync: this);
+          _tabController.index = 1;
+        } else {
+          _tabController = TabController(length: 1, vsync: this);
+        }
         return Container(
           height: 92,
           width: MediaQuery.of(context).size.width,
@@ -59,7 +75,6 @@ class _RibbonMenuState extends State<RibbonMenu> with SingleTickerProviderStateM
                               controller: _tabController,
                               tabs: [
                                 Tab(text: 'home'.tr()),
-                                Tab(text: 'preview'.tr()),
                                 Tab(text: 'settings'.tr()),
                               ],
                             )
@@ -70,20 +85,36 @@ class _RibbonMenuState extends State<RibbonMenu> with SingleTickerProviderStateM
                                   controller: _tabController,
                                   tabs: [
                                     Tab(text: 'home'.tr()),
-                                    Tab(text: 'edit'.tr()),
                                     Tab(text: 'settings'.tr()),
                                   ],
                                 )
-                              : TabBar(
-                                  isScrollable: true,
-                                  tabAlignment: TabAlignment.start,
-                                  controller: _tabController,
-                                  tabs: [
-                                    Tab(text: 'home'.tr()),
-                                    Tab(text: 'edit'.tr()),
-                                    Tab(text: 'settings'.tr()),
-                                  ],
-                                ),
+                              : state.bodyName == 'web'
+                                  ? TabBar(
+                                      isScrollable: true,
+                                      tabAlignment: TabAlignment.start,
+                                      controller: _tabController,
+                                      tabs: [
+                                        Tab(text: 'home'.tr()),
+                                      ],
+                                    )
+                                  : state.bodyName == 'groups'
+                                      ? TabBar(
+                                          isScrollable: true,
+                                          tabAlignment: TabAlignment.start,
+                                          controller: _tabController,
+                                          tabs: [
+                                            Tab(text: 'home'.tr()),
+                                            Tab(text: 'settings'.tr()),
+                                          ],
+                                        )
+                                      : TabBar(
+                                          isScrollable: true,
+                                          tabAlignment: TabAlignment.start,
+                                          controller: _tabController,
+                                          tabs: [
+                                            Tab(text: 'home'.tr()),
+                                          ],
+                                        ),
                     ),
                     SizedBox(
                       height: 60,
@@ -92,7 +123,6 @@ class _RibbonMenuState extends State<RibbonMenu> with SingleTickerProviderStateM
                               controller: _tabController,
                               children: const [
                                 HomeTabbar(),
-                                PreviewTabbar(),
                                 SettingsTabbar(),
                               ],
                             )
@@ -101,18 +131,30 @@ class _RibbonMenuState extends State<RibbonMenu> with SingleTickerProviderStateM
                                   controller: _tabController,
                                   children: const [
                                     HomeTabbar(),
-                                    EditTabbar(),
                                     SettingsTabbar(),
                                   ],
                                 )
-                              : TabBarView(
-                                  controller: _tabController,
-                                  children: const [
-                                    HomeTabbar(),
-                                    EditTabbar(),
-                                    SettingsTabbar(),
-                                  ],
-                                ),
+                              : state.bodyName == 'groups'
+                                  ? TabBarView(
+                                      controller: _tabController,
+                                      children: const [
+                                        HomeTabbar(),
+                                        SettingsTabbar(),
+                                      ],
+                                    )
+                                  : state.bodyName == 'web'
+                                      ? TabBarView(
+                                          controller: _tabController,
+                                          children: const [
+                                            HomeTabbar(),
+                                          ],
+                                        )
+                                      : TabBarView(
+                                          controller: _tabController,
+                                          children: const [
+                                            HomeTabbar(),
+                                          ],
+                                        ),
                     ),
                   ],
                 ),
@@ -234,7 +276,7 @@ class SettingsTabbar extends StatelessWidget {
         child: Row(
           children: [
             RibbonButton(
-                text: 'exportSong'.tr(),
+                text: 'exportAllSongs'.tr(),
                 icon: const Icon(
                   Icons.exit_to_app,
                   color: Colors.black,
@@ -243,7 +285,7 @@ class SettingsTabbar extends StatelessWidget {
                 onPressed: () async {
                   final listSong = context.read<HomePageBloc>().songsRepository.getListSongToJson();
                   String? outputFile = await FilePicker.platform.saveFile(
-                    dialogTitle: 'Please select an output file:',
+                    dialogTitle: 'pleaseSelectPathToSaveFile'.tr(),
                     fileName: 'list_songs.json',
                   );
                   if (outputFile == null) {
@@ -251,7 +293,25 @@ class SettingsTabbar extends StatelessWidget {
                   }
                   File returnedFile = File(outputFile);
                   await returnedFile.writeAsString(listSong);
-                })
+                }),
+            BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
+              builder: (context, state) {
+                return RibbonButton(
+                    text: 'manageGroups'.tr(),
+                    icon: const Icon(
+                      Icons.group,
+                      color: Colors.black,
+                    ),
+                    isEnabled: true,
+                    onPressed: () {
+                      if (state.bodyName == 'groups') {
+                        context.read<DesktopRibbonMenuBloc>().add(const ChangeHomeBody(bodyName: 'preview'));
+                      } else {
+                        context.read<DesktopRibbonMenuBloc>().add(const ChangeHomeBody(bodyName: 'groups'));
+                      }
+                    });
+              },
+            ),
           ],
         ));
   }

@@ -88,6 +88,69 @@ class FirebaseProvider {
     return listSongGroup;
   }
 
+  Future<bool> createNewGroup(String groupName) async {
+    try {
+      final snapshot = await groupCollection.doc('groups').get();
+      if (snapshot.exists) {
+        Map<String, dynamic>? map = snapshot.data();
+        List<dynamic> groups = map?['groups'];
+        if (groups.contains(groupName)) {
+          return false;
+        }
+        groups.add(groupName);
+        await groupCollection.doc('groups').update({'groups': groups});
+      } else {
+        await groupCollection.doc('groups').set({
+          'groups': [groupName]
+        });
+      }
+
+      return true;
+    } catch (e) {
+      logger.e('$e');
+      return false;
+    }
+  }
+
+  Future<bool> deleteGroup(String groupName) async {
+    try {
+      final snapshot = await groupCollection.doc('groups').get();
+      if (snapshot.exists) {
+        Map<String, dynamic>? map = snapshot.data();
+        List<dynamic> groups = map?['groups'];
+        if (groups.contains(groupName)) {
+          groups.remove(groupName);
+          await groupCollection.doc('groups').update({'groups': groups});
+          return true;
+        }
+      }
+      return false;
+    } catch (e) {
+      logger.e('$e');
+      return false;
+    }
+  }
+
+  Future<bool> updateGroup(String oldGroupName, String newGroupName) async {
+    try {
+      final snapshot = await groupCollection.doc('groups').get();
+      if (snapshot.exists) {
+        Map<String, dynamic>? map = snapshot.data();
+        List<dynamic> groups = map?['groups'];
+        if (groups.contains(oldGroupName)) {
+          groups.remove(oldGroupName);
+          groups.add(newGroupName);
+          await groupCollection.doc('groups').update({'groups': groups});
+          return true;
+        }
+      }
+      return false;
+    } catch (e) {
+      logger.e('$e');
+      return false;
+    }
+  }
+
   Future<void> deleteUser(User user) async {
     try {
       final snapshot = await userCollection.doc(user.name).get();
