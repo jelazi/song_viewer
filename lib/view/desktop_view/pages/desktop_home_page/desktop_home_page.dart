@@ -1,10 +1,11 @@
-import 'package:default_project/view/desktop_view/pages/desktop_home_page/home_bodies/edit_parts_body/edit_body.dart';
-import 'package:default_project/view/desktop_view/widgets/ribbon_menu.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../blocs/export_blocs.dart';
+import '../../widgets/ribbon_menu.dart';
+import 'home_bodies/edit_parts_body/edit_body.dart';
 import 'home_bodies/groups_body.dart';
 import 'home_bodies/preview_body.dart';
+import 'home_bodies/users_body.dart';
 import 'home_bodies/web_body.dart';
 
 class DesktopHomePage extends StatefulWidget {
@@ -33,6 +34,9 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
               break;
             case 'groups':
               homeBody = const GroupsBody();
+              break;
+            case 'users':
+              homeBody = const UsersBody();
               break;
             default:
               return const PreviewBody();

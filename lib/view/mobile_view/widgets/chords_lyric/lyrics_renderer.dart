@@ -185,7 +185,6 @@ class _LyricsRendererState extends State<LyricsRenderer> {
                     controller: _scrollControllerHorizontal,
                     child: GestureDetector(
                       onLongPress: () {
-                        logger.d('long press - ${widget.startIndex + index}');
                         //TODO:
                         /*    if (Get.find<UserController>().currentUser.value?.typeUser != TypeUser.superuser || !settingsController.editNotes.value) {
                           return;

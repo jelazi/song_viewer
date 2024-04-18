@@ -24,9 +24,6 @@ class WebRepository {
 
     var lyrics = (document.getElementsByClassName('lyrics')).map((e) => e.innerHtml).toList();
 
-    //  logger.i(document.body?.text);
-    logger.d(lyrics);
-
     return lyrics.toString();
   }
 

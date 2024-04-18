@@ -94,7 +94,6 @@ class ChordProcessorPDF {
     if (chord.isEmpty || increment == 0) return chord;
     if (chord == 'Bmi/G#') {
       //FIXME: prroblem with transponse chord
-      logger.d('chord');
     }
     var cycle = [];
     if (typeTranspose == TypeTranspose.german) {

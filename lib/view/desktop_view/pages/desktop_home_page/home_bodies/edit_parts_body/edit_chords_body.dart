@@ -105,7 +105,6 @@ class _EditChordsBodyState extends State<EditChordsBody> {
   }
 
   List<TextSpan> _getCLickableText(String text, TextStyle chordStyle, TextStyle textStyle) {
-    logger.d(text);
     List<TextSpan> list = [];
     List<WidgetSpan> line = [];
     String chord = '';

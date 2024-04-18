@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:default_project/services/constants.dart';
@@ -50,10 +49,12 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
           _tabController = TabController(length: 1, vsync: this);
         } else if (state.bodyName == 'groups') {
           _tabController = TabController(length: 2, vsync: this);
-          _tabController.index = 1;
+        } else if (state.bodyName == 'users') {
+          _tabController = TabController(length: 2, vsync: this);
         } else {
           _tabController = TabController(length: 1, vsync: this);
         }
+
         return Container(
           height: 92,
           width: MediaQuery.of(context).size.width,
@@ -107,14 +108,24 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
                                             Tab(text: 'settings'.tr()),
                                           ],
                                         )
-                                      : TabBar(
-                                          isScrollable: true,
-                                          tabAlignment: TabAlignment.start,
-                                          controller: _tabController,
-                                          tabs: [
-                                            Tab(text: 'home'.tr()),
-                                          ],
-                                        ),
+                                      : state.bodyName == 'users'
+                                          ? TabBar(
+                                              isScrollable: true,
+                                              tabAlignment: TabAlignment.start,
+                                              controller: _tabController,
+                                              tabs: [
+                                                Tab(text: 'home'.tr()),
+                                                Tab(text: 'settings'.tr()),
+                                              ],
+                                            )
+                                          : TabBar(
+                                              isScrollable: true,
+                                              tabAlignment: TabAlignment.start,
+                                              controller: _tabController,
+                                              tabs: [
+                                                Tab(text: 'home'.tr()),
+                                              ],
+                                            ),
                     ),
                     SizedBox(
                       height: 60,
@@ -149,100 +160,67 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
                                             HomeTabbar(),
                                           ],
                                         )
-                                      : TabBarView(
-                                          controller: _tabController,
-                                          children: const [
-                                            HomeTabbar(),
-                                          ],
-                                        ),
+                                      : state.bodyName == 'users'
+                                          ? TabBarView(
+                                              controller: _tabController,
+                                              children: [
+                                                Container(),
+                                                Container(),
+                                              ],
+                                            )
+                                          : TabBarView(
+                                              controller: _tabController,
+                                              children: const [
+                                                HomeTabbar(),
+                                              ],
+                                            ),
                     ),
                   ],
                 ),
               ),
-              BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
-                builder: (context, state) {
-                  return GestureDetector(
-                    onTap: () {
-                      context.read<DesktopRibbonMenuBloc>().add(const ChangeHomeBody(bodyName: 'preview'));
-                    },
-                    child: BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
-                      builder: (context, state) {
-                        return Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: state.bodyName == 'preview' ? AppColor.primaryLightestColor : null,
-                              border: const Border(
-                                  left: BorderSide(
-                                    color: AppColor.grey3Color,
-                                  ),
-                                  bottom: BorderSide(
-                                    color: AppColor.grey3Color,
-                                  )),
-                            ),
-                            child: Text('preview'.tr()));
-                      },
-                    ),
-                  );
-                },
-              ),
-              BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
-                builder: (context, state) {
-                  return GestureDetector(
-                    onTap: () {
-                      context.read<DesktopRibbonMenuBloc>().add(const ChangeHomeBody(bodyName: 'edit'));
-                    },
-                    child: BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
-                      builder: (context, state) {
-                        return Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: state.bodyName == 'edit' ? AppColor.primaryLightestColor : null,
-                              border: const Border(
-                                  left: BorderSide(
-                                    color: AppColor.grey3Color,
-                                  ),
-                                  bottom: BorderSide(
-                                    color: AppColor.grey3Color,
-                                  )),
-                            ),
-                            child: Text('edit'.tr()));
-                      },
-                    ),
-                  );
-                },
-              ),
-              BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
-                builder: (context, state) {
-                  return GestureDetector(
-                    onTap: () {
-                      context.read<DesktopRibbonMenuBloc>().add(const ChangeHomeBody(bodyName: 'web'));
-                    },
-                    child: BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
-                      builder: (context, state) {
-                        return Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: state.bodyName == 'web' ? AppColor.primaryLightestColor : null,
-                              border: const Border(
-                                  left: BorderSide(
-                                    color: AppColor.grey3Color,
-                                  ),
-                                  bottom: BorderSide(
-                                    color: AppColor.grey3Color,
-                                  )),
-                            ),
-                            child: Text('web'.tr()));
-                      },
-                    ),
-                  );
-                },
-              ),
+              _getTopButton('preview', Icons.preview),
+              _getTopButton('edit', Icons.edit),
+              _getTopButton('web', Icons.web),
+              _getTopButton('groups', Icons.folder_shared),
+              _getTopButton('users', Icons.people),
             ],
           ),
         );
       },
     );
   }
+}
+
+Widget _getTopButton(String name, IconData icon) {
+  return BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
+    builder: (context, state) {
+      return GestureDetector(
+        onTap: () {
+          context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: name));
+        },
+        child: BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
+          builder: (context, state) {
+            return Container(
+                padding: const EdgeInsets.only(top: 2, left: 8, right: 8, bottom: 2),
+                decoration: BoxDecoration(
+                  color: state.bodyName == name ? AppColor.primaryColor : null,
+                  border: const Border(
+                      left: BorderSide(
+                        color: AppColor.grey3Color,
+                      ),
+                      bottom: BorderSide(
+                        color: AppColor.grey3Color,
+                      )),
+                ),
+                child: Icon(
+                  icon,
+                  color: state.bodyName == name ? AppColor.whiteColor : AppColor.primaryColor,
+                ));
+          },
+        ),
+      );
+    },
+  );
 }
 
 class EditTabbar extends StatelessWidget {
@@ -294,24 +272,6 @@ class SettingsTabbar extends StatelessWidget {
                   File returnedFile = File(outputFile);
                   await returnedFile.writeAsString(listSong);
                 }),
-            BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
-              builder: (context, state) {
-                return RibbonButton(
-                    text: 'manageGroups'.tr(),
-                    icon: const Icon(
-                      Icons.group,
-                      color: Colors.black,
-                    ),
-                    isEnabled: true,
-                    onPressed: () {
-                      if (state.bodyName == 'groups') {
-                        context.read<DesktopRibbonMenuBloc>().add(const ChangeHomeBody(bodyName: 'preview'));
-                      } else {
-                        context.read<DesktopRibbonMenuBloc>().add(const ChangeHomeBody(bodyName: 'groups'));
-                      }
-                    });
-              },
-            ),
           ],
         ));
   }

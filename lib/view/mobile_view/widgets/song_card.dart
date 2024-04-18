@@ -56,7 +56,6 @@ class _SongCardState extends State<SongCard> with TickerProviderStateMixin {
             context.read<HomePageBloc>().add(ChangeExpandedCard(songId: widget.song.id));
             break;
           case TypeClickCard.preview:
-            logger.d('openChords');
             context.read<PreviewChordBloc>().add(ChangeCurrentSong(song: widget.song));
             Navigator.pushNamed(context, '/previewPage');
             break;
@@ -126,7 +125,6 @@ class _SongCardState extends State<SongCard> with TickerProviderStateMixin {
                                 color: AppColor.primaryDarkColor,
                               ),
                               onPressed: () {
-                                logger.d('openChords');
                                 context.read<PreviewChordBloc>().add(ChangeCurrentSong(song: widget.song));
                                 Navigator.pushNamed(context, '/previewPage');
                               }),
@@ -136,7 +134,6 @@ class _SongCardState extends State<SongCard> with TickerProviderStateMixin {
                                 color: AppColor.primaryDarkestColor,
                               ),
                               onPressed: () {
-                                logger.d('openPresentation');
                                 Navigator.pushNamed(context, '/presentationPage');
                               }),
                           Visibility(
@@ -147,8 +144,6 @@ class _SongCardState extends State<SongCard> with TickerProviderStateMixin {
                                   color: AppColor.primaryColor,
                                 ),
                                 onPressed: () {
-                                  logger.d('openSheets');
-
                                   Navigator.pushNamed(context, '/sheetViewPage');
                                 }),
                           ),
@@ -160,7 +155,6 @@ class _SongCardState extends State<SongCard> with TickerProviderStateMixin {
                                   color: AppColor.primaryLightColor,
                                 ),
                                 onPressed: () {
-                                  logger.d('openYoutube');
                                   Navigator.pushNamed(context, '/youtubeVideoPage');
                                 }),
                           ),

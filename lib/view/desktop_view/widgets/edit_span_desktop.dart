@@ -47,9 +47,7 @@ class _EditSpanDesktopState extends State<EditSpanDesktop> {
                     visible: state.listSelectedChords.contains(widget.index),
                     child: GestureDetector(
                       onSecondaryTap: () {
-                        if (widget.typeSongItem == TypeSongItem.chord) {
-                          logger.d('right click');
-                        }
+                        if (widget.typeSongItem == TypeSongItem.chord) {}
                       },
                       onTap: () {
                         if (widget.typeSongItem == TypeSongItem.chord) {
@@ -74,7 +72,6 @@ class _EditSpanDesktopState extends State<EditSpanDesktop> {
                   /// right click
                   onSecondaryTap: () {
                     if (widget.typeSongItem == TypeSongItem.chord) {
-                      logger.d('right click');
                       // create menu for right click on position mouse
                     }
                   },
@@ -94,9 +91,7 @@ class _EditSpanDesktopState extends State<EditSpanDesktop> {
                   visible: state.listSelectedChords.contains(widget.index),
                   child: GestureDetector(
                     onSecondaryTap: () {
-                      if (widget.typeSongItem == TypeSongItem.chord) {
-                        logger.d('right click');
-                      }
+                      if (widget.typeSongItem == TypeSongItem.chord) {}
                     },
                     onTap: () {
                       if (widget.typeSongItem == TypeSongItem.chord) {

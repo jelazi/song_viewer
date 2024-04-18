@@ -91,7 +91,6 @@ class ChordProcessor {
     if (chord.isEmpty || increment == 0) return chord;
     if (chord == 'Bmi/G#') {
       //FIXME: prroblem with transponse chord
-      logger.d('chord');
     }
     var cycle = [];
     if (typeTranspose == TypeTranspose.german) {
@@ -114,7 +113,6 @@ class ChordProcessor {
       String apend = newChord.substring(newChord.indexOf('/') + 1);
       final indApp = cycle.indexOf(apend);
       if (indApp == -1) {
-        logger.d(newChord);
         return newChord;
       }
       final newIndApp = (indApp + increment + cycle.length) % cycle.length;
