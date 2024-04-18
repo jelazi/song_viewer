@@ -53,14 +53,23 @@ class _HomeDrawerState extends State<HomeDrawer> {
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 14,
-                      ))
+                      )),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text('${context.read<HomePageBloc>().songsRepository.songs.length} ${'songs'.tr()}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        )),
+                  )
                 ],
               ),
             ),
-            BlocBuilder<HomePageBloc, HomePageState>(
+            BlocBuilder<UsersBloc, UsersState>(
               builder: (context, state) {
                 return Visibility(
-                  visible: state.typeUser == TypeUser.admin || state.typeUser == TypeUser.superuser,
+                  visible: state.currentUser?.typeUser == TypeUser.admin || state.currentUser?.typeUser == TypeUser.superuser,
                   child: ListTile(
                     title: Row(children: [
                       const Icon(Icons.add),

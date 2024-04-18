@@ -25,6 +25,10 @@ class HiveProvider {
     return transposeBox.get(songId) ?? 0;
   }
 
+  void setCurrentUser(User? user) {
+    settingsBox.put('currentUser', user);
+  }
+
   User? getCurrentUser() {
     return settingsBox.get('currentUser');
   }

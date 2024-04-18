@@ -15,12 +15,9 @@ class UsersRepository {
   TypeUser currentTypeUser = TypeUser.none;
 
   final userController = StreamController<TypeUser>.broadcast();
-  Stream<TypeUser> get selectSongData => userController.stream.asBroadcastStream();
+  Stream<TypeUser> get userStream => userController.stream.asBroadcastStream();
 
-  final _users = <User>[
-    User('test', 'test')..typeUser = TypeUser.admin,
-    User('josef', 'jk')..typeUser = TypeUser.viewer,
-  ];
+  List<User> users = <User>[];
 
   UsersRepository({
     required HiveProvider hiveProvider,
@@ -31,13 +28,63 @@ class UsersRepository {
 
   Future<void> loadUsersFromFirebase() async {
     try {
-      final users = await _firebaseProvider.userCollection.get();
-      for (var user in users.docs) {
+      final _users = await _firebaseProvider.userCollection.get();
+      users = <User>[];
+      for (var user in _users.docs) {
         final userObject = User.fromJson(user.data());
-        _users.add(userObject);
+        users.add(userObject);
       }
     } catch (e) {
-      print(e);
+      logger.e(e);
+    }
+  }
+
+  Future<void> logoutUser() async {
+    _hiveProvider.setCurrentUser(null);
+    currentTypeUser = TypeUser.none;
+    userController.sink.add(TypeUser.none);
+  }
+
+  Future<void> updateListUsersFromFirebase() async {
+    try {
+      final _users = await _firebaseProvider.userCollection.get();
+      users = <User>[];
+      for (var user in _users.docs) {
+        final userObject = User.fromJson(user.data());
+        users.add(userObject);
+      }
+    } catch (e) {
+      logger.e(e);
+    }
+  }
+
+  Future<bool> createUser(User newUser) async {
+    try {
+      await _firebaseProvider.userCollection.doc(newUser.name).set(newUser.toJson());
+      return true;
+    } catch (e) {
+      logger.e(e);
+      return false;
+    }
+  }
+
+  Future<bool> deleteUser(User user) async {
+    try {
+      await _firebaseProvider.userCollection.doc(user.name).delete();
+      return true;
+    } catch (e) {
+      logger.e(e);
+      return false;
+    }
+  }
+
+  Future<bool> updateUser(User newUser) async {
+    try {
+      await _firebaseProvider.userCollection.doc(newUser.name).update(newUser.toJson());
+      return true;
+    } catch (e) {
+      logger.e(e);
+      return false;
     }
   }
 
@@ -46,31 +93,35 @@ class UsersRepository {
     if (user == null) {
       return;
     }
-    if (checkUser(user.name, user.password, isFromHive: true)) {
+    if (checkUser(user.name, user.password, isFromHive: true) is User) {
       logger.d('User ${user.name} is logged in');
     } else {
       logger.d('User ${user.name} is not logged in');
     }
   }
 
-  bool checkUser(String username, String password, {bool isFromHive = false}) {
-    final user = _users.firstWhereOrNull((element) => element.name == username);
-    final userWithPassword = _users.firstWhereOrNull((element) => element.name == username && element.password == password);
+  dynamic checkUser(String username, String password, {bool isFromHive = false}) {
+    final user = users.firstWhereOrNull((element) => element.name == username);
+    final userWithPassword = users.firstWhereOrNull((element) => element.name == username && element.password == password);
 
     if (user == null) {
-      logger.d('User $username does not exist');
-      return false;
+      logger.w('User $username does not exist');
+      return 'userName';
     }
     if (userWithPassword == null) {
-      logger.d('User $username has wrong password');
-      return false;
+      logger.w('User $username has wrong password');
+      return 'usersPassword';
     }
-    logger.d('User $username has correct password');
     if (!isFromHive) {
       settingsRepository.setCurrentUser(user);
     }
     currentTypeUser = user.typeUser;
+    _hiveProvider.setCurrentUser(user);
     userController.sink.add(user.typeUser);
-    return true;
+    return user;
+  }
+
+  User? getCurrentUser() {
+    return _hiveProvider.getCurrentUser();
   }
 }

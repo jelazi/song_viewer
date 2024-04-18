@@ -158,10 +158,10 @@ class _SongCardState extends State<SongCard> with TickerProviderStateMixin {
                                   Navigator.pushNamed(context, '/youtubeVideoPage');
                                 }),
                           ),
-                          BlocBuilder<HomePageBloc, HomePageState>(
+                          BlocBuilder<UsersBloc, UsersState>(
                             builder: (context, state) {
                               return Visibility(
-                                visible: state.typeUser == TypeUser.admin || state.typeUser == TypeUser.superuser,
+                                visible: state.currentUser?.typeUser == TypeUser.admin || state.currentUser?.typeUser == TypeUser.superuser,
                                 child: IconButton(
                                     icon: Icon(
                                       MdiIcons.pencil,

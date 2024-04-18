@@ -44,6 +44,7 @@ Future<void> initProvidersRepositories() async {
     firebaseProvider: firebaseProvider,
     settingsRepository: settingsRepository,
   );
+  await usersRepository.loadUsersFromFirebase();
   webRepository = WebRepository(
     webProvider: webProvider,
   );

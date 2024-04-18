@@ -25,32 +25,32 @@ class User {
   String get nameTypeUser {
     switch (typeUser) {
       case TypeUser.none:
-        return 'typeUser.none'.tr();
+        return 'none'.tr();
       case TypeUser.viewer:
-        return 'typeUser.viewer'.tr();
+        return 'viewer'.tr();
       case TypeUser.editor:
-        return 'typeUser.editor'.tr();
+        return 'editor'.tr();
       case TypeUser.admin:
-        return 'typeUser.admin'.tr();
+        return 'admin'.tr();
       case TypeUser.superuser:
-        return 'typeUser.superuser'.tr();
+        return 'superuser'.tr();
     }
   }
 
-  TypeUser getTypeUserByName(String nameTypeUser) {
-    if (nameTypeUser == 'typeUser.none'.tr()) {
+  static TypeUser getTypeUserByName(String nameTypeUser) {
+    if (nameTypeUser == 'none'.tr()) {
       return TypeUser.none;
     }
-    if (nameTypeUser == 'typeUser.viewer'.tr()) {
+    if (nameTypeUser == 'viewer'.tr()) {
       return TypeUser.viewer;
     }
-    if (nameTypeUser == 'typeUser.editor'.tr()) {
+    if (nameTypeUser == 'editor'.tr()) {
       return TypeUser.editor;
     }
-    if (nameTypeUser == 'typeUser.admin'.tr()) {
+    if (nameTypeUser == 'admin'.tr()) {
       return TypeUser.admin;
     }
-    if (nameTypeUser == 'typeUser.superuser'.tr()) {
+    if (nameTypeUser == 'superuser'.tr()) {
       return TypeUser.superuser;
     }
 

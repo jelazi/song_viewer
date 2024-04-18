@@ -194,29 +194,35 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
 Widget _getTopButton(String name, IconData icon) {
   return BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
     builder: (context, state) {
-      return GestureDetector(
-        onTap: () {
-          context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: name));
-        },
-        child: BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
-          builder: (context, state) {
-            return Container(
-                padding: const EdgeInsets.only(top: 2, left: 8, right: 8, bottom: 2),
-                decoration: BoxDecoration(
-                  color: state.bodyName == name ? AppColor.primaryColor : null,
-                  border: const Border(
-                      left: BorderSide(
-                        color: AppColor.grey3Color,
-                      ),
-                      bottom: BorderSide(
-                        color: AppColor.grey3Color,
-                      )),
-                ),
-                child: Icon(
-                  icon,
-                  color: state.bodyName == name ? AppColor.whiteColor : AppColor.primaryColor,
-                ));
-          },
+      return Tooltip(
+        message: name.tr(),
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: () {
+              context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: name));
+            },
+            child: BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
+              builder: (context, state) {
+                return Container(
+                    padding: const EdgeInsets.only(top: 2, left: 8, right: 8, bottom: 2),
+                    decoration: BoxDecoration(
+                      color: state.bodyName == name ? AppColor.primaryColor : null,
+                      border: const Border(
+                          left: BorderSide(
+                            color: AppColor.grey3Color,
+                          ),
+                          bottom: BorderSide(
+                            color: AppColor.grey3Color,
+                          )),
+                    ),
+                    child: Icon(
+                      icon,
+                      color: state.bodyName == name ? AppColor.whiteColor : AppColor.primaryColor,
+                    ));
+              },
+            ),
+          ),
         ),
       );
     },

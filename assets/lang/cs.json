@@ -233,5 +233,16 @@
     "manageGroups": "Skupiny",
     "otherSettings": "Ostatní nastavení",
     "delete": "Vymazat",
+    "song": "Píseň",
+    "velkyZpevnik": "Velký zpěvník",
+    "superMusic": "Super music",
+    "search": "Hledat",
+    "editUser": "Editace uživatele",
+    "fieldEmpty": "Pole nesmí být prázdné",
+    "addUser": "Přidat uživatele",
+    "deleteUser": "Vymazat uživatele",
+    "deleteUserQuestion": "Chcete vymazat uživatele: ",
+    "users": "Uživatelé",
+    "inputNewChord": "Vlož nový akord",
     "test": "Test"
 }

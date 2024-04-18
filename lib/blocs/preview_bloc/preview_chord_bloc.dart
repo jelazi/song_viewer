@@ -28,7 +28,7 @@ class PreviewChordBloc extends Bloc<PreviewChordEvent, PreviewChordState> {
           appBarStatus: true,
           visibleButtons: false,
           cap: 0,
-          isSelectedSong: false,
+          selectedSongId: '',
           heightWindow: 300,
         )) {
     on<_Init>(_init);
@@ -72,7 +72,7 @@ class PreviewChordBloc extends Bloc<PreviewChordEvent, PreviewChordState> {
       emit(state.copyWith(
           data: state.data.copyWith(song: event.song),
           textStyle: TextStyle(fontSize: settingsRepository.previewFontTextSize, color: settingsRepository.previewColorText),
-          isSelectedSong: songsRepository.selectedSongId == event.song?.id,
+          selectedSongId: songsRepository.selectedSongId,
           chordStyle: TextStyle(
             fontSize: settingsRepository.previewFontChordSize,
             color: settingsRepository.previewColorChord,
@@ -145,8 +145,8 @@ class PreviewChordBloc extends Bloc<PreviewChordEvent, PreviewChordState> {
 
   void _selectSong(SelectSongInPreview event, Emitter<PreviewChordState> emit) {
     final state = this.state;
-    songsRepository.selectSong(state.data.song?.id);
-    emit(state.copyWith(isSelectedSong: event.status));
+    songsRepository.selectSong(event.selectSongId);
+    emit(state.copyWith(selectedSongId: songsRepository.selectedSongId));
   }
 
   int _getCapByIncrement(int increment) {

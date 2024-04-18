@@ -72,10 +72,10 @@ class _PreviewPageMobileState extends State<PreviewPageMobile> {
                       IconButton(
                           icon: Icon(
                             MdiIcons.radioboxMarked,
-                            color: state.isSelectedSong ? Colors.green : AppColor.primaryDarkColor,
+                            color: (state.data.song != null && state.selectedSongId == state.data.song?.id) ? Colors.green : AppColor.primaryDarkColor,
                           ),
                           onPressed: () {
-                            context.read<PreviewChordBloc>().add(SelectSongInPreview(status: !state.isSelectedSong));
+                            context.read<PreviewChordBloc>().add(SelectSongInPreview(selectSongId: state.data.song?.id ?? ''));
                           }),
                       IconButton(
                           onPressed: () {

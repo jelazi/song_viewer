@@ -6,7 +6,7 @@ class PreviewChordState extends Equatable {
   final TextStyle textStyle;
   final TextStyle chordStyle;
   final bool twoColumns;
-  final bool isSelectedSong;
+  final String selectedSongId;
   final int transposeIncrement;
   final int scrollSpeed;
   final int currentColumn;
@@ -20,7 +20,7 @@ class PreviewChordState extends Equatable {
     required this.textStyle,
     required this.chordStyle,
     required this.twoColumns,
-    required this.isSelectedSong,
+    required this.selectedSongId,
     required this.transposeIncrement,
     required this.scrollSpeed,
     required this.currentColumn,
@@ -45,7 +45,7 @@ class PreviewChordState extends Equatable {
         appBarStatus,
         visibleButtons,
         cap,
-        isSelectedSong,
+        selectedSongId,
       ];
 
   PreviewChordState copyWith({
@@ -53,7 +53,7 @@ class PreviewChordState extends Equatable {
     TextStyle? textStyle,
     TextStyle? chordStyle,
     bool? twoColumns,
-    bool? isSelectedSong,
+    String? selectedSongId,
     int? transposeIncrement,
     int? scrollSpeed,
     int? currentColumn,
@@ -68,7 +68,7 @@ class PreviewChordState extends Equatable {
       textStyle: textStyle ?? this.textStyle,
       chordStyle: chordStyle ?? this.chordStyle,
       twoColumns: twoColumns ?? this.twoColumns,
-      isSelectedSong: isSelectedSong ?? this.isSelectedSong,
+      selectedSongId: selectedSongId ?? this.selectedSongId,
       transposeIncrement: transposeIncrement ?? this.transposeIncrement,
       scrollSpeed: scrollSpeed ?? this.scrollSpeed,
       currentColumn: currentColumn ?? this.currentColumn,
@@ -154,7 +154,7 @@ class PreviewChordInitial extends PreviewChordState {
     required super.appBarStatus,
     required super.visibleButtons,
     required super.cap,
-    required super.isSelectedSong,
+    required super.selectedSongId,
     required super.heightWindow,
   });
 }

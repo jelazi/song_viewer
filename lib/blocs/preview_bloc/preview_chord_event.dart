@@ -70,11 +70,11 @@ class TransposeChord extends PreviewChordEvent {
 }
 
 class SelectSongInPreview extends PreviewChordEvent {
-  final bool status;
-  const SelectSongInPreview({required this.status});
+  final String selectSongId;
+  const SelectSongInPreview({required this.selectSongId});
 
   @override
-  List<Object> get props => [status];
+  List<Object> get props => [selectSongId];
 }
 
 class ChangeColumnStatus extends PreviewChordEvent {

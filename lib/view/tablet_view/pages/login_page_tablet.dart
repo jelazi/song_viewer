@@ -15,9 +15,9 @@ class LoginPageTablet extends StatelessWidget {
         appBar: AppBar(
           title: const Text('Login'),
         ),
-        body: BlocConsumer<LoginBloc, LoginState>(
+        body: BlocConsumer<UsersBloc, UsersState>(
           listener: (context, state) {
-            if (state.isLogin) {
+            if (state.currentUser != null) {
               Navigator.pushNamed(context, '/');
             }
           },
@@ -54,7 +54,7 @@ class LoginPageTablet extends StatelessWidget {
                     ElevatedButton(
                       child: const Text('Login'),
                       onPressed: () {
-                        context.read<LoginBloc>().add(Login(password: passwordController.text, username: usernameController.text));
+                        context.read<UsersBloc>().add(LoginUser(passwordUser: passwordController.text, nameUser: usernameController.text));
                       },
                     ),
                   ],

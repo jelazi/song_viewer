@@ -27,7 +27,6 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
           isEditIconVisible: false,
           listSong: [],
           listExpandedSongs: [],
-          typeUser: TypeUser.none,
           listAllGroups: [],
         )) {
     on<_Init>(_init);
@@ -38,16 +37,11 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
     on<UpdateSettingsData>(_updateSettingsData);
     on<ChangeExpandedCard>(_changeExpandedCard);
     on<UpdateSong>(_updateSong);
-    on<LoginUser>(_loginUser);
     on<CreateGroup>(_createGroup);
     on<DeleteGroup>(_deleteGroup);
     on<ChangeGroup>(_changeGroup);
     songsRepository.selectSongData.listen((event) {
       add(ChangeSelectedSong(selectedSongId: event));
-    });
-
-    usersRepository.selectSongData.listen((event) {
-      add(LoginUser(typeUser: event));
     });
 
     add(const _Init());
@@ -62,7 +56,6 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
       listAllGroups: songsRepository.listAllGroups,
       selectedSongId: songsRepository.selectedSongId,
       listExpandedSongs: [],
-      typeUser: usersRepository.currentTypeUser,
     ));
   }
 
@@ -110,11 +103,6 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
     final state = this.state;
     await songsRepository.updateSong(event.song);
     emit(state.copyWith(listSong: List<Song>.from(songsRepository.songs)));
-  }
-
-  void _loginUser(LoginUser event, Emitter<HomePageState> emit) {
-    final state = this.state;
-    emit(state.copyWith(typeUser: event.typeUser));
   }
 
   void _createGroup(CreateGroup event, Emitter<HomePageState> emit) async {
