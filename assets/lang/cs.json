@@ -244,5 +244,6 @@
     "deleteUserQuestion": "Chcete vymazat uživatele: ",
     "users": "Uživatelé",
     "inputNewChord": "Vlož nový akord",
+    "selectGroups": "Vyber skupiny pro zobrazení",
     "test": "Test"
 }

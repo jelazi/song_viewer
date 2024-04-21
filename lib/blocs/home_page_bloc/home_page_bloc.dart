@@ -28,6 +28,7 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
           listSong: [],
           listExpandedSongs: [],
           listAllGroups: [],
+          listSelectedGroups: [],
         )) {
     on<_Init>(_init);
     on<UpdateSongData>(_updateSongData);
@@ -40,8 +41,13 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
     on<CreateGroup>(_createGroup);
     on<DeleteGroup>(_deleteGroup);
     on<ChangeGroup>(_changeGroup);
+    on<SelectGroups>(_selectGroups);
     songsRepository.selectSongData.listen((event) {
       add(ChangeSelectedSong(selectedSongId: event));
+    });
+
+    songsRepository.isChangedListSong.listen((event) {
+      add(const UpdateSongData(updateSongRepository: false));
     });
 
     add(const _Init());
@@ -54,6 +60,7 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
       isEditIconVisible: settingsRepository.isEditIconVisible,
       listSong: List<Song>.from(songsRepository.songs),
       listAllGroups: songsRepository.listAllGroups,
+      listSelectedGroups: List<String>.from(songsRepository.listAllGroups),
       selectedSongId: songsRepository.selectedSongId,
       listExpandedSongs: [],
     ));
@@ -61,7 +68,9 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
 
   void _updateSongData(UpdateSongData event, Emitter<HomePageState> emit) async {
     final state = this.state;
-    await songsRepository.updateSongsFromFirebase();
+    if (event.updateSongRepository) {
+      await songsRepository.updateSongsFromFirebase();
+    }
     emit(state.copyWith(
       listSong: List<Song>.from(songsRepository.songs),
     ));
@@ -121,5 +130,20 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
     final state = this.state;
     await songsRepository.updateGroup(event.group, event.newGroup);
     emit(state.copyWith(listAllGroups: List<String>.from(songsRepository.listAllGroups)));
+  }
+
+  void _selectGroups(SelectGroups event, Emitter<HomePageState> emit) {
+    final state = this.state;
+    final listAllSongs = List<Song>.from(songsRepository.songs);
+    final listSelectedSongs = <Song>[];
+    for (Song song in listAllSongs) {
+      if (song.groups == null) {
+        continue;
+      }
+      if (song.groups!.any((element) => event.groups.contains(element))) {
+        listSelectedSongs.add(song);
+      }
+    }
+    emit(state.copyWith(listSelectedGroups: List<String>.from(event.groups), listSong: listSelectedSongs));
   }
 }

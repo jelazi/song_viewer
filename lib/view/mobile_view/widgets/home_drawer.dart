@@ -1,6 +1,8 @@
 import 'package:default_project/blocs/export_blocs.dart';
 import 'package:default_project/services/constants.dart';
 import 'package:default_project/services/enums.dart';
+import 'package:default_project/view/desktop_view/widgets/my_dropdown_field.dart';
+import 'package:default_project/view/mobile_view/widgets/dialogs/dialogs_export.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -100,21 +102,103 @@ class _HomeDrawerState extends State<HomeDrawer> {
                 Navigator.pushNamed(context, '/settingsPage');
               },
             ),
-            ExpansionTile(
-                title: Text('typeClickCard'.tr()),
-                children: items.map((String item) {
-                  return ListTile(
-                    selected: selectedItem == item,
-                    selectedColor: Colors.blue,
-                    title: Text(item),
-                    onTap: () {
-                      setState(() {
-                        context.read<HomePageBloc>().settingsRepository.changeTypeClickCard(TypeClickCard.values[items.indexOf(item)]);
-                        selectedItem = item;
+            ListTile(
+              title: Row(children: [
+                const Icon(Icons.ads_click),
+                const SizedBox(
+                  width: 10,
+                ),
+                Text('typeClickCard'.tr()),
+              ]),
+              onTap: () {
+                Navigator.of(context).pop();
+                List<String> items = [
+                  TypeClickCard.none.name,
+                  TypeClickCard.preview.name,
+                  TypeClickCard.presentation.name,
+                  TypeClickCard.sheet.name,
+                  TypeClickCard.youtube.name,
+                ];
+                String selectedItem = context.read<HomePageBloc>().settingsRepository.typeClickCard.name;
+                showDialog(
+                    barrierDismissible: false,
+                    context: context,
+                    builder: (context) {
+                      return StatefulBuilder(builder: (context, setState) {
+                        return EditDialog(
+                            title: 'typeClickCard'.tr(),
+                            okClick: () {
+                              context.read<HomePageBloc>().settingsRepository.changeTypeClickCard(TypeClickCard.values[items.indexOf(selectedItem)]);
+                            },
+                            widgetContent: MyDropDownField(
+                              items: items,
+                              selectedItem: selectedItem,
+                              listener: (value) {
+                                setState(() {
+                                  selectedItem = value;
+                                });
+                              },
+                            ));
                       });
-                    },
-                  );
-                }).toList())
+                    });
+              },
+            ),
+            // list tile select group
+            BlocBuilder<HomePageBloc, HomePageState>(
+              builder: (context, state) {
+                List<String> selectedGroups = List.from(state.listSelectedGroups);
+                return ListTile(
+                  textColor: state.listAllGroups.length != selectedGroups.length ? AppColor.alertErrorColor : AppColor.grey1Color,
+                  iconColor: state.listAllGroups.length != selectedGroups.length ? AppColor.alertErrorColor : AppColor.grey1Color,
+                  title: Row(children: [
+                    const Icon(Icons.group),
+                    const SizedBox(
+                      width: 10,
+                    ),
+                    Text('selectGroups'.tr()),
+                  ]),
+                  onTap: () {
+                    Navigator.of(context).pop();
+
+                    showDialog(
+                      barrierDismissible: false,
+                      context: context,
+                      builder: (context) {
+                        return StatefulBuilder(builder: (context, setState) {
+                          return EditDialog(
+                              height: 500,
+                              title: 'selectGroups'.tr(),
+                              okClick: () {
+                                context.read<HomePageBloc>().add(SelectGroups(groups: selectedGroups));
+                              },
+                              widgetContent: SizedBox(
+                                height: 350,
+                                child: Wrap(
+                                  children: state.listAllGroups
+                                      .map((e) => ChoiceChip(
+                                          checkmarkColor: selectedGroups.contains(e) ? AppColor.whiteColor : AppColor.primaryColor,
+                                          onSelected: (value) {
+                                            setState(() {
+                                              if (selectedGroups.contains(e)) {
+                                                selectedGroups.remove(e);
+                                              } else {
+                                                selectedGroups.add(e);
+                                              }
+                                            });
+                                          },
+                                          selectedColor: AppColor.primaryColor,
+                                          label: Text(e, style: TextStyle(color: selectedGroups.contains(e) ? AppColor.whiteColor : AppColor.primaryColor)),
+                                          selected: selectedGroups.contains(e)))
+                                      .toList(),
+                                ),
+                              ));
+                        });
+                      },
+                    );
+                  },
+                );
+              },
+            ),
           ],
         ),
       ),

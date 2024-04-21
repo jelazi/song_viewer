@@ -17,6 +17,10 @@ class SongsRepository {
   final selectSongController = StreamController<String>.broadcast();
   Stream<String> get selectSongData => selectSongController.stream.asBroadcastStream();
 
+  final isChangedListSongController = StreamController<int>.broadcast();
+  Stream<int> get isChangedListSong => isChangedListSongController.stream.asBroadcastStream();
+  int isChangedListSongValue = 0;
+
   final _songs = <Song>[];
   String selectedSongId = '';
   List<String> listAllGroups = [];
@@ -74,6 +78,7 @@ class SongsRepository {
         }
       }
     }
+    isChangedListSongController.sink.add(isChangedListSongValue++);
   }
 
   Future<void> loadAllGroups() async {

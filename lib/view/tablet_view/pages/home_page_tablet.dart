@@ -59,6 +59,7 @@ class _HomePageTabletState extends State<HomePageTablet> {
           body: RefreshIndicator(
             onRefresh: () async {
               // context.read<HomePageBloc>().add(const LoadSongs());
+              context.read<HomePageBloc>().add(const UpdateSongData());
             },
             child: CustomScrollView(slivers: [
               SliverLayoutBuilder(builder: ((context, constraints) {

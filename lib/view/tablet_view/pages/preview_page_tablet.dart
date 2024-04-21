@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:default_project/services/constants.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -127,6 +128,24 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
                       ),
                     ],
                   ),
+                ),
+                BlocBuilder<PreviewChordBloc, PreviewChordState>(
+                  builder: (context, state) {
+                    return Visibility(
+                      visible: state.data.song?.indexSongBook != null,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Align(
+                          alignment: Alignment.topRight,
+                          child: Text('${'indexSongBook'.tr()}: ${state.data.song?.indexSongBook ?? ''}',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: AppColor.primaryColor,
+                              )),
+                        ),
+                      ),
+                    );
+                  },
                 ),
                 Positioned(
                   top: 10,

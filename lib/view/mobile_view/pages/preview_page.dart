@@ -61,6 +61,9 @@ class _PreviewPageMobileState extends State<PreviewPageMobile> {
                   height: state.appBarStatus ? 90.0 : 0.0,
                   duration: const Duration(milliseconds: 200),
                   child: AppBar(
+                    iconTheme: const IconThemeData(
+                      color: Colors.white,
+                    ),
                     backgroundColor: AppColor.primaryColor,
                     title: Column(
                       children: [

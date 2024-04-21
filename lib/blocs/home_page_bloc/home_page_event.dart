@@ -15,10 +15,11 @@ class _Init extends HomePageEvent {
 }
 
 class UpdateSongData extends HomePageEvent {
-  const UpdateSongData();
+  final bool updateSongRepository;
+  const UpdateSongData({this.updateSongRepository = true});
 
   @override
-  List<Object> get props => [];
+  List<Object> get props => [updateSongRepository];
 }
 
 class FilterSong extends HomePageEvent {
@@ -106,4 +107,12 @@ class ChangeGroup extends HomePageEvent {
 
   @override
   List<Object> get props => [group, newGroup];
+}
+
+class SelectGroups extends HomePageEvent {
+  final List<String> groups;
+  const SelectGroups({required this.groups});
+
+  @override
+  List<Object> get props => [groups];
 }

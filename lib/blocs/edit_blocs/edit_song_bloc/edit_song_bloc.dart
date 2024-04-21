@@ -357,7 +357,7 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
     emit(state.copyWith(currentText: text, listUniqueChords: currentSong.getAllUniqueChordsFromSong(TypeLyric.translate)));
   }
 
-  void _saveSong(SaveSong event, Emitter<EditSongState> emit) {
+  void _saveSong(SaveSong event, Emitter<EditSongState> emit) async {
     final state = this.state;
     var song = state.currentEditSong;
     bool isChanged = false;
@@ -394,7 +394,8 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
       if (song.id.isEmpty) {
         song.generateId();
       }
-      songsRepository.updateSong(song);
+      await songsRepository.updateSong(song);
+      await songsRepository.updateSongsFromFirebase();
     }
     emit(state.copyWith(currentEditSong: song, listSelectedChords: []));
   }
