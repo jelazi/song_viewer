@@ -81,8 +81,8 @@ class _LyricsRendererState extends State<LyricsRenderer> {
         }
         _fontScale = (_baseFontScale * details.scale).clamp(0.5, 5.0);
 
-        context.read<PreviewChordBloc>().add(ChangeTextFontSize(fontSize: _fontScale * widget.baseFontSize));
-        context.read<PreviewChordBloc>().add(ChangeChordFontSize(fontSize: _fontScale * widget.baseFontSize));
+        //  context.read<PreviewChordBloc>().add(ChangeTextFontSize(fontSize: _fontScale * widget.baseFontSize));
+        //   context.read<PreviewChordBloc>().add(ChangeChordFontSize(fontSize: _fontScale * widget.baseFontSize));
       },
       onScaleEnd: (details) {
         /// ????

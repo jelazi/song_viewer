@@ -224,6 +224,12 @@ class _SettingsPageTabletState extends State<SettingsPageTablet> {
     required bool isChord,
   }) {
     int currentValue = value;
+    if (currentValue < minValue) {
+      currentValue = minValue;
+    }
+    if (currentValue > maxValue) {
+      currentValue = maxValue;
+    }
     return StatefulBuilder(builder: (context, setState) {
       return EditDialog(
         height: 300,

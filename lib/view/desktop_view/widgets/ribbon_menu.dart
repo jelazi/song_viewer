@@ -278,6 +278,54 @@ class SettingsTabbar extends StatelessWidget {
                   File returnedFile = File(outputFile);
                   await returnedFile.writeAsString(listSong);
                 }),
+            BlocBuilder<EditSongBloc, EditSongState>(
+              builder: (context, state) {
+                return Visibility(
+                  visible: state.currentEditSong.id.isNotEmpty,
+                  child: RibbonButton(
+                      text: 'exportLyricsToTxt'.tr(),
+                      icon: SizedBox(height: 25, child: Image.asset('assets/icons/txt.png')),
+                      isEnabled: true,
+                      onPressed: () async {
+                        String lyric = '';
+                        showDialog(
+                            context: context,
+                            builder: (context) {
+                              return SelectDialog(
+                                title: 'exportLyricsToTxt'.tr(),
+                                selectQuestion: 'withOrWithoutChords'.tr(),
+                                firstSelectTitle: 'withChords'.tr(),
+                                firstSelectFunction: () async {
+                                  lyric = state.currentEditSong.lyricsWithChords;
+                                  String? outputFile = await FilePicker.platform.saveFile(
+                                    dialogTitle: 'pleaseSelectPathToSaveFile'.tr(),
+                                    fileName: '${state.currentEditSong.title}.txt',
+                                  );
+                                  if (outputFile == null) {
+                                    return;
+                                  }
+                                  File returnedFile = File(outputFile);
+                                  await returnedFile.writeAsString(lyric);
+                                },
+                                secondSelectTitle: 'withoutChords'.tr(),
+                                secondSelectFunction: () async {
+                                  lyric = state.currentEditSong.lyricsWithoutChordsWithLines;
+                                  String? outputFile = await FilePicker.platform.saveFile(
+                                    dialogTitle: 'pleaseSelectPathToSaveFile'.tr(),
+                                    fileName: '${state.currentEditSong.title}.txt',
+                                  );
+                                  if (outputFile == null) {
+                                    return;
+                                  }
+                                  File returnedFile = File(outputFile);
+                                  await returnedFile.writeAsString(lyric);
+                                },
+                              );
+                            });
+                      }),
+                );
+              },
+            ),
           ],
         ));
   }

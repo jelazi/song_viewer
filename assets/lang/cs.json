@@ -245,5 +245,9 @@
     "users": "Uživatelé",
     "inputNewChord": "Vlož nový akord",
     "selectGroups": "Vyber skupiny pro zobrazení",
+    "exportLyricsToTxt": "Export textu písně do txt",
+    "withOrWithoutChords": "S akordy / Bez akordů",
+    "withChords": "S akordy",
+    "withoutChords": "Bez akordů",
     "test": "Test"
 }

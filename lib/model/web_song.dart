@@ -5,6 +5,7 @@ class WebSong {
   String title;
   String ref;
   String interpret;
+  bool ischords = true;
   String id = '';
   List<dom.Node> nodes = [];
   String unformatText = '';
@@ -13,5 +14,6 @@ class WebSong {
     required this.title,
     required this.ref,
     required this.interpret,
+    this.ischords = true,
   });
 }

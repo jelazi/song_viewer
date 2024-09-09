@@ -6,8 +6,16 @@ class WebState extends Equatable {
   final List<WebSong> songs;
   final List<WebSong> filteredSongs;
   final List<WebInterpret> interprets;
+  final List<WebInterpret> filteredInterprets;
   final WebInterpret? currentInterpret;
   final int searchWeb;
+  final bool isSearching;
+  final TextStyle textStyle;
+  final TextStyle chordStyle;
+  final bool appBarStatus;
+  final int transposeIncrement;
+  final int scrollSpeed;
+
   final listSearchWeb = [
     'superMusic'.tr(),
     'velkyZpevnik'.tr(),
@@ -20,13 +28,35 @@ class WebState extends Equatable {
     required this.songs,
     required this.filteredSongs,
     required this.interprets,
+    required this.filteredInterprets,
     this.currentInterpret,
     required this.searchWeb,
     required this.searchType,
+    required this.isSearching,
+    required this.textStyle,
+    required this.chordStyle,
+    required this.appBarStatus,
+    required this.transposeIncrement,
+    required this.scrollSpeed,
   });
 
   @override
-  List<Object> get props => [currentSong ?? '', songs, filteredSongs, currentInterpret ?? '', interprets, searchWeb, searchType];
+  List<Object> get props => [
+        currentSong ?? '',
+        songs,
+        filteredSongs,
+        currentInterpret ?? '',
+        interprets,
+        filteredInterprets,
+        searchWeb,
+        searchType,
+        isSearching,
+        textStyle,
+        chordStyle,
+        appBarStatus,
+        transposeIncrement,
+        scrollSpeed
+      ];
 
   WebState copyWith({
     WebSong? currentSong,
@@ -36,6 +66,13 @@ class WebState extends Equatable {
     WebInterpret? currentInterpret,
     int? searchWeb,
     int? searchType,
+    bool? isSearching,
+    List<WebInterpret>? filteredInterprets,
+    TextStyle? textStyle,
+    TextStyle? chordStyle,
+    bool? appBarStatus,
+    int? transposeIncrement,
+    int? scrollSpeed,
   }) {
     return WebState(
       currentSong: currentSong,
@@ -45,6 +82,13 @@ class WebState extends Equatable {
       currentInterpret: currentInterpret,
       searchWeb: searchWeb ?? this.searchWeb,
       searchType: searchType ?? this.searchType,
+      isSearching: isSearching ?? this.isSearching,
+      filteredInterprets: filteredInterprets ?? this.filteredInterprets,
+      textStyle: textStyle ?? this.textStyle,
+      chordStyle: chordStyle ?? this.chordStyle,
+      appBarStatus: appBarStatus ?? this.appBarStatus,
+      transposeIncrement: transposeIncrement ?? this.transposeIncrement,
+      scrollSpeed: scrollSpeed ?? this.scrollSpeed,
     );
   }
 }
@@ -58,5 +102,12 @@ class WebInitial extends WebState {
     required super.interprets,
     required super.searchWeb,
     required super.searchType,
+    required super.isSearching,
+    required super.filteredInterprets,
+    required super.textStyle,
+    required super.chordStyle,
+    required super.appBarStatus,
+    required super.transposeIncrement,
+    required super.scrollSpeed,
   });
 }

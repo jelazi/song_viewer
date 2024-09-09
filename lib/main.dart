@@ -98,7 +98,7 @@ class MyApp extends StatelessWidget {
             create: (context) => DesktopRibbonMenuBloc(),
           ),
           BlocProvider(
-            create: ((context) => WebBloc(webRepository: webRepository)),
+            create: ((context) => WebBloc(webRepository: webRepository, settingsRepository: settingsRepository)),
           ),
           BlocProvider(
             create: ((context) => UsersBloc(usersRepository: usersRepository)),

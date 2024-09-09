@@ -28,11 +28,16 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
   void initState() {
     super.initState();
     scrollController.addListener(() {
-      if (scrollController.position.userScrollDirection == ScrollDirection.reverse) {
-        context.read<PreviewChordBloc>().add(const ChangeAppBarStatus(status: false));
-      }
-      if (scrollController.position.userScrollDirection == ScrollDirection.forward) {
-        context.read<PreviewChordBloc>().add(const ChangeAppBarStatus(status: true));
+      if (mounted) {
+        if (context.read<PreviewChordBloc>().state.twoColumns) {
+          return;
+        }
+        if (scrollController.position.userScrollDirection == ScrollDirection.reverse) {
+          context.read<PreviewChordBloc>().add(const ChangeAppBarStatus(status: false));
+        }
+        if (scrollController.position.userScrollDirection == ScrollDirection.forward) {
+          context.read<PreviewChordBloc>().add(const ChangeAppBarStatus(status: true));
+        }
       }
     });
   }

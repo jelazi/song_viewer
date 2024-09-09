@@ -1,5 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'package:beautiful_soup_dart/beautiful_soup.dart';
 import 'package:collection/collection.dart';
+import 'package:default_project/services/auxiliary_functions.dart';
 import 'package:html/dom.dart';
 import 'package:html/parser.dart';
 import 'package:logger_pkg/logger_pkg.dart';
@@ -10,21 +12,184 @@ import '../providers/web_provider.dart';
 import '../services/enums.dart';
 import 'package:html/dom.dart' as dom;
 
+class WebChord {
+  String text;
+  int beforeSpaces = 0;
+
+  WebChord({required this.text, this.beforeSpaces = 0});
+}
+
+extension InsertString on String {
+  String insert(int index, String string) => replaceRange(index, index, string);
+}
+
 class WebRepository {
   WebProvider webProvider;
+  Map<String, String> allInterpretersPisnickyAkordy = {};
+
   WebRepository({
     required this.webProvider,
   });
 
   Future<String> testGetSong() async {
     var response = await webProvider.testGet();
+    final text = parseTextFromPisnickyAkordy(response.data);
+    final respnseSearch = await webProvider.searchPisnickyAkordy('touha');
+    //  final responseFirstLetter = await webProvider.searchInterpretByFirstLetterPisnickyAkordy('b');
+    // final responseSearch = parseSearchByFirstLetterFromPisnickyAkordy(responseFirstLetter.data, 'b');
+    final responseSong = await webProvider.getSongsFromInterpretPisnickyAkordy('/pribuzni');
+    final responseSongText = parseGetSongsFromInterpretFromPisnickyAkordy(responseSong.data);
+    return '';
+  }
 
-    //  logger.i(result);
-    var document = parse(response.data);
+  Future<String> getTextSongPisnickyAkordy(String song) async {
+    String songText = '';
+    final response = await webProvider.getDataFromPisnickyAkordy(song);
+    songText = parseTextFromPisnickyAkordy(response.data);
+    return songText;
+  }
 
-    var lyrics = (document.getElementsByClassName('lyrics')).map((e) => e.innerHtml).toList();
+  Future<List<WebSong>> findSongOfInterpretPisnickyAkordy(
+    String ref,
+  ) async {
+    List<WebSong> songs = [];
+    final response = await webProvider.getSongsFromInterpretPisnickyAkordy(ref);
+    final parsedSongs = parseGetSongsFromInterpretFromPisnickyAkordy(response.data);
+    if (parsedSongs.isNotEmpty) {
+      for (MapEntry<String, String> entry in parsedSongs.entries) {
+        String title = entry.key;
+        bool isChords = title.contains('akordy a text písně');
+        if (title.contains(' akordy a text písně')) {
+          title = title.replaceAll('akordy a text písně', '');
+        } else if (title.contains(' text písně')) {
+          title = title.replaceAll('text písně', '');
+        }
+        songs.add(WebSong(interpret: ref, title: title, ref: entry.value));
+      }
+    }
+    return songs;
+  }
 
-    return lyrics.toString();
+  Future<List<WebInterpret>> findInterpretPisnickyAkordy(String searchText) async {
+    List<WebInterpret> interprets = [];
+
+    if (allInterpretersPisnickyAkordy.isEmpty) {
+      final response = await webProvider.searchInterpretByFirstLetterPisnickyAkordy(searchText);
+      allInterpretersPisnickyAkordy = parseSearchByFirstLetterFromPisnickyAkordy(response.data, searchText);
+    }
+    if (allInterpretersPisnickyAkordy.isNotEmpty) {
+      final searchTextToLover = removeDiacriticsAndWhitespace(searchText.toLowerCase());
+      for (MapEntry<String, String> entry in allInterpretersPisnickyAkordy.entries) {
+        if (removeDiacriticsAndWhitespace(entry.key.toLowerCase()).contains(searchTextToLover)) {
+          interprets.add(WebInterpret(name: entry.key, ref: entry.value));
+          if (interprets.length > 50) {
+            break;
+          }
+        }
+      }
+    }
+    return interprets;
+  }
+
+  Map<String, String> parseSearchByFirstLetterFromPisnickyAkordy(String htmlText, String firstLetter) {
+    Map<String, String> map = {};
+    BeautifulSoup bs = BeautifulSoup(htmlText);
+    final tabPaneAll = bs.findAll('*', class_: 'tab-pane');
+
+    for (var tabPane in tabPaneAll) {
+      final list = tabPane.find('*', class_: 'itemlist');
+      int index = 0;
+      if (list != null) {
+        for (var element in list.children) {
+          final contents = element.contents;
+          if (contents.isNotEmpty) {
+            String title = '';
+            String ref = '';
+            title = contents.first.attributes['title'] ?? '';
+            ref = contents.first.attributes['href'] ?? '';
+            if (!map.containsKey(title)) {
+              map[title] = ref;
+            } else {
+              if (title.contains(firstLetter)) {
+                map['$title$index'] = ref;
+                index++;
+              }
+            }
+          }
+        }
+      }
+    }
+    return map;
+  }
+
+  Map<String, String> parseGetSongsFromInterpretFromPisnickyAkordy(String htmlText) {
+    Map<String, String> map = {};
+    BeautifulSoup bs = BeautifulSoup(htmlText);
+    final tabPane = bs.find('*', class_: 'tab-pane', id: 'az');
+    final contents = tabPane?.contents;
+    if (contents != null) {
+      for (var element in contents) {
+        final list = element.children;
+        if (list.isNotEmpty) {
+          for (var item in list) {
+            if (item.children.isNotEmpty) {
+              String title = '';
+              String ref = '';
+              title = item.children.first.attributes['title'] ?? '';
+              ref = item.children.first.attributes['href'] ?? '';
+              map[title] = ref;
+            }
+          }
+        }
+      }
+    }
+    return map;
+  }
+
+  String parseTextFromPisnickyAkordy(String htmlText) {
+    BeautifulSoup bs = BeautifulSoup(htmlText);
+    final songText = bs.find('*', id: 'songtext');
+    final pre = songText?.find('pre');
+    final nodes = pre?.nodes;
+    String allText = '';
+    if (nodes != null) {
+      String text = '';
+      List<WebChord> chords = [];
+      int beforeSpaces = 0;
+      for (var son in nodes) {
+        if (son is Element && son.className == 'aline') {
+          if (son.nodes.isNotEmpty) {
+            for (var node in son.nodes) {
+              if (node is Element && node.className == 'akord') {
+                chords.add(WebChord(text: node.text, beforeSpaces: beforeSpaces));
+              }
+              if (node is Text) {
+                beforeSpaces = node.text.length;
+              }
+            }
+          }
+        }
+        if (son is Text) {
+          text = son.text;
+          int index = 0;
+          if (chords.isNotEmpty) {
+            for (WebChord chord in chords) {
+              index += chord.beforeSpaces;
+              if (index < text.length) {
+                text = text.insert(index, '[${chord.text}]');
+                index += chord.text.length + 2;
+              } else {
+                text = '$text[${chord.text}]';
+              }
+            }
+          }
+          allText += text;
+          chords.clear();
+          beforeSpaces = 0;
+        }
+      }
+    }
+    return allText;
   }
 
   Future<dynamic> findSongProScholy(String text) async {

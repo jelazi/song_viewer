@@ -7,14 +7,23 @@ class WebEvent extends Equatable {
   List<Object> get props => [];
 }
 
+class _Init extends WebEvent {
+  const _Init();
+}
+
 class ChangeCurrentWebSong extends WebEvent {
   final WebSong? song;
   const ChangeCurrentWebSong({required this.song});
 }
 
 class ChangeCurrentInterpret extends WebEvent {
-  final WebInterpret interpret;
+  final WebInterpret? interpret;
   const ChangeCurrentInterpret({required this.interpret});
+}
+
+class FilterInterprets extends WebEvent {
+  final String filter;
+  const FilterInterprets({required this.filter});
 }
 
 class FilterSongs extends WebEvent {
@@ -38,4 +47,8 @@ class ChangeSearchWeb extends WebEvent {
 class ChangeSearchType extends WebEvent {
   final int searchType;
   const ChangeSearchType({required this.searchType});
+}
+
+class TestWebEvent extends WebEvent {
+  const TestWebEvent();
 }

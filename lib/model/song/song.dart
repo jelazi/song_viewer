@@ -131,11 +131,57 @@ class Song {
 
   String get lyricsWithoutChords {
     String lyrics = '';
-    for (SongLine line in listLyrics(false, true, TypeLyric.translate)) {
+    for (SongLine line in listLyrics(false, false, TypeLyric.translate)) {
       for (SongItem item in line.listItem) {
         if (item.type == TypeSongItem.lyric) {
           lyrics += item.text;
         }
+      }
+    }
+    return lyrics;
+  }
+
+  String get lyricsWithoutChordsWithLines {
+    String lyrics = '';
+    for (SongLine line in listLyrics(false, false, TypeLyric.translate)) {
+      for (SongItem item in line.listItem) {
+        if (item.type == TypeSongItem.lyric) {
+          lyrics += item.text;
+        }
+      }
+      lyrics += '\n';
+    }
+    return lyrics;
+  }
+
+  String get lyricsWithChords {
+    String lyrics = '';
+    for (SongLine line in listLyrics(true, false, TypeLyric.translate)) {
+      String chordLine = '';
+      String lyricLine = '';
+      int indexFromStartLine = 0;
+      for (SongItem item in line.listItem) {
+        if (item.type == TypeSongItem.lyric) {
+          lyricLine += item.text;
+          indexFromStartLine += item.text.length;
+        } else {
+          if (chordLine.isNotEmpty && indexFromStartLine <= 0) {
+            chordLine += ',${item.text}';
+            indexFromStartLine = 0 - (item.text.length + 1);
+          } else if (chordLine.isNotEmpty && indexFromStartLine == 1) {
+            chordLine += ', ${item.text}';
+            indexFromStartLine = 0 - (item.text.length + 2);
+          } else {
+            chordLine += '${' ' * (indexFromStartLine)}${item.text}';
+            indexFromStartLine = 0 - item.text.length;
+          }
+        }
+      }
+      if (chordLine.isNotEmpty) {
+        lyrics += '$chordLine\n';
+      }
+      if (lyricLine.isNotEmpty) {
+        lyrics += '$lyricLine\n';
       }
     }
     return lyrics;
