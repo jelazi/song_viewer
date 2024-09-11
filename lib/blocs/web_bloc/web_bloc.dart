@@ -1,11 +1,15 @@
+import 'dart:math';
+
 import 'package:bloc/bloc.dart';
 import 'package:default_project/model/web_interpret.dart';
+import 'package:default_project/providers/hive_provider.dart';
 import 'package:default_project/repositories/web_repository.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
+import '../../model/web_item.dart';
 import '../../model/web_song.dart';
 import '../../repositories/settings_repository.dart';
 
@@ -15,7 +19,8 @@ part 'web_state.dart';
 class WebBloc extends Bloc<WebEvent, WebState> {
   WebRepository webRepository;
   SettingsRepository settingsRepository;
-  WebBloc({required this.webRepository, required this.settingsRepository})
+  HiveProvider hiveProvider;
+  WebBloc({required this.webRepository, required this.settingsRepository, required this.hiveProvider})
       : super(WebInitial(
           currentSong: null,
           songs: const [],
@@ -69,16 +74,41 @@ class WebBloc extends Bloc<WebEvent, WebState> {
     final eventSong = event.song;
     if (eventSong != null) {
       WebSong currentSong = WebSong(title: eventSong.title, ref: eventSong.ref, interpret: eventSong.interpret);
-      final text = await webRepository.getTextSongPisnickyAkordy(currentSong.ref);
-      currentSong.lyric = text;
+      var text = '';
+      if (event.typeSearching == 'velkyzpevnik.cz') {
+        currentSong.server = 'velkyzpevnik.cz';
+        final savedSong = hiveProvider.getWebSong('velkyzpevnik.cz${currentSong.ref}');
+        if (savedSong != null) {
+          currentSong = savedSong;
+        } else {
+          currentSong.lyric = await webRepository.getTextSongVelkyZpevnik(currentSong);
+          hiveProvider.setWebSong('velkyzpevnik.cz${currentSong.ref}', currentSong);
+        }
+      }
+      if (event.typeSearching == 'pisnicky-akordy.cz') {
+        currentSong.server = 'pisnicky-akordy.cz';
+        final savedSong = hiveProvider.getWebSong('pisnicky-akordy.cz${currentSong.ref}');
+        if (savedSong != null) {
+          currentSong = savedSong;
+        } else {
+          currentSong.lyric = await webRepository.getTextSongPisnickyAkordy(currentSong.ref);
+          hiveProvider.setWebSong('pisnicky-akordy.cz${currentSong.ref}', currentSong);
+        }
+      }
       emit(state.copyWith(currentSong: currentSong, currentInterpret: state.currentInterpret));
     }
   }
 
   void _changeCurrentInterpret(ChangeCurrentInterpret event, Emitter<WebState> emit) async {
     emit(state.copyWith(currentInterpret: event.interpret));
+    List<WebSong> songs = [];
     if (event.interpret != null) {
-      List<WebSong> songs = await webRepository.findSongOfInterpretPisnickyAkordy(event.interpret?.ref ?? '');
+      if (event.typeSearching == 'velkyzpevnik.cz' && event.interpret != null) {
+        songs = await webRepository.findSongByInterpretFromVelkyZpevnik(event.interpret!);
+      }
+      if (event.typeSearching == 'pisnicky-akordy.cz') {
+        songs = await webRepository.findSongOfInterpretPisnickyAkordy(event.interpret?.ref ?? '');
+      }
       if (songs.isNotEmpty) {
         emit(state.copyWith(currentInterpret: event.interpret, songs: songs, filteredSongs: songs, currentSong: null));
       }
@@ -97,11 +127,19 @@ class WebBloc extends Bloc<WebEvent, WebState> {
   }
 
   void _filterInterprets(FilterInterprets event, Emitter<WebState> emit) async {
+    List<WebInterpret> list = [];
     final state = this.state;
     if (event.filter.isEmpty) {
       emit(state.copyWith(interprets: [], isSearching: false, filteredInterprets: []));
     }
-    final list = await webRepository.findInterpretPisnickyAkordy(event.filter);
+    if (event.typeSearching == 'velkyzpevnik.cz') {
+      List<WebItem> listItem = await webRepository.findSongAndIterpretsFromVelkyZpevnik(event.filter);
+      list = listItem.map((e) => e is WebInterpret ? e : null).where((element) => element != null).toList().cast<WebInterpret>();
+    }
+
+    if (event.typeSearching == 'pisnicky-akordy.cz') {
+      list = await webRepository.findInterpretPisnickyAkordy(event.filter);
+    }
     emit(state.copyWith(interprets: list, isSearching: false, filteredInterprets: list));
   }
 
@@ -110,7 +148,7 @@ class WebBloc extends Bloc<WebEvent, WebState> {
   void _loadInterprets(LoadInterprets event, Emitter<WebState> emit) {}
 
   void _changeSearchWeb(ChangeSearchWeb event, Emitter<WebState> emit) {
-    emit(state.copyWith(searchWeb: event.searchWeb));
+    emit(state.copyWith(searchWeb: event.searchWeb, currentInterpret: null, currentSong: null, songs: [], filteredSongs: [], filteredInterprets: [], interprets: []));
   }
 
   void _changeSearchType(ChangeSearchType event, Emitter<WebState> emit) {

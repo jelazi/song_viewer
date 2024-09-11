@@ -5,6 +5,7 @@ dynamic playlistRepository;
 dynamic usersRepository;
 dynamic songsRepository;
 dynamic webRepository;
+dynamic hiveProvider;
 
 Future<void> initProvidersRepositories() async {
   await Firebase.initializeApp(
@@ -18,7 +19,7 @@ Future<void> initProvidersRepositories() async {
   }
 
   FirebaseProvider firebaseProvider = FirebaseProvider();
-  HiveProvider hiveProvider = HiveProvider();
+  hiveProvider = HiveProvider();
   await hiveProvider.initHiveBox();
   WebProvider webProvider = WebProvider();
 
@@ -61,4 +62,6 @@ Future<void> initHiveFunction() async {
   Hive.registerAdapter(TypeUserAdapter());
   Hive.registerAdapter(UserAdapter());
   Hive.registerAdapter(TypeClickCardAdapter());
+  Hive.registerAdapter(WebItemAdapter());
+  Hive.registerAdapter(WebSongAdapter());
 }

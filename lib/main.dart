@@ -2,6 +2,7 @@
 import 'dart:io';
 
 import 'package:bot_toast/bot_toast.dart';
+import 'package:default_project/model/web_item.dart';
 import 'package:default_project/providers/web_provider.dart';
 import 'package:default_project/repositories/settings_repository.dart';
 import 'package:default_project/services/constants.dart';
@@ -22,6 +23,7 @@ import 'package:window_manager/window_manager.dart';
 import 'blocs/export_blocs.dart';
 import 'firebase_options.dart';
 import 'model/user.dart';
+import 'model/web_song.dart';
 import 'providers/firebase_provider.dart';
 import 'providers/hive_provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -98,7 +100,7 @@ class MyApp extends StatelessWidget {
             create: (context) => DesktopRibbonMenuBloc(),
           ),
           BlocProvider(
-            create: ((context) => WebBloc(webRepository: webRepository, settingsRepository: settingsRepository)),
+            create: ((context) => WebBloc(webRepository: webRepository, settingsRepository: settingsRepository, hiveProvider: hiveProvider)),
           ),
           BlocProvider(
             create: ((context) => UsersBloc(usersRepository: usersRepository)),

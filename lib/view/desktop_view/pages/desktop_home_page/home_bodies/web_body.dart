@@ -40,7 +40,7 @@ class _WebBodyState extends State<WebBody> {
           },
           child: Row(
             children: [
-              const ListWebSong(),
+              ListWebSong(),
               Expanded(
                   child: Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -48,7 +48,7 @@ class _WebBodyState extends State<WebBody> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(state.currentSong?.title ?? '', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                    Text(state.currentInterpret?.name ?? '', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColor.grey2Color)),
+                    Text(state.currentInterpret?.title ?? '', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColor.grey2Color)),
                     SizedBox(
                       height: MediaQuery.of(context).size.height - 200,
                       child: state.currentSong == null || (state.currentSong?.lyric ?? '').isEmpty

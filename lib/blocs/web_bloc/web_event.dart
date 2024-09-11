@@ -13,17 +13,20 @@ class _Init extends WebEvent {
 
 class ChangeCurrentWebSong extends WebEvent {
   final WebSong? song;
-  const ChangeCurrentWebSong({required this.song});
+  final String typeSearching;
+  const ChangeCurrentWebSong({required this.song, required this.typeSearching});
 }
 
 class ChangeCurrentInterpret extends WebEvent {
   final WebInterpret? interpret;
-  const ChangeCurrentInterpret({required this.interpret});
+  final String typeSearching;
+  const ChangeCurrentInterpret({required this.interpret, required this.typeSearching});
 }
 
 class FilterInterprets extends WebEvent {
   final String filter;
-  const FilterInterprets({required this.filter});
+  final String typeSearching;
+  const FilterInterprets({required this.filter, required this.typeSearching});
 }
 
 class FilterSongs extends WebEvent {

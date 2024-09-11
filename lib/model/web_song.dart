@@ -1,19 +1,26 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
-import 'package:html/dom.dart' as dom;
+import 'web_item.dart';
+import 'package:json_annotation/json_annotation.dart';
+import 'package:hive/hive.dart';
 
-class WebSong {
-  String title;
-  String ref;
+part 'web_song.g.dart';
+
+@JsonSerializable()
+@HiveType(typeId: 5)
+class WebSong extends WebItem {
+  @HiveField(2)
+  String server = '';
+  @HiveField(3)
   String interpret;
+  @HiveField(4)
   bool ischords = true;
-  String id = '';
-  List<dom.Node> nodes = [];
-  String unformatText = '';
+  @HiveField(5)
   String lyric = '';
   WebSong({
-    required this.title,
-    required this.ref,
+    required super.title,
+    required super.ref,
     required this.interpret,
     this.ischords = true,
+    this.server = '',
   });
 }

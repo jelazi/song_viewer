@@ -1,4 +1,6 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'dart:convert';
+
 import 'package:beautiful_soup_dart/beautiful_soup.dart';
 import 'package:collection/collection.dart';
 import 'package:default_project/services/auxiliary_functions.dart';
@@ -7,10 +9,10 @@ import 'package:html/parser.dart';
 import 'package:logger_pkg/logger_pkg.dart';
 
 import '../model/web_interpret.dart';
+import '../model/web_item.dart';
 import '../model/web_song.dart';
 import '../providers/web_provider.dart';
 import '../services/enums.dart';
-import 'package:html/dom.dart' as dom;
 
 class WebChord {
   String text;
@@ -32,14 +34,86 @@ class WebRepository {
   });
 
   Future<String> testGetSong() async {
-    var response = await webProvider.testGet();
-    final text = parseTextFromPisnickyAkordy(response.data);
-    final respnseSearch = await webProvider.searchPisnickyAkordy('touha');
+    // var response = await webProvider.testGet();
+    // final text = parseTextFromPisnickyAkordy(response.data);
+    // final respnseSearch = await webProvider.searchPisnickyAkordy('touha');
     //  final responseFirstLetter = await webProvider.searchInterpretByFirstLetterPisnickyAkordy('b');
     // final responseSearch = parseSearchByFirstLetterFromPisnickyAkordy(responseFirstLetter.data, 'b');
-    final responseSong = await webProvider.getSongsFromInterpretPisnickyAkordy('/pribuzni');
-    final responseSongText = parseGetSongsFromInterpretFromPisnickyAkordy(responseSong.data);
+    //   final responseSong = await webProvider.getSongsFromInterpretPisnickyAkordy('/pribuzni');
+    //  final responseSongText = parseGetSongsFromInterpretFromPisnickyAkordy(responseSong.data);
+
+    final response = await findSongAndIterpretsFromVelkyZpevnik('žalman');
+    final ressong = await findSongByInterpretFromVelkyZpevnik(response.first as WebInterpret);
+    final song = await getTextSongVelkyZpevnik(ressong[5]);
+
     return '';
+  }
+
+  Future<List<WebSong>> findSongByInterpretFromVelkyZpevnik(WebInterpret interpret) async {
+    List<WebSong> songs = [];
+    final response = await webProvider.getDataVelkyZpevnik(interpret.ref);
+    if (response.statusCode != 200) {
+      logger.e('error status Code ${response.statusCode}');
+      return songs;
+    }
+    final parsedSongs = parseSongsByInterpretFromVelkyZpevnik(response.data);
+    if (parsedSongs.isNotEmpty) {
+      for (MapEntry<String, String> entry in parsedSongs.entries) {
+        String title = entry.key;
+
+        songs.add(WebSong(interpret: interpret.title, title: title, ref: entry.value, ischords: true, server: 'velkyzpevnik.cz'));
+      }
+    }
+
+    return songs;
+  }
+
+  Map<String, String> parseSongsByInterpretFromVelkyZpevnik(String htmlText) {
+    Map<String, String> map = {};
+    BeautifulSoup bs = BeautifulSoup(htmlText);
+    final songs = bs.find('*', class_: 'songs');
+    if (songs != null) {
+      for (Bs4Element element in songs.contents) {
+        if (element.className == 'song show-upon-scroll') {
+          String ref = element.attributes['href'] ?? '';
+          String title = element.strippedStrings;
+          if (title.isNotEmpty && ref.isNotEmpty) {
+            map[title] = ref;
+          }
+        }
+      }
+    }
+
+    return map;
+  }
+
+  Future<List<WebItem>> findSongAndIterpretsFromVelkyZpevnik(String searchText) async {
+    List<WebItem> items = [];
+    final respnseItem = await webProvider.searchVelkyZpevnik(searchText);
+    if (respnseItem.statusCode != 200) {
+      logger.e('error status Code ${respnseItem.statusCode}');
+      return items;
+    }
+    if (respnseItem.data == null) {
+      logger.e('error data is null');
+      return items;
+    }
+    try {
+      if (respnseItem.data is List) {
+        for (Map<String, dynamic> item in respnseItem.data) {
+          if (item.containsKey('type')) {
+            if (item['type'] == 'interpret') {
+              items.add(WebInterpret(title: item['name'], ref: item['url']));
+            } else if (item['type'] == 'song') {
+              items.add(WebSong(title: item['name'], ref: item['url'], interpret: item['interpret'], server: 'velkyzpevnik.cz'));
+            }
+          }
+        }
+      }
+    } catch (e) {
+      logger.e('error: $e');
+    }
+    return items;
   }
 
   Future<String> getTextSongPisnickyAkordy(String song) async {
@@ -64,7 +138,7 @@ class WebRepository {
         } else if (title.contains(' text písně')) {
           title = title.replaceAll('text písně', '');
         }
-        songs.add(WebSong(interpret: ref, title: title, ref: entry.value));
+        songs.add(WebSong(interpret: ref, title: title, ref: entry.value, server: 'pisnicky-akordy.cz'));
       }
     }
     return songs;
@@ -81,7 +155,7 @@ class WebRepository {
       final searchTextToLover = removeDiacriticsAndWhitespace(searchText.toLowerCase());
       for (MapEntry<String, String> entry in allInterpretersPisnickyAkordy.entries) {
         if (removeDiacriticsAndWhitespace(entry.key.toLowerCase()).contains(searchTextToLover)) {
-          interprets.add(WebInterpret(name: entry.key, ref: entry.value));
+          interprets.add(WebInterpret(title: entry.key, ref: entry.value));
           if (interprets.length > 50) {
             break;
           }
@@ -262,7 +336,7 @@ class WebRepository {
 
                   Iterable refIt = td.getElementsByTagName('a').where((element) => element.attributes.containsKey('href')).map((e) => e.attributes['href']);
                   if (refIt.isNotEmpty && name.isNotEmpty) {
-                    interpreters.add(WebInterpret(name: name, ref: refIt.first, songs: songs ?? -1));
+                    interpreters.add(WebInterpret(title: name, ref: refIt.first, songs: songs ?? -1));
                   }
                 }
               }
@@ -289,7 +363,7 @@ class WebRepository {
       String name = e.children.firstWhere((element) => element.className == 'title').innerHtml;
       String ref = e.attributes['href'] ?? '';
 
-      return WebInterpret(name: name, ref: ref);
+      return WebInterpret(title: name, ref: ref);
     }).toList();
 
     return interprets;
@@ -307,7 +381,7 @@ class WebRepository {
       String title = e.children.firstWhere((element) => element.className == 'title').innerHtml;
       String ref = e.children.firstWhere((element) => element.className == 'title').attributes['href'] ?? '';
       String interpret = e.children.firstWhere((element) => element.className == 'interpret').innerHtml;
-      return WebSong(title: title, ref: ref, interpret: interpret);
+      return WebSong(title: title, ref: ref, interpret: interpret, server: 'velkyzpevnik.cz');
     }).toList();
     logger.d(songs.toString());
     return songs;
@@ -331,7 +405,7 @@ class WebRepository {
               String ref = element.attributes['href'] ?? '';
               String title = element.children.first.innerHtml;
               if (title.isNotEmpty && ref.isNotEmpty) {
-                WebSong song = WebSong(title: title, ref: ref, interpret: interpret.name);
+                WebSong song = WebSong(title: title, ref: ref, interpret: interpret.title, server: 'velkyzpevnik.cz');
 
                 listSong.add(song);
               }
@@ -381,74 +455,85 @@ class WebRepository {
     return name;
   }
 
-  Future<WebSong> getTextSongVelkyZpevnik(WebSong song) async {
-    WebSong newSong = song;
+  Future<String> getTextSongVelkyZpevnik(WebSong song) async {
     dynamic response = await webProvider.getDataVelkyZpevnik(song.ref);
+    String lyric = '';
     if (response.statusCode != 200) {
       logger.e('error status Code ${response.statusCode}');
-      return newSong;
+      return lyric;
     }
-    try {
-      final document = parse(response.data);
-      Element? chordBox = document.getElementById('chordbox');
-      List<String> chords = [];
-      if (chordBox == null) {
-        return newSong;
-      }
-      newSong.nodes = chordBox.nodes;
-      newSong.unformatText = chordBox.text;
-      for (dom.Node node in chordBox.nodes) {
-        if (node.attributes['class'] == 'chord') {
-          chords.add('[${node.attributes['data-chord']}]');
-          continue;
-        }
-        if (node is dom.Text) {
-          if (node.text.trim().isEmpty) {
-            chords.add(node.text);
-          } else {
-            String lyric = node.text;
-            final regExp = RegExp("\n");
-            if (regExp.allMatches(lyric).length <= 3) {
-              lyric = lyric.replaceAll('\n', '');
-            }
 
-            while (lyric[lyric.length - 1] == ' ') {
-              lyric = lyric.substring(0, lyric.length - 1);
-            }
-            int index = 0;
-            for (String chord in chords) {
-              if (chord.trim().isEmpty) {
-                index += chord.length;
-              } else {
-                if (index > lyric.length) {
-                  lyric = '$lyric$chord';
-                  index = lyric.length + 1;
-                } else {
-                  int indexChord = (index * 1.39).round();
-                  if (indexChord > lyric.length - 1) {
-                    indexChord = lyric.length - 1;
-                  }
-                  lyric = '${lyric.substring(0, indexChord)}$chord${lyric.substring(indexChord, lyric.length)}';
-                  index += chord.length;
+    try {
+      BeautifulSoup bs = BeautifulSoup(response.data);
+      final songText = bs.find('*', class_: 'format', id: 'chordbox');
+      if (songText == null) {
+        logger.e('songText is null');
+        return lyric;
+      }
+      String text = '';
+      List<WebChord> chords = [];
+      int beforeSpaces = 0;
+      for (var son in songText.nodes) {
+        if (son is Element && son.className == 'chord') {
+          chords.add(WebChord(text: son.text, beforeSpaces: beforeSpaces));
+        }
+        if (songText.nodes.first == son) {
+          if (son is Text && son.text.contains('\n')) {
+            final lines = son.text.split('\n');
+            for (String line in lines) {
+              if (text.trim().isEmpty) {
+                if (lines.last == line) {
+                  beforeSpaces = text.length;
                 }
+              } else {
+                lyric += line;
               }
             }
-            lyric += '\n';
-            newSong.lyric += lyric;
-            chords.clear();
+          } else if (son is Text && son.text.trim().isEmpty) {
+            beforeSpaces = son.text.length;
+            if (chords.isNotEmpty) {
+              beforeSpaces += chords.last.text.length;
+            }
+          }
+          continue;
+        }
+        if (son is Text && son.text.trim().isEmpty) {
+          beforeSpaces = son.text.length;
+          if (chords.isNotEmpty) {
+            beforeSpaces += chords.last.text.length;
+          }
+        }
+        if (son is Text && son.text.contains('\n')) {
+          final lines = son.text.split('\n');
+          for (String line in lines) {
+            if (line.trim().isEmpty) {
+              if (lines.last == line) {
+                beforeSpaces = line.length;
+              }
+            } else {
+              text = line;
+              if (chords.isNotEmpty) {
+                int index = 0;
+                for (WebChord chord in chords) {
+                  index += chord.beforeSpaces;
+                  if (index < text.length) {
+                    text = text.insert(index, '[${chord.text}]');
+                    index += chord.text.length + 2;
+                  } else {
+                    text = '$text[${chord.text}]';
+                  }
+                }
+              }
+              lyric += '$text\n';
+              chords.clear();
+              beforeSpaces = 0;
+            }
           }
         }
       }
-
-      //   text = chordBox?.text ?? '';
-      List<Element> listSong = document.getElementsByTagName('span').where((element) => element.attributes['class'] == 'chord').toList();
-      logger.d('text unformat: ${chordBox.text}');
-      logger.d(newSong.lyric);
-
-      logger.d('test');
     } catch (e) {
-      logger.d('$e');
+      logger.e('$e');
     }
-    return newSong;
+    return lyric;
   }
 }
