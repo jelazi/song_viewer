@@ -29,6 +29,7 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
           listExpandedSongs: [],
           listAllGroups: [],
           listSelectedGroups: [],
+          selectedPage: 'preview',
         )) {
     on<_Init>(_init);
     on<UpdateSongData>(_updateSongData);
@@ -42,6 +43,7 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
     on<DeleteGroup>(_deleteGroup);
     on<ChangeGroup>(_changeGroup);
     on<SelectGroups>(_selectGroups);
+    on<SelectPage>(_selectPage);
     songsRepository.selectSongData.listen((event) {
       add(ChangeSelectedSong(selectedSongId: event));
     });
@@ -145,5 +147,10 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
       }
     }
     emit(state.copyWith(listSelectedGroups: List<String>.from(event.groups), listSong: listSelectedSongs));
+  }
+
+  void _selectPage(SelectPage event, Emitter<HomePageState> emit) {
+    final state = this.state;
+    emit(state.copyWith(selectedPage: event.page));
   }
 }

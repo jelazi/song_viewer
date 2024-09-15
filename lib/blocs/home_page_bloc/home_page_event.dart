@@ -116,3 +116,11 @@ class SelectGroups extends HomePageEvent {
   @override
   List<Object> get props => [groups];
 }
+
+class SelectPage extends HomePageEvent {
+  final String page;
+  const SelectPage({required this.page});
+
+  @override
+  List<Object> get props => [page];
+}

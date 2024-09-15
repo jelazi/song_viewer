@@ -249,5 +249,8 @@
     "withOrWithoutChords": "S akordy / Bez akordů",
     "withChords": "S akordy",
     "withoutChords": "Bez akordů",
+    "selectPage": "Vyber stránku",
+    "selectWebSite": "Vyber vyhledávač",
+    "filterInterpret": "Filtruj zpěváka",
     "test": "Test"
 }

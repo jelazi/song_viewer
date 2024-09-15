@@ -55,52 +55,102 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
       context.read<PreviewChordBloc>().add(ChangeHeightWindow(height: MediaQuery.of(context).size.height));
     }
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(100),
-        child: BlocConsumer<PreviewChordBloc, PreviewChordState>(
-          listener: (context, state) {
-            if (state.heightWindow != MediaQuery.of(context).size.height) {
-              context.read<PreviewChordBloc>().add(ChangeHeightWindow(height: MediaQuery.of(context).size.height));
-            }
-          },
-          builder: (context, state) {
-            return GestureDetector(
-              onPanUpdate: (details) {
-                if (details.delta.dy < 0) {
-                  context.read<PreviewChordBloc>().add(const ChangeAppBarStatus(status: false));
-                }
+      appBar: AppBar(
+        title: BlocConsumer<PreviewChordBloc, PreviewChordState>(listener: (context, state) {
+          if (state.heightWindow != MediaQuery.of(context).size.height) {
+            context.read<PreviewChordBloc>().add(ChangeHeightWindow(height: MediaQuery.of(context).size.height));
+          }
+        }, builder: (context, state) {
+          return state.data.song?.interpret != null
+              ? Column(
+                  children: [Text(state.data.song?.title ?? ''), Text(state.data.song?.interpret ?? '', style: pTextStyle.copyWith(color: AppColor.primaryDarkColor))],
+                )
+              : Text(state.data.song?.title ?? '');
+        }),
+        actions: [
+          IconButton(
+              onPressed: () {
+                context.read<PreviewChordBloc>().add(const ChangeFontSize(isIncrease: true));
               },
-              child: AnimatedContainer(
-                  height: state.appBarStatus ? 90.0 : 0.0,
-                  duration: const Duration(milliseconds: 200),
-                  child: AppBar(
-                    iconTheme: const IconThemeData(color: Colors.white),
-                    backgroundColor: AppColor.primaryColor,
-                    title: Column(
-                      children: [
-                        Text(state.data.song?.title ?? '', style: h4TextStyle.copyWith(color: Colors.white)),
-                        Text(state.data.song?.interpret ?? '', style: pTextStyle.copyWith(color: Colors.white))
-                      ],
-                    ),
-                    actions: [
-                      IconButton(
-                          icon: Icon(
-                            MdiIcons.radioboxMarked,
-                            color: (state.data.song != null && state.selectedSongId == state.data.song?.id) ? Colors.green : AppColor.primaryDarkColor,
-                          ),
-                          onPressed: () {
-                            context.read<PreviewChordBloc>().add(SelectSongInPreview(selectSongId: state.data.song?.id ?? ''));
-                          }),
-                      IconButton(
-                          onPressed: () {
-                            context.read<PreviewChordBloc>().add(ChangeVisibleButtons(status: !state.visibleButtons));
-                          },
-                          icon: const Icon(Icons.menu, color: Colors.white))
-                    ],
-                  )),
-            );
-          },
-        ),
+              icon: const Icon(
+                Icons.zoom_in,
+                color: AppColor.primaryDarkColor,
+              )),
+          IconButton(
+              onPressed: () {
+                context.read<PreviewChordBloc>().add(const ChangeFontSize(isIncrease: false));
+              },
+              icon: const Icon(
+                Icons.zoom_out,
+                color: AppColor.primaryDarkColor,
+              )),
+          IconButton(
+            onPressed: () {
+              context.read<PreviewChordBloc>().add(const TransposeChord(increment: 1));
+            },
+            icon: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.add,
+                  size: 18,
+                  color: AppColor.primaryDarkColor,
+                ),
+                Icon(
+                  Icons.music_note,
+                  size: 18,
+                  color: AppColor.primaryDarkColor,
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: () {
+              context.read<PreviewChordBloc>().add(const TransposeChord(increment: -1));
+            },
+            icon: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.remove,
+                  size: 18,
+                  color: AppColor.primaryDarkColor,
+                ),
+                Icon(
+                  Icons.music_note,
+                  size: 18,
+                  color: AppColor.primaryDarkColor,
+                ),
+              ],
+            ),
+          ),
+          BlocBuilder<PreviewChordBloc, PreviewChordState>(
+            builder: (context, state) {
+              return IconButton(
+                onPressed: () {
+                  context.read<PreviewChordBloc>().add(ChangeColumnStatus(status: !state.twoColumns));
+                },
+                icon: Icon(
+                  state.twoColumns ? Icons.view_column : Icons.format_align_justify,
+                  size: 18,
+                  color: AppColor.primaryDarkColor,
+                ),
+              );
+            },
+          ),
+          BlocBuilder<PreviewChordBloc, PreviewChordState>(
+            builder: (context, state) {
+              return IconButton(
+                  icon: Icon(
+                    MdiIcons.radioboxMarked,
+                    color: (state.data.song != null && state.selectedSongId == state.data.song?.id) ? Colors.green : AppColor.primaryDarkColor,
+                  ),
+                  onPressed: () {
+                    context.read<PreviewChordBloc>().add(SelectSongInPreview(selectSongId: state.data.song?.id ?? ''));
+                  });
+            },
+          ),
+        ],
       ),
       body: BlocBuilder<PreviewChordBloc, PreviewChordState>(
         builder: (context, state) {
@@ -159,65 +209,7 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
                       opacity: state.visibleButtons && state.appBarStatus ? 1.0 : 0.0,
                       duration: const Duration(milliseconds: 500),
                       child: Column(
-                        children: [
-                          MyFloatingButton(
-                              enabled: state.textStyle.fontSize! < 40,
-                              onPressed: () {
-                                context.read<PreviewChordBloc>().add(const ChangeFontSize(isIncrease: true));
-                              },
-                              icon: const Icon(Icons.zoom_in)),
-                          MyFloatingButton(
-                              enabled: state.textStyle.fontSize! > 10,
-                              onPressed: () {
-                                context.read<PreviewChordBloc>().add(const ChangeFontSize(isIncrease: false));
-                              },
-                              icon: const Icon(Icons.zoom_out)),
-                          MyFloatingButton(
-                              onPressed: () {
-                                context.read<PreviewChordBloc>().add(const TransposeChord(increment: 1));
-                              },
-                              icon: const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.add,
-                                    size: 18,
-                                  ),
-                                  Icon(
-                                    Icons.music_note,
-                                    size: 18,
-                                  ),
-                                ],
-                              ),
-                              enabled: true),
-                          MyFloatingButton(
-                              onPressed: () {
-                                context.read<PreviewChordBloc>().add(const TransposeChord(increment: -1));
-                              },
-                              icon: const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.remove,
-                                    size: 18,
-                                  ),
-                                  Icon(
-                                    Icons.music_note,
-                                    size: 18,
-                                  ),
-                                ],
-                              ),
-                              enabled: true),
-                          MyFloatingButton(
-                              onPressed: () {
-                                context.read<PreviewChordBloc>().add(ChangeColumnStatus(status: !state.twoColumns));
-                              },
-                              icon: Icon(
-                                state.twoColumns ? Icons.view_column : Icons.format_align_justify,
-                                size: 18,
-                              ),
-                              enabled: true)
-                        ],
+                        children: [],
                       )),
                 ),
                 Visibility(

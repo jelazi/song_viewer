@@ -8,6 +8,7 @@ class HomePageState extends Equatable {
   final List<String> listExpandedSongs;
   final List<String> listAllGroups;
   final List<String> listSelectedGroups;
+  final String selectedPage;
 
   const HomePageState({
     required this.selectedSongId,
@@ -16,10 +17,11 @@ class HomePageState extends Equatable {
     required this.listExpandedSongs,
     required this.listAllGroups,
     required this.listSelectedGroups,
+    required this.selectedPage,
   });
 
   @override
-  List<Object> get props => [selectedSongId, listSong, listExpandedSongs, isEditIconVisible, listAllGroups, listSelectedGroups];
+  List<Object> get props => [selectedSongId, listSong, listExpandedSongs, isEditIconVisible, listAllGroups, listSelectedGroups, selectedPage];
 
   HomePageState copyWith({
     String? selectedSongId,
@@ -28,6 +30,7 @@ class HomePageState extends Equatable {
     List<String>? listExpandedSongs,
     List<String>? listAllGroups,
     List<String>? listSelectedGroups,
+    String? selectedPage,
   }) {
     return HomePageState(
       selectedSongId: selectedSongId ?? this.selectedSongId,
@@ -36,6 +39,7 @@ class HomePageState extends Equatable {
       listExpandedSongs: listExpandedSongs ?? this.listExpandedSongs,
       listAllGroups: listAllGroups ?? this.listAllGroups,
       listSelectedGroups: listSelectedGroups ?? this.listSelectedGroups,
+      selectedPage: selectedPage ?? this.selectedPage,
     );
   }
 }
@@ -48,5 +52,6 @@ class HomePageInitial extends HomePageState {
     required super.listExpandedSongs,
     required super.listAllGroups,
     required super.listSelectedGroups,
+    required super.selectedPage,
   });
 }

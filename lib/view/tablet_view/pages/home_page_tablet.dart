@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:default_project/repositories/settings_repository.dart';
-import 'package:default_project/view/mobile_view/widgets/song_card.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 
 import '../../../blocs/export_blocs.dart';
 import '../../../services/constants.dart';
-import '../../mobile_view/widgets/home_drawer.dart';
+import '../widgets/song_card_tablet.dart';
+import '../widgets/filter_field_tablet.dart';
+import '../widgets/song_card_tablet_web.dart';
 
 class HomePageTablet extends StatefulWidget {
   final SettingsRepository settingsRepository;
@@ -20,7 +22,13 @@ class HomePageTablet extends StatefulWidget {
 }
 
 class _HomePageTabletState extends State<HomePageTablet> {
-  final TextEditingController _filter = TextEditingController();
+  final TextEditingController _previewFilterSearchSong = TextEditingController();
+  final TextEditingController _filterInterpretPisnickyAkordy = TextEditingController();
+  final TextEditingController _filterSongPisnickyAkordy = TextEditingController();
+  final TextEditingController _filterInterpretVelkyZpevnik = TextEditingController();
+  final TextEditingController _filterSongVelkyZpevnik = TextEditingController();
+  String selectPage = 'preview';
+  String selectedWebSite = 'velkyzpevnik.cz';
 
   bool selectLargeScreen(Size size) {
     bool isLargeScreen = false;
@@ -50,83 +58,357 @@ class _HomePageTabletState extends State<HomePageTablet> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      selectLargeScreen(MediaQuery.of(context).size);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    selectLargeScreen(MediaQuery.of(context).size);
     return BlocBuilder<HomePageBloc, HomePageState>(
       builder: (context, state) {
         return Scaffold(
-          drawer: const HomeDrawer(),
-          body: RefreshIndicator(
-            onRefresh: () async {
-              // context.read<HomePageBloc>().add(const LoadSongs());
-              context.read<HomePageBloc>().add(const UpdateSongData());
-            },
-            child: CustomScrollView(slivers: [
-              SliverLayoutBuilder(builder: ((context, constraints) {
-                return SliverAppBar(
-                  floating: true,
-                  pinned: true,
-                  snap: false,
-                  centerTitle: false,
-                  title: Align(alignment: Alignment.centerRight, child: Text('songsViewer'.tr())),
-                  bottom: PreferredSize(
-                    preferredSize: const Size.fromHeight(50),
-                    child: Column(
-                      children: [
-                        Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 10),
-                          width: MediaQuery.of(context).size.width - 20,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(color: AppColor.primaryColor),
-                          ),
-                          child: Center(
-                            child: TextField(
-                              controller: _filter,
-                              decoration: InputDecoration(
-                                hintText: 'filterSong'.tr(),
-                                prefixIcon: const Icon(Icons.search),
-                                suffixIcon: IconButton(
-                                  onPressed: (() {
-                                    _filter.clear();
-                                    context.read<HomePageBloc>().add(const FilterSong(filter: ''));
-                                  }),
-                                  icon: const Icon(Icons.clear),
-                                ),
-                              ),
-                              onChanged: (value) {
-                                context.read<HomePageBloc>().add(FilterSong(filter: value));
-                              },
-                            ),
+          resizeToAvoidBottomInset: false,
+          body: SafeArea(
+            child: Row(children: [
+              SizedBox(
+                  width: 250,
+                  height: MediaQuery.of(context).size.height,
+                  child: Column(
+                    children: [
+                      Text(
+                        'songsViewer'.tr(),
+                        style: const TextStyle(
+                          fontSize: 24,
+                        ),
+                      ),
+                      Text('${'version'.tr()} ${context.read<HomePageBloc>().settingsRepository.version}',
+                          style: const TextStyle(
+                            fontSize: 14,
+                          )),
+                      Visibility(
+                        visible: state.selectedPage == 'preview',
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: SizedBox(
+                            height: 30,
+                            child: Text('${context.read<HomePageBloc>().songsRepository.songs.length} ${'songs'.tr()}',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                )),
                           ),
                         ),
-                        const SizedBox(
-                          height: 10,
-                        )
-                      ],
-                    ),
-                  ),
-                );
-              })),
-              SliverList(
-                delegate: SliverChildListDelegate(
-                  state.listSong
-                      .map((song) => SongCard(
-                            song: song,
-                            index: state.listSong.indexOf(song),
-                            isSelectedSong: state.selectedSongId == song.id,
-                            isEditIconVisible: state.isEditIconVisible,
-                            isExpanded: state.listExpandedSongs.contains(song.id),
-                          ))
-                      .toList(),
-                ),
+                      ),
+                      const Divider(
+                        color: AppColor.grey3Color,
+                        height: 20,
+                        thickness: 1,
+                        indent: 20,
+                        endIndent: 20,
+                      ),
+                      getSelectPageDropDown(),
+                      const Divider(
+                        color: AppColor.grey3Color,
+                        height: 40,
+                        thickness: 1,
+                        indent: 20,
+                        endIndent: 20,
+                      ),
+                      state.selectedPage == 'preview'
+                          ? getPreviewFilterItems(context)
+                          : state.selectedPage == 'web'
+                              ? getWebFilterItems(context)
+                              : const SizedBox(),
+                    ],
+                  )),
+              SizedBox(
+                height: MediaQuery.of(context).size.height,
+                width: MediaQuery.of(context).size.width - 250,
+                child: state.selectedPage == 'preview'
+                    ? getPreviewBody(state)
+                    : state.selectedPage == 'web'
+                        ? getWebBody(state)
+                        : const SizedBox(),
               )
             ]),
           ),
         );
       },
+    );
+  }
+
+  Widget getWebBody(HomePageState state) {
+    return BlocBuilder<WebBloc, WebState>(
+      builder: (context, state) {
+        return ListView(
+          shrinkWrap: true,
+          children: state.songs
+              .map((song) => SongCardTabletWeb(
+                    song: song,
+                    index: state.songs.indexOf(song),
+                  ))
+              .toList(),
+        );
+      },
+    );
+  }
+
+  Widget getPreviewBody(HomePageState state) {
+    return ListView(
+      shrinkWrap: true,
+      children: state.listSong
+          .map((song) => SongCardTablet(
+                song: song,
+                index: state.listSong.indexOf(song),
+                isEditIconVisible: state.isEditIconVisible,
+                isSelectedSong: state.selectedSongId == song.id,
+              ))
+          .toList(),
+    );
+  }
+
+  Widget getPreviewFilterItems(BuildContext context) {
+    return Column(
+      children: [
+        FilterFieldTablet(
+          filter: _previewFilterSearchSong,
+          clearFilter: () => context.read<HomePageBloc>().add(const FilterSong(filter: '')),
+          onChanged: (value) => context.read<HomePageBloc>().add(FilterSong(filter: value)),
+          hintText: 'filterSong'.tr(),
+        ),
+      ],
+    );
+  }
+
+  Widget getWebFilterItems(BuildContext context) {
+    return BlocBuilder<WebBloc, WebState>(
+      builder: (context, state) {
+        return Column(
+          children: [
+            getWebSiteDropDown(),
+            const SizedBox(height: 20),
+            ...state.searchWeb == 0 ? getSearchWidgetForPisnickyAkordy(state) : getSearchWidgetForVelkyZpevnik(state),
+          ],
+        );
+      },
+    );
+  }
+
+  List<Widget> getSearchWidgetForVelkyZpevnik(WebState state) {
+    return [
+      FilterFieldTablet(
+        filter: _filterInterpretVelkyZpevnik,
+        clearFilter: () => context.read<WebBloc>().add(FilterInterprets(filter: '', typeSearching: 'velkyzpevnik.cz')),
+        onChanged: (value) => context.read<WebBloc>().add(FilterInterprets(filter: value, typeSearching: 'velkyzpevnik.cz')),
+        hintText: 'filterInterpret'.tr(),
+      ),
+      SizedBox(
+          height: MediaQuery.of(context).size.height - 410,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: state.filteredInterprets
+                  .map((interpret) => MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: GestureDetector(
+                          onTap: () {
+                            if (state.currentInterpret?.title == interpret.title) {
+                              context.read<WebBloc>().add(const ChangeCurrentInterpret(interpret: null, typeSearching: 'velkyzpevnik.cz'));
+                            } else {
+                              context.read<WebBloc>().add(ChangeCurrentInterpret(interpret: interpret, typeSearching: 'velkyzpevnik.cz'));
+                            }
+                          },
+                          child: Container(
+                            height: 30,
+                            width: 200,
+                            decoration: const BoxDecoration(
+                              border: Border(
+                                top: BorderSide(color: AppColor.grey3Color, width: 1.0),
+                              ),
+                            ),
+                            child: Text(
+                              interpret.title,
+                              style: TextStyle(fontSize: 14, color: state.currentInterpret?.title == interpret.title ? AppColor.alertErrorColor : AppColor.grey1Color),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                      ))
+                  .toList(),
+            ),
+          )),
+    ];
+  }
+
+  List<Widget> getSearchWidgetForPisnickyAkordy(WebState state) {
+    return [
+      FilterFieldTablet(
+        filter: _filterInterpretPisnickyAkordy,
+        clearFilter: () => context.read<WebBloc>().add(FilterInterprets(filter: '', typeSearching: 'pisnicky-akordy.cz')),
+        onChanged: (value) => context.read<WebBloc>().add(FilterInterprets(filter: value, typeSearching: 'pisnicky-akordy.cz')),
+        hintText: 'filterInterpret'.tr(),
+      ),
+      SizedBox(
+          height: MediaQuery.of(context).size.height - 410,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: state.filteredInterprets
+                  .map((interpret) => MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: GestureDetector(
+                          onTap: () {
+                            if (state.currentInterpret?.title == interpret.title) {
+                              context.read<WebBloc>().add(const ChangeCurrentInterpret(interpret: null, typeSearching: 'pisnicky-akordy.cz'));
+                            } else {
+                              context.read<WebBloc>().add(ChangeCurrentInterpret(interpret: interpret, typeSearching: 'pisnicky-akordy.cz'));
+                            }
+                          },
+                          child: Container(
+                            height: 30,
+                            width: 200,
+                            decoration: const BoxDecoration(
+                              border: Border(
+                                top: BorderSide(color: AppColor.grey3Color, width: 1.0),
+                              ),
+                            ),
+                            child: Text(
+                              interpret.title,
+                              style: TextStyle(fontSize: 14, color: state.currentInterpret?.title == interpret.title ? AppColor.alertErrorColor : AppColor.grey1Color),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                      ))
+                  .toList(),
+            ),
+          )),
+    ];
+  }
+
+  Widget getSelectPageDropDown() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 10.0, top: 20),
+          child: Text('selectPage'.tr(), style: const TextStyle(fontSize: 16)),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: AppColor.grey3Color),
+            borderRadius: BorderRadius.circular(5),
+          ),
+          margin: const EdgeInsets.all(8),
+          width: 250,
+          height: 40,
+          child: DropdownButton<String>(
+            underline: const SizedBox(),
+            value: selectPage,
+            padding: const EdgeInsets.only(left: 8),
+            items: [
+              DropdownMenuItem(
+                value: 'preview',
+                child: SizedBox(
+                  width: 200,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.remove_red_eye, color: AppColor.grey1Color),
+                      const SizedBox(width: 8),
+                      Text('preview'.tr()),
+                    ],
+                  ),
+                ),
+              ),
+              DropdownMenuItem(
+                value: 'web',
+                child: SizedBox(
+                  width: 200,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.web, color: AppColor.grey1Color),
+                      const SizedBox(width: 8),
+                      Text('web'.tr()),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+            onChanged: (value) {
+              setState(() {
+                selectPage = value!;
+              });
+              context.read<HomePageBloc>().add(SelectPage(page: value ?? 'preview'));
+            },
+            hint: const Text('Select an option'),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget getWebSiteDropDown() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(
+            left: 10.0,
+          ),
+          child: Text('selectWebSite'.tr(), style: const TextStyle(fontSize: 16)),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: AppColor.grey3Color),
+            borderRadius: BorderRadius.circular(5),
+          ),
+          margin: const EdgeInsets.all(8),
+          width: 250,
+          height: 40,
+          child: DropdownButton<String>(
+            underline: const SizedBox(),
+            value: selectedWebSite,
+            padding: const EdgeInsets.only(left: 8),
+            items: const [
+              DropdownMenuItem(
+                value: 'velkyzpevnik.cz',
+                child: SizedBox(
+                  width: 200,
+                  child: Text('velkyzpevnik.cz'),
+                ),
+              ),
+              DropdownMenuItem(
+                value: 'pisnicky-akordy.cz',
+                child: SizedBox(
+                  width: 200,
+                  child: Text('pisnicky-akordy.cz'),
+                ),
+              ),
+            ],
+            onChanged: (value) {
+              setState(() {
+                selectedWebSite = value!;
+                _filterSongVelkyZpevnik.clear();
+                _filterInterpretVelkyZpevnik.clear();
+                _filterInterpretPisnickyAkordy.clear();
+                _filterSongPisnickyAkordy.clear();
+                context.read<WebBloc>().add(ChangeSearchWeb(searchWeb: selectedWebSite == 'pisnicky-akordy.cz' ? 0 : 1));
+              });
+              int index = 0;
+              if (value == 'pisnicky-akordy.cz') {
+                index = 1;
+              }
+              context.read<WebBloc>().add(ChangeSearchWeb(searchWeb: index));
+            },
+            hint: const Text('Select an option'),
+          ),
+        ),
+      ],
     );
   }
 }
