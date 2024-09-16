@@ -104,3 +104,12 @@ class ChangeCurrentColumn extends PreviewChordEvent {
   @override
   List<Object> get props => [column];
 }
+
+class ChangeLyricFromWebSongUpdate extends PreviewChordEvent {
+  final int typeSearching;
+  final WebSong webSong;
+  const ChangeLyricFromWebSongUpdate({required this.typeSearching, required this.webSong});
+
+  @override
+  List<Object> get props => [typeSearching, webSong];
+}

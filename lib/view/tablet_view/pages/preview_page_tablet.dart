@@ -9,7 +9,6 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import '../../../blocs/export_blocs.dart';
 import '../../../model/chord/chords_positions.dart';
 import '../../../services/enums.dart';
-import '../../mobile_view/widgets/my_floating_button.dart';
 import '../../mobile_view/widgets/chords_lyric/flutter_chord.dart';
 import '../../mobile_view/widgets/chords_lyric/guitar_tabs.dart';
 
@@ -285,9 +284,13 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
   }
 
   Widget _getLyricsTwoColumnsRenderer(PreviewChordState state, ScrollController scrollController) {
-    String lyric = state.data.song?.lyrics ?? '';
-    List<String> list = lyric.split('\n');
     List<String> splittedLyric = state.lyricWithColumns(true, true, TypeLyric.translate);
+    if (splittedLyric.isEmpty) {
+      // when the song is from web and the lyrics are not loaded
+      return Center(
+        child: Text('empty'.tr()),
+      );
+    }
     if (splittedLyric.length == 1) {
       return LyricsRenderer(
         scrollController: scrollController,

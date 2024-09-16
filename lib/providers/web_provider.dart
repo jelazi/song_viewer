@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart' as dio;
 import 'package:dio/dio.dart';
+import 'package:logger_pkg/logger_pkg.dart';
 
 class WebProvider {
   final dio.Dio _dio = dio.Dio();
@@ -22,7 +23,12 @@ class WebProvider {
   }
 
   Future<Response> getDataVelkyZpevnik(String requir) async {
-    return dio.Dio().get('$velkyZpevnikUrl$requir');
+    try {
+      return dio.Dio().get('$velkyZpevnikUrl$requir');
+    } catch (e) {
+      logger.e(e);
+      return Response(requestOptions: RequestOptions(path: ''));
+    }
   }
 
   Future<dynamic> getDataProScholy(String requir) async {

@@ -190,7 +190,7 @@ class _HomePageTabletState extends State<HomePageTablet> {
           children: [
             getWebSiteDropDown(),
             const SizedBox(height: 20),
-            ...state.searchWeb == 0 ? getSearchWidgetForPisnickyAkordy(state) : getSearchWidgetForVelkyZpevnik(state),
+            ...state.searchWeb == 0 ? getSearchWidgetForVelkyZpevnik(state) : getSearchWidgetForPisnickyAkordy(state),
           ],
         );
       },
@@ -208,38 +208,41 @@ class _HomePageTabletState extends State<HomePageTablet> {
       SizedBox(
           height: MediaQuery.of(context).size.height - 410,
           child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: state.filteredInterprets
-                  .map((interpret) => MouseRegion(
-                        cursor: SystemMouseCursors.click,
-                        child: GestureDetector(
-                          onTap: () {
-                            if (state.currentInterpret?.title == interpret.title) {
-                              context.read<WebBloc>().add(const ChangeCurrentInterpret(interpret: null, typeSearching: 'velkyzpevnik.cz'));
-                            } else {
-                              context.read<WebBloc>().add(ChangeCurrentInterpret(interpret: interpret, typeSearching: 'velkyzpevnik.cz'));
-                            }
-                          },
-                          child: Container(
-                            height: 30,
-                            width: 200,
-                            decoration: const BoxDecoration(
-                              border: Border(
-                                top: BorderSide(color: AppColor.grey3Color, width: 1.0),
+            child: state.filteredInterprets.isEmpty
+                ? Center(child: CircularProgressIndicator())
+                : Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: state.filteredInterprets
+                        .map((interpret) => MouseRegion(
+                              cursor: SystemMouseCursors.click,
+                              child: GestureDetector(
+                                onTap: () {
+                                  if (state.currentInterpret?.title == interpret.title) {
+                                    context.read<WebBloc>().add(const ChangeCurrentInterpret(interpret: null, typeSearching: 'velkyzpevnik.cz'));
+                                  } else {
+                                    context.read<WebBloc>().add(ChangeCurrentInterpret(interpret: interpret, typeSearching: 'velkyzpevnik.cz'));
+                                  }
+                                },
+                                child: Container(
+                                  height: 40,
+                                  width: 200,
+                                  alignment: Alignment.centerLeft,
+                                  decoration: const BoxDecoration(
+                                    border: Border(
+                                      top: BorderSide(color: AppColor.grey3Color, width: 1.0),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    interpret.title,
+                                    style: TextStyle(fontSize: 14, color: state.currentInterpret?.title == interpret.title ? AppColor.alertErrorColor : AppColor.grey1Color),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
                               ),
-                            ),
-                            child: Text(
-                              interpret.title,
-                              style: TextStyle(fontSize: 14, color: state.currentInterpret?.title == interpret.title ? AppColor.alertErrorColor : AppColor.grey1Color),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ),
-                      ))
-                  .toList(),
-            ),
+                            ))
+                        .toList(),
+                  ),
           )),
     ];
   }
@@ -270,8 +273,9 @@ class _HomePageTabletState extends State<HomePageTablet> {
                             }
                           },
                           child: Container(
-                            height: 30,
+                            height: 40,
                             width: 200,
+                            alignment: Alignment.centerLeft,
                             decoration: const BoxDecoration(
                               border: Border(
                                 top: BorderSide(color: AppColor.grey3Color, width: 1.0),

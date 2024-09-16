@@ -1,6 +1,8 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'package:default_project/blocs/export_blocs.dart';
+import 'package:default_project/blocs/preview_bloc/preview_chord_bloc.dart';
 import 'package:flutter/material.dart';
-
+import '../../../model/song/song.dart';
 import '../../../model/web_song.dart';
 import '../../../services/constants.dart';
 
@@ -27,7 +29,10 @@ class _SongCardTabletWebState extends State<SongCardTabletWeb> with TickerProvid
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {},
+      onTap: () async {
+        context.read<PreviewChordBloc>().add(ChangeLyricFromWebSongUpdate(webSong: widget.song, typeSearching: context.read<WebBloc>().state.searchWeb));
+        Navigator.pushNamed(context, '/previewPage');
+      },
       child: SizedBox(
         height: 60,
         child: Card(

@@ -1,4 +1,5 @@
 import 'package:default_project/main.dart';
+import 'package:default_project/model/web_song.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:equatable/equatable.dart';
@@ -43,6 +44,7 @@ class PreviewChordBloc extends Bloc<PreviewChordEvent, PreviewChordState> {
     on<ChangeColumnStatus>(_changeColumnStatus);
     on<ChangeHeightWindow>(_changeHeightWindow);
     on<ChangeCurrentColumn>(_changeCurrentColumn);
+    on<ChangeLyricFromWebSongUpdate>(_changeLyricFromWebSongUpdate);
     add(const _Init());
   }
 
@@ -193,6 +195,39 @@ class PreviewChordBloc extends Bloc<PreviewChordEvent, PreviewChordState> {
       return;
     }
     emit(state.copyWith(currentColumn: event.column));
+  }
+
+  void _changeLyricFromWebSongUpdate(ChangeLyricFromWebSongUpdate event, Emitter<PreviewChordState> emit) async {
+    final state = this.state;
+
+    WebSong webSong = event.webSong;
+
+    var text = '';
+    if (event.typeSearching == 0) {
+      webSong.server = 'velkyzpevnik.cz';
+      final savedSong = hiveProvider.getWebSong('velkyzpevnik.cz${webSong.ref}');
+      if (savedSong != null) {
+        webSong = savedSong;
+      } else {
+        webSong.lyric = await webRepository.getTextSongVelkyZpevnik(webSong);
+        hiveProvider.setWebSong('velkyzpevnik.cz${webSong.ref}', webSong);
+      }
+    }
+    if (event.typeSearching == 1) {
+      webSong.server = 'pisnicky-akordy.cz';
+      final savedSong = hiveProvider.getWebSong('pisnicky-akordy.cz${webSong.ref}');
+      if (savedSong != null) {
+        webSong = savedSong;
+      } else {
+        webSong.lyric = await webRepository.getTextSongPisnickyAkordy(webSong.ref);
+        hiveProvider.setWebSong('pisnicky-akordy.cz${webSong.ref}', webSong);
+      }
+    }
+    Song song = Song(title: webSong.title, interpret: webSong.interpret, id: webSong.server + webSong.ref, lyrics: webSong.lyric);
+    emit(state.copyWith(
+      data: state.data.copyWith(song: song),
+      currentColumn: 0,
+    ));
   }
 
   List<String> lyricWithColumns(int maxLines, Song song, bool chords, bool notes, TypeLyric typeLyric) {

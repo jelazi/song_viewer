@@ -25,6 +25,8 @@ import '../mobile_view/pages/sheet_view_page.dart';
 import '../mobile_view/pages/youtube_video_page.dart';
 import '../tablet_view/pages/home_page_tablet.dart';
 
+
+
 class AppRouter {
   SettingsRepository settingsRepository;
   AppRouter({
@@ -54,6 +56,7 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => PageResponsive(pageMobile: const EditPageMobile(), pageTablet: const EditPageTablet(), pageDesktop: Container()));
       case '/previewPage':
         return MaterialPageRoute(builder: (_) => PageResponsive(pageMobile: const PreviewPageMobile(), pageTablet: const PreviewPageTablet(), pageDesktop: Container()));
+
       case '/presentationPage':
         return MaterialPageRoute(builder: (_) => PageResponsive(pageMobile: const PresentationPageMobile(), pageTablet: const PresentationPageTablet(), pageDesktop: Container()));
       case '/sheetViewPage':
