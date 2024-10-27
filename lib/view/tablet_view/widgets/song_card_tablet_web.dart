@@ -1,8 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:default_project/blocs/export_blocs.dart';
-import 'package:default_project/blocs/preview_bloc/preview_chord_bloc.dart';
 import 'package:flutter/material.dart';
-import '../../../model/song/song.dart';
+
 import '../../../model/web_song.dart';
 import '../../../services/constants.dart';
 

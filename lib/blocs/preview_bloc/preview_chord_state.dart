@@ -15,6 +15,7 @@ class PreviewChordState extends Equatable {
   final bool visibleButtons;
   final int cap;
   final double heightWindow;
+  final bool isDataFromWeb;
   const PreviewChordState({
     required this.data,
     required this.textStyle,
@@ -29,6 +30,7 @@ class PreviewChordState extends Equatable {
     required this.visibleButtons,
     required this.cap,
     required this.heightWindow,
+    required this.isDataFromWeb,
   });
 
   @override
@@ -46,6 +48,8 @@ class PreviewChordState extends Equatable {
         visibleButtons,
         cap,
         selectedSongId,
+        heightWindow,
+        isDataFromWeb,
       ];
 
   PreviewChordState copyWith({
@@ -62,6 +66,7 @@ class PreviewChordState extends Equatable {
     bool? visibleButtons,
     int? cap,
     double? heightWindow,
+    bool? isDataFromWeb,
   }) {
     return PreviewChordState(
       data: data ?? this.data,
@@ -77,6 +82,7 @@ class PreviewChordState extends Equatable {
       visibleButtons: visibleButtons ?? this.visibleButtons,
       cap: cap ?? this.cap,
       heightWindow: heightWindow ?? this.heightWindow,
+      isDataFromWeb: isDataFromWeb ?? this.isDataFromWeb,
     );
   }
 
@@ -156,5 +162,6 @@ class PreviewChordInitial extends PreviewChordState {
     required super.cap,
     required super.selectedSongId,
     required super.heightWindow,
+    required super.isDataFromWeb,
   });
 }

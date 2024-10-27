@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:default_project/services/constants.dart';
+import 'package:default_project/view/desktop_view/widgets/my_toast.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -62,11 +63,26 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
         }, builder: (context, state) {
           return state.data.song?.interpret != null
               ? Column(
-                  children: [Text(state.data.song?.title ?? ''), Text(state.data.song?.interpret ?? '', style: pTextStyle.copyWith(color: AppColor.primaryDarkColor))],
+                  children: [Text(state.data.song?.title ?? ''), Text(state.data.song?.interpret ?? '', style: labelTextStyle.copyWith(color: AppColor.primaryDarkColor))],
                 )
               : Text(state.data.song?.title ?? '');
         }),
         actions: [
+          BlocBuilder<PreviewChordBloc, PreviewChordState>(
+            builder: (context, state) {
+              return Visibility(
+                visible: state.isDataFromWeb,
+                child: IconButton(
+                    onPressed: () {
+                      MyToast.showText(text: 'savePage'.tr(), typeNotification: TypeNotification.warning);
+                    },
+                    icon: const Icon(
+                      Icons.save,
+                      color: AppColor.primaryDarkColor,
+                    )),
+              );
+            },
+          ),
           IconButton(
               onPressed: () {
                 context.read<PreviewChordBloc>().add(const ChangeFontSize(isIncrease: true));

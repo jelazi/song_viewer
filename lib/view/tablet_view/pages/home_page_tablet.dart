@@ -1,13 +1,12 @@
-import 'package:flutter/material.dart';
 import 'package:default_project/repositories/settings_repository.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 
 import '../../../blocs/export_blocs.dart';
 import '../../../services/constants.dart';
-import '../widgets/song_card_tablet.dart';
 import '../widgets/filter_field_tablet.dart';
+import '../widgets/song_card_tablet.dart';
 import '../widgets/song_card_tablet_web.dart';
 
 class HomePageTablet extends StatefulWidget {
@@ -209,40 +208,42 @@ class _HomePageTabletState extends State<HomePageTablet> {
           height: MediaQuery.of(context).size.height - 410,
           child: SingleChildScrollView(
             child: state.filteredInterprets.isEmpty
-                ? Center(child: CircularProgressIndicator())
-                : Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: state.filteredInterprets
-                        .map((interpret) => MouseRegion(
-                              cursor: SystemMouseCursors.click,
-                              child: GestureDetector(
-                                onTap: () {
-                                  if (state.currentInterpret?.title == interpret.title) {
-                                    context.read<WebBloc>().add(const ChangeCurrentInterpret(interpret: null, typeSearching: 'velkyzpevnik.cz'));
-                                  } else {
-                                    context.read<WebBloc>().add(ChangeCurrentInterpret(interpret: interpret, typeSearching: 'velkyzpevnik.cz'));
-                                  }
-                                },
-                                child: Container(
-                                  height: 40,
-                                  width: 200,
-                                  alignment: Alignment.centerLeft,
-                                  decoration: const BoxDecoration(
-                                    border: Border(
-                                      top: BorderSide(color: AppColor.grey3Color, width: 1.0),
+                ? Container()
+                : _filterInterpretVelkyZpevnik.text.isEmpty
+                    ? Container()
+                    : Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: state.filteredInterprets
+                            .map((interpret) => MouseRegion(
+                                  cursor: SystemMouseCursors.click,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      if (state.currentInterpret?.title == interpret.title) {
+                                        context.read<WebBloc>().add(const ChangeCurrentInterpret(interpret: null, typeSearching: 'velkyzpevnik.cz'));
+                                      } else {
+                                        context.read<WebBloc>().add(ChangeCurrentInterpret(interpret: interpret, typeSearching: 'velkyzpevnik.cz'));
+                                      }
+                                    },
+                                    child: Container(
+                                      height: 40,
+                                      width: 200,
+                                      alignment: Alignment.centerLeft,
+                                      decoration: const BoxDecoration(
+                                        border: Border(
+                                          top: BorderSide(color: AppColor.grey3Color, width: 1.0),
+                                        ),
+                                      ),
+                                      child: Text(
+                                        interpret.title,
+                                        style: TextStyle(fontSize: 14, color: state.currentInterpret?.title == interpret.title ? AppColor.alertErrorColor : AppColor.grey1Color),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ),
                                   ),
-                                  child: Text(
-                                    interpret.title,
-                                    style: TextStyle(fontSize: 14, color: state.currentInterpret?.title == interpret.title ? AppColor.alertErrorColor : AppColor.grey1Color),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ),
-                            ))
-                        .toList(),
-                  ),
+                                ))
+                            .toList(),
+                      ),
           )),
     ];
   }
@@ -299,6 +300,7 @@ class _HomePageTabletState extends State<HomePageTablet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // add hide/show button
         Padding(
           padding: const EdgeInsets.only(left: 10.0, top: 20),
           child: Text('selectPage'.tr(), style: const TextStyle(fontSize: 16)),

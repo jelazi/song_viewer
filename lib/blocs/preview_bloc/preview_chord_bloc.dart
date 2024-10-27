@@ -1,9 +1,8 @@
 import 'package:default_project/main.dart';
 import 'package:default_project/model/web_song.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../model/song/song.dart';
 import '../../repositories/settings_repository.dart';
@@ -31,6 +30,7 @@ class PreviewChordBloc extends Bloc<PreviewChordEvent, PreviewChordState> {
           cap: 0,
           selectedSongId: '',
           heightWindow: 300,
+          isDataFromWeb: false,
         )) {
     on<_Init>(_init);
     on<ChangeCurrentSong>(_changeCurrentSong);
@@ -81,9 +81,15 @@ class PreviewChordBloc extends Bloc<PreviewChordEvent, PreviewChordState> {
           ),
           transposeIncrement: transposeIncrement,
           cap: _getCapByIncrement(transposeIncrement),
-          currentColumn: 0));
+          currentColumn: 0,
+          isDataFromWeb: false));
     } else {
-      emit(state.copyWith(data: state.data.copyWith(song: event.song), transposeIncrement: transposeIncrement, cap: _getCapByIncrement(transposeIncrement), currentColumn: 0));
+      emit(state.copyWith(
+          data: state.data.copyWith(song: event.song),
+          transposeIncrement: transposeIncrement,
+          cap: _getCapByIncrement(transposeIncrement),
+          currentColumn: 0,
+          isDataFromWeb: false));
     }
   }
 
@@ -223,11 +229,10 @@ class PreviewChordBloc extends Bloc<PreviewChordEvent, PreviewChordState> {
         hiveProvider.setWebSong('pisnicky-akordy.cz${webSong.ref}', webSong);
       }
     }
+    webSong.title = webSong.title.replaceAll('  ', '');
+    webSong.title = webSong.title.replaceAll('\n', '');
     Song song = Song(title: webSong.title, interpret: webSong.interpret, id: webSong.server + webSong.ref, lyrics: webSong.lyric);
-    emit(state.copyWith(
-      data: state.data.copyWith(song: song),
-      currentColumn: 0,
-    ));
+    emit(state.copyWith(data: state.data.copyWith(song: song), currentColumn: 0, cap: 0, transposeIncrement: 0, isDataFromWeb: true));
   }
 
   List<String> lyricWithColumns(int maxLines, Song song, bool chords, bool notes, TypeLyric typeLyric) {

@@ -44,7 +44,8 @@ class _SongCardTabletState extends State<SongCardTablet> with TickerProviderStat
         TypeClickCard typeClickCard = settingsRepository.typeClickCard;
         switch (typeClickCard) {
           case TypeClickCard.none:
-            context.read<HomePageBloc>().add(ChangeExpandedCard(songId: widget.song.id));
+            context.read<PreviewChordBloc>().add(ChangeCurrentSong(song: widget.song));
+            Navigator.pushNamed(context, '/previewPage');
             break;
           case TypeClickCard.preview:
             context.read<PreviewChordBloc>().add(ChangeCurrentSong(song: widget.song));
