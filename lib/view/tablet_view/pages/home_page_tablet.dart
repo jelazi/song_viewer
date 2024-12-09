@@ -1,3 +1,4 @@
+import 'package:default_project/model/web_interpret.dart';
 import 'package:default_project/repositories/settings_repository.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
@@ -87,23 +88,45 @@ class _HomePageTabletState extends State<HomePageTablet> {
                           style: const TextStyle(
                             fontSize: 14,
                           )),
-                      Visibility(
-                        visible: state.selectedPage == 'preview',
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: SizedBox(
-                            height: 30,
-                            child: Text('${context.read<HomePageBloc>().songsRepository.songs.length} ${'songs'.tr()}',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                )),
-                          ),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Visibility(
+                              visible: state.selectedPage == 'preview',
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: SizedBox(
+                                  height: 30,
+                                  child: Text('${context.read<HomePageBloc>().songsRepository.songs.length} ${'songs'.tr()}',
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      )),
+                                ),
+                              ),
+                            ),
+                            MouseRegion(
+                              cursor: SystemMouseCursors.click,
+                              child: GestureDetector(
+                                onTap: () {
+                                  Navigator.pushNamed(context, '/settingsPage');
+                                },
+                                child: Container(
+                                  height: 40,
+                                  width: 40,
+                                  decoration: BoxDecoration(border: Border.all(color: AppColor.grey3Color), borderRadius: BorderRadius.circular(5)),
+                                  padding: EdgeInsets.zero,
+                                  child: const Icon(Icons.settings, color: AppColor.grey2Color, size: 14),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       const Divider(
                         color: AppColor.grey3Color,
-                        height: 20,
                         thickness: 1,
                         indent: 20,
                         endIndent: 20,
@@ -111,7 +134,6 @@ class _HomePageTabletState extends State<HomePageTablet> {
                       getSelectPageDropDown(),
                       const Divider(
                         color: AppColor.grey3Color,
-                        height: 40,
                         thickness: 1,
                         indent: 20,
                         endIndent: 20,
@@ -119,7 +141,7 @@ class _HomePageTabletState extends State<HomePageTablet> {
                       state.selectedPage == 'preview'
                           ? getPreviewFilterItems(context)
                           : state.selectedPage == 'web'
-                              ? getWebFilterItems(context)
+                              ? getWebSiteDropDown()
                               : const SizedBox(),
                     ],
                   )),
@@ -142,14 +164,69 @@ class _HomePageTabletState extends State<HomePageTablet> {
   Widget getWebBody(HomePageState state) {
     return BlocBuilder<WebBloc, WebState>(
       builder: (context, state) {
-        return ListView(
-          shrinkWrap: true,
-          children: state.songs
-              .map((song) => SongCardTabletWeb(
-                    song: song,
-                    index: state.songs.indexOf(song),
-                  ))
-              .toList(),
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 15.0, bottom: 20),
+              child: FilterFieldTablet(
+                filter: _filterInterpretPisnickyAkordy,
+                clearFilter: state.searchWeb == 0
+                    ? () => context.read<WebBloc>().add(const FilterInterprets(filter: '', typeSearching: 'velkyzpevnik.cz'))
+                    : () => context.read<WebBloc>().add(const FilterInterprets(filter: '', typeSearching: 'pisnicky-akordy.cz')),
+                onChanged: (value) => context.read<WebBloc>().add(FilterInterprets(filter: value, typeSearching: state.searchWeb == 0 ? 'velkyzpevnik.cz' : 'pisnicky-akordy.cz')),
+                hintText: 'filterInterpret'.tr(),
+              ),
+            ),
+            SizedBox(
+              width: MediaQuery.of(context).size.width - 280,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: state.searchWebInterprets
+                        ? const SizedBox(width: 40, height: 40, child: CircularProgressIndicator())
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              SizedBox(
+                                  height: MediaQuery.of(context).size.height - 410,
+                                  child: SingleChildScrollView(
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.start,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: state.filteredInterprets.map((interpret) => WebInterpretCard(interpret: interpret)).toList(),
+                                    ),
+                                  )),
+                            ],
+                          ),
+                  ),
+                  Expanded(
+                    flex: 3,
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height - 110,
+                      child: state.searchWebSongs
+                          ? const SizedBox(
+                              width: 40,
+                              height: 40,
+                              child: CircularProgressIndicator(),
+                            )
+                          : ListView(
+                              shrinkWrap: true,
+                              children: state.songs
+                                  .map((song) => SongCardTabletWeb(
+                                        song: song,
+                                        index: state.songs.indexOf(song),
+                                      ))
+                                  .toList(),
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         );
       },
     );
@@ -180,120 +257,6 @@ class _HomePageTabletState extends State<HomePageTablet> {
         ),
       ],
     );
-  }
-
-  Widget getWebFilterItems(BuildContext context) {
-    return BlocBuilder<WebBloc, WebState>(
-      builder: (context, state) {
-        return Column(
-          children: [
-            getWebSiteDropDown(),
-            const SizedBox(height: 20),
-            ...state.searchWeb == 0 ? getSearchWidgetForVelkyZpevnik(state) : getSearchWidgetForPisnickyAkordy(state),
-          ],
-        );
-      },
-    );
-  }
-
-  List<Widget> getSearchWidgetForVelkyZpevnik(WebState state) {
-    return [
-      FilterFieldTablet(
-        filter: _filterInterpretVelkyZpevnik,
-        clearFilter: () => context.read<WebBloc>().add(FilterInterprets(filter: '', typeSearching: 'velkyzpevnik.cz')),
-        onChanged: (value) => context.read<WebBloc>().add(FilterInterprets(filter: value, typeSearching: 'velkyzpevnik.cz')),
-        hintText: 'filterInterpret'.tr(),
-      ),
-      SizedBox(
-          height: MediaQuery.of(context).size.height - 410,
-          child: SingleChildScrollView(
-            child: state.filteredInterprets.isEmpty
-                ? Container()
-                : _filterInterpretVelkyZpevnik.text.isEmpty
-                    ? Container()
-                    : Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: state.filteredInterprets
-                            .map((interpret) => MouseRegion(
-                                  cursor: SystemMouseCursors.click,
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      if (state.currentInterpret?.title == interpret.title) {
-                                        context.read<WebBloc>().add(const ChangeCurrentInterpret(interpret: null, typeSearching: 'velkyzpevnik.cz'));
-                                      } else {
-                                        context.read<WebBloc>().add(ChangeCurrentInterpret(interpret: interpret, typeSearching: 'velkyzpevnik.cz'));
-                                      }
-                                    },
-                                    child: Container(
-                                      height: 40,
-                                      width: 200,
-                                      alignment: Alignment.centerLeft,
-                                      decoration: const BoxDecoration(
-                                        border: Border(
-                                          top: BorderSide(color: AppColor.grey3Color, width: 1.0),
-                                        ),
-                                      ),
-                                      child: Text(
-                                        interpret.title,
-                                        style: TextStyle(fontSize: 14, color: state.currentInterpret?.title == interpret.title ? AppColor.alertErrorColor : AppColor.grey1Color),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ),
-                                ))
-                            .toList(),
-                      ),
-          )),
-    ];
-  }
-
-  List<Widget> getSearchWidgetForPisnickyAkordy(WebState state) {
-    return [
-      FilterFieldTablet(
-        filter: _filterInterpretPisnickyAkordy,
-        clearFilter: () => context.read<WebBloc>().add(FilterInterprets(filter: '', typeSearching: 'pisnicky-akordy.cz')),
-        onChanged: (value) => context.read<WebBloc>().add(FilterInterprets(filter: value, typeSearching: 'pisnicky-akordy.cz')),
-        hintText: 'filterInterpret'.tr(),
-      ),
-      SizedBox(
-          height: MediaQuery.of(context).size.height - 410,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: state.filteredInterprets
-                  .map((interpret) => MouseRegion(
-                        cursor: SystemMouseCursors.click,
-                        child: GestureDetector(
-                          onTap: () {
-                            if (state.currentInterpret?.title == interpret.title) {
-                              context.read<WebBloc>().add(const ChangeCurrentInterpret(interpret: null, typeSearching: 'pisnicky-akordy.cz'));
-                            } else {
-                              context.read<WebBloc>().add(ChangeCurrentInterpret(interpret: interpret, typeSearching: 'pisnicky-akordy.cz'));
-                            }
-                          },
-                          child: Container(
-                            height: 40,
-                            width: 200,
-                            alignment: Alignment.centerLeft,
-                            decoration: const BoxDecoration(
-                              border: Border(
-                                top: BorderSide(color: AppColor.grey3Color, width: 1.0),
-                              ),
-                            ),
-                            child: Text(
-                              interpret.title,
-                              style: TextStyle(fontSize: 14, color: state.currentInterpret?.title == interpret.title ? AppColor.alertErrorColor : AppColor.grey1Color),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ),
-                      ))
-                  .toList(),
-            ),
-          )),
-    ];
   }
 
   Widget getSelectPageDropDown() {
@@ -359,62 +322,109 @@ class _HomePageTabletState extends State<HomePageTablet> {
   }
 
   Widget getWebSiteDropDown() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(
-            left: 10.0,
+    return Padding(
+      padding: const EdgeInsets.only(top: 20.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(
+              left: 10.0,
+            ),
+            child: Text('selectWebSite'.tr(), style: const TextStyle(fontSize: 16)),
           ),
-          child: Text('selectWebSite'.tr(), style: const TextStyle(fontSize: 16)),
-        ),
-        Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: AppColor.grey3Color),
-            borderRadius: BorderRadius.circular(5),
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: AppColor.grey3Color),
+              borderRadius: BorderRadius.circular(5),
+            ),
+            margin: const EdgeInsets.all(8),
+            width: 250,
+            height: 40,
+            child: DropdownButton<String>(
+              underline: const SizedBox(),
+              value: selectedWebSite,
+              padding: const EdgeInsets.only(left: 8),
+              items: const [
+                DropdownMenuItem(
+                  value: 'velkyzpevnik.cz',
+                  child: SizedBox(
+                    width: 200,
+                    child: Text('velkyzpevnik.cz'),
+                  ),
+                ),
+                DropdownMenuItem(
+                  value: 'pisnicky-akordy.cz',
+                  child: SizedBox(
+                    width: 200,
+                    child: Text('pisnicky-akordy.cz'),
+                  ),
+                ),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  selectedWebSite = value!;
+                  _filterSongVelkyZpevnik.clear();
+                  _filterInterpretVelkyZpevnik.clear();
+                  _filterInterpretPisnickyAkordy.clear();
+                  _filterSongPisnickyAkordy.clear();
+                  context.read<WebBloc>().add(ChangeSearchWeb(searchWeb: selectedWebSite == 'pisnicky-akordy.cz' ? 0 : 1));
+                });
+                int index = 0;
+                if (value == 'pisnicky-akordy.cz') {
+                  index = 1;
+                }
+                context.read<WebBloc>().add(ChangeSearchWeb(searchWeb: index));
+              },
+              hint: const Text('Select an option'),
+            ),
           ),
-          margin: const EdgeInsets.all(8),
-          width: 250,
-          height: 40,
-          child: DropdownButton<String>(
-            underline: const SizedBox(),
-            value: selectedWebSite,
-            padding: const EdgeInsets.only(left: 8),
-            items: const [
-              DropdownMenuItem(
-                value: 'velkyzpevnik.cz',
-                child: SizedBox(
-                  width: 200,
-                  child: Text('velkyzpevnik.cz'),
-                ),
-              ),
-              DropdownMenuItem(
-                value: 'pisnicky-akordy.cz',
-                child: SizedBox(
-                  width: 200,
-                  child: Text('pisnicky-akordy.cz'),
-                ),
-              ),
-            ],
-            onChanged: (value) {
-              setState(() {
-                selectedWebSite = value!;
-                _filterSongVelkyZpevnik.clear();
-                _filterInterpretVelkyZpevnik.clear();
-                _filterInterpretPisnickyAkordy.clear();
-                _filterSongPisnickyAkordy.clear();
-                context.read<WebBloc>().add(ChangeSearchWeb(searchWeb: selectedWebSite == 'pisnicky-akordy.cz' ? 0 : 1));
-              });
-              int index = 0;
-              if (value == 'pisnicky-akordy.cz') {
-                index = 1;
+        ],
+      ),
+    );
+  }
+}
+
+class WebInterpretCard extends StatelessWidget {
+  final WebInterpret interpret;
+
+  const WebInterpretCard({
+    super.key,
+    required this.interpret,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<WebBloc, WebState>(
+      builder: (context, state) {
+        return MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: () {
+              if (state.currentInterpret?.title == interpret.title) {
+                context.read<WebBloc>().add(const ChangeCurrentInterpret(interpret: null, typeSearching: 'velkyzpevnik.cz'));
+              } else {
+                context.read<WebBloc>().add(ChangeCurrentInterpret(interpret: interpret, typeSearching: 'velkyzpevnik.cz'));
               }
-              context.read<WebBloc>().add(ChangeSearchWeb(searchWeb: index));
             },
-            hint: const Text('Select an option'),
+            child: Container(
+              height: 60,
+              width: 200,
+              alignment: Alignment.centerLeft,
+              decoration: const BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: AppColor.grey3Color, width: 1.0),
+                ),
+              ),
+              child: Text(
+                interpret.title,
+                style: TextStyle(fontSize: 14, color: state.currentInterpret?.title == interpret.title ? AppColor.alertErrorColor : AppColor.grey1Color),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 }

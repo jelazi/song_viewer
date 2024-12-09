@@ -1,15 +1,11 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'package:default_project/blocs/export_blocs.dart';
 import 'package:default_project/main.dart';
 import 'package:default_project/services/enums.dart';
-
 import 'package:flutter/material.dart';
-
-import 'package:default_project/blocs/export_blocs.dart';
-
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 import '../../../model/song/song.dart';
-
 import '../../../services/constants.dart';
 
 class SongCardTablet extends StatefulWidget {
@@ -84,10 +80,12 @@ class _SongCardTabletState extends State<SongCardTablet> with TickerProviderStat
                     padding: const EdgeInsets.all(8.0),
                     child: Row(
                       children: [
-                        Text(
-                          widget.song.title,
-                          style: h5TextStyle,
-                          overflow: TextOverflow.ellipsis,
+                        Expanded(
+                          child: Text(
+                            widget.song.title,
+                            style: h5TextStyle,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                         Visibility(
                           visible: widget.song.indexSongBook != null,

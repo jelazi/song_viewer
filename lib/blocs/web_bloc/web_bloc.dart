@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:bloc/bloc.dart';
 import 'package:default_project/model/web_interpret.dart';
 import 'package:default_project/providers/hive_provider.dart';
@@ -7,7 +5,6 @@ import 'package:default_project/repositories/web_repository.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
-import 'package:path/path.dart';
 
 import '../../model/web_item.dart';
 import '../../model/web_song.dart';
@@ -36,6 +33,9 @@ class WebBloc extends Bloc<WebEvent, WebState> {
           appBarStatus: true,
           transposeIncrement: 0,
           scrollSpeed: 20,
+          searchWebInterprets: false,
+          searchWebSongs: false,
+          downloadWebSong: false,
         )) {
     on<_Init>(_init);
     on<ChangeCurrentWebSong>(_changeCurrentWebSong);
@@ -100,7 +100,7 @@ class WebBloc extends Bloc<WebEvent, WebState> {
   }
 
   void _changeCurrentInterpret(ChangeCurrentInterpret event, Emitter<WebState> emit) async {
-    emit(state.copyWith(currentInterpret: event.interpret));
+    emit(state.copyWith(currentInterpret: event.interpret, searchWebSongs: true));
     List<WebSong> songs = [];
     if (event.interpret != null) {
       if (event.typeSearching == 'velkyzpevnik.cz' && event.interpret != null) {
@@ -110,10 +110,10 @@ class WebBloc extends Bloc<WebEvent, WebState> {
         songs = await webRepository.findSongOfInterpretPisnickyAkordy(event.interpret?.ref ?? '');
       }
       if (songs.isNotEmpty) {
-        emit(state.copyWith(currentInterpret: event.interpret, songs: songs, filteredSongs: songs, currentSong: null));
+        emit(state.copyWith(currentInterpret: event.interpret, songs: songs, filteredSongs: songs, currentSong: null, searchWebSongs: false));
       }
     } else {
-      emit(state.copyWith(currentInterpret: event.interpret, songs: [], filteredSongs: [], currentSong: null));
+      emit(state.copyWith(currentInterpret: event.interpret, songs: [], filteredSongs: [], currentSong: null, searchWebSongs: false));
     }
   }
 
@@ -129,8 +129,9 @@ class WebBloc extends Bloc<WebEvent, WebState> {
   void _filterInterprets(FilterInterprets event, Emitter<WebState> emit) async {
     List<WebInterpret> list = [];
     final state = this.state;
+    emit(state.copyWith(isSearching: true));
     if (event.filter.isEmpty) {
-      emit(state.copyWith(interprets: [], isSearching: false, filteredInterprets: []));
+      emit(state.copyWith(interprets: [], isSearching: false, filteredInterprets: [], searchWebInterprets: false));
     }
     if (event.typeSearching == 'velkyzpevnik.cz') {
       List<WebItem> listItem = await webRepository.findSongAndIterpretsFromVelkyZpevnik(event.filter);
@@ -140,7 +141,7 @@ class WebBloc extends Bloc<WebEvent, WebState> {
     if (event.typeSearching == 'pisnicky-akordy.cz') {
       list = await webRepository.findInterpretPisnickyAkordy(event.filter);
     }
-    emit(state.copyWith(interprets: list, isSearching: false, filteredInterprets: list));
+    emit(state.copyWith(interprets: list, isSearching: false, filteredInterprets: list, searchWebInterprets: false));
   }
 
   void _loadSongs(LoadSongs event, Emitter<WebState> emit) {}
@@ -152,7 +153,7 @@ class WebBloc extends Bloc<WebEvent, WebState> {
   }
 
   void _changeSearchType(ChangeSearchType event, Emitter<WebState> emit) {
-    emit(state.copyWith(searchType: event.searchType));
+    emit(state.copyWith(searchType: event.searchType, searchWebInterprets: false));
   }
 
   void _testWebEvent(TestWebEvent event, Emitter<WebState> emit) async {

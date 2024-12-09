@@ -33,7 +33,7 @@ class _SongCardTabletWebState extends State<SongCardTabletWeb> with TickerProvid
         Navigator.pushNamed(context, '/previewPage');
       },
       child: SizedBox(
-        height: 60,
+        height: 80,
         child: Card(
             color: AppColor.whiteColor,
             shape: RoundedRectangleBorder(
@@ -44,25 +44,13 @@ class _SongCardTabletWebState extends State<SongCardTabletWeb> with TickerProvid
               ),
             ),
             surfaceTintColor: AppColor.primaryColor,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
-                      children: [
-                        Text(
-                          widget.song.title,
-                          style: h5TextStyle,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              child: Text(
+                widget.song.title,
+                style: h5TextStyle,
+                softWrap: true,
+              ),
             )),
       ),
     );

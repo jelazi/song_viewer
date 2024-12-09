@@ -15,6 +15,9 @@ class WebState extends Equatable {
   final bool appBarStatus;
   final int transposeIncrement;
   final int scrollSpeed;
+  final bool searchWebInterprets;
+  final bool searchWebSongs;
+  final bool downloadWebSong;
 
   final listSearchWeb = [
     'superMusic'.tr(),
@@ -38,6 +41,9 @@ class WebState extends Equatable {
     required this.appBarStatus,
     required this.transposeIncrement,
     required this.scrollSpeed,
+    required this.searchWebInterprets,
+    required this.searchWebSongs,
+    required this.downloadWebSong,
   });
 
   @override
@@ -55,7 +61,10 @@ class WebState extends Equatable {
         chordStyle,
         appBarStatus,
         transposeIncrement,
-        scrollSpeed
+        scrollSpeed,
+        searchWebInterprets,
+        searchWebSongs,
+        downloadWebSong,
       ];
 
   WebState copyWith({
@@ -73,6 +82,9 @@ class WebState extends Equatable {
     bool? appBarStatus,
     int? transposeIncrement,
     int? scrollSpeed,
+    bool? searchWebInterprets,
+    bool? searchWebSongs,
+    bool? downloadWebSong,
   }) {
     return WebState(
       currentSong: currentSong,
@@ -89,6 +101,9 @@ class WebState extends Equatable {
       appBarStatus: appBarStatus ?? this.appBarStatus,
       transposeIncrement: transposeIncrement ?? this.transposeIncrement,
       scrollSpeed: scrollSpeed ?? this.scrollSpeed,
+      searchWebInterprets: searchWebInterprets ?? this.searchWebInterprets,
+      searchWebSongs: searchWebSongs ?? this.searchWebSongs,
+      downloadWebSong: downloadWebSong ?? this.downloadWebSong,
     );
   }
 }
@@ -109,5 +124,8 @@ class WebInitial extends WebState {
     required super.appBarStatus,
     required super.transposeIncrement,
     required super.scrollSpeed,
+    required super.searchWebInterprets,
+    required super.searchWebSongs,
+    required super.downloadWebSong,
   });
 }
