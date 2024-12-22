@@ -1,5 +1,4 @@
 import 'package:easy_localization/easy_localization.dart';
-
 import 'package:flutter/material.dart';
 
 import '../../../../../blocs/export_blocs.dart';
@@ -87,8 +86,9 @@ class _ListWebSongState extends State<ListWebSong> {
               labelText: 'filterInterpret'.tr(),
             ),
             onChanged: (value) {
-              setState(() {});
-              context.read<WebBloc>().add(FilterInterprets(filter: value, typeSearching: 'velkyzpevnik.cz'));
+              context.read<WebBloc>().add(FilterInterprets(
+                    filter: value,
+                  ));
             },
           ),
         ),
@@ -101,7 +101,9 @@ class _ListWebSongState extends State<ListWebSong> {
                 child: GestureDetector(
                   onTap: () {
                     if (state.currentInterpret?.title == state.currentInterpret?.title) {
-                      context.read<WebBloc>().add(const ChangeCurrentInterpret(interpret: null, typeSearching: 'velkyzpevnik.cz'));
+                      context.read<WebBloc>().add(const ChangeCurrentInterpret(
+                            interpret: null,
+                          ));
                     }
                   },
                   child: Container(
@@ -138,9 +140,13 @@ class _ListWebSongState extends State<ListWebSong> {
                                     child: GestureDetector(
                                       onTap: () {
                                         if (state.currentInterpret?.title == interpret.title) {
-                                          context.read<WebBloc>().add(const ChangeCurrentInterpret(interpret: null, typeSearching: 'velkyzpevnik.cz'));
+                                          context.read<WebBloc>().add(const ChangeCurrentInterpret(
+                                                interpret: null,
+                                              ));
                                         } else {
-                                          context.read<WebBloc>().add(ChangeCurrentInterpret(interpret: interpret, typeSearching: 'velkyzpevnik.cz'));
+                                          context.read<WebBloc>().add(ChangeCurrentInterpret(
+                                                interpret: interpret,
+                                              ));
                                         }
                                       },
                                       child: Container(
@@ -178,7 +184,9 @@ class _ListWebSongState extends State<ListWebSong> {
               labelText: 'filterSong'.tr(),
             ),
             onChanged: (value) {
-              context.read<WebBloc>().add(FilterInterprets(filter: value, typeSearching: 'velkyzpevnik.cz'));
+              context.read<WebBloc>().add(FilterInterprets(
+                    filter: value,
+                  ));
             },
           ),
         ),
@@ -249,7 +257,9 @@ class _ListWebSongState extends State<ListWebSong> {
               labelText: 'filterInterpret'.tr(),
             ),
             onChanged: (value) {
-              context.read<WebBloc>().add(FilterInterprets(filter: value, typeSearching: 'pisnicky-akordy.cz'));
+              context.read<WebBloc>().add(FilterInterprets(
+                    filter: value,
+                  ));
             },
           ),
         ),
@@ -262,7 +272,9 @@ class _ListWebSongState extends State<ListWebSong> {
                 child: GestureDetector(
                   onTap: () {
                     if (state.currentInterpret?.title == state.currentInterpret?.title) {
-                      context.read<WebBloc>().add(const ChangeCurrentInterpret(interpret: null, typeSearching: 'pisnicky-akordy.cz'));
+                      context.read<WebBloc>().add(const ChangeCurrentInterpret(
+                            interpret: null,
+                          ));
                     }
                   },
                   child: Container(
@@ -299,9 +311,13 @@ class _ListWebSongState extends State<ListWebSong> {
                                     child: GestureDetector(
                                       onTap: () {
                                         if (state.currentInterpret?.title == interpret.title) {
-                                          context.read<WebBloc>().add(const ChangeCurrentInterpret(interpret: null, typeSearching: 'pisnicky-akordy.cz'));
+                                          context.read<WebBloc>().add(const ChangeCurrentInterpret(
+                                                interpret: null,
+                                              ));
                                         } else {
-                                          context.read<WebBloc>().add(ChangeCurrentInterpret(interpret: interpret, typeSearching: 'pisnicky-akordy.cz'));
+                                          context.read<WebBloc>().add(ChangeCurrentInterpret(
+                                                interpret: interpret,
+                                              ));
                                         }
                                       },
                                       child: Container(
@@ -339,7 +355,9 @@ class _ListWebSongState extends State<ListWebSong> {
               labelText: 'filterSong'.tr(),
             ),
             onChanged: (value) {
-              context.read<WebBloc>().add(FilterInterprets(filter: value, typeSearching: 'pisnicky-akordy.cz'));
+              context.read<WebBloc>().add(FilterInterprets(
+                    filter: value,
+                  ));
             },
           ),
         ),

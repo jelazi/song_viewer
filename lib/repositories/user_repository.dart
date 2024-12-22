@@ -94,9 +94,9 @@ class UsersRepository {
       return;
     }
     if (checkUser(user.name, user.password, isFromHive: true) is User) {
-      logger.d('User ${user.name} is logged in');
+      logger.v('User ${user.name} is logged in');
     } else {
-      logger.d('User ${user.name} is not logged in');
+      logger.v('User ${user.name} is not logged in');
     }
   }
 

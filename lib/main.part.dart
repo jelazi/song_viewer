@@ -64,4 +64,5 @@ Future<void> initHiveFunction() async {
   Hive.registerAdapter(TypeClickCardAdapter());
   Hive.registerAdapter(WebItemAdapter());
   Hive.registerAdapter(WebSongAdapter());
+  Hive.registerAdapter(WebInterpretAdapter());
 }

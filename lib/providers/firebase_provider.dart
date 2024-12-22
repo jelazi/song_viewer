@@ -40,7 +40,7 @@ class FirebaseProvider {
         await userCollection.doc(user.name).set(user.toJson());
       }
     } catch (e) {
-      logger.d('$e');
+      logger.e('$e');
     }
   }
 

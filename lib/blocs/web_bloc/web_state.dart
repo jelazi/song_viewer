@@ -7,7 +7,8 @@ class WebState extends Equatable {
   final List<WebSong> filteredSongs;
   final List<WebInterpret> interprets;
   final List<WebInterpret> filteredInterprets;
-  final WebInterpret? currentInterpret;
+  final List<WebInterpret> historyInterprets;
+  final WebInterpret currentInterpret;
   final int searchWeb;
   final bool isSearching;
   final TextStyle textStyle;
@@ -20,9 +21,10 @@ class WebState extends Equatable {
   final bool downloadWebSong;
 
   final listSearchWeb = [
-    'superMusic'.tr(),
-    'velkyZpevnik'.tr(),
+    'velkyzpevnik.cz',
+    'pisnicky-akordy.cz',
   ];
+
   final int searchType;
   final listSelectTypeSearch = ['song'.tr(), 'interpret'.tr()];
 
@@ -32,7 +34,7 @@ class WebState extends Equatable {
     required this.filteredSongs,
     required this.interprets,
     required this.filteredInterprets,
-    this.currentInterpret,
+    required this.currentInterpret,
     required this.searchWeb,
     required this.searchType,
     required this.isSearching,
@@ -44,6 +46,7 @@ class WebState extends Equatable {
     required this.searchWebInterprets,
     required this.searchWebSongs,
     required this.downloadWebSong,
+    required this.historyInterprets,
   });
 
   @override
@@ -51,7 +54,7 @@ class WebState extends Equatable {
         currentSong ?? '',
         songs,
         filteredSongs,
-        currentInterpret ?? '',
+        currentInterpret,
         interprets,
         filteredInterprets,
         searchWeb,
@@ -65,6 +68,7 @@ class WebState extends Equatable {
         searchWebInterprets,
         searchWebSongs,
         downloadWebSong,
+        historyInterprets,
       ];
 
   WebState copyWith({
@@ -72,6 +76,7 @@ class WebState extends Equatable {
     List<WebSong>? songs,
     List<WebSong>? filteredSongs,
     List<WebInterpret>? interprets,
+    List<WebInterpret>? historyInterprets,
     WebInterpret? currentInterpret,
     int? searchWeb,
     int? searchType,
@@ -91,7 +96,8 @@ class WebState extends Equatable {
       songs: songs ?? this.songs,
       filteredSongs: filteredSongs ?? this.filteredSongs,
       interprets: interprets ?? this.interprets,
-      currentInterpret: currentInterpret,
+      historyInterprets: historyInterprets ?? this.historyInterprets,
+      currentInterpret: currentInterpret ?? this.currentInterpret,
       searchWeb: searchWeb ?? this.searchWeb,
       searchType: searchType ?? this.searchType,
       isSearching: isSearching ?? this.isSearching,
@@ -127,5 +133,6 @@ class WebInitial extends WebState {
     required super.searchWebInterprets,
     required super.searchWebSongs,
     required super.downloadWebSong,
+    required super.historyInterprets,
   });
 }

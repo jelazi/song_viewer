@@ -23,9 +23,10 @@ class WebBloc extends Bloc<WebEvent, WebState> {
           songs: const [],
           filteredSongs: const [],
           filteredInterprets: const [],
-          currentInterpret: null,
+          historyInterprets: const [],
+          currentInterpret: WebInterpret(title: '', ref: ''),
           interprets: const [],
-          searchWeb: 0,
+          searchWeb: 1,
           searchType: 0,
           isSearching: false,
           textStyle: const TextStyle(color: Colors.black, fontSize: 16),
@@ -50,6 +51,8 @@ class WebBloc extends Bloc<WebEvent, WebState> {
     add(const _Init());
   }
 
+  final listSearchWeb = ['velkyzpevnik.cz', 'pisnicky-akordy.cz'];
+
   void _init(_Init event, Emitter<WebState> emit) async {
     final state = this.state;
     emit(state.copyWith(
@@ -60,17 +63,21 @@ class WebBloc extends Bloc<WebEvent, WebState> {
       ),
     ));
     emit(state.copyWith(isSearching: true));
-    final interpret = await webRepository.findInterpretPisnickyAkordy('a');
+    await webRepository.findInterpretPisnickyAkordy('a');
+    final historyInterprets = hiveProvider.getInterpretsFromWebBox('pisnicky-akordy.cz');
 
     emit(state.copyWith(
       isSearching: false,
-      interprets: interpret,
-      filteredInterprets: interpret,
+      historyInterprets: getLastTenInterpretsReverse(historyInterprets),
     ));
   }
 
+  List<WebInterpret> getLastTenInterpretsReverse(List<WebInterpret> list) {
+    return list.reversed.toList();
+  }
+
   void _changeCurrentWebSong(ChangeCurrentWebSong event, Emitter<WebState> emit) async {
-    emit(state.copyWith(currentSong: event.song, currentInterpret: state.currentInterpret));
+    emit(state.copyWith(currentSong: event.song, downloadWebSong: true));
     final eventSong = event.song;
     if (eventSong != null) {
       WebSong currentSong = WebSong(title: eventSong.title, ref: eventSong.ref, interpret: eventSong.interpret);
@@ -95,7 +102,10 @@ class WebBloc extends Bloc<WebEvent, WebState> {
           hiveProvider.setWebSong('pisnicky-akordy.cz${currentSong.ref}', currentSong);
         }
       }
-      emit(state.copyWith(currentSong: currentSong, currentInterpret: state.currentInterpret));
+
+      emit(state.copyWith(currentSong: currentSong, downloadWebSong: false));
+    } else {
+      emit(state.copyWith(currentSong: null, downloadWebSong: false));
     }
   }
 
@@ -103,17 +113,25 @@ class WebBloc extends Bloc<WebEvent, WebState> {
     emit(state.copyWith(currentInterpret: event.interpret, searchWebSongs: true));
     List<WebSong> songs = [];
     if (event.interpret != null) {
-      if (event.typeSearching == 'velkyzpevnik.cz' && event.interpret != null) {
+      if (state.searchWeb == 0 && event.interpret != null) {
         songs = await webRepository.findSongByInterpretFromVelkyZpevnik(event.interpret!);
       }
-      if (event.typeSearching == 'pisnicky-akordy.cz') {
+      if (state.searchWeb == 1) {
         songs = await webRepository.findSongOfInterpretPisnickyAkordy(event.interpret?.ref ?? '');
       }
+      hiveProvider.setHistoryInterpretToWebBox(listSearchWeb[state.searchWeb], event.interpret!);
+      final historyInterprets = hiveProvider.getInterpretsFromWebBox(listSearchWeb[state.searchWeb]);
       if (songs.isNotEmpty) {
-        emit(state.copyWith(currentInterpret: event.interpret, songs: songs, filteredSongs: songs, currentSong: null, searchWebSongs: false));
+        emit(state.copyWith(
+            currentInterpret: event.interpret,
+            songs: songs,
+            filteredSongs: songs,
+            currentSong: null,
+            searchWebSongs: false,
+            historyInterprets: getLastTenInterpretsReverse(historyInterprets)));
       }
     } else {
-      emit(state.copyWith(currentInterpret: event.interpret, songs: [], filteredSongs: [], currentSong: null, searchWebSongs: false));
+      emit(state.copyWith(currentInterpret: WebInterpret(title: '', ref: ''), songs: [], filteredSongs: [], currentSong: null, searchWebSongs: false));
     }
   }
 
@@ -133,12 +151,12 @@ class WebBloc extends Bloc<WebEvent, WebState> {
     if (event.filter.isEmpty) {
       emit(state.copyWith(interprets: [], isSearching: false, filteredInterprets: [], searchWebInterprets: false));
     }
-    if (event.typeSearching == 'velkyzpevnik.cz') {
-      List<WebItem> listItem = await webRepository.findSongAndIterpretsFromVelkyZpevnik(event.filter);
+    if (state.searchWeb == 0) {
+      List<WebItem> listItem = await webRepository.findSongAndInterpretsFromVelkyZpevnik(event.filter);
       list = listItem.map((e) => e is WebInterpret ? e : null).where((element) => element != null).toList().cast<WebInterpret>();
     }
 
-    if (event.typeSearching == 'pisnicky-akordy.cz') {
+    if (state.searchWeb == 1) {
       list = await webRepository.findInterpretPisnickyAkordy(event.filter);
     }
     emit(state.copyWith(interprets: list, isSearching: false, filteredInterprets: list, searchWebInterprets: false));
@@ -149,7 +167,19 @@ class WebBloc extends Bloc<WebEvent, WebState> {
   void _loadInterprets(LoadInterprets event, Emitter<WebState> emit) {}
 
   void _changeSearchWeb(ChangeSearchWeb event, Emitter<WebState> emit) {
-    emit(state.copyWith(searchWeb: event.searchWeb, currentInterpret: null, currentSong: null, songs: [], filteredSongs: [], filteredInterprets: [], interprets: []));
+    final historyInterprets = hiveProvider.getInterpretsFromWebBox(state.listSearchWeb[event.searchWeb]);
+    emit(state.copyWith(
+        searchWeb: event.searchWeb,
+        currentSong: null,
+        songs: [],
+        filteredSongs: [],
+        filteredInterprets: [],
+        interprets: [],
+        historyInterprets: getLastTenInterpretsReverse(historyInterprets),
+        currentInterpret: WebInterpret(
+          title: '',
+          ref: '',
+        )));
   }
 
   void _changeSearchType(ChangeSearchType event, Emitter<WebState> emit) {

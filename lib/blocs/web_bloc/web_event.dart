@@ -19,14 +19,13 @@ class ChangeCurrentWebSong extends WebEvent {
 
 class ChangeCurrentInterpret extends WebEvent {
   final WebInterpret? interpret;
-  final String typeSearching;
-  const ChangeCurrentInterpret({required this.interpret, required this.typeSearching});
+
+  const ChangeCurrentInterpret({required this.interpret});
 }
 
 class FilterInterprets extends WebEvent {
   final String filter;
-  final String typeSearching;
-  const FilterInterprets({required this.filter, required this.typeSearching});
+  const FilterInterprets({required this.filter});
 }
 
 class FilterSongs extends WebEvent {

@@ -4,31 +4,29 @@ import 'dart:io';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:default_project/model/web_item.dart';
 import 'package:default_project/providers/web_provider.dart';
+import 'package:default_project/repositories/playlist_repository.dart';
 import 'package:default_project/repositories/settings_repository.dart';
+import 'package:default_project/repositories/songs_repository.dart';
+import 'package:default_project/repositories/user_repository.dart';
 import 'package:default_project/services/constants.dart';
 import 'package:default_project/services/enums.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:logger_pkg/logger_pkg.dart';
-
 import 'package:path_provider/path_provider.dart' as pathProvider;
-
-import 'package:default_project/repositories/playlist_repository.dart';
-import 'package:default_project/repositories/songs_repository.dart';
-import 'package:default_project/repositories/user_repository.dart';
+import 'package:path_provider/path_provider.dart' as path_provider;
 import 'package:window_manager/window_manager.dart';
 
 import 'blocs/export_blocs.dart';
 import 'firebase_options.dart';
 import 'model/user.dart';
+import 'model/web_interpret.dart';
 import 'model/web_song.dart';
 import 'providers/firebase_provider.dart';
 import 'providers/hive_provider.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:path_provider/path_provider.dart' as path_provider;
-
 import 'repositories/web_repository.dart';
 import 'view/router/app_router.dart';
 
@@ -37,8 +35,8 @@ part 'main.part.dart';
 void main() async {
   logger = MyLogger(
     debug: true,
-    saveToFile: true,
-    level: 4,
+    saveToFile: false,
+    level: 2,
     isDebugConsole: true,
   );
   logger.v('Start app');

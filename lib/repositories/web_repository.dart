@@ -1,6 +1,4 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
-import 'dart:convert';
-
 import 'package:beautiful_soup_dart/beautiful_soup.dart';
 import 'package:collection/collection.dart';
 import 'package:default_project/services/auxiliary_functions.dart';
@@ -42,27 +40,31 @@ class WebRepository {
     //   final responseSong = await webProvider.getSongsFromInterpretPisnickyAkordy('/pribuzni');
     //  final responseSongText = parseGetSongsFromInterpretFromPisnickyAkordy(responseSong.data);
 
-    final response = await findSongAndIterpretsFromVelkyZpevnik('žalman');
-    final ressong = await findSongByInterpretFromVelkyZpevnik(response.first as WebInterpret);
-    final song = await getTextSongVelkyZpevnik(ressong[5]);
+    final response = await findSongAndInterpretsFromVelkyZpevnik('žalman');
+    final resSong = await findSongByInterpretFromVelkyZpevnik(response.first as WebInterpret);
+    final song = await getTextSongVelkyZpevnik(resSong[5]);
 
     return '';
   }
 
   Future<List<WebSong>> findSongByInterpretFromVelkyZpevnik(WebInterpret interpret) async {
     List<WebSong> songs = [];
-    final response = await webProvider.getDataVelkyZpevnik(interpret.ref);
-    if (response.statusCode != 200) {
-      logger.e('error status Code ${response.statusCode}');
-      return songs;
-    }
-    final parsedSongs = parseSongsByInterpretFromVelkyZpevnik(response.data);
-    if (parsedSongs.isNotEmpty) {
-      for (MapEntry<String, String> entry in parsedSongs.entries) {
-        String title = entry.key;
-
-        songs.add(WebSong(interpret: interpret.title, title: title, ref: entry.value, ischords: true, server: 'velkyzpevnik.cz'));
+    try {
+      final response = await webProvider.getDataVelkyZpevnik(interpret.ref);
+      if (response.statusCode != 200) {
+        logger.e('error status Code ${response.statusCode}');
+        return songs;
       }
+      final parsedSongs = parseSongsByInterpretFromVelkyZpevnik(response.data);
+      if (parsedSongs.isNotEmpty) {
+        for (MapEntry<String, String> entry in parsedSongs.entries) {
+          String title = entry.key;
+
+          songs.add(WebSong(interpret: interpret.title, title: title, ref: entry.value, ischords: true, server: 'velkyzpevnik.cz'));
+        }
+      }
+    } catch (e) {
+      logger.e('error: $e');
     }
 
     return songs;
@@ -87,20 +89,20 @@ class WebRepository {
     return map;
   }
 
-  Future<List<WebItem>> findSongAndIterpretsFromVelkyZpevnik(String searchText) async {
+  Future<List<WebItem>> findSongAndInterpretsFromVelkyZpevnik(String searchText) async {
     List<WebItem> items = [];
-    final respnseItem = await webProvider.searchVelkyZpevnik(searchText);
-    if (respnseItem.statusCode != 200) {
-      logger.e('error status Code ${respnseItem.statusCode}');
+    final responseItem = await webProvider.searchVelkyZpevnik(searchText);
+    if (responseItem.statusCode != 200) {
+      logger.e('error status Code ${responseItem.statusCode}');
       return items;
     }
-    if (respnseItem.data == null) {
+    if (responseItem.data == null) {
       logger.e('error data is null');
       return items;
     }
     try {
-      if (respnseItem.data is List) {
-        for (Map<String, dynamic> item in respnseItem.data) {
+      if (responseItem.data is List) {
+        for (Map<String, dynamic> item in responseItem.data) {
           if (item.containsKey('type')) {
             if (item['type'] == 'interpret') {
               items.add(WebInterpret(title: item['name'], ref: item['url']));
@@ -272,7 +274,7 @@ class WebRepository {
 
     try {
       List<Element> songslist = response.getElementsByClassName('container');
-      logger.d('test');
+      logger.v('test');
     } catch (e) {
       logger.e('error: $e');
     }
@@ -347,7 +349,7 @@ class WebRepository {
       }
       return [];
     } catch (e) {
-      logger.d('$e');
+      logger.e('$e');
       return [];
     }
   }
@@ -383,7 +385,7 @@ class WebRepository {
       String interpret = e.children.firstWhere((element) => element.className == 'interpret').innerHtml;
       return WebSong(title: title, ref: ref, interpret: interpret, server: 'velkyzpevnik.cz');
     }).toList();
-    logger.d(songs.toString());
+
     return songs;
   }
 
@@ -412,7 +414,6 @@ class WebRepository {
             }
           }
         }
-        logger.d('stop');
       }
     } catch (e) {
       logger.e('error: $e');
@@ -434,7 +435,7 @@ class WebRepository {
           final document = parse(response.data);
 
           if (document.head == null) {
-            logger.d('document hasnot head');
+            logger.v('document hasnot head');
             return name;
           }
           List<Element> listElementMeta = document.head!.getElementsByTagName('meta');
