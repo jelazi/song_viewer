@@ -21,10 +21,11 @@ class ChangeEditSong extends EditSongEvent {
 }
 
 class ChangeSongValue extends EditSongEvent {
-  final String value;
+  final dynamic value;
   final String nameValue;
+  final String appVersion;
   TextSelection? selection;
-  ChangeSongValue({required this.value, required this.nameValue, this.selection});
+  ChangeSongValue({required this.value, required this.nameValue, required this.appVersion, this.selection});
 }
 
 class CheckModifiedSong extends EditSongEvent {
@@ -114,7 +115,10 @@ class DeleteChord extends EditSongEvent {
 }
 
 class SaveSong extends EditSongEvent {
-  const SaveSong();
+  final String typeApp;
+  const SaveSong({required this.typeApp});
+  @override
+  List<Object> get props => [typeApp];
 }
 
 class CreateNewSong extends EditSongEvent {

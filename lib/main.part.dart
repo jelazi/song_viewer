@@ -1,11 +1,11 @@
 part of 'main.dart';
 
-dynamic settingsRepository;
-dynamic playlistRepository;
-dynamic usersRepository;
-dynamic songsRepository;
-dynamic webRepository;
-dynamic hiveProvider;
+late SettingsRepository settingsRepository;
+late PlaylistRepository playlistRepository;
+late UsersRepository usersRepository;
+late SongsRepository songsRepository;
+late WebRepository webRepository;
+late HiveProvider hiveProvider;
 
 Future<void> initProvidersRepositories() async {
   await Firebase.initializeApp(
@@ -28,7 +28,7 @@ Future<void> initProvidersRepositories() async {
   );
 
   await settingsRepository.loadLocalSettings();
-  await settingsRepository.getInfoApp();
+  settingsRepository.getInfoApp();
 
   songsRepository = SongsRepository(
     firebaseProvider: firebaseProvider,

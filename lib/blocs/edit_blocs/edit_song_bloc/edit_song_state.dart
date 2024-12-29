@@ -18,6 +18,11 @@ class EditSongState extends Equatable {
   final TextEditingController titleController;
   final TextEditingController interpretController;
   final TextEditingController indexSongBookController;
+  final String title;
+  final String interpret;
+  final String indexSongBook;
+  final List<String> tags;
+  final List<String> notes;
 
   const EditSongState({
     required this.currentEditSong,
@@ -36,6 +41,11 @@ class EditSongState extends Equatable {
     required this.titleController,
     required this.interpretController,
     required this.indexSongBookController,
+    required this.title,
+    required this.interpret,
+    required this.indexSongBook,
+    required this.tags,
+    required this.notes,
   });
 
   @override
@@ -56,6 +66,11 @@ class EditSongState extends Equatable {
         titleController,
         interpretController,
         indexSongBookController,
+        title,
+        interpret,
+        indexSongBook,
+        tags,
+        notes,
       ];
 
   EditSongState copyWith({
@@ -75,6 +90,11 @@ class EditSongState extends Equatable {
     TextEditingController? titleController,
     TextEditingController? interpretController,
     TextEditingController? indexSongBookController,
+    String? title,
+    String? interpret,
+    String? indexSongBook,
+    List<String>? tags,
+    List<String>? notes,
   }) {
     return EditSongState(
       currentEditSong: currentEditSong ?? this.currentEditSong,
@@ -93,26 +113,60 @@ class EditSongState extends Equatable {
       titleController: titleController ?? this.titleController,
       interpretController: interpretController ?? this.interpretController,
       indexSongBookController: indexSongBookController ?? this.indexSongBookController,
+      title: title ?? this.title,
+      interpret: interpret ?? this.interpret,
+      indexSongBook: indexSongBook ?? this.indexSongBook,
+      tags: tags ?? this.tags,
+      notes: notes ?? this.notes,
     );
+  }
+
+  List<String> checkEditSong() {
+    List<String> list = [];
+    if (currentEditSong.title != title) {
+      list.add('title');
+    }
+    if (currentEditSong.interpret != interpret && (currentEditSong.interpret != null || interpret != '')) {
+      list.add('interpret');
+    }
+    if (currentEditSong.indexSongBook.toString() != indexSongBook && (currentEditSong.indexSongBook != null || indexSongBook != '')) {
+      list.add('indexSongBook');
+    }
+    if (currentEditSong.tags != tags && (currentEditSong.tags != null || tags.isNotEmpty)) {
+      list.add('tags');
+    }
+    if (currentEditSong.groups != currentGroups && (currentEditSong.groups != null || currentGroups.isNotEmpty)) {
+      list.add('groups');
+    }
+    if (currentEditSong.lyrics != currentText) {
+      list.add('lyrics');
+    }
+    return list;
   }
 }
 
 class EditSongInitial extends EditSongState {
-  const EditSongInitial(
-      {required super.currentEditSong,
-      required super.textStyle,
-      required super.chordStyle,
-      required super.selectChord,
-      required super.listUniqueChords,
-      required super.transposeIncrement,
-      required super.selectChordIndex,
-      required super.listUniqueChordsIsVisible,
-      required super.currentText,
-      required super.listSelectedChords,
-      required super.isOriginalLyrics,
-      required super.listAllGroups,
-      required super.currentGroups,
-      required super.titleController,
-      required super.interpretController,
-      required super.indexSongBookController});
+  const EditSongInitial({
+    required super.currentEditSong,
+    required super.textStyle,
+    required super.chordStyle,
+    required super.selectChord,
+    required super.listUniqueChords,
+    required super.transposeIncrement,
+    required super.selectChordIndex,
+    required super.listUniqueChordsIsVisible,
+    required super.currentText,
+    required super.listSelectedChords,
+    required super.isOriginalLyrics,
+    required super.listAllGroups,
+    required super.currentGroups,
+    required super.titleController,
+    required super.interpretController,
+    required super.indexSongBookController,
+    required super.title,
+    required super.interpret,
+    required super.indexSongBook,
+    required super.tags,
+    required super.notes,
+  });
 }

@@ -56,7 +56,7 @@ class _EditLyricPageMobileState extends State<EditLyricPageMobile> {
                   style: state.textStyle,
                   maxLines: 200,
                   onChanged: (value) {
-                    context.read<EditSongBloc>().add(ChangeSongValue(value: value, nameValue: widget.isOriginalLyrics ? 'originalLyrics' : 'lyrics'));
+                    context.read<EditSongBloc>().add(ChangeSongValue(value: value, nameValue: widget.isOriginalLyrics ? 'originalLyrics' : 'lyrics', appVersion: 'mobile'));
                   },
                 ),
               )),

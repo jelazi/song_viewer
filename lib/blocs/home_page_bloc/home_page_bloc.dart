@@ -1,14 +1,14 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 
-import 'package:default_project/model/user.dart';
 import 'package:default_project/repositories/settings_repository.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:equatable/equatable.dart';
-
 import 'package:default_project/repositories/songs_repository.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:equatable/equatable.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../model/song/song.dart';
 import '../../repositories/user_repository.dart';
+import '../../view/desktop_view/widgets/my_toast.dart';
 
 part 'home_page_event.dart';
 part 'home_page_state.dart';
@@ -44,6 +44,7 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
     on<ChangeGroup>(_changeGroup);
     on<SelectGroups>(_selectGroups);
     on<SelectPage>(_selectPage);
+    on<DeleteSong>(_deleteSong);
     songsRepository.selectSongData.listen((event) {
       add(ChangeSelectedSong(selectedSongId: event));
     });
@@ -152,5 +153,16 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
   void _selectPage(SelectPage event, Emitter<HomePageState> emit) {
     final state = this.state;
     emit(state.copyWith(selectedPage: event.page));
+  }
+
+  void _deleteSong(DeleteSong event, Emitter<HomePageState> emit) async {
+    final state = this.state;
+    final result = await songsRepository.deleteSong(event.song.id);
+
+    if (result) {
+      await songsRepository.updateSongsFromFirebase();
+      MyToast.showText(text: '${'songs'.tr()}: ${event.song.title} ${'deleted'.tr()}', typeNotification: TypeNotification.success);
+      emit(state.copyWith(listSong: List<Song>.from(songsRepository.songs)));
+    }
   }
 }

@@ -2,6 +2,8 @@
 import 'package:default_project/blocs/export_blocs.dart';
 import 'package:default_project/main.dart';
 import 'package:default_project/services/enums.dart';
+import 'package:default_project/view/mobile_view/widgets/dialogs/question_dialog.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
@@ -121,6 +123,67 @@ class _SongCardTabletState extends State<SongCardTablet> with TickerProviderStat
                     onPressed: () {
                       context.read<HomePageBloc>().add(SelectSong(selectedSongId: widget.song.id));
                     }),
+                Visibility(
+                  visible: widget.isEditIconVisible,
+                  child: PopupMenuButton(
+                      icon: const Icon(
+                        Icons.more_vert,
+                        color: AppColor.grey3Color,
+                      ),
+                      itemBuilder: (context) {
+                        return [
+                          PopupMenuItem(
+                            value: 1,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Icon(
+                                  Icons.edit,
+                                  color: AppColor.grey1Color,
+                                ),
+                                Text('edit'.tr()),
+                              ],
+                            ),
+                            onTap: () {
+                              context.read<EditSongBloc>().add(ChangeEditSong(song: widget.song.copyWith(), isOriginalLyrics: false));
+                              Navigator.pushNamed(context, '/editPage');
+                            },
+                          ),
+                          PopupMenuItem(
+                            value: 2,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Icon(
+                                  Icons.delete,
+                                  color: AppColor.grey1Color,
+                                ),
+                                Text('delete'.tr()),
+                              ],
+                            ),
+                            onTap: () {
+                              showDialog(
+                                  context: context,
+                                  builder: (context) => QuestionDialog(
+                                        title: 'deleteSong'.tr(),
+                                        okClick: () {
+                                          context.read<HomePageBloc>().add(DeleteSong(song: widget.song));
+                                        },
+                                        question: '${'deleteSongQuestion'.tr()} ${widget.song.title}?',
+                                      ));
+                            },
+                          ),
+                        ];
+                      },
+                      onSelected: (value) {
+                        switch (value) {
+                          case 1:
+                            break;
+                          case 2:
+                            break;
+                        }
+                      }),
+                ),
               ],
             )),
       ),

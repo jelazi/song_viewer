@@ -1,13 +1,12 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:io';
 
+import 'package:default_project/services/constants.dart';
 import 'package:default_project/services/enums.dart';
 import 'package:default_project/view/mobile_view/widgets/dialogs/dialogs_export.dart';
 import 'package:default_project/view/mobile_view/widgets/dialogs/question_dialog.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-
-import 'package:default_project/services/constants.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 import '../../../../blocs/export_blocs.dart';
@@ -26,9 +25,33 @@ class _EditPageTabletState extends State<EditPageTablet> {
   Widget build(BuildContext context) {
     return BlocBuilder<EditSongBloc, EditSongState>(
       builder: (context, state) {
-        return WillPopScope(
-          onWillPop: () async {
-            return _onWillPop(state);
+        return PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (pop, result) async {
+            final isChanged = state.checkEditSong();
+            if (isChanged.isEmpty) {
+              Navigator.pushNamed(context, '/');
+            } else {
+              final result = await showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return QuestionDialog(
+                    title: 'saveChanges'.tr(),
+                    question: isChanged.toString() + 'saveChangesQuestion'.tr(),
+                    okClick: () {
+                      context.read<EditSongBloc>().add(const SaveSong(typeApp: 'tablet'));
+                      Navigator.pushNamed(context, '/');
+                    },
+                    cancelClick: () {
+                      Navigator.pushNamed(context, '/');
+                    },
+                  );
+                },
+              );
+              if (result != null) {
+                Navigator.pushNamed(context, '/');
+              }
+            }
           },
           child: Scaffold(appBar: AppBar(
             title: BlocBuilder<EditSongBloc, EditSongState>(
@@ -47,7 +70,7 @@ class _EditPageTabletState extends State<EditPageTablet> {
                   children: [
                     EditRow(
                         typeValue: 'title'.tr(),
-                        title: state.currentEditSong.title,
+                        title: state.title,
                         titleTextStyle: h3TextStyle,
                         editFunction: () {
                           showDialog(
@@ -55,7 +78,7 @@ class _EditPageTabletState extends State<EditPageTablet> {
                               builder: ((context) {
                                 return EditTextDialog(
                                   okClick: (value) {
-                                    context.read<EditSongBloc>().add(ChangeSongValue(nameValue: 'title', value: value));
+                                    context.read<EditSongBloc>().add(ChangeSongValue(nameValue: 'title', value: value, appVersion: 'tablet'));
                                   },
                                   title: 'editTitle'.tr(),
                                   value: state.currentEditSong.title,
@@ -64,7 +87,7 @@ class _EditPageTabletState extends State<EditPageTablet> {
                         }),
                     EditRow(
                         typeValue: 'interpret'.tr(),
-                        title: state.currentEditSong.interpret,
+                        title: state.interpret,
                         titleTextStyle: labelTextStyle,
                         editFunction: () {
                           showDialog(
@@ -72,7 +95,7 @@ class _EditPageTabletState extends State<EditPageTablet> {
                               builder: ((context) {
                                 return EditTextDialog(
                                   okClick: (value) {
-                                    context.read<EditSongBloc>().add(ChangeSongValue(nameValue: 'interpret', value: value));
+                                    context.read<EditSongBloc>().add(ChangeSongValue(nameValue: 'interpret', value: value, appVersion: 'tablet'));
                                   },
                                   title: 'editInterpret'.tr(),
                                   value: state.currentEditSong.interpret ?? '',
@@ -81,7 +104,7 @@ class _EditPageTabletState extends State<EditPageTablet> {
                         }),
                     EditRow(
                         typeValue: 'indexSongBook'.tr(),
-                        title: (state.currentEditSong.indexSongBook?.toString()),
+                        title: state.indexSongBook,
                         titleTextStyle: labelTextStyle,
                         editFunction: () {
                           showDialog(
@@ -89,7 +112,7 @@ class _EditPageTabletState extends State<EditPageTablet> {
                               builder: ((context) {
                                 return EditNumberDialog(
                                   okClick: (value) {
-                                    context.read<EditSongBloc>().add(ChangeSongValue(nameValue: 'indexSongBook', value: value));
+                                    context.read<EditSongBloc>().add(ChangeSongValue(nameValue: 'indexSongBook', value: value, appVersion: 'tablet'));
                                   },
                                   title: 'indexSongBook'.tr(),
                                   value: state.currentEditSong.indexSongBook ?? 0,
@@ -98,7 +121,7 @@ class _EditPageTabletState extends State<EditPageTablet> {
                         }),
                     EditRow(
                         typeValue: 'text'.tr(),
-                        title: state.currentEditSong.lyrics,
+                        title: state.currentText,
                         titleTextStyle: labelTextStyle,
                         maxLines: 5,
                         editFunction: () {
@@ -254,7 +277,51 @@ Widget getGroups(BuildContext context, EditSongState state) {
             Row(
               children: [
                 GestureDetector(
-                  onTap: () {},
+                  onTap: () {
+                    List<String> choiceGroups = [];
+                    for (String group in state.currentGroups) {
+                      choiceGroups.add(group);
+                    }
+                    showDialog(
+                        context: context,
+                        builder: ((context) {
+                          return StatefulBuilder(builder: (context, setState) {
+                            return EditDialog(
+                              height: 500,
+                              width: 400,
+                              okClick: () {
+                                context.read<EditSongBloc>().add(ChangeSongValue(nameValue: 'groups', value: choiceGroups, appVersion: 'tablet'));
+                              },
+                              title: 'editGroups'.tr(),
+                              widgetContent: SizedBox(
+                                height: 350,
+                                child: Wrap(
+                                    children: state.listAllGroups
+                                        .map((e) => Padding(
+                                              padding: const EdgeInsets.all(4.0),
+                                              child: ChoiceChip(
+                                                selectedColor: AppColor.primaryColor,
+                                                checkmarkColor: choiceGroups.contains(e) ? Colors.white : Colors.black,
+                                                padding: const EdgeInsets.all(8),
+                                                label: Text(e, style: TextStyle(color: choiceGroups.contains(e) ? Colors.white : Colors.black)),
+                                                selected: choiceGroups.contains(e),
+                                                onSelected: (value) {
+                                                  setState(() {
+                                                    if (value) {
+                                                      choiceGroups.add(e);
+                                                    } else {
+                                                      choiceGroups.remove(e);
+                                                    }
+                                                  });
+                                                },
+                                              ),
+                                            ))
+                                        .toList()),
+                              ),
+                            );
+                          });
+                        }));
+                  },
                   child: Container(
                       height: 30,
                       margin: const EdgeInsets.all(5),
@@ -263,7 +330,7 @@ Widget getGroups(BuildContext context, EditSongState state) {
                 ),
                 isNotEmptyOrNull
                     ? Row(
-                        children: state.currentEditSong.groups!
+                        children: state.currentGroups
                             .map((e) => GestureDetector(
                                   onLongPress: () {},
                                   child: Container(

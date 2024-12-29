@@ -65,6 +65,7 @@ class PreviewChordBloc extends Bloc<PreviewChordEvent, PreviewChordState> {
       emit(state.copyWith(data: state.data.copyWith(song: null), transposeIncrement: 0, cap: 0, currentColumn: 0));
       return;
     }
+
     final transposeIncrement = songsRepository.getTransposeForSong(event.song);
 
     if (state.textStyle.color != settingsRepository.previewColorText ||
@@ -147,7 +148,7 @@ class PreviewChordBloc extends Bloc<PreviewChordEvent, PreviewChordState> {
       newIncrement = newIncrement + 12;
     }
 
-    songsRepository.changeTransposeChord(state.data.song, newIncrement);
+    songsRepository.changeTransposeChord(state.data.song!, newIncrement);
     emit(state.copyWith(transposeIncrement: newIncrement, cap: _getCapByIncrement(newIncrement)));
   }
 

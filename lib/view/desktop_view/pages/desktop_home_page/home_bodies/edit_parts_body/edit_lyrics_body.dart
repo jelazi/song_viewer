@@ -68,7 +68,7 @@ class _EditLyricsBodyState extends State<EditLyricsBody> {
                             child: GestureDetector(
                                 onTap: () {
                                   previousSelection = null;
-                                  context.read<EditSongBloc>().add(const SaveSong());
+                                  context.read<EditSongBloc>().add(const SaveSong(typeApp: 'desktop'));
                                 },
                                 child: Container(
                                     height: 30,
@@ -104,7 +104,7 @@ class _EditLyricsBodyState extends State<EditLyricsBody> {
                   maxLines: 200,
                   onChanged: (value) {
                     previousSelection = editingController.selection;
-                    context.read<EditSongBloc>().add(ChangeSongValue(nameValue: 'lyrics', value: editingController.text));
+                    context.read<EditSongBloc>().add(ChangeSongValue(nameValue: 'lyrics', value: editingController.text, appVersion: 'desktop'));
                   },
                 ),
               )),

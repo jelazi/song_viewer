@@ -1,7 +1,9 @@
 import 'dart:math';
 
+import 'package:default_project/model/song/song.dart';
 import 'package:default_project/services/constants.dart';
 import 'package:default_project/view/desktop_view/widgets/my_toast.dart';
+import 'package:default_project/view/mobile_view/widgets/dialogs/dialogs_export.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -74,7 +76,103 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
                 visible: state.isDataFromWeb,
                 child: IconButton(
                     onPressed: () {
-                      MyToast.showText(text: 'savePage'.tr(), typeNotification: TypeNotification.warning);
+                      TextEditingController nameSongController = TextEditingController(text: state.data.song?.title ?? '');
+                      TextEditingController interpretController = TextEditingController(text: state.data.song?.interpret ?? '');
+                      List listAllGroups = context.read<HomePageBloc>().state.listAllGroups;
+                      var selectedGroups = <String>[];
+                      showDialog(
+                          context: context,
+                          builder: (context) => StatefulBuilder(builder: (context, setState) {
+                                return EditDialog(
+                                    okBack: false,
+                                    height: 540,
+                                    width: 400,
+                                    title: 'saveSong'.tr(),
+                                    okClick: () {
+                                      if (selectedGroups.isEmpty) {
+                                        MyToast.showText(text: 'selectGroups'.tr(), typeNotification: TypeNotification.error);
+                                        return;
+                                      }
+                                      if (nameSongController.text.isEmpty) {
+                                        MyToast.showText(text: 'enterTitle'.tr(), typeNotification: TypeNotification.error);
+                                        return;
+                                      }
+                                      Song song = Song.empty();
+                                      song.generateId();
+                                      song.title = nameSongController.text;
+                                      song.interpret = interpretController.text;
+                                      song.lyrics = state.data.song?.lyrics ?? '';
+                                      song.notes = state.data.song?.notes ?? [];
+                                      song.groups = selectedGroups;
+                                      context.read<HomePageBloc>().songsRepository.updateSong(song);
+                                      Navigator.of(context).pop();
+                                      Navigator.of(context).pop();
+                                    },
+                                    widgetContent: SizedBox(
+                                      height: 400,
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                        children: [
+                                          SizedBox(
+                                            height: 150,
+                                            child: Column(
+                                              children: [
+                                                Row(
+                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                  children: [
+                                                    Text('title'.tr()),
+                                                    SizedBox(
+                                                      width: 200,
+                                                      child: TextField(
+                                                        style: const TextStyle(color: AppColor.primaryColor),
+                                                        controller: nameSongController,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                  children: [
+                                                    Text('interpret'.tr()),
+                                                    SizedBox(
+                                                      width: 150,
+                                                      child: TextField(
+                                                        style: const TextStyle(color: AppColor.grey1Color),
+                                                        controller: interpretController,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          SizedBox(
+                                              height: 150,
+                                              child: Wrap(
+                                                children: listAllGroups
+                                                    .map((e) => Padding(
+                                                          padding: const EdgeInsets.all(4.0),
+                                                          child: ChoiceChip(
+                                                              checkmarkColor: selectedGroups.contains(e) ? AppColor.whiteColor : AppColor.primaryColor,
+                                                              onSelected: (value) {
+                                                                setState(() {
+                                                                  if (selectedGroups.contains(e)) {
+                                                                    selectedGroups.remove(e);
+                                                                  } else {
+                                                                    selectedGroups.add(e);
+                                                                  }
+                                                                });
+                                                              },
+                                                              selectedColor: AppColor.primaryColor,
+                                                              label: Text(e, style: TextStyle(color: selectedGroups.contains(e) ? AppColor.whiteColor : AppColor.primaryColor)),
+                                                              selected: selectedGroups.contains(e)),
+                                                        ))
+                                                    .toList(),
+                                              ))
+                                        ],
+                                      ),
+                                    ));
+                              }));
                     },
                     icon: const Icon(
                       Icons.save,

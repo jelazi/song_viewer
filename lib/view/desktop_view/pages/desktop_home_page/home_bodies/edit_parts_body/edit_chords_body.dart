@@ -1,10 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:logger_pkg/logger_pkg.dart';
 
 import '../../../../../../blocs/export_blocs.dart';
 import '../../../../../../model/song/song_item.dart';
-
 import '../../../../../../services/constants.dart';
 import '../../../../widgets/edit_span_desktop.dart';
 
@@ -60,7 +58,7 @@ class _EditChordsBodyState extends State<EditChordsBody> {
                             cursor: SystemMouseCursors.click,
                             child: GestureDetector(
                                 onTap: () {
-                                  context.read<EditSongBloc>().add(const SaveSong());
+                                  context.read<EditSongBloc>().add(const SaveSong(typeApp: 'desktop'));
                                 },
                                 child: Container(
                                     height: 30,

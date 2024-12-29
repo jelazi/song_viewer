@@ -124,3 +124,11 @@ class SelectPage extends HomePageEvent {
   @override
   List<Object> get props => [page];
 }
+
+class DeleteSong extends HomePageEvent {
+  final Song song;
+  const DeleteSong({required this.song});
+
+  @override
+  List<Object> get props => [song];
+}

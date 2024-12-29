@@ -1,6 +1,4 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
-import 'dart:math';
-
 import 'package:collection/collection.dart';
 import 'package:default_project/model/youtube_video.dart';
 import 'package:default_project/services/enums.dart';
@@ -86,11 +84,11 @@ class Song {
       title: title ?? this.title,
       lyrics: lyrics ?? this.lyrics,
       originalLyrics: originalLyrics ?? this.originalLyrics,
-      indexSongBook: indexSongBook,
-      interpret: interpret,
+      indexSongBook: indexSongBook ?? this.indexSongBook,
+      interpret: interpret ?? this.interpret,
       typeTranspose: typeTranspose ?? this.typeTranspose,
-      songBar: songBar,
-      bmp: bmp,
+      songBar: songBar ?? this.songBar,
+      bmp: bmp ?? this.bmp,
       sheets: sheets ?? this.sheets,
       groups: groups ?? this.groups,
       tags: tags ?? this.tags,

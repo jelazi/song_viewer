@@ -1,8 +1,8 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 
-import 'package:equatable/equatable.dart';
-
 import 'package:default_project/repositories/settings_repository.dart';
+import 'package:default_project/repositories/songs_repository.dart';
+import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -11,8 +11,10 @@ part 'settings_state.dart';
 
 class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   SettingsRepository settingsRepository;
+  SongsRepository songsRepository;
   SettingsBloc({
     required this.settingsRepository,
+    required this.songsRepository,
   }) : super(const SettingsInitial(
           previewFontTextSize: 20,
           previewFontChordSize: 20,

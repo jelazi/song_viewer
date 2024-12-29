@@ -1,5 +1,6 @@
 import 'package:default_project/model/web_interpret.dart';
 import 'package:default_project/repositories/settings_repository.dart';
+import 'package:default_project/view/mobile_view/widgets/dialogs/edit_dialog.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -275,6 +276,63 @@ class _HomePageTabletState extends State<HomePageTablet> {
   Widget getPreviewFilterItems(BuildContext context) {
     return Column(
       children: [
+        BlocBuilder<HomePageBloc, HomePageState>(
+          builder: (context, state) {
+            return Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: OutlinedButton(
+                onPressed: () {
+                  List<String> choiceGroups = [];
+                  for (String group in state.listSelectedGroups) {
+                    choiceGroups.add(group);
+                  }
+                  showDialog(
+                      context: context,
+                      builder: (context) => StatefulBuilder(builder: (context, setState) {
+                            return EditDialog(
+                              height: 500,
+                              width: 400,
+                              title: 'selectGroups'.tr(),
+                              okClick: () {
+                                context.read<HomePageBloc>().add(SelectGroups(groups: choiceGroups));
+                              },
+                              widgetContent: SizedBox(
+                                height: 350,
+                                child: Wrap(
+                                    children: state.listAllGroups
+                                        .map((e) => Padding(
+                                              padding: const EdgeInsets.all(4.0),
+                                              child: ChoiceChip(
+                                                selectedColor: AppColor.primaryColor,
+                                                checkmarkColor: choiceGroups.contains(e) ? Colors.white : Colors.black,
+                                                padding: const EdgeInsets.all(8),
+                                                label: Text(e, style: TextStyle(color: choiceGroups.contains(e) ? Colors.white : Colors.black)),
+                                                selected: choiceGroups.contains(e),
+                                                onSelected: (value) {
+                                                  setState(() {
+                                                    if (value) {
+                                                      choiceGroups.add(e);
+                                                    } else {
+                                                      choiceGroups.remove(e);
+                                                    }
+                                                  });
+                                                },
+                                              ),
+                                            ))
+                                        .toList()),
+                              ),
+                            );
+                          }));
+                },
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: state.listAllGroups.length != state.listSelectedGroups.length ? AppColor.alertErrorColor : AppColor.grey3Color),
+                ),
+                child: Text('groups'.tr(),
+                    style: TextStyle(fontSize: 16, color: state.listAllGroups.length != state.listSelectedGroups.length ? AppColor.alertErrorColor : AppColor.grey1Color)),
+              ),
+            );
+          },
+        ),
         FilterFieldTablet(
           filter: _previewFilterSearchSong,
           clearFilter: () => context.read<HomePageBloc>().add(const FilterSong(filter: '')),

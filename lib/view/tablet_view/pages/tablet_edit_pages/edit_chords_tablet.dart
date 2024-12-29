@@ -64,24 +64,13 @@ class _EditChordsPageTabletState extends State<EditChordsPageTablet> {
             ),
             body: Stack(
               children: [
-                SingleChildScrollView(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(
-                        height: 10,
-                      ),
-                      const Divider(),
-                      Padding(
-                        padding: const EdgeInsets.all(15.0),
-                        child: RichText(
-                            softWrap: true,
-                            text: TextSpan(
-                                children: _getCLickableText(
-                                    widget.isOriginalLyrics ? state.currentEditSong.originalLyrics ?? '' : state.currentEditSong.lyrics, state.chordStyle, state.textStyle))),
-                      ),
-                    ],
+                Container(
+                  height: MediaQuery.of(context).size.height - 160,
+                  alignment: Alignment.topLeft,
+                  padding: const EdgeInsets.only(left: 15),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.vertical,
+                    child: RichText(softWrap: true, text: TextSpan(children: _getCLickableText(state.currentText, state.chordStyle, state.textStyle))),
                   ),
                 ),
                 Visibility(

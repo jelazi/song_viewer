@@ -1,13 +1,12 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:async';
 
+import 'package:collection/collection.dart';
 import 'package:logger_pkg/logger_pkg.dart';
 
 import '../model/song/song.dart';
 import '../providers/firebase_provider.dart';
 import '../providers/hive_provider.dart';
-import 'package:collection/collection.dart';
-
 import '../services/auxiliary_functions.dart';
 
 class SongsRepository {
@@ -162,7 +161,10 @@ class SongsRepository {
     _hiveProvider.setNewTransposeForSong(song.id, transpose);
   }
 
-  int getTransposeForSong(Song song) {
+  int getTransposeForSong(Song? song) {
+    if (song == null) {
+      return 0;
+    }
     return _hiveProvider.getTransposeForSong(song.id);
   }
 

@@ -3,7 +3,6 @@ import 'package:default_project/repositories/settings_repository.dart';
 import 'package:default_project/repositories/songs_repository.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../model/song/song.dart';
 import '../../../services/enums.dart';
@@ -34,6 +33,11 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
           titleController: TextEditingController(),
           interpretController: TextEditingController(),
           indexSongBookController: TextEditingController(),
+          title: '',
+          interpret: '',
+          indexSongBook: '',
+          tags: const [],
+          notes: const [],
         )) {
     on<_Init>(_init);
     on<ChangeEditSong>(_changeEditSong);
@@ -90,6 +94,10 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
         titleController: TextEditingController(text: event.song.title),
         interpretController: TextEditingController(text: event.song.interpret),
         indexSongBookController: TextEditingController(text: (event.song.indexSongBook == null) ? '' : event.song.indexSongBook.toString()),
+        title: event.song.title,
+        interpret: event.song.interpret ?? '',
+        indexSongBook: (event.song.indexSongBook == null) ? '' : event.song.indexSongBook.toString(),
+        tags: event.song.tags ?? [],
       ));
     } else {
       emit(state.copyWith(
@@ -102,55 +110,136 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
         titleController: TextEditingController(text: event.song.title),
         interpretController: TextEditingController(text: event.song.interpret),
         indexSongBookController: TextEditingController(text: (event.song.indexSongBook == null) ? '' : event.song.indexSongBook.toString()),
+        title: event.song.title,
+        interpret: event.song.interpret ?? '',
+        indexSongBook: (event.song.indexSongBook == null) ? '' : event.song.indexSongBook.toString(),
+        tags: event.song.tags ?? [],
       ));
     }
   }
 
   void _changeSongValue(ChangeSongValue event, Emitter<EditSongState> emit) {
     final state = this.state;
-    switch (event.nameValue) {
-      case 'title':
-        {
-          emit(state.copyWith(
-            titleController: TextEditingController(
-              text: event.value,
-            )..selection = event.selection ?? TextSelection.collapsed(offset: event.value.length),
-          ));
+    if (event.appVersion == 'desktop') {
+      switch (event.nameValue) {
+        case 'title':
+          {
+            emit(state.copyWith(
+              titleController: TextEditingController(
+                text: event.value,
+              )..selection = event.selection ?? TextSelection.collapsed(offset: event.value.length),
+            ));
 
-          break;
-        }
-      case 'interpret':
-        {
-          emit(state.copyWith(
-              interpretController: TextEditingController(
-            text: event.value,
-          )..selection = event.selection ?? TextSelection.collapsed(offset: event.value.length)));
-          break;
-        }
-      case 'indexSongBook':
-        {
-          emit(state.copyWith(
-              indexSongBookController: TextEditingController(
-            text: event.value,
-          )..selection = event.selection ?? TextSelection.collapsed(offset: event.value.length)));
-          break;
-        }
-      case 'lyrics':
-        {
-          emit(
-            state.copyWith(currentText: event.value),
-          );
-          break;
-        }
-      case 'originalLyrics':
-        {
-          emit(state.copyWith(
-            currentEditSong: state.currentEditSong.copyWith(
-              originalLyrics: event.value,
-            ),
-          ));
-          break;
-        }
+            break;
+          }
+        case 'interpret':
+          {
+            emit(state.copyWith(
+                interpretController: TextEditingController(
+              text: event.value,
+            )..selection = event.selection ?? TextSelection.collapsed(offset: event.value.length)));
+            break;
+          }
+        case 'indexSongBook':
+          {
+            emit(state.copyWith(
+                indexSongBookController: TextEditingController(
+              text: event.value,
+            )..selection = event.selection ?? TextSelection.collapsed(offset: event.value.length)));
+            break;
+          }
+        case 'lyrics':
+          {
+            emit(
+              state.copyWith(currentText: event.value),
+            );
+            break;
+          }
+        case 'originalLyrics':
+          {
+            emit(state.copyWith(
+              currentEditSong: state.currentEditSong.copyWith(
+                originalLyrics: event.value,
+              ),
+            ));
+            break;
+          }
+        case 'groups':
+          {
+            emit(state.copyWith(
+              currentEditSong: state.currentEditSong.copyWith(
+                groups: event.value,
+              ),
+            ));
+            break;
+          }
+      }
+    }
+    if (event.appVersion == 'tablet') {
+      switch (event.nameValue) {
+        case 'title':
+          {
+            emit(state.copyWith(title: event.value));
+            break;
+          }
+        case 'interpret':
+          {
+            emit(state.copyWith(interpret: event.value));
+            break;
+          }
+        case 'indexSongBook':
+          {
+            emit(state.copyWith(indexSongBook: event.value));
+            break;
+          }
+        case 'lyrics':
+          {
+            emit(state.copyWith(currentText: event.value));
+            break;
+          }
+        case 'originalLyrics':
+          {
+            break;
+          }
+        case 'tags':
+          {
+            emit(state.copyWith(tags: event.value));
+            break;
+          }
+        case 'groups':
+          {
+            emit(state.copyWith(currentGroups: event.value));
+            break;
+          }
+      }
+    }
+    if (event.appVersion == 'mobile') {
+      switch (event.nameValue) {
+        case 'title':
+          {
+            emit(state.copyWith(title: event.value));
+            break;
+          }
+        case 'interpret':
+          {
+            emit(state.copyWith(interpret: event.value));
+            break;
+          }
+        case 'indexSongBook':
+          {
+            emit(state.copyWith(indexSongBook: event.value));
+            break;
+          }
+        case 'lyrics':
+          {
+            emit(state.copyWith(currentText: event.value));
+            break;
+          }
+        case 'originalLyrics':
+          {
+            break;
+          }
+      }
     }
   }
 
@@ -359,45 +448,72 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
 
   void _saveSong(SaveSong event, Emitter<EditSongState> emit) async {
     final state = this.state;
-    var song = state.currentEditSong;
-    bool isChanged = false;
-    if (state.isOriginalLyrics) {
-      if (song.originalLyrics != state.currentText) {
-        song = song.copyWith(originalLyrics: state.currentText);
+    if (event.typeApp == 'desktop') {
+      var song = state.currentEditSong;
+      bool isChanged = false;
+      if (state.isOriginalLyrics) {
+        if (song.originalLyrics != state.currentText) {
+          song = song.copyWith(originalLyrics: state.currentText);
+          isChanged = true;
+        }
+      } else {
+        if (song.lyrics != state.currentText) {
+          song = song.copyWith(lyrics: state.currentText);
+          isChanged = true;
+        }
+      }
+      if (song.title != state.titleController.text) {
+        song = song.copyWith(title: state.titleController.text);
         isChanged = true;
       }
-    } else {
+      if (song.interpret != state.interpretController.text) {
+        song = song.copyWith(interpret: state.interpretController.text);
+        isChanged = true;
+      }
+      if (state.indexSongBookController.text.isNotEmpty) {
+        if (song.indexSongBook != int.parse(state.indexSongBookController.text)) {
+          song = song.copyWith(indexSongBook: int.parse(state.indexSongBookController.text));
+          isChanged = true;
+        }
+      }
+      if (song.groups != state.currentGroups) {
+        song = song.copyWith(groups: state.currentGroups);
+        isChanged = true;
+      }
+      if (isChanged) {
+        if (song.id.isEmpty) {
+          song.generateId();
+        }
+        await songsRepository.updateSong(song);
+        await songsRepository.updateSongsFromFirebase();
+      }
+      emit(state.copyWith(currentEditSong: song, listSelectedChords: []));
+    } else if (event.typeApp == 'tablet') {
+      var song = state.currentEditSong;
+      if (song.title != state.title) {
+        song = song.copyWith(title: state.title);
+      }
+      if (song.interpret != state.interpret) {
+        song = song.copyWith(interpret: state.interpret);
+      }
+      if (state.indexSongBook.isNotEmpty) {
+        var indexSongBook = int.tryParse(state.indexSongBook);
+        if (indexSongBook != null) {
+          song = song.copyWith(indexSongBook: indexSongBook);
+        }
+      }
       if (song.lyrics != state.currentText) {
         song = song.copyWith(lyrics: state.currentText);
-        isChanged = true;
       }
-    }
-    if (song.title != state.titleController.text) {
-      song = song.copyWith(title: state.titleController.text);
-      isChanged = true;
-    }
-    if (song.interpret != state.interpretController.text) {
-      song = song.copyWith(interpret: state.interpretController.text);
-      isChanged = true;
-    }
-    if (state.indexSongBookController.text.isNotEmpty) {
-      if (song.indexSongBook != int.parse(state.indexSongBookController.text)) {
-        song = song.copyWith(indexSongBook: int.parse(state.indexSongBookController.text));
-        isChanged = true;
+      if (song.tags != state.tags) {
+        song = song.copyWith(tags: state.tags);
       }
-    }
-    if (song.groups != state.currentGroups) {
-      song = song.copyWith(groups: state.currentGroups);
-      isChanged = true;
-    }
-    if (isChanged) {
-      if (song.id.isEmpty) {
-        song.generateId();
+      if (song.groups != state.currentGroups) {
+        song = song.copyWith(groups: state.currentGroups);
       }
       await songsRepository.updateSong(song);
       await songsRepository.updateSongsFromFirebase();
     }
-    emit(state.copyWith(currentEditSong: song, listSelectedChords: []));
   }
 
   void _createNewSong(CreateNewSong event, Emitter<EditSongState> emit) {

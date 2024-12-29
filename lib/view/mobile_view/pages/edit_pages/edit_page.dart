@@ -1,13 +1,12 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:io';
 
+import 'package:default_project/services/constants.dart';
 import 'package:default_project/services/enums.dart';
 import 'package:default_project/view/mobile_view/widgets/dialogs/dialogs_export.dart';
 import 'package:default_project/view/mobile_view/widgets/dialogs/question_dialog.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-
-import 'package:default_project/services/constants.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 import '../../../../blocs/export_blocs.dart';
@@ -55,7 +54,7 @@ class _EditPageMobileState extends State<EditPageMobile> {
                               builder: ((context) {
                                 return EditTextDialog(
                                   okClick: (value) {
-                                    context.read<EditSongBloc>().add(ChangeSongValue(nameValue: 'title', value: value));
+                                    context.read<EditSongBloc>().add(ChangeSongValue(nameValue: 'title', value: value, appVersion: 'mobile'));
                                   },
                                   title: 'editTitle'.tr(),
                                   value: state.currentEditSong.title,
@@ -72,7 +71,7 @@ class _EditPageMobileState extends State<EditPageMobile> {
                               builder: ((context) {
                                 return EditTextDialog(
                                   okClick: (value) {
-                                    context.read<EditSongBloc>().add(ChangeSongValue(nameValue: 'interpret', value: value));
+                                    context.read<EditSongBloc>().add(ChangeSongValue(nameValue: 'interpret', value: value, appVersion: 'mobile'));
                                   },
                                   title: 'editInterpret'.tr(),
                                   value: state.currentEditSong.interpret ?? '',
@@ -89,7 +88,7 @@ class _EditPageMobileState extends State<EditPageMobile> {
                               builder: ((context) {
                                 return EditNumberDialog(
                                   okClick: (value) {
-                                    context.read<EditSongBloc>().add(ChangeSongValue(nameValue: 'indexSongBook', value: value));
+                                    context.read<EditSongBloc>().add(ChangeSongValue(nameValue: 'indexSongBook', value: value, appVersion: 'mobile'));
                                   },
                                   title: 'indexSongBook'.tr(),
                                   value: state.currentEditSong.indexSongBook ?? 0,

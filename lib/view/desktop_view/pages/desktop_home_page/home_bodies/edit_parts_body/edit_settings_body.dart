@@ -35,7 +35,7 @@ class _EditSettingsBodyState extends State<EditSettingsBody> {
                             cursor: SystemMouseCursors.click,
                             child: GestureDetector(
                                 onTap: () {
-                                  context.read<EditSongBloc>().add(const SaveSong());
+                                  context.read<EditSongBloc>().add(const SaveSong(typeApp: 'desktop'));
                                 },
                                 child: Container(
                                     height: 30,
@@ -68,7 +68,7 @@ class _EditSettingsBodyState extends State<EditSettingsBody> {
                       border: OutlineInputBorder(),
                     ),
                     onChanged: (value) {
-                      context.read<EditSongBloc>().add(ChangeSongValue(nameValue: 'title', value: value, selection: state.titleController.selection));
+                      context.read<EditSongBloc>().add(ChangeSongValue(nameValue: 'title', value: value, selection: state.titleController.selection, appVersion: 'desktop'));
                     },
                   ),
                 ),
@@ -90,7 +90,9 @@ class _EditSettingsBodyState extends State<EditSettingsBody> {
                       border: OutlineInputBorder(),
                     ),
                     onChanged: (value) {
-                      context.read<EditSongBloc>().add(ChangeSongValue(nameValue: 'interpret', value: value, selection: state.interpretController.selection));
+                      context
+                          .read<EditSongBloc>()
+                          .add(ChangeSongValue(nameValue: 'interpret', value: value, selection: state.interpretController.selection, appVersion: 'desktop'));
                     },
                   ),
                 ),
@@ -115,7 +117,9 @@ class _EditSettingsBodyState extends State<EditSettingsBody> {
                       border: OutlineInputBorder(),
                     ),
                     onChanged: (value) {
-                      context.read<EditSongBloc>().add(ChangeSongValue(nameValue: 'indexSongBook', value: value, selection: state.indexSongBookController.selection));
+                      context
+                          .read<EditSongBloc>()
+                          .add(ChangeSongValue(nameValue: 'indexSongBook', value: value, selection: state.indexSongBookController.selection, appVersion: 'desktop'));
                     },
                   ),
                 ),

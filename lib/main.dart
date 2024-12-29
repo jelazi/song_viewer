@@ -28,6 +28,7 @@ import 'model/web_song.dart';
 import 'providers/firebase_provider.dart';
 import 'providers/hive_provider.dart';
 import 'repositories/web_repository.dart';
+import 'view/desktop_view/widgets/my_toast.dart';
 import 'view/router/app_router.dart';
 
 part 'main.part.dart';
@@ -68,6 +69,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if ((Platform.isAndroid || Platform.isIOS) && MediaQuery.of(context).size.width < 600) {
+      myToastWidth = MediaQuery.of(context).size.width - 40;
+    } else if (Platform.isAndroid || Platform.isIOS) {
+      myToastWidth = 400;
+    } else {
+      myToastWidth = 400;
+    }
     return MultiBlocProvider(
       providers: [
         BlocProvider(
@@ -87,7 +95,11 @@ class MyApp extends StatelessWidget {
               create: (context) => PreviewChordBloc(
                     settingsRepository: settingsRepository,
                   )),
-          BlocProvider(create: ((context) => SettingsBloc(settingsRepository: settingsRepository))),
+          BlocProvider(
+              create: ((context) => SettingsBloc(
+                    settingsRepository: settingsRepository,
+                    songsRepository: songsRepository,
+                  ))),
           BlocProvider(
             create: (context) => EditSongBloc(
               songsRepository: songsRepository,

@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:default_project/view/mobile_view/widgets/settings_ui/settings_list.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:numberpicker/numberpicker.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../blocs/export_blocs.dart';
 import '../../mobile_view/widgets/dialogs/edit_dialog.dart';
@@ -166,23 +169,67 @@ class _SettingsPageTabletState extends State<SettingsPageTablet> {
                       title: 'editIconVisibility'.tr(),
                       onPressed: (conte, value) {
                         context.read<SettingsBloc>().add(ChangeSettingsValue('isEditIconVisible', value));
+                        context.read<HomePageBloc>().add(const UpdateSettingsData());
                       },
                       iconData: Icons.visibility,
                       switchValue: state.isEditIconVisible,
                     ),
-                    SettingsTile.switched(
-                        title: 'autoHideTopBar'.tr(),
-                        onPressed: (conte, value) {
-                          context.read<SettingsBloc>().add(ChangeSettingsValue('autoHideTopBar', value));
-                        },
-                        iconData: Icons.hide_source,
-                        switchValue: state.autoHideTopBar),
+                  ],
+                ),
+                SettingsSection(
+                  title: 'functions'.tr(),
+                  tiles: [
+                    SettingsTile(
+                      title: 'importData'.tr(),
+                      onPressed: (BuildContext context) {},
+                      iconData: Icons.import_export,
+                      value: '',
+                    ),
+                    SettingsTile(
+                      title: 'exportData'.tr(),
+                      onPressed: (BuildContext context) async {
+                        final songs = context.read<SettingsBloc>().songsRepository.songs;
+                        final json = songs.map((e) => e.toJson()).toList();
+                        _onShareTextAsXFile(context, jsonEncode(json), 'songs.json');
+                      },
+                      iconData: Icons.save_as,
+                      value: '',
+                    ),
                   ],
                 ),
               ],
             );
           },
         ));
+  }
+
+  void _onShareTextAsXFile(BuildContext context, String text, String fileName) async {
+    final box = context.findRenderObject() as RenderBox?;
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final data = utf8.encode(text);
+    final shareResult = await Share.shareXFiles(
+      [
+        XFile.fromData(
+          data,
+          // name: fileName, // Notice, how setting the name here does not work.
+          mimeType: 'text/plain',
+        ),
+      ],
+      sharePositionOrigin: box!.localToGlobal(Offset.zero) & box.size,
+      fileNameOverrides: [fileName],
+    );
+
+    scaffoldMessenger.showSnackBar(getResultSnackBar(shareResult));
+  }
+
+  SnackBar getResultSnackBar(ShareResult result) {
+    return SnackBar(
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [Text("Share result: ${result.status}"), if (result.status == ShareResultStatus.success) Text("Shared to: ${result.raw}")],
+      ),
+    );
   }
 
   Widget getColorFont({

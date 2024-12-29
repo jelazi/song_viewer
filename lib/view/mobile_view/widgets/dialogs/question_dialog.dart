@@ -31,7 +31,7 @@ class QuestionDialog extends StatelessWidget {
       titlePadding: const EdgeInsets.all(0),
       title: Container(
         decoration: const BoxDecoration(
-            color: AppColor.defaultBackgroundColor,
+            color: AppColor.primaryColor,
             borderRadius: BorderRadius.only(
               topLeft: Radius.circular(8.0),
               topRight: Radius.circular(8.0),
@@ -64,18 +64,18 @@ class QuestionDialog extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 ElevatedButton(
+                    style: const ButtonStyle(backgroundColor: WidgetStatePropertyAll(AppColor.primaryColor)),
                     onPressed: cancelClick != null ? () => cancelClick!() : () => Navigator.of(context).pop(),
-                    child: Text(
-                      ('no').tr(),
-                    )),
+                    child: Text(('no').tr(), style: const TextStyle(color: Colors.white))),
                 ElevatedButton(
+                    style: const ButtonStyle(backgroundColor: WidgetStatePropertyAll(AppColor.primaryColor)),
                     onPressed: () {
                       if (okBack) {
                         Navigator.of(context).pop();
                       }
                       okClick();
                     },
-                    child: Text(('yes').tr())),
+                    child: Text(('yes').tr(), style: const TextStyle(color: Colors.white))),
               ],
             ),
           )
