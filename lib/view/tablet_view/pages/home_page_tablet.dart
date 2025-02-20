@@ -143,7 +143,7 @@ class _HomePageTabletState extends State<HomePageTablet> {
                           ? getPreviewFilterItems(context)
                           : state.selectedPage == 'web'
                               ? getWebSiteDropDown()
-                              : const SizedBox(),
+                              : Container(color: AppColor.grey3Color, height: 40),
                     ],
                   )),
               SizedBox(
@@ -153,12 +153,119 @@ class _HomePageTabletState extends State<HomePageTablet> {
                     ? getPreviewBody(state)
                     : state.selectedPage == 'web'
                         ? getWebBody(state)
-                        : const SizedBox(),
+                        : state.selectedPage == 'playlists'
+                            ? getPlaylistsBody()
+                            : Container(),
               )
             ]),
           ),
         );
       },
+    );
+  }
+
+  Widget getPlaylistsBody() => Container(child: BlocBuilder<PlaylistsBloc, PlaylistsState>(
+        builder: (context, state) {
+          return Column(
+            children: [
+              SizedBox(
+                width: MediaQuery.of(context).size.width - 250,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppColor.grey3Color),
+                      ),
+                      onPressed: () {
+                        context.read<PlaylistsBloc>().add(const OpenPlaylist(playlist: null));
+                        Navigator.of(context).pushNamed('/editPlaylistPage');
+                      },
+                      child: Row(
+                        children: [
+                          const Icon(Icons.add, color: AppColor.primaryColor),
+                          const SizedBox(width: 8),
+                          Text('createPlaylist'.tr()),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                  ],
+                ),
+              ),
+              const Divider(color: AppColor.grey3Color, thickness: 1, indent: 20, endIndent: 20),
+              Expanded(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: state.playlists.map((playlist) {
+                    String songNamesSubtitle = '';
+                    if (playlist.listSongIds.isNotEmpty) {
+                      for (var songId in playlist.listSongIds) {
+                        final songName = context.read<PlaylistsBloc>().songsRepository.songs.firstWhere((element) => element.id == songId).title;
+                        if (songName.isNotEmpty) {
+                          songNamesSubtitle = songNamesSubtitle + songName;
+                        }
+                        if (songId != playlist.listSongIds.last) {
+                          songNamesSubtitle = songNamesSubtitle + ', ';
+                        }
+                      }
+                    }
+                    return GestureDetector(
+                      onTap: () {
+                        context.read<PlaylistsBloc>().add(OpenPlaylist(playlist: playlist));
+                        Navigator.of(context).pushNamed('/playlistPage');
+                      },
+                      child: Card(
+                          color: AppColor.whiteColor,
+                          borderOnForeground: true,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(5.0),
+                            side: const BorderSide(
+                              color: AppColor.grey3Color,
+                              width: 1.0,
+                            ),
+                          ),
+                          child: ListTile(
+                            title: Text(
+                              playlist.name,
+                            ),
+                            subtitle: Text(
+                              songNamesSubtitle,
+                            ),
+                            trailing: SizedBox(
+                              width: 100,
+                              height: 50,
+                              child: Row(
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.edit, color: AppColor.primaryColor),
+                                    onPressed: () {
+                                      context.read<PlaylistsBloc>().add(OpenPlaylist(playlist: playlist));
+                                      Navigator.of(context).pushNamed('/editPlaylistPage');
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete, color: AppColor.alertErrorColor),
+                                    onPressed: () {
+                                      context.read<PlaylistsBloc>().add(DeletePlaylist(playlist: playlist));
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          );
+        },
+      ));
+
+  Container newMethod() {
+    return Container(
+      color: AppColor.grey3Color,
     );
   }
 
@@ -179,6 +286,7 @@ class _HomePageTabletState extends State<HomePageTablet> {
               ),
             ),
             SizedBox(
+              height: MediaQuery.of(context).size.height - 125,
               width: MediaQuery.of(context).size.width - 280,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -230,12 +338,12 @@ class _HomePageTabletState extends State<HomePageTablet> {
                             child: CircularProgressIndicator(),
                           )
                         : SizedBox(
-                            height: MediaQuery.of(context).size.height - 110,
+                            height: MediaQuery.of(context).size.height - 135,
                             child: Column(
                               children: [
                                 Text(state.currentInterpret.title, style: const TextStyle(fontSize: 16, color: AppColor.grey1Color)),
                                 SizedBox(
-                                  height: MediaQuery.of(context).size.height - 135,
+                                  height: MediaQuery.of(context).size.height - 160,
                                   child: ListView(
                                     shrinkWrap: true,
                                     children: state.songs
@@ -387,6 +495,19 @@ class _HomePageTabletState extends State<HomePageTablet> {
                       const Icon(Icons.web, color: AppColor.grey1Color),
                       const SizedBox(width: 8),
                       Text('web'.tr()),
+                    ],
+                  ),
+                ),
+              ),
+              DropdownMenuItem(
+                value: 'playlists',
+                child: SizedBox(
+                  width: 200,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.playlist_play, color: AppColor.grey1Color),
+                      const SizedBox(width: 8),
+                      Text('playlists'.tr()),
                     ],
                   ),
                 ),

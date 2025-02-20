@@ -262,5 +262,10 @@
     "saveEditText": "Uložit text písně",
     "saveEditTextQuestion": "Chcete uložit text písně?",
     "editLyricsLabel": "Editovat text písně",
+    "playlistName": "Název playlistu",
+    "createPlaylist": "Vytvořit playlist",
+    "allSongs": "Všechny písně",
+    "filteredSongs": "Filtrované písně",
+    "currentPlaylist": "Aktuální playlist",
     "test": "Test"
 }

@@ -8,6 +8,7 @@ import 'package:default_project/view/tablet_view/pages/sheet_view_page_tablet.da
 import 'package:default_project/view/tablet_view/pages/tablet_edit_pages/edit_chords_tablet.dart';
 import 'package:default_project/view/tablet_view/pages/tablet_edit_pages/edit_lyrics_tablet.dart';
 import 'package:default_project/view/tablet_view/pages/tablet_edit_pages/edit_page_tablet.dart';
+import 'package:default_project/view/tablet_view/pages/tablet_edit_pages/edit_playlist_tablet.dart';
 import 'package:default_project/view/tablet_view/pages/youtube_video_page_tablet.dart';
 import 'package:flutter/material.dart';
 
@@ -24,8 +25,7 @@ import '../mobile_view/pages/settings_page.dart';
 import '../mobile_view/pages/sheet_view_page.dart';
 import '../mobile_view/pages/youtube_video_page.dart';
 import '../tablet_view/pages/home_page_tablet.dart';
-
-
+import '../tablet_view/pages/playlist_tablet.dart';
 
 class AppRouter {
   SettingsRepository settingsRepository;
@@ -97,6 +97,12 @@ class AppRouter {
             ),
           );
         }
+      case '/editPlaylistPage':
+        return MaterialPageRoute(builder: (_) => const PageResponsive(pageMobile: EditPlaylistTablet(), pageTablet: EditPlaylistTablet(), pageDesktop: EditPlaylistTablet()));
+
+      case '/playlistPage':
+        return MaterialPageRoute(builder: (_) => const PageResponsive(pageMobile: PlaylistTablet(), pageTablet: PlaylistTablet(), pageDesktop: PlaylistTablet()));
+
       case '/stateLogin':
         return MaterialPageRoute(builder: (_) => StateLogin(settingsRepository: settingsRepository));
       default:

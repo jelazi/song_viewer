@@ -1,6 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:logger_pkg/logger_pkg.dart';
-
 import 'package:uuid/uuid.dart';
 
 import 'song/song.dart';
@@ -13,7 +12,7 @@ class Playlist {
   String? id;
   List<String> listSongIds = [];
 
-  Playlist(this.name) {
+  Playlist({required this.id, required this.name}) {
     _generateId();
   }
 

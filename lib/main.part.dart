@@ -50,6 +50,11 @@ Future<void> initProvidersRepositories() async {
     webProvider: webProvider,
   );
 
+  playlistRepository = PlaylistRepository(
+    hiveProvider: hiveProvider,
+    firebaseProvider: firebaseProvider,
+  );
+
   await webRepository.testGetSong();
   await usersRepository.loadUsersFromFirebase();
   await usersRepository.loadCurrentUser();
