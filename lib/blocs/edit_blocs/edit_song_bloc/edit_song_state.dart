@@ -11,7 +11,7 @@ class EditSongState extends Equatable {
   final int transposeIncrement;
   final bool listUniqueChordsIsVisible;
   final String currentText;
-  final List<int> listSelectedChords;
+  final int selectedChord;
   final bool isOriginalLyrics;
   final List<String> listAllGroups;
   final List<String> currentGroups;
@@ -34,7 +34,7 @@ class EditSongState extends Equatable {
     required this.transposeIncrement,
     required this.listUniqueChordsIsVisible,
     required this.currentText,
-    required this.listSelectedChords,
+    required this.selectedChord,
     required this.isOriginalLyrics,
     required this.listAllGroups,
     required this.currentGroups,
@@ -59,7 +59,7 @@ class EditSongState extends Equatable {
         transposeIncrement,
         listUniqueChordsIsVisible,
         currentText,
-        listSelectedChords,
+        selectedChord,
         isOriginalLyrics,
         listAllGroups,
         currentGroups,
@@ -83,7 +83,7 @@ class EditSongState extends Equatable {
     int? transposeIncrement,
     bool? listUniqueChordsIsVisible,
     String? currentText,
-    List<int>? listSelectedChords,
+    int? selectedChord,
     bool? isOriginalLyrics,
     List<String>? listAllGroups,
     List<String>? currentGroups,
@@ -106,7 +106,7 @@ class EditSongState extends Equatable {
       transposeIncrement: transposeIncrement ?? this.transposeIncrement,
       listUniqueChordsIsVisible: listUniqueChordsIsVisible ?? this.listUniqueChordsIsVisible,
       currentText: currentText ?? this.currentText,
-      listSelectedChords: listSelectedChords ?? this.listSelectedChords,
+      selectedChord: selectedChord ?? this.selectedChord,
       isOriginalLyrics: isOriginalLyrics ?? this.isOriginalLyrics,
       listAllGroups: listAllGroups ?? this.listAllGroups,
       currentGroups: currentGroups ?? this.currentGroups,
@@ -156,7 +156,7 @@ class EditSongInitial extends EditSongState {
     required super.selectChordIndex,
     required super.listUniqueChordsIsVisible,
     required super.currentText,
-    required super.listSelectedChords,
+    required super.selectedChord,
     required super.isOriginalLyrics,
     required super.listAllGroups,
     required super.currentGroups,

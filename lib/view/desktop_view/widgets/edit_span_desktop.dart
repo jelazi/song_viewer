@@ -4,7 +4,6 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:logger_pkg/logger_pkg.dart';
 
 import '../../../model/song/song_item.dart';
 
@@ -44,7 +43,7 @@ class _EditSpanDesktopState extends State<EditSpanDesktop> {
             child: Row(
               children: [
                 Visibility(
-                    visible: state.listSelectedChords.contains(widget.index),
+                    visible: state.selectedChord == widget.index,
                     child: GestureDetector(
                       onSecondaryTap: () {
                         if (widget.typeSongItem == TypeSongItem.chord) {}
@@ -88,7 +87,7 @@ class _EditSpanDesktopState extends State<EditSpanDesktop> {
                   )),
                 ),
                 Visibility(
-                  visible: state.listSelectedChords.contains(widget.index),
+                  visible: state.selectedChord == widget.index,
                   child: GestureDetector(
                     onSecondaryTap: () {
                       if (widget.typeSongItem == TypeSongItem.chord) {}
