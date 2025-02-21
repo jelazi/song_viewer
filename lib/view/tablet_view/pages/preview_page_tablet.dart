@@ -290,7 +290,7 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
                           );
                         },
                       ),
-                      SizedBox(
+                      Container(
                         height: MediaQuery.of(context).size.height - 120,
                         child: state.twoColumns ? _getLyricsTwoColumnsRenderer(state, scrollController) : _getLyricsOneColumnRenderer(state, scrollController),
                       ),
@@ -315,16 +315,6 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
                     );
                   },
                 ),
-                Positioned(
-                  top: 10,
-                  right: 10,
-                  child: AnimatedOpacity(
-                      opacity: state.visibleButtons && state.appBarStatus ? 1.0 : 0.0,
-                      duration: const Duration(milliseconds: 500),
-                      child: Column(
-                        children: [],
-                      )),
-                ),
                 Visibility(
                   visible: state.twoColumns && state.lyricWithColumns(true, true, TypeLyric.translate).length > 2,
                   child: Align(
@@ -333,8 +323,7 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
                       padding: const EdgeInsets.all(8.0),
                       child: ElevatedButton(
                         style: ButtonStyle(
-                          backgroundColor:
-                              MaterialStateProperty.all<Color>(state.currentColumn > 0 ? AppColor.primaryColor.withOpacity(0.7) : AppColor.grey4Color.withOpacity(0.7)),
+                          backgroundColor: WidgetStateProperty.all<Color>(state.currentColumn > 0 ? AppColor.primaryColor.withOpacity(0.7) : AppColor.grey4Color.withOpacity(0.7)),
                         ),
                         onPressed: () {
                           if (state.currentColumn <= 0) {
@@ -399,6 +388,7 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
 
   Widget _getLyricsTwoColumnsRenderer(PreviewChordState state, ScrollController scrollController) {
     List<String> splittedLyric = state.lyricWithColumns(true, true, TypeLyric.translate);
+
     if (splittedLyric.isEmpty) {
       // when the song is from web and the lyrics are not loaded
       return Center(

@@ -116,7 +116,7 @@ class MyApp extends StatelessWidget {
             create: ((context) => UsersBloc(usersRepository: usersRepository)),
           ),
           BlocProvider(
-            create: ((context) => PlaylistsBloc(playlistRepository: playlistRepository, songsRepository: songsRepository)),
+            create: ((context) => PlaylistsBloc(playlistRepository: playlistRepository, songsRepository: songsRepository, settingsRepository: settingsRepository)),
           ),
         ],
         child: MaterialApp(

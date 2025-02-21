@@ -1,11 +1,14 @@
-import 'package:bloc/bloc.dart';
+import 'package:default_project/blocs/export_blocs.dart';
 import 'package:default_project/repositories/playlist_repository.dart';
 import 'package:default_project/repositories/songs_repository.dart';
 import 'package:default_project/view/desktop_view/widgets/my_toast.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
 
 import '../../model/playlist.dart';
 import '../../model/song/song.dart';
+import '../../repositories/settings_repository.dart';
+import '../../services/enums.dart';
 
 part 'playlists_event.dart';
 part 'playlists_state.dart';
@@ -13,14 +16,28 @@ part 'playlists_state.dart';
 class PlaylistsBloc extends Bloc<PlaylistsEvent, PlaylistsState> {
   PlaylistRepository playlistRepository;
   SongsRepository songsRepository;
-  PlaylistsBloc({required this.playlistRepository, required this.songsRepository})
+  SettingsRepository settingsRepository;
+  final double menuHeight = 140;
+  PlaylistsBloc({required this.playlistRepository, required this.songsRepository, required this.settingsRepository})
       : super(PlaylistsInitial(
-          playlists: [],
+          playlists: const [],
           currentPlaylist: Playlist(id: '', name: ''),
           namePlaylist: '',
-          currentSongs: [],
-          allSongs: [],
-          filteredSongs: [],
+          currentSongs: const [],
+          allSongs: const [],
+          filteredSongs: const [],
+          heightWindow: 0,
+          currentSong: Song(id: '', title: '', lyrics: ''),
+          selectedSongId: '',
+          textStyle: const TextStyle(),
+          chordStyle: const TextStyle(),
+          appBarStatus: false,
+          transposeIncrement: 0,
+          scrollSpeed: 0,
+          currentColumn: 0,
+          maxLines: 0,
+          cap: 0,
+          indexCurrentSongInPlaylist: 0,
         )) {
     on<_Init>(_init);
     on<OpenPlaylist>(_openPlaylist);
@@ -31,13 +48,28 @@ class PlaylistsBloc extends Bloc<PlaylistsEvent, PlaylistsState> {
     on<AddSongToPlaylist>(_addSongToPlaylist);
     on<RemoveSongFromPlaylist>(_removeSongFromPlaylist);
     on<ChangeNamePlaylist>(_changeNamePlaylist);
+    on<ChangeAppBarStatusPlaylist>(_changeAppBarStatusPlaylist);
+    on<ChangeHeightWindowPlaylist>(_changeHeightWindowPlaylist);
+    on<ChangeFontSizePlaylist>(_changeFontSizePlaylist);
+    on<TransposeChordPlaylist>(_transposeChordPlaylist);
+    on<SelectSongInPreviewPlaylist>(_selectSongInPreviewPlaylist);
+    on<ChangeCurrentColumnPlaylist>(_changeCurrentColumnPlaylist);
 
     add(const _Init());
   }
 
   void _init(_Init event, Emitter<PlaylistsState> emit) {
     final state = this.state;
-    emit(state.copyWith(playlists: playlistRepository.playlists, allSongs: songsRepository.songs, filteredSongs: []));
+    emit(state.copyWith(
+      playlists: playlistRepository.playlists,
+      allSongs: songsRepository.songs,
+      filteredSongs: [],
+      textStyle: TextStyle(fontSize: settingsRepository.previewFontTextSize, color: settingsRepository.previewColorText),
+      chordStyle: TextStyle(
+        fontSize: settingsRepository.previewFontChordSize,
+        color: settingsRepository.previewColorChord,
+      ),
+    ));
   }
 
   void _filterSongPlaylist(FilterSongPlaylist event, Emitter<PlaylistsState> emit) {
@@ -48,16 +80,25 @@ class PlaylistsBloc extends Bloc<PlaylistsEvent, PlaylistsState> {
   void _openPlaylist(OpenPlaylist event, Emitter<PlaylistsState> emit) {
     final state = this.state;
     List<Song> currentSongs = [];
-    var playlist = event.playlist;
-    if (playlist == null) {
-      emit(state.copyWith(currentPlaylist: Playlist(id: '', name: ''), currentSongs: []));
-      return;
-    }
-    event.playlist!.listSongIds.forEach((songId) {
+    for (var songId in event.playlist!.listSongIds) {
       final song = state.allSongs.firstWhere((element) => element.id == songId);
       currentSongs.add(song);
-    });
-    emit(state.copyWith(currentPlaylist: event.playlist, currentSongs: currentSongs, filteredSongs: []));
+    }
+    if (event.forEdit) {
+      var playlist = event.playlist;
+      if (playlist == null) {
+        emit(state.copyWith(currentPlaylist: Playlist(id: '', name: ''), currentSongs: []));
+        return;
+      }
+
+      emit(state.copyWith(currentPlaylist: event.playlist, currentSongs: currentSongs, filteredSongs: []));
+    } else {
+      emit(state.copyWith(
+          currentSongs: currentSongs,
+          filteredSongs: [],
+          currentSong: currentSongs.isNotEmpty ? currentSongs[0] : state.currentSong,
+          indexCurrentSongInPlaylist: currentSongs.isNotEmpty ? 0 : state.indexCurrentSongInPlaylist));
+    }
   }
 
   void _closePlaylist(ClosePlaylist event, Emitter<PlaylistsState> emit) {
@@ -65,6 +106,10 @@ class PlaylistsBloc extends Bloc<PlaylistsEvent, PlaylistsState> {
     emit(state.copyWith(
       currentPlaylist: Playlist(id: '', name: ''),
       currentSongs: [],
+      currentSong: Song(id: '', title: '', lyrics: ''),
+      selectedSongId: '',
+      indexCurrentSongInPlaylist: 0,
+      currentColumn: 0,
     ));
   }
 
@@ -136,5 +181,110 @@ class PlaylistsBloc extends Bloc<PlaylistsEvent, PlaylistsState> {
       }
     }
     return listChange;
+  }
+
+  void _changeAppBarStatusPlaylist(ChangeAppBarStatusPlaylist event, Emitter<PlaylistsState> emit) {
+    final state = this.state;
+    if (settingsRepository.autoHideTopBar) {
+      emit(state.copyWith(appBarStatus: event.status));
+    } else {
+      emit(state.copyWith(appBarStatus: true));
+    }
+  }
+
+  void _changeHeightWindowPlaylist(ChangeHeightWindowPlaylist event, Emitter<PlaylistsState> emit) {
+    final state = this.state;
+    final textSizeHeight = this.textSizeHeight(state.textStyle);
+    int maxLines = (event.height - menuHeight) / textSizeHeight ~/ 1;
+    emit(state.copyWith(
+      heightWindow: event.height,
+      maxLines: maxLines,
+    ));
+  }
+
+  void _changeFontSizePlaylist(ChangeFontSizePlaylist event, Emitter<PlaylistsState> emit) {
+    final state = this.state;
+    double fontSize = state.textStyle.fontSize!;
+    double chordSize = state.chordStyle.fontSize!;
+    if (event.isIncrease) {
+      fontSize++;
+      chordSize++;
+    } else {
+      fontSize--;
+      chordSize--;
+    }
+    settingsRepository.changeSettingsValue('previewFontTextSize', fontSize);
+    settingsRepository.changeSettingsValue('previewFontChordSize', chordSize);
+    final textSizeHeight = this.textSizeHeight(state.textStyle.copyWith(fontSize: fontSize));
+    int maxLines = (state.heightWindow - menuHeight) / textSizeHeight ~/ 1;
+    emit(state.copyWith(textStyle: state.textStyle.copyWith(fontSize: fontSize), chordStyle: state.chordStyle.copyWith(fontSize: chordSize), maxLines: maxLines));
+  }
+
+  void _transposeChordPlaylist(TransposeChordPlaylist event, Emitter<PlaylistsState> emit) {
+    final state = this.state;
+    int newIncrement = state.transposeIncrement + event.increment;
+    if (newIncrement >= 12) {
+      newIncrement = newIncrement - 12;
+    }
+    if (newIncrement <= -12) {
+      newIncrement = newIncrement + 12;
+    }
+
+    songsRepository.changeTransposeChord(state.currentSong, newIncrement);
+    emit(state.copyWith(transposeIncrement: newIncrement, cap: _getCapByIncrement(newIncrement)));
+  }
+
+  void _selectSongInPreviewPlaylist(SelectSongInPreviewPlaylist event, Emitter<PlaylistsState> emit) {
+    final state = this.state;
+    songsRepository.selectSong(event.selectSongId);
+    emit(state.copyWith(selectedSongId: songsRepository.selectedSongId));
+  }
+
+  int _getCapByIncrement(int increment) {
+    int cap = 0;
+    if (increment == 0) {
+      cap = 0;
+    } else {
+      if (increment < 0) {
+        cap = -1 * increment;
+      } else {
+        cap = 12 - increment;
+      }
+    }
+    return cap;
+  }
+
+  void _changeCurrentColumnPlaylist(ChangeCurrentColumnPlaylist event, Emitter<PlaylistsState> emit) {
+    final state = this.state;
+    if (event.column < 0 && state.indexCurrentSongInPlaylist == 0) {
+      emit(state.copyWith(currentColumn: 0));
+      return;
+    }
+    final lyricsColumn = state.lyricWithColumns(true, true, TypeLyric.translate, state.currentSong);
+    if (lyricsColumn.length - 2 < event.column && state.indexCurrentSongInPlaylist == state.currentSongs.length - 1) {
+      emit(state.copyWith(currentColumn: lyricsColumn.length - 1));
+      return;
+    }
+    if (lyricsColumn.length - 1 < event.column) {
+      //change song
+      final newCurrentSong = state.currentSongs[state.indexCurrentSongInPlaylist + 1];
+      emit(state.copyWith(indexCurrentSongInPlaylist: state.indexCurrentSongInPlaylist + 1, currentColumn: 0, currentSong: newCurrentSong));
+      return;
+    }
+    if (event.column < 0) {
+      //change song
+      final newCurrentSong = state.currentSongs[state.indexCurrentSongInPlaylist - 1];
+      final lyricsColumn = state.lyricWithColumns(true, true, TypeLyric.translate, newCurrentSong);
+      final lastIndexNewSong = lyricsColumn.length % 2 == 0 ? lyricsColumn.length - 2 : lyricsColumn.length - 1;
+      emit(state.copyWith(indexCurrentSongInPlaylist: state.indexCurrentSongInPlaylist - 1, currentColumn: lastIndexNewSong, currentSong: newCurrentSong));
+      return;
+    }
+    emit(state.copyWith(currentColumn: event.column));
+  }
+
+  double textSizeHeight(TextStyle textStyle) {
+    final TextPainter textPainter = TextPainter(text: TextSpan(text: 'Firstline', style: textStyle), textDirection: TextDirection.ltr)
+      ..layout(minWidth: 0, maxWidth: double.infinity);
+    return textPainter.size.height * 1.35;
   }
 }

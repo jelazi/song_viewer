@@ -25,103 +25,112 @@ class _EditPlaylistTabletState extends State<EditPlaylistTablet> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(),
-        body: BlocBuilder<PlaylistsBloc, PlaylistsState>(
-          builder: (context, state) {
-            return Container(
-              height: MediaQuery.of(context).size.height - 90,
-              width: MediaQuery.of(context).size.width,
-              child: Column(
-                children: [
-                  TextField(
-                    controller: _playlistName,
-                    decoration: InputDecoration(
-                      hintText: 'playlistName'.tr(),
-                      prefixIcon: const Icon(Icons.playlist_add),
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) {
+          context.read<PlaylistsBloc>().add(const ClosePlaylist());
+          return;
+        }
+      },
+      child: Scaffold(
+          appBar: AppBar(),
+          body: BlocBuilder<PlaylistsBloc, PlaylistsState>(
+            builder: (context, state) {
+              return SizedBox(
+                height: MediaQuery.of(context).size.height - 90,
+                width: MediaQuery.of(context).size.width,
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _playlistName,
+                      decoration: InputDecoration(
+                        hintText: 'playlistName'.tr(),
+                        prefixIcon: const Icon(Icons.playlist_add),
+                      ),
+                      onChanged: (value) {
+                        context.read<PlaylistsBloc>().add(ChangeNamePlaylist(playlist: state.currentPlaylist, name: value));
+                      },
                     ),
-                    onChanged: (value) {
-                      context.read<PlaylistsBloc>().add(ChangeNamePlaylist(playlist: state.currentPlaylist, name: value));
-                    },
-                  ),
-                  Row(
-                    children: [
-                      SizedBox(
-                          height: MediaQuery.of(context).size.height - 140,
-                          width: MediaQuery.of(context).size.width * 0.5 - 20,
-                          child: Column(
-                            children: [
-                              Text('currentPlaylist'.tr()),
-                              SizedBox(
-                                height: MediaQuery.of(context).size.height - 180,
-                                child: ListView(
-                                  children: state.currentSongs.map((e) => CurrentSongCard(song: e)).toList(),
-                                ),
-                              ),
-                            ],
-                          )),
-                      const SizedBox(
-                        width: 8,
-                      ),
-                      const VerticalDivider(
-                        width: 20,
-                        thickness: 2,
-                      ),
-                      const SizedBox(
-                        width: 8,
-                      ),
-                      SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.5 - 20,
-                          height: MediaQuery.of(context).size.height - 180,
-                          child: Column(
-                            children: [
-                              Text(state.filteredSongs.isEmpty ? 'allSongs'.tr() : 'filteredSongs'.tr()),
-                              TextField(
-                                controller: _filter,
-                                decoration: InputDecoration(
-                                  hintText: 'filterSong'.tr(),
-                                  prefixIcon: const Icon(Icons.search),
-                                  suffixIcon: IconButton(
-                                    onPressed: (() {
-                                      _filter.clear();
-                                      context.read<PlaylistsBloc>().add(const FilterSongPlaylist(filter: ''));
-                                    }),
-                                    icon: const Icon(Icons.clear),
+                    Row(
+                      children: [
+                        SizedBox(
+                            height: MediaQuery.of(context).size.height - 140,
+                            width: MediaQuery.of(context).size.width * 0.5 - 20,
+                            child: Column(
+                              children: [
+                                Text('currentPlaylist'.tr()),
+                                SizedBox(
+                                  height: MediaQuery.of(context).size.height - 180,
+                                  child: ListView(
+                                    children: state.currentSongs.map((e) => CurrentSongCard(song: e)).toList(),
                                   ),
                                 ),
-                                onChanged: (value) {
-                                  context.read<PlaylistsBloc>().add(FilterSongPlaylist(filter: value));
-                                },
-                              ),
-                              SizedBox(
-                                height: MediaQuery.of(context).size.height - 250,
-                                child: Scrollbar(
-                                  controller: _scrollController,
-                                  thumbVisibility: true,
-                                  trackVisibility: true,
-                                  thickness: 40,
-                                  radius: const Radius.circular(5),
-                                  child: ListView.builder(
-                                      controller: _scrollController,
-                                      itemCount: state.filteredSongs.isEmpty ? state.allSongs.length : state.filteredSongs.length,
-                                      itemBuilder: (context, index) {
-                                        if (state.filteredSongs.isEmpty) {
-                                          return CardSongForPlaylist(song: state.allSongs[index]);
-                                        } else {
-                                          return CardSongForPlaylist(song: state.filteredSongs[index]);
-                                        }
+                              ],
+                            )),
+                        const SizedBox(
+                          width: 8,
+                        ),
+                        const VerticalDivider(
+                          width: 20,
+                          thickness: 2,
+                        ),
+                        const SizedBox(
+                          width: 8,
+                        ),
+                        SizedBox(
+                            width: MediaQuery.of(context).size.width * 0.5 - 20,
+                            height: MediaQuery.of(context).size.height - 180,
+                            child: Column(
+                              children: [
+                                Text(state.filteredSongs.isEmpty ? 'allSongs'.tr() : 'filteredSongs'.tr()),
+                                TextField(
+                                  controller: _filter,
+                                  decoration: InputDecoration(
+                                    hintText: 'filterSong'.tr(),
+                                    prefixIcon: const Icon(Icons.search),
+                                    suffixIcon: IconButton(
+                                      onPressed: (() {
+                                        _filter.clear();
+                                        context.read<PlaylistsBloc>().add(const FilterSongPlaylist(filter: ''));
                                       }),
+                                      icon: const Icon(Icons.clear),
+                                    ),
+                                  ),
+                                  onChanged: (value) {
+                                    context.read<PlaylistsBloc>().add(FilterSongPlaylist(filter: value));
+                                  },
                                 ),
-                              ),
-                            ],
-                          )),
-                    ],
-                  ),
-                ],
-              ),
-            );
-          },
-        ));
+                                SizedBox(
+                                  height: MediaQuery.of(context).size.height - 250,
+                                  child: Scrollbar(
+                                    controller: _scrollController,
+                                    thumbVisibility: true,
+                                    trackVisibility: true,
+                                    thickness: 40,
+                                    radius: const Radius.circular(5),
+                                    child: ListView.builder(
+                                        controller: _scrollController,
+                                        itemCount: state.filteredSongs.isEmpty ? state.allSongs.length : state.filteredSongs.length,
+                                        itemBuilder: (context, index) {
+                                          if (state.filteredSongs.isEmpty) {
+                                            return CardSongForPlaylist(song: state.allSongs[index]);
+                                          } else {
+                                            return CardSongForPlaylist(song: state.filteredSongs[index]);
+                                          }
+                                        }),
+                                  ),
+                                ),
+                              ],
+                            )),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          )),
+    );
   }
 }
 
@@ -140,6 +149,11 @@ class CurrentSongCard extends StatelessWidget {
           feedback: Container(
             height: 50,
             width: 60,
+            decoration: BoxDecoration(
+              color: AppColor.whiteColor,
+              border: Border.all(color: AppColor.grey3Color),
+              borderRadius: BorderRadius.circular(5),
+            ),
           ),
           child: Card(
             color: AppColor.whiteColor,

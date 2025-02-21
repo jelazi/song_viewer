@@ -25,9 +25,13 @@ class _EditPageMobileState extends State<EditPageMobile> {
   Widget build(BuildContext context) {
     return BlocBuilder<EditSongBloc, EditSongState>(
       builder: (context, state) {
-        return WillPopScope(
-          onWillPop: () async {
-            return _onWillPop(state);
+        return PopScope(
+          canPop: true,
+          onPopInvokedWithResult: (didPop, result) async {
+            if (didPop) {
+              _onWillPop(state);
+              return;
+            }
           },
           child: Scaffold(appBar: AppBar(
             title: BlocBuilder<EditSongBloc, EditSongState>(

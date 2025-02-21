@@ -16,9 +16,10 @@ class _Init extends PlaylistsEvent {
 
 class OpenPlaylist extends PlaylistsEvent {
   final Playlist? playlist;
-  const OpenPlaylist({required this.playlist});
+  final bool forEdit;
+  const OpenPlaylist({required this.playlist, required this.forEdit});
   @override
-  List<Object> get props => [playlist!];
+  List<Object> get props => [playlist!, forEdit];
 }
 
 class ClosePlaylist extends PlaylistsEvent {
@@ -69,4 +70,46 @@ class ChangeNamePlaylist extends PlaylistsEvent {
   const ChangeNamePlaylist({required this.playlist, required this.name});
   @override
   List<Object> get props => [playlist, name];
+}
+
+class ChangeAppBarStatusPlaylist extends PlaylistsEvent {
+  final bool status;
+  const ChangeAppBarStatusPlaylist({required this.status});
+  @override
+  List<Object> get props => [status];
+}
+
+class ChangeHeightWindowPlaylist extends PlaylistsEvent {
+  final double height;
+  const ChangeHeightWindowPlaylist({required this.height});
+  @override
+  List<Object> get props => [height];
+}
+
+class ChangeFontSizePlaylist extends PlaylistsEvent {
+  final bool isIncrease;
+  const ChangeFontSizePlaylist({required this.isIncrease});
+  @override
+  List<Object> get props => [isIncrease];
+}
+
+class TransposeChordPlaylist extends PlaylistsEvent {
+  final int increment;
+  const TransposeChordPlaylist({required this.increment});
+  @override
+  List<Object> get props => [increment];
+}
+
+class SelectSongInPreviewPlaylist extends PlaylistsEvent {
+  final String selectSongId;
+  const SelectSongInPreviewPlaylist({required this.selectSongId});
+  @override
+  List<Object> get props => [selectSongId];
+}
+
+class ChangeCurrentColumnPlaylist extends PlaylistsEvent {
+  final int column;
+  const ChangeCurrentColumnPlaylist({required this.column});
+  @override
+  List<Object> get props => [column];
 }

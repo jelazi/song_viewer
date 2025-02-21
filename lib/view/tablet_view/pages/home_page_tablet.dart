@@ -178,7 +178,7 @@ class _HomePageTabletState extends State<HomePageTablet> {
                         side: const BorderSide(color: AppColor.grey3Color),
                       ),
                       onPressed: () {
-                        context.read<PlaylistsBloc>().add(const OpenPlaylist(playlist: null));
+                        context.read<PlaylistsBloc>().add(const OpenPlaylist(playlist: null, forEdit: true));
                         Navigator.of(context).pushNamed('/editPlaylistPage');
                       },
                       child: Row(
@@ -212,7 +212,7 @@ class _HomePageTabletState extends State<HomePageTablet> {
                     }
                     return GestureDetector(
                       onTap: () {
-                        context.read<PlaylistsBloc>().add(OpenPlaylist(playlist: playlist));
+                        context.read<PlaylistsBloc>().add(OpenPlaylist(playlist: playlist, forEdit: false));
                         Navigator.of(context).pushNamed('/playlistPage');
                       },
                       child: Card(
@@ -240,7 +240,7 @@ class _HomePageTabletState extends State<HomePageTablet> {
                                   IconButton(
                                     icon: const Icon(Icons.edit, color: AppColor.primaryColor),
                                     onPressed: () {
-                                      context.read<PlaylistsBloc>().add(OpenPlaylist(playlist: playlist));
+                                      context.read<PlaylistsBloc>().add(OpenPlaylist(playlist: playlist, forEdit: true));
                                       Navigator.of(context).pushNamed('/editPlaylistPage');
                                     },
                                   ),

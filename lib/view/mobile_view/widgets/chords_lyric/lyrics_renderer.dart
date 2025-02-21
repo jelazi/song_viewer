@@ -1,9 +1,5 @@
 import 'package:collection/collection.dart';
-import 'package:default_project/blocs/export_blocs.dart';
-//import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
-import 'package:logger_pkg/logger_pkg.dart';
-import '../../../../model/note.dart';
 
 import '../../../../services/enums.dart';
 import './flutter_chord.dart';
@@ -95,12 +91,6 @@ class _LyricsRendererState extends State<LyricsRenderer> {
         separatorBuilder: (context, index) => const SizedBox(height: 8),
         itemBuilder: (context, index) {
           final line = chordLyricsDocument.chordLyricsLines[index];
-
-          if (widget.listNotes.isNotEmpty) {
-            for (Note note in widget.listNotes) {
-              //    Get.find<ChordLyricsController>().notes[note.index].value = note.noteText;
-            }
-          }
           return SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             controller: _scrollControllerHorizontal,
