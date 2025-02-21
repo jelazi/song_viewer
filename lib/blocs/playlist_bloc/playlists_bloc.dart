@@ -21,7 +21,7 @@ class PlaylistsBloc extends Bloc<PlaylistsEvent, PlaylistsState> {
   PlaylistsBloc({required this.playlistRepository, required this.songsRepository, required this.settingsRepository})
       : super(PlaylistsInitial(
           playlists: const [],
-          currentPlaylist: Playlist(id: '', name: ''),
+          currentPlaylist: Playlist(id: null, name: ''),
           namePlaylist: '',
           currentSongs: const [],
           allSongs: const [],
@@ -80,18 +80,20 @@ class PlaylistsBloc extends Bloc<PlaylistsEvent, PlaylistsState> {
   void _openPlaylist(OpenPlaylist event, Emitter<PlaylistsState> emit) {
     final state = this.state;
     List<Song> currentSongs = [];
-    for (var songId in event.playlist!.listSongIds) {
-      final song = state.allSongs.firstWhere((element) => element.id == songId);
-      currentSongs.add(song);
+    if (event.playlist != null) {
+      for (var songId in event.playlist!.listSongIds) {
+        final song = state.allSongs.firstWhere((element) => element.id == songId);
+        currentSongs.add(song);
+      }
     }
     if (event.forEdit) {
       var playlist = event.playlist;
       if (playlist == null) {
-        emit(state.copyWith(currentPlaylist: Playlist(id: '', name: ''), currentSongs: []));
+        emit(state.copyWith(currentPlaylist: Playlist(id: null, name: ''), currentSongs: []));
         return;
       }
 
-      emit(state.copyWith(currentPlaylist: event.playlist, currentSongs: currentSongs, filteredSongs: []));
+      emit(state.copyWith(currentPlaylist: event.playlist, currentSongs: currentSongs, filteredSongs: [], namePlaylist: playlist.name));
     } else {
       emit(state.copyWith(
           currentSongs: currentSongs,
@@ -104,7 +106,7 @@ class PlaylistsBloc extends Bloc<PlaylistsEvent, PlaylistsState> {
   void _closePlaylist(ClosePlaylist event, Emitter<PlaylistsState> emit) {
     final state = this.state;
     emit(state.copyWith(
-      currentPlaylist: Playlist(id: '', name: ''),
+      currentPlaylist: Playlist(id: null, name: ''),
       currentSongs: [],
       currentSong: Song(id: '', title: '', lyrics: ''),
       selectedSongId: '',
@@ -115,16 +117,25 @@ class PlaylistsBloc extends Bloc<PlaylistsEvent, PlaylistsState> {
 
   void _savePlaylist(SavePlaylist event, Emitter<PlaylistsState> emit) async {
     final state = this.state;
-    final newPlaylist = event.playlist;
-    var playlistId = <String>[];
-    for (var song in state.currentSongs) {
-      playlistId.add(song.id);
+    final playlist = state.currentPlaylist;
+    if (state.namePlaylist.isEmpty) {
+      MyToast.showText(text: 'Name is empty', typeNotification: TypeNotification.warning);
+      return;
     }
-    newPlaylist.listSongIds = playlistId;
-    newPlaylist.name = state.namePlaylist;
-    await playlistRepository.savePlaylist(event.playlist);
+    if (state.currentSongs.isEmpty) {
+      MyToast.showText(text: 'No song', typeNotification: TypeNotification.warning);
+      return;
+    }
+    final isChange = checkSongChange();
+    if (isChange.isEmpty) {
+      MyToast.showText(text: 'No change', typeNotification: TypeNotification.warning);
+      return;
+    }
+    playlist.name = state.namePlaylist;
+    playlist.listSongIds = state.currentSongs.map((e) => e.id).toList();
+    await playlistRepository.savePlaylist(playlist);
     MyToast.showText(text: 'Playlist saved', typeNotification: TypeNotification.success);
-    emit(state.copyWith(playlists: playlistRepository.playlists));
+    emit(state.copyWith(playlists: List<Playlist>.from(playlistRepository.playlists)));
   }
 
   void _deletePlaylist(DeletePlaylist event, Emitter<PlaylistsState> emit) async {
@@ -136,32 +147,24 @@ class PlaylistsBloc extends Bloc<PlaylistsEvent, PlaylistsState> {
 
   void _addSongToPlaylist(AddSongToPlaylist event, Emitter<PlaylistsState> emit) {
     final state = this.state;
-    final playlist = state.currentPlaylist;
     final song = event.song;
-    playlist.listSongIds.add(song.id);
     emit(state.copyWith(
-      currentPlaylist: playlist,
       currentSongs: [...state.currentSongs, song],
     ));
   }
 
   void _removeSongFromPlaylist(RemoveSongFromPlaylist event, Emitter<PlaylistsState> emit) {
     final state = this.state;
-    final playlist = state.currentPlaylist;
     var currentSongs = List<Song>.from(state.currentSongs);
     currentSongs.removeAt(event.index);
-    playlist.listSongIds.removeAt(event.index);
     emit(state.copyWith(
-      currentPlaylist: playlist,
       currentSongs: currentSongs,
     ));
   }
 
   void _changeNamePlaylist(ChangeNamePlaylist event, Emitter<PlaylistsState> emit) {
     final state = this.state;
-    final playlist = state.currentPlaylist;
-    playlist.name = event.name;
-    emit(state.copyWith(currentPlaylist: playlist));
+    emit(state.copyWith(namePlaylist: event.name));
   }
 
   List<String> checkSongChange() {

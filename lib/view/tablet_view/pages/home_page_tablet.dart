@@ -143,7 +143,7 @@ class _HomePageTabletState extends State<HomePageTablet> {
                           ? getPreviewFilterItems(context)
                           : state.selectedPage == 'web'
                               ? getWebSiteDropDown()
-                              : Container(color: AppColor.grey3Color, height: 40),
+                              : Container(),
                     ],
                   )),
               SizedBox(
@@ -200,14 +200,16 @@ class _HomePageTabletState extends State<HomePageTablet> {
                   children: state.playlists.map((playlist) {
                     String songNamesSubtitle = '';
                     if (playlist.listSongIds.isNotEmpty) {
+                      var index = 0;
                       for (var songId in playlist.listSongIds) {
                         final songName = context.read<PlaylistsBloc>().songsRepository.songs.firstWhere((element) => element.id == songId).title;
                         if (songName.isNotEmpty) {
                           songNamesSubtitle = songNamesSubtitle + songName;
                         }
-                        if (songId != playlist.listSongIds.last) {
+                        if (index < playlist.listSongIds.length - 1) {
                           songNamesSubtitle = songNamesSubtitle + ', ';
                         }
+                        index++;
                       }
                     }
                     return GestureDetector(
@@ -481,7 +483,7 @@ class _HomePageTabletState extends State<HomePageTablet> {
                     children: [
                       const Icon(Icons.remove_red_eye, color: AppColor.grey1Color),
                       const SizedBox(width: 8),
-                      Text('preview'.tr()),
+                      Text('viewSongs'.tr()),
                     ],
                   ),
                 ),

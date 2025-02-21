@@ -20,11 +20,14 @@ class _EditPlaylistTabletState extends State<EditPlaylistTablet> {
   @override
   void initState() {
     super.initState();
-    _playlistName.text = context.read<PlaylistsBloc>().state.currentPlaylist.name;
+    _playlistName.text = context.read<PlaylistsBloc>().state.namePlaylist;
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_playlistName.text.isEmpty || _playlistName.text != context.read<PlaylistsBloc>().state.currentPlaylist.name) {
+      _playlistName.text = context.read<PlaylistsBloc>().state.currentPlaylist.name;
+    }
     return PopScope(
       canPop: true,
       onPopInvokedWithResult: (didPop, result) async {
@@ -34,7 +37,29 @@ class _EditPlaylistTabletState extends State<EditPlaylistTablet> {
         }
       },
       child: Scaffold(
-          appBar: AppBar(),
+          appBar: AppBar(
+            actions: [
+              BlocBuilder<PlaylistsBloc, PlaylistsState>(
+                builder: (context, state) {
+                  return OutlinedButton(
+                    onPressed: () {
+                      context.read<PlaylistsBloc>().add(const SavePlaylist());
+                    },
+                    child: Row(
+                      children: [
+                        const Icon(Icons.save, color: AppColor.primaryColor),
+                        const SizedBox(width: 8),
+                        Text('save'.tr()),
+                      ],
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(
+                width: 30,
+              )
+            ],
+          ),
           body: BlocBuilder<PlaylistsBloc, PlaylistsState>(
             builder: (context, state) {
               return SizedBox(

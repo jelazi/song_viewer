@@ -1,7 +1,7 @@
 name: default_project
 description: A new Flutter project.
 publish_to: none
-version: 1.1.13+3
+version: 1.1.14+4
 
 environment:
   sdk: '>=3.2.2 <4.0.0'

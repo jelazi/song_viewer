@@ -36,10 +36,7 @@ class FilterSongPlaylist extends PlaylistsEvent {
 }
 
 class SavePlaylist extends PlaylistsEvent {
-  final Playlist playlist;
-  const SavePlaylist({required this.playlist});
-  @override
-  List<Object> get props => [playlist];
+  const SavePlaylist();
 }
 
 class DeletePlaylist extends PlaylistsEvent {
