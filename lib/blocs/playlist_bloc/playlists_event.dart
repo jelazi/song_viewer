@@ -110,3 +110,11 @@ class ChangeCurrentColumnPlaylist extends PlaylistsEvent {
   @override
   List<Object> get props => [column];
 }
+
+class MoveSongInPlaylist extends PlaylistsEvent {
+  final int oldIndex;
+  final int newIndex;
+  const MoveSongInPlaylist({required this.oldIndex, required this.newIndex});
+  @override
+  List<Object> get props => [oldIndex, newIndex];
+}

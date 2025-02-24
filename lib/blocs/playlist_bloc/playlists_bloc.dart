@@ -54,6 +54,7 @@ class PlaylistsBloc extends Bloc<PlaylistsEvent, PlaylistsState> {
     on<TransposeChordPlaylist>(_transposeChordPlaylist);
     on<SelectSongInPreviewPlaylist>(_selectSongInPreviewPlaylist);
     on<ChangeCurrentColumnPlaylist>(_changeCurrentColumnPlaylist);
+    on<MoveSongInPlaylist>(_moveSongInPlaylist);
 
     add(const _Init());
   }
@@ -289,5 +290,13 @@ class PlaylistsBloc extends Bloc<PlaylistsEvent, PlaylistsState> {
     final TextPainter textPainter = TextPainter(text: TextSpan(text: 'Firstline', style: textStyle), textDirection: TextDirection.ltr)
       ..layout(minWidth: 0, maxWidth: double.infinity);
     return textPainter.size.height * 1.35;
+  }
+
+  void _moveSongInPlaylist(MoveSongInPlaylist event, Emitter<PlaylistsState> emit) {
+    final state = this.state;
+    final currentSongs = List<Song>.from(state.currentSongs);
+    final song = currentSongs.removeAt(event.oldIndex);
+    currentSongs.insert(event.newIndex, song);
+    emit(state.copyWith(currentSongs: currentSongs));
   }
 }
