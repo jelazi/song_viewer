@@ -4,6 +4,7 @@ import 'package:default_project/repositories/songs_repository.dart';
 import 'package:default_project/view/desktop_view/widgets/my_toast.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
+import 'package:logger_pkg/logger_pkg.dart';
 
 import '../../model/playlist.dart';
 import '../../model/song/song.dart';
@@ -135,6 +136,7 @@ class PlaylistsBloc extends Bloc<PlaylistsEvent, PlaylistsState> {
     playlist.name = state.namePlaylist;
     playlist.listSongIds = state.currentSongs.map((e) => e.id).toList();
     await playlistRepository.savePlaylist(playlist);
+    logger.d(playlist.toJson());
     MyToast.showText(text: 'Playlist saved', typeNotification: TypeNotification.success);
     emit(state.copyWith(playlists: List<Playlist>.from(playlistRepository.playlists)));
   }
