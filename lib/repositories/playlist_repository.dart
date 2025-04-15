@@ -25,14 +25,24 @@ class PlaylistRepository {
   }
 
   Future<bool> savePlaylist(Playlist playlist) async {
-    _firebaseProvider.addPlaylistToFirebase(playlist);
-    _playlists = await _firebaseProvider.getListPlaylistsFromFirestore();
+    final result = await _firebaseProvider.addPlaylistToFirebase(playlist);
+    if (result == false) {
+      return false;
+    }
+    if (_playlists.any((element) => element.id == playlist.id)) {
+      _playlists.removeWhere((element) => element.id == playlist.id);
+    }
+    _playlists.add(playlist);
+
     return true;
   }
 
   Future<bool> deletePlaylist(Playlist playlist) async {
-    await _firebaseProvider.deletePlaylist(playlist);
-    _playlists = await _firebaseProvider.getListPlaylistsFromFirestore();
+    final result = await _firebaseProvider.deletePlaylist(playlist);
+    if (result == false) {
+      return false;
+    }
+    _playlists.removeWhere((element) => element.id == playlist.id);
     return true;
   }
 }

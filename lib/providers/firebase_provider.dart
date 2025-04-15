@@ -31,16 +31,18 @@ class FirebaseProvider {
     });
   }
 
-  Future<void> addUserToFirebase(User user) async {
+  Future<bool> addUserToFirebase(User user) async {
     try {
       var snapshot = await userCollection.doc(user.name).get();
       if (snapshot.exists) {
-        updateUser(user);
+        return await updateUser(user);
       } else {
         await userCollection.doc(user.name).set(user.toJson());
       }
+      return true;
     } catch (e) {
       logger.e('$e');
+      return false;
     }
   }
 
@@ -52,11 +54,13 @@ class FirebaseProvider {
     selectedSong.update({'song': ''});
   }
 
-  void updateUser(User user) async {
+  Future<bool> updateUser(User user) async {
     try {
       await userCollection.doc(user.name).update(user.toJson());
+      return true;
     } catch (e) {
       logger.e('$e');
+      return false;
     }
   }
 
@@ -151,18 +155,23 @@ class FirebaseProvider {
     }
   }
 
-  Future<void> deleteUser(User user) async {
+  Future<bool> deleteUser(User user) async {
     try {
       final snapshot = await userCollection.doc(user.name).get();
       if (snapshot.exists) {
         await userCollection.doc(user.name).delete();
+        return true;
+      } else {
+        logger.e('User not found');
+        return false;
       }
     } catch (e) {
       logger.e('$e');
+      return false;
     }
   }
 
-  Future<void> addSongToFirebase(Song songData) async {
+  Future<bool> addSongToFirebase(Song songData) async {
     try {
       final snapshot = await songCollection.doc(songData.id).get();
       if (snapshot.exists) {
@@ -170,16 +179,20 @@ class FirebaseProvider {
       } else {
         await songCollection.doc(songData.id).set(songData.toJson());
       }
+      return true;
     } catch (e) {
       logger.e('$e');
+      return false;
     }
   }
 
-  Future<void> updateSong(Song songData) async {
+  Future<bool> updateSong(Song songData) async {
     try {
       await songCollection.doc(songData.id).update(songData.toJson());
+      return true;
     } catch (e) {
       logger.e('$e');
+      return false;
     }
   }
 
@@ -212,28 +225,33 @@ class FirebaseProvider {
     }
   }
 
-  Future<void> addPlaylistToFirebase(Playlist playlist) async {
+  Future<bool> addPlaylistToFirebase(Playlist playlist) async {
     try {
       final snapshot = await playlistCollection.doc(playlist.id).get();
       if (snapshot.exists) {
-        updatePlaylist(playlist);
+        final result = await updatePlaylist(playlist);
+        return result;
       } else {
         await playlistCollection.doc(playlist.id).set(playlist.toJson());
+        return true;
       }
     } catch (e) {
       logger.e('$e');
+      return false;
     }
   }
 
-  void updatePlaylist(Playlist playlist) async {
+  Future<bool> updatePlaylist(Playlist playlist) async {
     try {
       await playlistCollection.doc(playlist.id).update(playlist.toJson());
+      return true;
     } catch (e) {
       logger.e('$e');
+      return false;
     }
   }
 
-  void addGroupsToFirebase(List<String> listGroup) async {
+  Future<bool> addGroupsToFirebase(List<String> listGroup) async {
     Map<String, Object> map = {'groups': listGroup};
     try {
       final snapshot = await groupCollection.doc('groups').get();
@@ -242,8 +260,10 @@ class FirebaseProvider {
       } else {
         await groupCollection.doc('groups').set(map);
       }
+      return true;
     } catch (e) {
       logger.e('$e');
+      return false;
     }
   }
 
@@ -260,14 +280,18 @@ class FirebaseProvider {
     return listPlaylists;
   }
 
-  Future<void> deletePlaylist(Playlist playlist) async {
+  Future<bool> deletePlaylist(Playlist playlist) async {
     try {
       final snapshot = await playlistCollection.doc(playlist.id).get();
       if (snapshot.exists) {
         await playlistCollection.doc(playlist.id).delete();
+        return true;
+      } else {
+        return false;
       }
     } catch (e) {
       logger.e('$e');
+      return false;
     }
   }
 }
