@@ -243,6 +243,7 @@ class PlaylistsBloc extends Bloc<PlaylistsEvent, PlaylistsState> {
     }
 
     songsRepository.changeTransposeChord(state.currentSong, newIncrement);
+
     emit(state.copyWith(transposeIncrement: newIncrement, cap: _getCapByIncrement(newIncrement)));
   }
 
@@ -280,7 +281,14 @@ class PlaylistsBloc extends Bloc<PlaylistsEvent, PlaylistsState> {
     if (lyricsColumn.length - 1 < event.column) {
       //change song
       final newCurrentSong = state.currentSongs[state.indexCurrentSongInPlaylist + 1];
-      emit(state.copyWith(indexCurrentSongInPlaylist: state.indexCurrentSongInPlaylist + 1, currentColumn: 0, currentSong: newCurrentSong));
+      final transposeIncrement = songsRepository.getTransposeForSong(newCurrentSong);
+
+      emit(state.copyWith(
+          indexCurrentSongInPlaylist: state.indexCurrentSongInPlaylist + 1,
+          currentColumn: 0,
+          currentSong: newCurrentSong,
+          transposeIncrement: transposeIncrement,
+          cap: _getCapByIncrement(transposeIncrement)));
       return;
     }
     if (event.column < 0) {
@@ -288,7 +296,14 @@ class PlaylistsBloc extends Bloc<PlaylistsEvent, PlaylistsState> {
       final newCurrentSong = state.currentSongs[state.indexCurrentSongInPlaylist - 1];
       final lyricsColumn = state.lyricWithColumns(true, true, TypeLyric.translate, newCurrentSong);
       final lastIndexNewSong = lyricsColumn.length % 2 == 0 ? lyricsColumn.length - 2 : lyricsColumn.length - 1;
-      emit(state.copyWith(indexCurrentSongInPlaylist: state.indexCurrentSongInPlaylist - 1, currentColumn: lastIndexNewSong, currentSong: newCurrentSong));
+      final transposeIncrement = songsRepository.getTransposeForSong(newCurrentSong);
+
+      emit(state.copyWith(
+          indexCurrentSongInPlaylist: state.indexCurrentSongInPlaylist - 1,
+          currentColumn: lastIndexNewSong,
+          currentSong: newCurrentSong,
+          transposeIncrement: transposeIncrement,
+          cap: _getCapByIncrement(transposeIncrement)));
       return;
     }
     emit(state.copyWith(currentColumn: event.column));
