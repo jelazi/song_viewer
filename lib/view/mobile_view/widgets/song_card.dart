@@ -180,7 +180,11 @@ class _SongCardState extends State<SongCard> with TickerProviderStateMixin {
                             color: widget.isSelectedSong ? Colors.green : AppColor.primaryDarkColor,
                           ),
                           onPressed: () {
-                            context.read<HomePageBloc>().add(SelectSong(selectedSongId: widget.song.id));
+                            context.read<HomePageBloc>().add(SelectSong(
+                                selectedSongId: widget.song.id,
+                                title: widget.song.title,
+                                interpret: widget.song.interpret ?? '',
+                                lyricsWithoutChords: widget.song.lyricsWithoutChords ?? ''));
                           }),
                     ],
                   ),

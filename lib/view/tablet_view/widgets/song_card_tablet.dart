@@ -121,7 +121,8 @@ class _SongCardTabletState extends State<SongCardTablet> with TickerProviderStat
                       color: widget.isSelectedSong ? AppColor.primaryColor : AppColor.grey3Color,
                     ),
                     onPressed: () {
-                      context.read<HomePageBloc>().add(SelectSong(selectedSongId: widget.song.id));
+                      context.read<HomePageBloc>().add(SelectSong(
+                          selectedSongId: widget.song.id, title: widget.song.title, interpret: widget.song.interpret ?? '', lyricsWithoutChords: widget.song.lyricsWithoutChords));
                     }),
                 Visibility(
                   visible: widget.isEditIconVisible,

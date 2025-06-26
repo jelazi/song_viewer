@@ -71,7 +71,10 @@ class TransposeChord extends PreviewChordEvent {
 
 class SelectSongInPreview extends PreviewChordEvent {
   final String selectSongId;
-  const SelectSongInPreview({required this.selectSongId});
+  final String title;
+  final String interpret;
+  final String lyricsWithoutChords;
+  const SelectSongInPreview({required this.selectSongId, required this.title, required this.interpret, required this.lyricsWithoutChords});
 
   @override
   List<Object> get props => [selectSongId];

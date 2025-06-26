@@ -249,7 +249,7 @@ class PlaylistsBloc extends Bloc<PlaylistsEvent, PlaylistsState> {
 
   void _selectSongInPreviewPlaylist(SelectSongInPreviewPlaylist event, Emitter<PlaylistsState> emit) {
     final state = this.state;
-    songsRepository.selectSong(event.selectSongId);
+    songsRepository.selectSong(event.selectSongId, '', '', '');
     emit(state.copyWith(selectedSongId: songsRepository.selectedSongId));
   }
 

@@ -46,9 +46,15 @@ class ChangeSelectedSong extends HomePageEvent {
 
 class SelectSong extends HomePageEvent {
   final String selectedSongId;
+  final String title;
+  final String interpret;
+  final String lyricsWithoutChords;
 
   const SelectSong({
     required this.selectedSongId,
+    required this.title,
+    required this.interpret,
+    required this.lyricsWithoutChords,
   });
 
   @override

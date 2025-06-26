@@ -137,7 +137,7 @@ class _PlaylistTabletState extends State<PlaylistTablet> {
                           color: (state.currentSong.id != '' && state.selectedSongId == state.currentSong.id) ? Colors.green : AppColor.primaryDarkColor,
                         ),
                         onPressed: () {
-                          context.read<PreviewChordBloc>().add(SelectSongInPreview(selectSongId: state.currentSong.id));
+                          context.read<PreviewChordBloc>().add(SelectSongInPreview(selectSongId: state.currentSong.id, title: '', interpret: '', lyricsWithoutChords: ''));
                           context.read<PlaylistsBloc>().add(SelectSongInPreviewPlaylist(selectSongId: state.currentSong.id));
                         });
                   },

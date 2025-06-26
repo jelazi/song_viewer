@@ -46,12 +46,12 @@ class FirebaseProvider {
     }
   }
 
-  void saveNewSelectedSong(String id) {
-    selectedSong.update({'song': id});
+  void saveNewSelectedSong(String id, String title, String interpret, String lyricsWithoutChords) {
+    selectedSong.update({'song': id, 'title': title, 'interpret': interpret, 'lyricsWithoutChords': lyricsWithoutChords});
   }
 
   void removeSelectedSong() {
-    selectedSong.update({'song': ''});
+    selectedSong.update({'song': '', 'title': '', 'interpret': '', 'lyricsWithoutChords': ''});
   }
 
   Future<bool> updateUser(User user) async {

@@ -259,7 +259,11 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
                     color: (state.data.song != null && state.selectedSongId == state.data.song?.id) ? Colors.green : AppColor.primaryDarkColor,
                   ),
                   onPressed: () {
-                    context.read<PreviewChordBloc>().add(SelectSongInPreview(selectSongId: state.data.song?.id ?? ''));
+                    context.read<PreviewChordBloc>().add(SelectSongInPreview(
+                        selectSongId: state.data.song?.id ?? '',
+                        title: state.data.song?.title ?? '',
+                        interpret: state.data.song?.interpret ?? '',
+                        lyricsWithoutChords: state.data.song?.lyricsWithoutChordsWithLines ?? ''));
                   });
             },
           ),

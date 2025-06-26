@@ -97,14 +97,14 @@ class SongsRepository {
     }
   }
 
-  void selectSong(String songId) {
+  void selectSong(String songId, String title, String interpret, String lyricsWithoutChords) {
     if (selectedSongId == songId) {
       selectedSongId = '';
       _firebaseProvider.removeSelectedSong();
       return;
     }
     selectedSongId = songId;
-    _firebaseProvider.saveNewSelectedSong(songId);
+    _firebaseProvider.saveNewSelectedSong(songId, title, interpret, lyricsWithoutChords);
   }
 
   List<Song> getSongByFilter(String filterSong) {
