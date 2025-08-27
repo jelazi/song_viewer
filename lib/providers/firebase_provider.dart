@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:logger_pkg/logger_pkg.dart';
 
@@ -19,16 +21,29 @@ class FirebaseProvider {
       persistenceEnabled: true,
       cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
     );
-    songCollection = inst.collection('songs');
-    userCollection = inst.collection('users');
-    playlistCollection = inst.collection('playlists');
-    groupCollection = inst.collection('groups');
-    selectedSong.onValue.listen((DatabaseEvent event) {
-      final data = event.snapshot.value;
-      if (data != null && data is Map) {
-        //TODO: listener for current song on database
+    authenticateUser();
+  }
+
+  Future<void> authenticateUser() async {
+    try {
+      if (Firebase.apps.isEmpty) {
+        await Firebase.initializeApp();
       }
-    });
+      await fb_auth.FirebaseAuth.instance.signInAnonymously();
+
+      songCollection = inst.collection('songs');
+      userCollection = inst.collection('users');
+      playlistCollection = inst.collection('playlists');
+      groupCollection = inst.collection('groups');
+      selectedSong.onValue.listen((DatabaseEvent event) {
+        final data = event.snapshot.value;
+        if (data != null && data is Map) {
+          //TODO: listener for current song on database
+        }
+      });
+    } catch (e) {
+      logger.e('$e');
+    }
   }
 
   Future<bool> addUserToFirebase(User user) async {
