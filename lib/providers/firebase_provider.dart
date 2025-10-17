@@ -21,7 +21,6 @@ class FirebaseProvider {
       persistenceEnabled: true,
       cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
     );
-    authenticateUser();
   }
 
   Future<void> authenticateUser() async {
