@@ -1,13 +1,6 @@
 part of 'main.dart';
 
-late SettingsRepository settingsRepository;
-late PlaylistRepository playlistRepository;
-late UsersRepository usersRepository;
-late SongsRepository songsRepository;
-late WebRepository webRepository;
-late HiveProvider hiveProvider;
-
-Future<void> initProvidersRepositories() async {
+Future<AppRepositories> initProvidersRepositories() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -20,45 +13,52 @@ Future<void> initProvidersRepositories() async {
 
   FirebaseProvider firebaseProvider = FirebaseProvider();
   await firebaseProvider.authenticateUser();
-  hiveProvider = HiveProvider();
+  HiveProvider hiveProvider = HiveProvider();
   await hiveProvider.initHiveBox();
   WebProvider webProvider = WebProvider();
 
-  settingsRepository = SettingsRepository(
+  SettingsRepository settingsRepository = SettingsRepository(
     hiveProvider: hiveProvider,
   );
 
   await settingsRepository.loadLocalSettings();
   settingsRepository.getInfoApp();
 
-  songsRepository = SongsRepository(
+  SongsRepository songsRepository = SongsRepository(
     firebaseProvider: firebaseProvider,
     hiveProvider: hiveProvider,
   );
   await songsRepository.loadSongsFromFirebase();
   await songsRepository.loadAllGroups();
-  playlistRepository = PlaylistRepository(
+
+  PlaylistRepository playlistRepository = PlaylistRepository(
     hiveProvider: hiveProvider,
     firebaseProvider: firebaseProvider,
   );
-  usersRepository = UsersRepository(
+
+  UsersRepository usersRepository = UsersRepository(
     hiveProvider: hiveProvider,
     firebaseProvider: firebaseProvider,
     settingsRepository: settingsRepository,
   );
   await usersRepository.loadUsersFromFirebase();
-  webRepository = WebRepository(
-    webProvider: webProvider,
-  );
 
-  playlistRepository = PlaylistRepository(
-    hiveProvider: hiveProvider,
-    firebaseProvider: firebaseProvider,
+  WebRepository webRepository = WebRepository(
+    webProvider: webProvider,
   );
 
   await webRepository.testGetSong();
   await usersRepository.loadUsersFromFirebase();
   await usersRepository.loadCurrentUser();
+
+  return AppRepositories(
+    settingsRepository: settingsRepository,
+    playlistRepository: playlistRepository,
+    usersRepository: usersRepository,
+    songsRepository: songsRepository,
+    webRepository: webRepository,
+    hiveProvider: hiveProvider,
+  );
 }
 
 Future<void> initHiveFunction() async {

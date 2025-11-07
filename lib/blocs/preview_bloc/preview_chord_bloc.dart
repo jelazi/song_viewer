@@ -1,21 +1,30 @@
-import 'package:default_project/main.dart';
 import 'package:default_project/model/web_song.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../model/song/song.dart';
+import '../../providers/hive_provider.dart';
 import '../../repositories/settings_repository.dart';
+import '../../repositories/songs_repository.dart';
+import '../../repositories/web_repository.dart';
 import '../../services/enums.dart';
 
 part 'preview_chord_event.dart';
 part 'preview_chord_state.dart';
 
 class PreviewChordBloc extends Bloc<PreviewChordEvent, PreviewChordState> {
-  SettingsRepository settingsRepository;
+  final SettingsRepository settingsRepository;
+  final SongsRepository songsRepository;
+  final WebRepository webRepository;
+  final HiveProvider hiveProvider;
   final double menuHeight = 140;
+
   PreviewChordBloc({
     required this.settingsRepository,
+    required this.songsRepository,
+    required this.webRepository,
+    required this.hiveProvider,
   }) : super(PreviewChordInitial(
           data: CurrentData(song: null),
           textStyle: const TextStyle(),

@@ -1,6 +1,5 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:default_project/blocs/export_blocs.dart';
-import 'package:default_project/main.dart';
 import 'package:default_project/services/enums.dart';
 import 'package:default_project/view/mobile_view/widgets/dialogs/question_dialog.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -39,7 +38,8 @@ class _SongCardTabletState extends State<SongCardTablet> with TickerProviderStat
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        TypeClickCard typeClickCard = settingsRepository.typeClickCard;
+        final settingsState = context.read<SettingsBloc>().state;
+        TypeClickCard typeClickCard = settingsState.typeClickCard;
         switch (typeClickCard) {
           case TypeClickCard.none:
             context.read<PreviewChordBloc>().add(ChangeCurrentSong(song: widget.song));

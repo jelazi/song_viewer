@@ -12,6 +12,7 @@ class SettingsState extends Equatable {
   final Color editColorChord;
   final bool isEditIconVisible;
   final bool autoHideTopBar;
+  final TypeClickCard typeClickCard;
   const SettingsState({
     required this.previewFontTextSize,
     required this.previewFontChordSize,
@@ -23,6 +24,7 @@ class SettingsState extends Equatable {
     required this.editColorChord,
     required this.isEditIconVisible,
     required this.autoHideTopBar,
+    required this.typeClickCard,
   });
 
   @override
@@ -37,6 +39,7 @@ class SettingsState extends Equatable {
         editColorText,
         isEditIconVisible,
         autoHideTopBar,
+        typeClickCard,
       ];
 
   SettingsState copyWith({
@@ -50,6 +53,7 @@ class SettingsState extends Equatable {
     Color? editColorChord,
     bool? isEditIconVisible,
     bool? autoHideTopBar,
+    TypeClickCard? typeClickCard,
   }) {
     return SettingsState(
       previewFontTextSize: previewFontTextSize ?? this.previewFontTextSize,
@@ -62,20 +66,23 @@ class SettingsState extends Equatable {
       editColorChord: editColorChord ?? this.editColorChord,
       isEditIconVisible: isEditIconVisible ?? this.isEditIconVisible,
       autoHideTopBar: autoHideTopBar ?? this.autoHideTopBar,
+      typeClickCard: typeClickCard ?? this.typeClickCard,
     );
   }
 }
 
 class SettingsInitial extends SettingsState {
-  const SettingsInitial(
-      {required super.previewFontTextSize,
-      required super.previewFontChordSize,
-      required super.editFontTextSize,
-      required super.editFontChordSize,
-      required super.previewColorText,
-      required super.previewColorChord,
-      required super.editColorText,
-      required super.editColorChord,
-      required super.isEditIconVisible,
-      required super.autoHideTopBar});
+  const SettingsInitial({
+    required super.previewFontTextSize,
+    required super.previewFontChordSize,
+    required super.editFontTextSize,
+    required super.editFontChordSize,
+    required super.previewColorText,
+    required super.previewColorChord,
+    required super.editColorText,
+    required super.editColorChord,
+    required super.isEditIconVisible,
+    required super.autoHideTopBar,
+    required super.typeClickCard,
+  });
 }

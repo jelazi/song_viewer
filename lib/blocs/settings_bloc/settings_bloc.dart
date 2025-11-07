@@ -2,6 +2,7 @@
 
 import 'package:default_project/repositories/settings_repository.dart';
 import 'package:default_project/repositories/songs_repository.dart';
+import 'package:default_project/services/enums.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -26,6 +27,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
           editColorChord: Colors.red,
           isEditIconVisible: false,
           autoHideTopBar: false,
+          typeClickCard: TypeClickCard.none,
         )) {
     on<_SettingsInitial>(_settingsInitial);
     on<ChangeSettingsValue>(_changeSettingsValue);
@@ -59,6 +61,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       editColorChord: settingsRepository.editColorChord,
       isEditIconVisible: settingsRepository.isEditIconVisible,
       autoHideTopBar: settingsRepository.autoHideTopBar,
+      typeClickCard: settingsRepository.typeClickCard,
     ));
   }
 }

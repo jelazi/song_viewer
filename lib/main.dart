@@ -33,6 +33,24 @@ import 'view/router/app_router.dart';
 
 part 'main.part.dart';
 
+class AppRepositories {
+  final SettingsRepository settingsRepository;
+  final PlaylistRepository playlistRepository;
+  final UsersRepository usersRepository;
+  final SongsRepository songsRepository;
+  final WebRepository webRepository;
+  final HiveProvider hiveProvider;
+
+  AppRepositories({
+    required this.settingsRepository,
+    required this.playlistRepository,
+    required this.usersRepository,
+    required this.songsRepository,
+    required this.webRepository,
+    required this.hiveProvider,
+  });
+}
+
 void main() async {
   logger = MyLogger(
     debug: true,
@@ -44,7 +62,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
   await initHiveFunction();
-  await initProvidersRepositories();
+
+  // Initialize providers and repositories locally
+  final repositories = await initProvidersRepositories();
+
   if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
     await windowManager.ensureInitialized();
     WindowManager.instance.setMinimumSize(const Size(1024, 800));
@@ -57,15 +78,20 @@ void main() async {
     supportedLocales: const [Locale('cs'), Locale('en')],
     path: 'assets/lang',
     fallbackLocale: const Locale('cs'),
-    child: MyApp(),
+    child: MyApp(repositories: repositories),
   ));
 }
 
 class MyApp extends StatelessWidget {
-  final AppRouter _appRouter = AppRouter(settingsRepository: settingsRepository);
+  final AppRepositories repositories;
+  late final AppRouter _appRouter;
+
   MyApp({
     Key? key,
-  }) : super(key: key);
+    required this.repositories,
+  }) : super(key: key) {
+    _appRouter = AppRouter(settingsRepository: repositories.settingsRepository);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,37 +112,41 @@ class MyApp extends StatelessWidget {
         providers: [
           BlocProvider(
             create: (context) => HomePageBloc(
-              songsRepository: songsRepository,
-              settingsRepository: settingsRepository,
-              usersRepository: usersRepository,
+              songsRepository: repositories.songsRepository,
+              settingsRepository: repositories.settingsRepository,
+              usersRepository: repositories.usersRepository,
             ),
           ),
           BlocProvider(
               create: (context) => PreviewChordBloc(
-                    settingsRepository: settingsRepository,
+                    settingsRepository: repositories.settingsRepository,
+                    songsRepository: repositories.songsRepository,
+                    webRepository: repositories.webRepository,
+                    hiveProvider: repositories.hiveProvider,
                   )),
           BlocProvider(
               create: ((context) => SettingsBloc(
-                    settingsRepository: settingsRepository,
-                    songsRepository: songsRepository,
+                    settingsRepository: repositories.settingsRepository,
+                    songsRepository: repositories.songsRepository,
                   ))),
           BlocProvider(
             create: (context) => EditSongBloc(
-              songsRepository: songsRepository,
-              settingsRepository: settingsRepository,
+              songsRepository: repositories.songsRepository,
+              settingsRepository: repositories.settingsRepository,
             ),
           ),
           BlocProvider(
             create: (context) => DesktopRibbonMenuBloc(),
           ),
           BlocProvider(
-            create: ((context) => WebBloc(webRepository: webRepository, settingsRepository: settingsRepository, hiveProvider: hiveProvider)),
+            create: ((context) => WebBloc(webRepository: repositories.webRepository, settingsRepository: repositories.settingsRepository, hiveProvider: repositories.hiveProvider)),
           ),
           BlocProvider(
-            create: ((context) => UsersBloc(usersRepository: usersRepository)),
+            create: ((context) => UsersBloc(usersRepository: repositories.usersRepository)),
           ),
           BlocProvider(
-            create: ((context) => PlaylistsBloc(playlistRepository: playlistRepository, songsRepository: songsRepository, settingsRepository: settingsRepository)),
+            create: ((context) => PlaylistsBloc(
+                playlistRepository: repositories.playlistRepository, songsRepository: repositories.songsRepository, settingsRepository: repositories.settingsRepository)),
           ),
         ],
         child: MaterialApp(

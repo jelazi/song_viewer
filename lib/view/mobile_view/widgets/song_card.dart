@@ -1,6 +1,5 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:default_project/blocs/export_blocs.dart';
-import 'package:default_project/main.dart';
 import 'package:default_project/services/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -48,7 +47,8 @@ class _SongCardState extends State<SongCard> with TickerProviderStateMixin {
     }
     return GestureDetector(
       onTap: () {
-        TypeClickCard typeClickCard = settingsRepository.typeClickCard;
+        final settingsState = context.read<SettingsBloc>().state;
+        TypeClickCard typeClickCard = settingsState.typeClickCard;
         switch (typeClickCard) {
           case TypeClickCard.none:
             context.read<HomePageBloc>().add(ChangeExpandedCard(songId: widget.song.id));
@@ -184,7 +184,7 @@ class _SongCardState extends State<SongCard> with TickerProviderStateMixin {
                                 selectedSongId: widget.song.id,
                                 title: widget.song.title,
                                 interpret: widget.song.interpret ?? '',
-                                lyricsWithoutChords: widget.song.lyricsWithoutChords ?? ''));
+                                lyricsWithoutChords: widget.song.lyricsWithoutChords));
                           }),
                     ],
                   ),
