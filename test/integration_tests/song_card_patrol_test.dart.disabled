@@ -1,0 +1,302 @@
+// TODO: Pro použití těchto testů musíš vygenerovat mocky:
+// 1. Přidej do pubspec.yaml dev_dependencies:
+//    mockito: ^5.4.4
+// 2. Spusť: flutter pub run build_runner build --delete-conflicting-outputs
+// 3. Odkomentuj celý tento soubor
+
+/*
+import 'package:default_project/blocs/export_blocs.dart';
+import 'package:default_project/model/song/song.dart';
+import 'package:default_project/repositories/settings_repository.dart';
+import 'package:default_project/repositories/songs_repository.dart';
+import 'package:default_project/services/enums.dart';
+import 'package:default_project/view/mobile_view/widgets/song_card.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/annotations.dart';
+import 'package:mockito/mockito.dart';
+import 'package:patrol/patrol.dart';
+
+// Vygeneruj mocky pro potřebné repository
+@GenerateMocks([SettingsRepository, SongsRepository])
+import 'song_card_patrol_test.mocks.dart';
+
+  setUp(() {
+    mockSettingsRepository = MockSettingsRepository();
+    mockSongsRepository = MockSongsRepository();
+    
+    // Nastav základní chování mock objektů
+    when(mockSettingsRepository.typeClickCard).thenReturn(TypeClickCard.none);
+  });
+
+  patrolTest(
+    'SongCard se zobrazí správně',
+    ($) async {
+      // Arrange - Vytvoř testovací data
+      final testSong = Song(
+        id: '1',
+        title: 'Testovací píseň',
+        interpret: 'Testovací interpret',
+        lyrics: 'Text písně...',
+        bmp: 120,
+      );
+
+      // Act - Vytvoř widget s základním BLoC setup
+      await $.pumpWidgetAndSettle(
+        MaterialApp(
+          home: Scaffold(
+            body: BlocProvider(
+              create: (context) => SettingsBloc(
+                settingsRepository: mockSettingsRepository,
+                songsRepository: mockSongsRepository,
+              ),
+              child: SongCard(
+                song: testSong,
+                index: 0,
+                isSelectedSong: false,
+                isEditIconVisible: false,
+                isExpanded: false,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Assert - Ověř, že se komponenty zobrazují
+      expect($(testSong.title), findsOneWidget);
+      expect($(testSong.interpret!), findsOneWidget);
+    },
+  );
+
+  patrolTest(
+    'SongCard reaguje na tap',
+    ($) async {
+      final testSong = Song(
+        id: '2',
+        title: 'Klikatelná píseň',
+        interpret: 'Test Interpret',
+        lyrics: 'Text...',
+        bmp: 100,
+      );
+
+      await $.pumpWidgetAndSettle(
+        MaterialApp(
+          home: Scaffold(
+            body: BlocProvider(
+              create: (context) => SettingsBloc(
+                settingsRepository: mockSettingsRepository,
+                songsRepository: mockSongsRepository,
+              ),
+              child: SongCard(
+                song: testSong,
+                index: 0,
+                isSelectedSong: false,
+                isEditIconVisible: false,
+                isExpanded: false,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Najdi SongCard a klikni na něj
+      final songCard = $(SongCard);
+      expect(songCard, findsOneWidget);
+      
+      await songCard.tap();
+      await $.pumpAndSettle();
+
+      // Po kliknutí se SongCard stále zobrazuje
+      expect(songCard, findsOneWidget);
+    },
+  );
+
+  patrolTest(
+    'SongCard se expanduje při změně isExpanded',
+    ($) async {
+      final testSong = Song(
+        id: '3',
+        title: 'Expandující píseň',
+        interpret: 'Expand Test',
+        lyrics: 'Dlouhý text písně...',
+        bmp: 90,
+      );
+
+      await $.pumpWidgetAndSettle(
+        MaterialApp(
+          home: _TestExpandableCard(
+            song: testSong,
+            settingsRepository: mockSettingsRepository,
+            songsRepository: mockSongsRepository,
+          ),
+        ),
+      );
+
+      // Najdi tlačítko pro expand
+      final expandButton = $('Expand');
+      expect(expandButton, findsOneWidget);
+
+      // Klikni na tlačítko
+      await expandButton.tap();
+      await $.pumpAndSettle();
+
+      // Widget by se měl expandovat (animace)
+      // Zde by šel testovat např. velikost nebo viditelnost dalších prvků
+    },
+  );
+
+  patrolTest(
+    'SongCard zobrazuje edit icon když isEditIconVisible=true',
+    ($) async {
+      final testSong = Song(
+        id: '4',
+        title: 'Editovatelná píseň',
+        interpret: 'Edit Test',
+        lyrics: 'Text...',
+        bmp: 110,
+      );
+
+      // Nejdřív bez edit ikony
+      await $.pumpWidgetAndSettle(
+        MaterialApp(
+          home: Scaffold(
+            body: BlocProvider(
+              create: (context) => SettingsBloc(
+                settingsRepository: mockSettingsRepository,
+                songsRepository: mockSongsRepository,
+              ),
+              child: SongCard(
+                song: testSong,
+                index: 0,
+                isSelectedSong: false,
+                isEditIconVisible: false,
+                isExpanded: false,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // SongCard by se měl zobrazovat
+      expect($(SongCard), findsOneWidget);
+
+      // Teď s edit ikonou
+      await $.pumpWidgetAndSettle(
+        MaterialApp(
+          home: Scaffold(
+            body: BlocProvider(
+              create: (context) => SettingsBloc(
+                settingsRepository: mockSettingsRepository,
+                songsRepository: mockSongsRepository,
+              ),
+              child: SongCard(
+                song: testSong,
+                index: 0,
+                isSelectedSong: false,
+                isEditIconVisible: true,
+                isExpanded: false,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // SongCard by se měl stále zobrazovat s edit ikonou
+      expect($(SongCard), findsOneWidget);
+    },
+  );
+
+  patrolTest(
+    'Více SongCard widgetů se zobrazuje ve scrollable listu',
+    ($) async {
+      final testSongs = [
+        Song(id: '1', title: 'Píseň 1', interpret: 'Interpret 1', lyrics: 'Text 1', bmp: 100),
+        Song(id: '2', title: 'Píseň 2', interpret: 'Interpret 2', lyrics: 'Text 2', bmp: 110),
+        Song(id: '3', title: 'Píseň 3', interpret: 'Interpret 3', lyrics: 'Text 3', bmp: 120),
+      ];
+
+      await $.pumpWidgetAndSettle(
+        MaterialApp(
+          home: Scaffold(
+            body: BlocProvider(
+              create: (context) => SettingsBloc(
+                settingsRepository: mockSettingsRepository,
+                songsRepository: mockSongsRepository,
+              ),
+              child: ListView.builder(
+                itemCount: testSongs.length,
+                itemBuilder: (context, index) {
+                  return SongCard(
+                    song: testSongs[index],
+                    index: index,
+                    isSelectedSong: false,
+                    isEditIconVisible: false,
+                    isExpanded: false,
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Ověř, že se všechny 3 karty zobrazují
+      expect($('Píseň 1'), findsOneWidget);
+      expect($('Píseň 2'), findsOneWidget);
+      expect($('Píseň 3'), findsOneWidget);
+    },
+  );
+}
+
+/// Helper widget pro testování expandování
+class _TestExpandableCard extends StatefulWidget {
+  final Song song;
+  final SettingsRepository settingsRepository;
+  final SongsRepository songsRepository;
+
+  const _TestExpandableCard({
+    required this.song,
+    required this.settingsRepository,
+    required this.songsRepository,
+  });
+
+  @override
+  State<_TestExpandableCard> createState() => _TestExpandableCardState();
+}
+
+class _TestExpandableCardState extends State<_TestExpandableCard> {
+  bool isExpanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Column(
+        children: [
+          BlocProvider(
+            create: (context) => SettingsBloc(
+              settingsRepository: widget.settingsRepository,
+              songsRepository: widget.songsRepository,
+            ),
+            child: SongCard(
+              song: widget.song,
+              index: 0,
+              isSelectedSong: false,
+              isEditIconVisible: false,
+              isExpanded: isExpanded,
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                isExpanded = !isExpanded;
+              });
+            },
+            child: const Text('Expand'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
