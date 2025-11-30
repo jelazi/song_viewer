@@ -160,13 +160,8 @@ class _PresentationAppState extends State<PresentationApp> {
             final song = Song.fromJson(songJson);
             debugPrint('Loaded song from arguments: ${song.title}');
             
-            // Set window to fullscreen
-            try {
-              await WindowManager.instance.setFullScreen(true);
-              debugPrint('Window set to fullscreen');
-            } catch (e) {
-              debugPrint('Error setting fullscreen: $e');
-            }
+            // Note: WindowManager APIs don't work in sub-windows
+            // The window opens normally and user can make it fullscreen with F11 or green button
             
             if (mounted) {
               setState(() {
