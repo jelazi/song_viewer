@@ -1,4 +1,5 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:bot_toast/bot_toast.dart';
@@ -10,6 +11,8 @@ import 'package:default_project/repositories/songs_repository.dart';
 import 'package:default_project/repositories/user_repository.dart';
 import 'package:default_project/services/constants.dart';
 import 'package:default_project/services/enums.dart';
+import 'package:default_project/services/presentation_window_manager.dart';
+import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
@@ -22,6 +25,7 @@ import 'package:window_manager/window_manager.dart';
 
 import 'blocs/export_blocs.dart';
 import 'firebase_options.dart';
+import 'model/song/song.dart';
 import 'model/user.dart';
 import 'model/web_interpret.dart';
 import 'model/web_song.dart';
@@ -56,12 +60,24 @@ void main(List<String> args) async {
 
   debugPrint('Main started with args: $args');
 
-  // Zjistit, jestli jsme v hlavním okně (ID 0) nebo v sub-okně
-  if (args.firstOrNull == 'multi_window') {
-    // Toto je sub-okno
-    debugPrint('Starting presentation window...');
-    runApp(const PresentationApp());
-    return;
+  // SPRÁVNÝ ZPŮSOB podle dokumentace: použít WindowController.fromCurrentEngine()
+  if (args.isNotEmpty && args.first == 'multi_window') {
+    debugPrint('This is a sub-window, getting WindowController from current engine');
+
+    try {
+      final windowController = await WindowController.fromCurrentEngine();
+      debugPrint('WindowController arguments: ${windowController.arguments}');
+
+      // Sub-okno - spusť presentation app
+      debugPrint('Starting presentation window...');
+      runApp(const PresentationApp());
+      return;
+    } catch (e) {
+      debugPrint('Error getting WindowController: $e');
+      // Fallback - spusť presentation app i bez WindowController
+      runApp(const PresentationApp());
+      return;
+    }
   }
 
   // Hlavní okno aplikace
@@ -95,36 +111,163 @@ void main(List<String> args) async {
   ));
 } // Minimální prezentační aplikace BEZ pluginů
 
-class PresentationApp extends StatelessWidget {
+class PresentationApp extends StatefulWidget {
   const PresentationApp({super.key});
+
+  @override
+  State<PresentationApp> createState() => _PresentationAppState();
+}
+
+class _PresentationAppState extends State<PresentationApp> {
+  String _displayText = 'Čeká na zprávy...';
+  Song? _currentSong;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInitialSongData();
+    _setupMessageHandler();
+
+    // Force window to show after first frame is rendered
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        debugPrint('First frame rendered, ensuring window is visible');
+        final controller = await WindowController.fromCurrentEngine();
+        await controller.show();
+        debugPrint('Window show() called after first frame');
+      } catch (e) {
+        debugPrint('Error showing window after frame: $e');
+      }
+    });
+  }
+
+  void _loadInitialSongData() async {
+    try {
+      final controller = await WindowController.fromCurrentEngine();
+      final arguments = controller.arguments;
+
+      debugPrint('Window arguments type: ${arguments.runtimeType}');
+      debugPrint('Window arguments: $arguments');
+
+      if (arguments is String && arguments.isNotEmpty) {
+        try {
+          final songJson = jsonDecode(arguments) as Map<String, dynamic>;
+          final song = Song.fromJson(songJson);
+          debugPrint('Loaded song from arguments: ${song.title}');
+
+          if (mounted) {
+            setState(() {
+              _currentSong = song;
+              _displayText = _extractLyrics(song);
+            });
+          }
+        } catch (e) {
+          debugPrint('Error parsing song from arguments: $e');
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading initial song data: $e');
+    }
+  }
+
+  void _setupMessageHandler() async {
+    try {
+      final controller = await WindowController.fromCurrentEngine();
+      await controller.setWindowMethodHandler((call) async {
+        debugPrint('PresentationApp received method: ${call.method}');
+
+        switch (call.method) {
+          case 'update_song':
+            try {
+              debugPrint('Received arguments type: ${call.arguments.runtimeType}');
+              // Convert from Map<Object?, Object?> to Map<String, dynamic>
+              final rawMap = call.arguments as Map;
+              final songJson = Map<String, dynamic>.from(rawMap);
+              debugPrint('Converted to Map<String, dynamic>, parsing Song...');
+              final song = Song.fromJson(songJson);
+              debugPrint('Song parsed successfully: ${song.title}');
+              if (mounted) {
+                setState(() {
+                  _currentSong = song;
+                  _displayText = _extractLyrics(song);
+                });
+              }
+              return 'ok';
+            } catch (e, stackTrace) {
+              debugPrint('Error processing song data: $e');
+              debugPrint('Stack trace: $stackTrace');
+              return 'error: $e';
+            }
+          case 'show_text':
+            final text = call.arguments as String;
+            if (mounted) {
+              setState(() {
+                _displayText = text;
+              });
+            }
+            return 'ok';
+          default:
+            debugPrint('Unknown method: ${call.method}');
+            return null;
+        }
+      });
+      debugPrint('Message handler setup complete and ready to receive messages');
+    } catch (e) {
+      debugPrint('Error setting up message handler: $e');
+    }
+  }
+
+  String _extractLyrics(Song song) {
+    // Remove chords in brackets [C], [Am], etc.
+    final lines = song.lyrics.split('\n');
+    final lyricsWithoutChords = StringBuffer();
+
+    for (final line in lines) {
+      String cleanLine = line.replaceAll(RegExp(r'\[.*?\]'), '');
+      if (cleanLine.trim().isNotEmpty) {
+        lyricsWithoutChords.writeln(cleanLine);
+      }
+    }
+
+    return lyricsWithoutChords.toString().trim();
+  }
 
   @override
   Widget build(BuildContext context) {
     debugPrint('PresentationApp building...');
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Scaffold(
         backgroundColor: Colors.black,
         body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.music_note, color: Colors.white, size: 100),
-              SizedBox(height: 20),
-              Text(
-                'Prezentační okno',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 48,
-                  fontWeight: FontWeight.bold,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(40),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.music_note, color: Colors.white, size: 100),
+                const SizedBox(height: 40),
+                Text(
+                  _currentSong?.title ?? 'Prezentační okno',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 48,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              SizedBox(height: 20),
-              Text(
-                'Čeká na zprávy...',
-                style: TextStyle(color: Colors.white70, fontSize: 24),
-              ),
-            ],
+                const SizedBox(height: 40),
+                Text(
+                  _displayText,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 32,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -132,20 +275,52 @@ class PresentationApp extends StatelessWidget {
   }
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   final AppRepositories repositories;
-  late final AppRouter _appRouter;
 
-  MyApp({
+  const MyApp({
     Key? key,
     required this.repositories,
-  }) : super(key: key) {
-    _appRouter = AppRouter(settingsRepository: repositories.settingsRepository);
+  }) : super(key: key);
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> with WindowListener {
+  late final AppRouter _appRouter;
+
+  @override
+  void initState() {
+    super.initState();
+    _appRouter = AppRouter(settingsRepository: widget.repositories.settingsRepository);
+    windowManager.addListener(this);
+  }
+
+  @override
+  void dispose() {
+    windowManager.removeListener(this);
+    super.dispose();
+  }
+
+  @override
+  Future<void> onWindowClose() async {
+    debugPrint('Main window closing, closing all child windows...');
+
+    // Close presentation window using manager
+    try {
+      await PresentationWindowManager().closePresentationWindow();
+    } catch (e) {
+      debugPrint('Error closing presentation window: $e');
+    }
+
+    // Now destroy the main window
+    await windowManager.destroy();
   }
 
   @override
   Widget build(BuildContext context) {
-    if ((Platform.isAndroid || Platform.isIOS) && MediaQuery.of(context).size.width < 600) {
+    if (MediaQuery.of(context).size.width < 600) {
       myToastWidth = MediaQuery.of(context).size.width - 40;
     } else if (Platform.isAndroid || Platform.isIOS) {
       myToastWidth = 400;
@@ -162,41 +337,44 @@ class MyApp extends StatelessWidget {
         providers: [
           BlocProvider(
             create: (context) => HomePageBloc(
-              songsRepository: repositories.songsRepository,
-              settingsRepository: repositories.settingsRepository,
-              usersRepository: repositories.usersRepository,
+              songsRepository: widget.repositories.songsRepository,
+              settingsRepository: widget.repositories.settingsRepository,
+              usersRepository: widget.repositories.usersRepository,
             ),
           ),
           BlocProvider(
               create: (context) => PreviewChordBloc(
-                    settingsRepository: repositories.settingsRepository,
-                    songsRepository: repositories.songsRepository,
-                    webRepository: repositories.webRepository,
-                    hiveProvider: repositories.hiveProvider,
+                    settingsRepository: widget.repositories.settingsRepository,
+                    songsRepository: widget.repositories.songsRepository,
+                    webRepository: widget.repositories.webRepository,
+                    hiveProvider: widget.repositories.hiveProvider,
                   )),
           BlocProvider(
               create: ((context) => SettingsBloc(
-                    settingsRepository: repositories.settingsRepository,
-                    songsRepository: repositories.songsRepository,
+                    settingsRepository: widget.repositories.settingsRepository,
+                    songsRepository: widget.repositories.songsRepository,
                   ))),
           BlocProvider(
             create: (context) => EditSongBloc(
-              songsRepository: repositories.songsRepository,
-              settingsRepository: repositories.settingsRepository,
+              songsRepository: widget.repositories.songsRepository,
+              settingsRepository: widget.repositories.settingsRepository,
             ),
           ),
           BlocProvider(
             create: (context) => DesktopRibbonMenuBloc(),
           ),
           BlocProvider(
-            create: ((context) => WebBloc(webRepository: repositories.webRepository, settingsRepository: repositories.settingsRepository, hiveProvider: repositories.hiveProvider)),
+            create: ((context) => WebBloc(
+                webRepository: widget.repositories.webRepository, settingsRepository: widget.repositories.settingsRepository, hiveProvider: widget.repositories.hiveProvider)),
           ),
           BlocProvider(
-            create: ((context) => UsersBloc(usersRepository: repositories.usersRepository)),
+            create: ((context) => UsersBloc(usersRepository: widget.repositories.usersRepository)),
           ),
           BlocProvider(
             create: ((context) => PlaylistsBloc(
-                playlistRepository: repositories.playlistRepository, songsRepository: repositories.songsRepository, settingsRepository: repositories.settingsRepository)),
+                playlistRepository: widget.repositories.playlistRepository,
+                songsRepository: widget.repositories.songsRepository,
+                settingsRepository: widget.repositories.settingsRepository)),
           ),
           BlocProvider(
             create: (context) => PresentationBloc(),

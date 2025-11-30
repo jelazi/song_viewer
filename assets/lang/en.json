@@ -183,5 +183,7 @@
     "selectTimeBeforeScrolling": "Vyber čas před startem",
     "filterSong": "Filter song",
     "songsViewer": "Songs Viewer",
-    "timeSong": "Délka písně"
+    "timeSong": "Song duration",
+    "present": "Open presentation",
+    "sendToPresent": "Send to presentation"
 }

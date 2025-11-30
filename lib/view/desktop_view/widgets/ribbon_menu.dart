@@ -1,88 +1,17 @@
 import 'dart:io';
 
 import 'package:default_project/services/constants.dart';
+import 'package:default_project/services/presentation_window_manager.dart';
 import 'package:default_project/view/mobile_view/widgets/dialogs/dialogs_export.dart';
 import 'package:default_project/view/mobile_view/widgets/dialogs/question_dialog.dart';
-import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:screen_retriever/screen_retriever.dart';
 
 import '../../../blocs/export_blocs.dart';
 import '../../../model/song/song.dart';
 import 'my_toast.dart';
 import 'ribbon_button.dart';
-
-// Function to open presentation in a new window
-Future<void> openPresentationWindow(BuildContext context, Song song) async {
-  if (!context.mounted) return;
-
-  try {
-    // Get all displays
-    final displays = await screenRetriever.getAllDisplays();
-
-    debugPrint('Displays found: ${displays.length}');
-    for (int i = 0; i < displays.length; i++) {
-      debugPrint('Display $i: position=${displays[i].visiblePosition}, size=${displays[i].size}');
-    }
-
-    // Determine window position and size
-    double windowX = 100;
-    double windowY = 100;
-    double windowWidth = 1200;
-    double windowHeight = 800;
-
-    // If multiple monitors, position on secondary monitor and use full size
-    if (displays.length > 1) {
-      final secondaryDisplay = displays[1];
-      windowX = secondaryDisplay.visiblePosition?.dx ?? 100;
-      windowY = secondaryDisplay.visiblePosition?.dy ?? 100;
-      windowWidth = secondaryDisplay.size.width;
-      windowHeight = secondaryDisplay.size.height;
-      debugPrint('Using secondary monitor at ($windowX, $windowY) size: ${windowWidth}x${windowHeight}');
-    } else {
-      debugPrint('Single monitor detected, using primary');
-    }
-
-    // Create new window - desktop_multi_window automatically passes 'multi_window' as first arg
-    final window = await WindowController.create(WindowConfiguration(
-      arguments: '', // Empty string is fine, main() will detect 'multi_window' in args
-    ));
-
-    debugPrint('Window created: ${window.windowId}');
-
-    // Just show the window without trying to set frame (causes channel errors)
-    await window.show();
-
-    debugPrint('Window shown');
-
-    debugPrint('Presentation window created and shown');
-    debugPrint('Presentation window opened successfully');
-
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Prezentační okno otevřeno'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }
-  } catch (e, stackTrace) {
-    debugPrint('Error opening presentation window: $e');
-    debugPrint('Stack trace: $stackTrace');
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Chyba: ${e.toString()}'),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 4),
-        ),
-      );
-    }
-  }
-}
 
 class RibbonMenu extends StatefulWidget {
   const RibbonMenu({super.key});
@@ -604,7 +533,29 @@ class HomeTabbar extends StatelessWidget {
                                   ),
                                   onPressed: () async {
                                     if (state.data.song != null) {
-                                      await openPresentationWindow(context, state.data.song!);
+                                      await PresentationWindowManager().openPresentationWindow(context, state.data.song!);
+                                    }
+                                  });
+                            },
+                          ),
+                          BlocBuilder<PreviewChordBloc, PreviewChordState>(
+                            builder: (context, state) {
+                              return RibbonButton(
+                                  text: 'sendToPresent'.tr(),
+                                  isEnabled: state.data.song != null,
+                                  icon: const Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.send,
+                                        size: 18,
+                                        color: Colors.black,
+                                      ),
+                                    ],
+                                  ),
+                                  onPressed: () async {
+                                    if (state.data.song != null) {
+                                      await PresentationWindowManager().sendSongToPresentation(context, state.data.song!);
                                     }
                                   });
                             },
