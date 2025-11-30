@@ -17,9 +17,9 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:logger_pkg/logger_pkg.dart';
-import 'package:path_provider/path_provider.dart' as pathProvider;
 import 'package:path_provider/path_provider.dart' as path_provider;
 import 'package:window_manager/window_manager.dart';
 
@@ -70,19 +70,11 @@ void main(List<String> args) async {
 
       // Sub-okno - spusť presentation app
       debugPrint('Starting presentation window...');
-      if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
-        await windowManager.ensureInitialized();
-        WindowManager.instance.setFullScreen(true);
-      }
       runApp(const PresentationApp());
       return;
     } catch (e) {
       debugPrint('Error getting WindowController: $e');
       // Fallback - spusť presentation app i bez WindowController
-      if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
-        await windowManager.ensureInitialized();
-        WindowManager.instance.setFullScreen(true);
-      }
       runApp(const PresentationApp());
       return;
     }
@@ -157,7 +149,7 @@ class _PresentationAppState extends State<PresentationApp> {
       debugPrint('Window arguments type: ${arguments.runtimeType}');
       debugPrint('Window arguments: $arguments');
 
-      if (arguments is String && arguments.isNotEmpty) {
+      if (arguments.isNotEmpty) {
         try {
           final songJson = jsonDecode(arguments) as Map<String, dynamic>;
           final song = Song.fromJson(songJson);
@@ -185,6 +177,73 @@ class _PresentationAppState extends State<PresentationApp> {
         debugPrint('PresentationApp received method: ${call.method}');
 
         switch (call.method) {
+          case 'close_window_with_exit':
+            debugPrint('Received close window with exit command');
+            if (Platform.isMacOS) {
+              try {
+                final platform = const MethodChannel('com.songviewer/window');
+                await platform.invokeMethod('closeWindowWithExit');
+              } catch (e) {
+                debugPrint('Error closing window: $e');
+              }
+            }
+            return 'ok';
+
+          case 'close_window_native':
+            debugPrint('Received close window native command');
+            // Close window by calling native close
+            if (Platform.isMacOS) {
+              try {
+                // First exit fullscreen if needed
+                final platform = const MethodChannel('com.songviewer/window');
+                await platform.invokeMethod('exitFullscreen');
+                await Future.delayed(const Duration(milliseconds: 300));
+                await platform.invokeMethod('closeWindow');
+              } catch (e) {
+                debugPrint('Error closing window: $e');
+              }
+            }
+            return 'ok';
+
+          case 'enter_fullscreen':
+            debugPrint('Received enter fullscreen command');
+            // Enter fullscreen by calling native method
+            if (Platform.isMacOS) {
+              try {
+                final platform = const MethodChannel('com.songviewer/window');
+                await platform.invokeMethod('enterFullscreen');
+              } catch (e) {
+                debugPrint('Error entering fullscreen: $e');
+              }
+            }
+            return 'ok';
+
+          case 'exit_fullscreen':
+            debugPrint('Received exit fullscreen command');
+            // Exit fullscreen by calling native method
+            if (Platform.isMacOS) {
+              try {
+                final platform = const MethodChannel('com.songviewer/window');
+                await platform.invokeMethod('exitFullscreen');
+              } catch (e) {
+                debugPrint('Error exiting fullscreen: $e');
+              }
+            }
+            return 'ok';
+
+          case 'close_window':
+            debugPrint('Received close command');
+            // Close window by calling native close
+            if (Platform.isMacOS) {
+              try {
+                final platform = const MethodChannel('com.songviewer/window');
+                await platform.invokeMethod('closeWindow');
+              } catch (e) {
+                debugPrint('Error closing window: $e');
+              }
+            }
+            return 'ok';
+
           case 'update_song':
             try {
               debugPrint('Received arguments type: ${call.arguments.runtimeType}');
@@ -369,7 +428,12 @@ class _MyAppState extends State<MyApp> with WindowListener {
             ),
           ),
           BlocProvider(
-            create: (context) => DesktopRibbonMenuBloc(),
+            create: (context) {
+              final bloc = DesktopRibbonMenuBloc();
+              // Set bloc reference in PresentationWindowManager
+              PresentationWindowManager().setBloc(bloc);
+              return bloc;
+            },
           ),
           BlocProvider(
             create: ((context) => WebBloc(

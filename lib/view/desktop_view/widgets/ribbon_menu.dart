@@ -516,28 +516,7 @@ class HomeTabbar extends StatelessWidget {
                                   });
                             },
                           ),
-                          BlocBuilder<PreviewChordBloc, PreviewChordState>(
-                            builder: (context, state) {
-                              return RibbonButton(
-                                  text: 'present'.tr(),
-                                  isEnabled: true, // Always enabled
-                                  icon: const Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.present_to_all,
-                                        size: 18,
-                                        color: Colors.black,
-                                      ),
-                                    ],
-                                  ),
-                                  onPressed: () async {
-                                    // Open with current song or empty song
-                                    final song = state.data.song ?? Song.empty();
-                                    await PresentationWindowManager().openPresentationWindow(context, song);
-                                  });
-                            },
-                          ),
+                          _buildPresentationButton(context),
                         ],
                       )
                     : state.bodyName == 'edit'
@@ -616,28 +595,7 @@ class HomeTabbar extends StatelessWidget {
                 : Row(
                     children: [
                       getNewSongButton(context),
-                      BlocBuilder<PreviewChordBloc, PreviewChordState>(
-                        builder: (context, state) {
-                          return RibbonButton(
-                              text: 'present'.tr(),
-                              isEnabled: true, // Always enabled
-                              icon: const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.present_to_all,
-                                    size: 18,
-                                    color: Colors.black,
-                                  ),
-                                ],
-                              ),
-                              onPressed: () async {
-                                // Open with current song or empty song
-                                final song = state.data.song ?? Song.empty();
-                                await PresentationWindowManager().openPresentationWindow(context, song);
-                              });
-                        },
-                      ),
+                      _buildPresentationButton(context),
                     ],
                   );
           },
@@ -699,6 +657,43 @@ class HomeTabbar extends StatelessWidget {
             });
       },
       isEnabled: true,
+    );
+  }
+
+  Widget _buildPresentationButton(BuildContext context) {
+    return BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
+      builder: (context, ribbonState) {
+        final isOpen = ribbonState.isPresentationWindowOpen;
+
+        return BlocBuilder<PreviewChordBloc, PreviewChordState>(
+          builder: (context, previewState) {
+            return RibbonButton(
+                text: isOpen ? 'Zavřít prezentaci' : 'present'.tr(),
+                isEnabled: true,
+                icon: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      isOpen ? Icons.close_fullscreen : Icons.present_to_all,
+                      size: 18,
+                      color: Colors.black,
+                    ),
+                  ],
+                ),
+                onPressed: () async {
+                  final manager = PresentationWindowManager();
+                  if (isOpen) {
+                    // Close presentation window
+                    await manager.closePresentationWindow();
+                  } else {
+                    // Open with current song or empty song
+                    final song = previewState.data.song ?? Song.empty();
+                    await manager.openPresentationWindow(context, song);
+                  }
+                });
+          },
+        );
+      },
     );
   }
 }

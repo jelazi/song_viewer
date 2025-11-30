@@ -1,6 +1,5 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter/material.dart';
 
 import '../../model/song/song.dart';
 
@@ -13,10 +12,12 @@ class DesktopRibbonMenuBloc extends Bloc<DesktopRibbonMenuEvent, DesktopRibbonMe
           bodyName: 'preview',
           bodyEditName: 'lyrics',
           isSelectedSong: false,
+          isPresentationWindowOpen: false,
         )) {
     on<ChangeHomeBody>(_changeHomeBody);
     on<ChangeEditBody>(_changeEditBody);
     on<ChangeIsSelectedSong>(_changeIsSelectedSong);
+    on<ChangePresentationWindowState>(_changePresentationWindowState);
   }
 
   void _changeHomeBody(ChangeHomeBody event, Emitter<DesktopRibbonMenuState> emit) {
@@ -29,5 +30,9 @@ class DesktopRibbonMenuBloc extends Bloc<DesktopRibbonMenuEvent, DesktopRibbonMe
 
   void _changeIsSelectedSong(ChangeIsSelectedSong event, Emitter<DesktopRibbonMenuState> emit) {
     emit(state.copyWith(isSelectedSong: event.song != null));
+  }
+
+  void _changePresentationWindowState(ChangePresentationWindowState event, Emitter<DesktopRibbonMenuState> emit) {
+    emit(state.copyWith(isPresentationWindowOpen: event.isOpen));
   }
 }

@@ -62,7 +62,7 @@ Future<AppRepositories> initProvidersRepositories() async {
 }
 
 Future<void> initHiveFunction() async {
-  Directory directory = await pathProvider.getApplicationDocumentsDirectory();
+  Directory directory = await path_provider.getApplicationDocumentsDirectory();
   Hive.init(directory.path);
   //Hive.initFlutter(directory.path);
   Hive.registerAdapter(TypeUserAdapter());

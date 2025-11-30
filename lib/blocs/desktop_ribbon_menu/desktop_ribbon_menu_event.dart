@@ -27,3 +27,10 @@ class ChangeIsSelectedSong extends DesktopRibbonMenuEvent {
   @override
   List<Object> get props => [song ?? ''];
 }
+
+class ChangePresentationWindowState extends DesktopRibbonMenuEvent {
+  final bool isOpen;
+  const ChangePresentationWindowState({required this.isOpen});
+  @override
+  List<Object> get props => [isOpen];
+}
