@@ -616,6 +616,28 @@ class HomeTabbar extends StatelessWidget {
                 : Row(
                     children: [
                       getNewSongButton(context),
+                      BlocBuilder<PreviewChordBloc, PreviewChordState>(
+                        builder: (context, state) {
+                          return RibbonButton(
+                              text: 'present'.tr(),
+                              isEnabled: true, // Always enabled
+                              icon: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.present_to_all,
+                                    size: 18,
+                                    color: Colors.black,
+                                  ),
+                                ],
+                              ),
+                              onPressed: () async {
+                                // Open with current song or empty song
+                                final song = state.data.song ?? Song.empty();
+                                await PresentationWindowManager().openPresentationWindow(context, song);
+                              });
+                        },
+                      ),
                     ],
                   );
           },
