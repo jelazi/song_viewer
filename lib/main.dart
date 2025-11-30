@@ -149,37 +149,17 @@ class _PresentationAppState extends State<PresentationApp> {
       debugPrint('Window arguments type: ${arguments.runtimeType}');
       debugPrint('Window arguments: $arguments');
 
-      if (arguments.isNotEmpty) {
+      if (arguments is String && arguments.isNotEmpty) {
         try {
-          final payload = jsonDecode(arguments) as Map<String, dynamic>;
-          
-          // Check if this is new format with window_position
-          if (payload.containsKey('song')) {
-            // New format with position data
-            final songJson = payload['song'] as Map<String, dynamic>;
-            final song = Song.fromJson(songJson);
-            debugPrint('Loaded song from arguments: ${song.title}');
-            
-            // Note: WindowManager APIs don't work in sub-windows
-            // The window opens normally and user can make it fullscreen with F11 or green button
-            
-            if (mounted) {
-              setState(() {
-                _currentSong = song;
-                _displayText = _extractLyrics(song);
-              });
-            }
-          } else {
-            // Old format - just song data
-            final song = Song.fromJson(payload);
-            debugPrint('Loaded song from arguments (old format): ${song.title}');
+          final songJson = jsonDecode(arguments) as Map<String, dynamic>;
+          final song = Song.fromJson(songJson);
+          debugPrint('Loaded song from arguments: ${song.title}');
 
-            if (mounted) {
-              setState(() {
-                _currentSong = song;
-                _displayText = _extractLyrics(song);
-              });
-            }
+          if (mounted) {
+            setState(() {
+              _currentSong = song;
+              _displayText = _extractLyrics(song);
+            });
           }
         } catch (e) {
           debugPrint('Error parsing song from arguments: $e');
@@ -259,60 +239,36 @@ class _PresentationAppState extends State<PresentationApp> {
       debugShowCheckedModeBanner: false,
       home: Scaffold(
         backgroundColor: Colors.black,
-        body: Stack(
-          children: [
-            Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(40),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.music_note, color: Colors.white, size: 100),
-                    const SizedBox(height: 40),
-                    Text(
-                      _currentSong?.title ?? 'Prezentační okno',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 48,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 40),
-                    Text(
-                      _displayText,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 32,
-                        height: 1.5,
-                      ),
-                    ),
-                  ],
+        body: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(40),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.music_note, color: Colors.white, size: 100),
+                const SizedBox(height: 40),
+                Text(
+                  _currentSong?.title ?? 'Prezentační okno',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 48,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
+                const SizedBox(height: 40),
+                Text(
+                  _displayText,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 32,
+                    height: 1.5,
+                  ),
+                ),
+              ],
             ),
-            // Hint for fullscreen (only show if no song loaded yet)
-            if (_currentSong == null)
-              Positioned(
-                bottom: 20,
-                right: 20,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Text(
-                    'Tip: Stiskněte Control+Command+F pro fullscreen',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ),
-          ],
+          ),
         ),
       ),
     );

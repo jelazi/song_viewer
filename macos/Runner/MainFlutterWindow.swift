@@ -15,7 +15,7 @@ class MainFlutterWindow: NSWindow {
       // Register the plugin which you want access from other isolate.
       RegisterGeneratedPlugins(registry: controller)
       
-      // Move new window to secondary screen if available
+      // Move new window to secondary screen if available and enter fullscreen
       if let window = controller.view.window {
         let screens = NSScreen.screens
         if screens.count > 1 {
@@ -24,7 +24,7 @@ class MainFlutterWindow: NSWindow {
             // Get the visible frame of the secondary screen
             let screenFrame = secondaryScreen.visibleFrame
             
-            // Create a window frame that fills most of the secondary screen
+            // Create a window frame on the secondary screen
             let windowWidth: CGFloat = screenFrame.width * 0.9
             let windowHeight: CGFloat = screenFrame.height * 0.9
             let windowX = screenFrame.origin.x + (screenFrame.width - windowWidth) / 2
@@ -35,13 +35,19 @@ class MainFlutterWindow: NSWindow {
             // Set the window frame
             window.setFrame(newFrame, display: true)
             
-            // Optionally enter fullscreen
-            window.toggleFullScreen(nil)
+            // Enter fullscreen mode
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+              window.toggleFullScreen(nil)
+            }
             
-            print("Window moved to secondary screen: \(secondaryScreen.localizedName)")
+            print("Window moved to secondary screen and entering fullscreen: \(secondaryScreen.localizedName)")
           }
         } else {
-          print("Only one screen available, window stays on main screen")
+          // Only one screen - enter fullscreen on main screen
+          DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            window.toggleFullScreen(nil)
+          }
+          print("Only one screen available, entering fullscreen on main screen")
         }
       }
     }
