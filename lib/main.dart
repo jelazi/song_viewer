@@ -154,23 +154,19 @@ class _PresentationAppState extends State<PresentationApp> {
           final payload = jsonDecode(arguments) as Map<String, dynamic>;
           
           // Check if this is new format with window_position
-          if (payload.containsKey('song') && payload.containsKey('window_position')) {
+          if (payload.containsKey('song')) {
             // New format with position data
             final songJson = payload['song'] as Map<String, dynamic>;
             final song = Song.fromJson(songJson);
             debugPrint('Loaded song from arguments: ${song.title}');
             
-            // Set window position
-            final posData = payload['window_position'] as Map<String, dynamic>;
-            final x = posData['x'] as double;
-            final y = posData['y'] as double;
-            final width = posData['width'] as double;
-            final height = posData['height'] as double;
-            
-            debugPrint('Setting window position: ($x, $y) size: ${width}x$height');
-            await WindowManager.instance.setPosition(Offset(x, y));
-            await WindowManager.instance.setSize(Size(width, height));
-            debugPrint('Window positioned on target display');
+            // Set window to fullscreen
+            try {
+              await WindowManager.instance.setFullScreen(true);
+              debugPrint('Window set to fullscreen');
+            } catch (e) {
+              debugPrint('Error setting fullscreen: $e');
+            }
             
             if (mounted) {
               setState(() {

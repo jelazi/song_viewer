@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
-import 'package:screen_retriever/screen_retriever.dart';
 
 import '../model/song/song.dart';
 
@@ -77,49 +76,9 @@ class PresentationWindowManager {
 
       debugPrint('Creating new presentation window...');
 
-      // Get all available displays
-      final displays = await ScreenRetriever.instance.getAllDisplays();
-      debugPrint('Found ${displays.length} displays');
-
-      // Get primary display
-      final primaryDisplay = await ScreenRetriever.instance.getPrimaryDisplay();
-      debugPrint('Primary display: ${primaryDisplay.id}');
-
-      // Find a secondary display (different from primary)
-      Display? targetDisplay;
-      if (displays.length > 1) {
-        // Use first display that is not primary
-        targetDisplay = displays.firstWhere(
-          (display) => display.id != primaryDisplay.id,
-          orElse: () => primaryDisplay,
-        );
-        debugPrint('Using display: ${targetDisplay.id} (${targetDisplay.size.width}x${targetDisplay.size.height})');
-      } else {
-        debugPrint('Only one display found, using primary display');
-        targetDisplay = primaryDisplay;
-      }
-
-      // Calculate window position on target display
-      // Position at center of the target display
-      final displayBounds = targetDisplay.visiblePosition!;
-      final displaySize = targetDisplay.size;
-      const windowWidth = 1200.0;
-      const windowHeight = 800.0;
-      
-      final windowX = displayBounds.dx + (displaySize.width - windowWidth) / 2;
-      final windowY = displayBounds.dy + (displaySize.height - windowHeight) / 2;
-
-      debugPrint('Positioning window at ($windowX, $windowY) on display ${targetDisplay.id}');
-
-      // Create payload with both song data and window position
+      // Create payload with song data
       final payload = {
         'song': song.toJson(),
-        'window_position': {
-          'x': windowX,
-          'y': windowY,
-          'width': windowWidth,
-          'height': windowHeight,
-        },
       };
       
       // Create new window with payload as JSON string
@@ -135,7 +94,7 @@ class PresentationWindowManager {
       // Show the window
       await window.show();
 
-      debugPrint('Window shown with song data and position in arguments on display ${targetDisplay.id}');
+      debugPrint('Window shown - will be set to fullscreen automatically');
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
