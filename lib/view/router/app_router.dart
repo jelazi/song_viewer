@@ -1,4 +1,5 @@
 import 'package:default_project/view/desktop_view/pages/desktop_home_page/desktop_home_page.dart';
+import 'package:default_project/view/desktop_view/pages/presentation_page_desktop.dart';
 import 'package:default_project/view/responsive_view/pages/page_responsive.dart';
 import 'package:default_project/view/responsive_view/pages/state_login.dart';
 import 'package:default_project/view/tablet_view/pages/presentation_page_tablet.dart';
@@ -58,7 +59,8 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => PageResponsive(pageMobile: const PreviewPageMobile(), pageTablet: const PreviewPageTablet(), pageDesktop: Container()));
 
       case '/presentationPage':
-        return MaterialPageRoute(builder: (_) => PageResponsive(pageMobile: const PresentationPageMobile(), pageTablet: const PresentationPageTablet(), pageDesktop: Container()));
+        return MaterialPageRoute(
+            builder: (_) => PageResponsive(pageMobile: const PresentationPageMobile(), pageTablet: const PresentationPageTablet(), pageDesktop: const PresentationPageDesktop()));
       case '/sheetViewPage':
         return MaterialPageRoute(builder: (_) => PageResponsive(pageMobile: const SheetViewPageMobile(), pageTablet: const SheetViewPageTablet(), pageDesktop: Container()));
       case '/youtubeVideoPage':

@@ -70,6 +70,12 @@ class MyToast {
         }
       },
       toastBuilder: (_) {
+        // Define text style for toast
+        final pTextStyle = const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.normal,
+        );
+
         return MouseRegion(
           cursor: typeNotification == TypeNotification.chat ? SystemMouseCursors.click : SystemMouseCursors.basic,
           child: GestureDetector(

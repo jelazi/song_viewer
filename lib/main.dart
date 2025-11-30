@@ -51,7 +51,21 @@ class AppRepositories {
   });
 }
 
-void main() async {
+void main(List<String> args) async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  debugPrint('Main started with args: $args');
+
+  // Zjistit, jestli jsme v hlavním okně (ID 0) nebo v sub-okně
+  if (args.firstOrNull == 'multi_window') {
+    // Toto je sub-okno
+    debugPrint('Starting presentation window...');
+    runApp(const PresentationApp());
+    return;
+  }
+
+  // Hlavní okno aplikace
+  debugPrint('Starting main window...');
   logger = MyLogger(
     debug: true,
     saveToFile: false,
@@ -59,7 +73,6 @@ void main() async {
     isDebugConsole: true,
   );
   logger.v('Start app');
-  WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
   await initHiveFunction();
 
@@ -80,6 +93,43 @@ void main() async {
     fallbackLocale: const Locale('cs'),
     child: MyApp(repositories: repositories),
   ));
+} // Minimální prezentační aplikace BEZ pluginů
+
+class PresentationApp extends StatelessWidget {
+  const PresentationApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    debugPrint('PresentationApp building...');
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.music_note, color: Colors.white, size: 100),
+              SizedBox(height: 20),
+              Text(
+                'Prezentační okno',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 48,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 20),
+              Text(
+                'Čeká na zprávy...',
+                style: TextStyle(color: Colors.white70, fontSize: 24),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -147,6 +197,9 @@ class MyApp extends StatelessWidget {
           BlocProvider(
             create: ((context) => PlaylistsBloc(
                 playlistRepository: repositories.playlistRepository, songsRepository: repositories.songsRepository, settingsRepository: repositories.settingsRepository)),
+          ),
+          BlocProvider(
+            create: (context) => PresentationBloc(),
           ),
         ],
         child: MaterialApp(
