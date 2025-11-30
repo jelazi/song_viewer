@@ -48,7 +48,7 @@ class PresentationWindowManager {
       final allWindows = await WindowController.getAll();
       for (var window in allWindows) {
         // Check if it's a presentation window (will have JSON string with song data)
-        if (window.arguments.isNotEmpty) {
+        if (window.arguments is String && window.arguments.isNotEmpty) {
           try {
             // Try to parse as JSON to verify it's our presentation window
             jsonDecode(window.arguments);
@@ -76,15 +76,10 @@ class PresentationWindowManager {
 
       debugPrint('Creating new presentation window...');
 
-      // Create payload with song data
-      final payload = {
-        'song': song.toJson(),
-      };
-      
-      // Create new window with payload as JSON string
-      final payloadJsonString = jsonEncode(payload);
+      // Create new window with song data in arguments as JSON string
+      final songJsonString = jsonEncode(song.toJson());
       final window = await WindowController.create(WindowConfiguration(
-        arguments: payloadJsonString,
+        arguments: songJsonString,
       ));
 
       _presentationWindowController = window;
@@ -94,7 +89,7 @@ class PresentationWindowManager {
       // Show the window
       await window.show();
 
-      debugPrint('Window shown - will be set to fullscreen automatically');
+      debugPrint('Window shown with song data in arguments');
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -129,7 +124,7 @@ class PresentationWindowManager {
         // Check all windows
         final allWindows = await WindowController.getAll();
         for (var window in allWindows) {
-          if (window.arguments.isNotEmpty) {
+          if (window.arguments is String && window.arguments.isNotEmpty) {
             try {
               jsonDecode(window.arguments);
               _presentationWindowController = window;
