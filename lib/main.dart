@@ -149,17 +149,46 @@ class _PresentationAppState extends State<PresentationApp> {
       debugPrint('Window arguments type: ${arguments.runtimeType}');
       debugPrint('Window arguments: $arguments');
 
-      if (arguments is String && arguments.isNotEmpty) {
+      if (arguments.isNotEmpty) {
         try {
-          final songJson = jsonDecode(arguments) as Map<String, dynamic>;
-          final song = Song.fromJson(songJson);
-          debugPrint('Loaded song from arguments: ${song.title}');
+          final payload = jsonDecode(arguments) as Map<String, dynamic>;
+          
+          // Check if this is new format with window_position
+          if (payload.containsKey('song') && payload.containsKey('window_position')) {
+            // New format with position data
+            final songJson = payload['song'] as Map<String, dynamic>;
+            final song = Song.fromJson(songJson);
+            debugPrint('Loaded song from arguments: ${song.title}');
+            
+            // Set window position
+            final posData = payload['window_position'] as Map<String, dynamic>;
+            final x = posData['x'] as double;
+            final y = posData['y'] as double;
+            final width = posData['width'] as double;
+            final height = posData['height'] as double;
+            
+            debugPrint('Setting window position: ($x, $y) size: ${width}x$height');
+            await WindowManager.instance.setPosition(Offset(x, y));
+            await WindowManager.instance.setSize(Size(width, height));
+            debugPrint('Window positioned on target display');
+            
+            if (mounted) {
+              setState(() {
+                _currentSong = song;
+                _displayText = _extractLyrics(song);
+              });
+            }
+          } else {
+            // Old format - just song data
+            final song = Song.fromJson(payload);
+            debugPrint('Loaded song from arguments (old format): ${song.title}');
 
-          if (mounted) {
-            setState(() {
-              _currentSong = song;
-              _displayText = _extractLyrics(song);
-            });
+            if (mounted) {
+              setState(() {
+                _currentSong = song;
+                _displayText = _extractLyrics(song);
+              });
+            }
           }
         } catch (e) {
           debugPrint('Error parsing song from arguments: $e');
