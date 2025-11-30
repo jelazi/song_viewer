@@ -6,6 +6,7 @@ export './home_page_bloc/home_page_bloc.dart';
 export './notification_bloc/notification_bloc.dart';
 export './playlist_bloc/playlists_bloc.dart';
 export './presentation_bloc/presentation_bloc.dart';
+export './presentation_playlist_bloc/presentation_playlist_bloc.dart';
 export './settings_bloc/settings_bloc.dart';
 export './users_bloc/users_bloc.dart';
 export './web_bloc/web_bloc.dart';

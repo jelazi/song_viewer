@@ -379,6 +379,9 @@ class _MyAppState extends State<MyApp> with WindowListener {
           BlocProvider(
             create: (context) => PresentationBloc(),
           ),
+          BlocProvider(
+            create: (context) => PresentationPlaylistBloc(),
+          ),
         ],
         child: MaterialApp(
           title: 'Songs viewer',
