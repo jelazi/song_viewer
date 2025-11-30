@@ -259,36 +259,60 @@ class _PresentationAppState extends State<PresentationApp> {
       debugShowCheckedModeBanner: false,
       home: Scaffold(
         backgroundColor: Colors.black,
-        body: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(40),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.music_note, color: Colors.white, size: 100),
-                const SizedBox(height: 40),
-                Text(
-                  _currentSong?.title ?? 'Prezentační okno',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 48,
-                    fontWeight: FontWeight.bold,
-                  ),
+        body: Stack(
+          children: [
+            Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(40),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.music_note, color: Colors.white, size: 100),
+                    const SizedBox(height: 40),
+                    Text(
+                      _currentSong?.title ?? 'Prezentační okno',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 48,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+                    Text(
+                      _displayText,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 32,
+                        height: 1.5,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 40),
-                Text(
-                  _displayText,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 32,
-                    height: 1.5,
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
+            // Hint for fullscreen (only show if no song loaded yet)
+            if (_currentSong == null)
+              Positioned(
+                bottom: 20,
+                right: 20,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text(
+                    'Tip: Stiskněte Control+Command+F pro fullscreen',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
