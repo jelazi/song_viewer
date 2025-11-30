@@ -70,11 +70,19 @@ void main(List<String> args) async {
 
       // Sub-okno - spusť presentation app
       debugPrint('Starting presentation window...');
+      if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
+        await windowManager.ensureInitialized();
+        WindowManager.instance.setFullScreen(true);
+      }
       runApp(const PresentationApp());
       return;
     } catch (e) {
       debugPrint('Error getting WindowController: $e');
       // Fallback - spusť presentation app i bez WindowController
+      if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
+        await windowManager.ensureInitialized();
+        WindowManager.instance.setFullScreen(true);
+      }
       runApp(const PresentationApp());
       return;
     }

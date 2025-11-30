@@ -520,7 +520,7 @@ class HomeTabbar extends StatelessWidget {
                             builder: (context, state) {
                               return RibbonButton(
                                   text: 'present'.tr(),
-                                  isEnabled: state.data.song != null,
+                                  isEnabled: true, // Always enabled
                                   icon: const Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
@@ -532,31 +532,9 @@ class HomeTabbar extends StatelessWidget {
                                     ],
                                   ),
                                   onPressed: () async {
-                                    if (state.data.song != null) {
-                                      await PresentationWindowManager().openPresentationWindow(context, state.data.song!);
-                                    }
-                                  });
-                            },
-                          ),
-                          BlocBuilder<PreviewChordBloc, PreviewChordState>(
-                            builder: (context, state) {
-                              return RibbonButton(
-                                  text: 'sendToPresent'.tr(),
-                                  isEnabled: state.data.song != null,
-                                  icon: const Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.send,
-                                        size: 18,
-                                        color: Colors.black,
-                                      ),
-                                    ],
-                                  ),
-                                  onPressed: () async {
-                                    if (state.data.song != null) {
-                                      await PresentationWindowManager().sendSongToPresentation(context, state.data.song!);
-                                    }
+                                    // Open with current song or empty song
+                                    final song = state.data.song ?? Song.empty();
+                                    await PresentationWindowManager().openPresentationWindow(context, song);
                                   });
                             },
                           ),
