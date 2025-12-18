@@ -76,7 +76,7 @@ class PresentationWindowManager {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Prezentační okno otevřeno'),
+            content: Text('Presentation window opened'),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 2),
           ),
@@ -87,7 +87,7 @@ class PresentationWindowManager {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Chyba při otevírání okna: $e'),
+            content: Text('Error opening window: $e'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 3),
           ),
@@ -111,7 +111,7 @@ class PresentationWindowManager {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Píseň "${song.title}" odeslána'),
+            content: Text('Song "${song.title}" sent'),
             backgroundColor: Colors.green,
             duration: const Duration(seconds: 1),
           ),

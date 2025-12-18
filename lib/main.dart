@@ -60,7 +60,7 @@ void main(List<String> args) async {
 
   debugPrint('Main started with args: $args');
 
-  // SPRÁVNÝ ZPŮSOB podle dokumentace: použít WindowController.fromCurrentEngine()
+  // CORRECT WAY according to documentation: use WindowController.fromCurrentEngine()
   if (args.isNotEmpty && args.first == 'multi_window') {
     debugPrint('This is a sub-window, getting WindowController from current engine');
 
@@ -68,19 +68,19 @@ void main(List<String> args) async {
       final windowController = await WindowController.fromCurrentEngine();
       debugPrint('WindowController arguments: ${windowController.arguments}');
 
-      // Sub-okno - spusť presentation app
+      // Sub-window - start presentation app
       debugPrint('Starting presentation window...');
       runApp(const PresentationApp());
       return;
     } catch (e) {
       debugPrint('Error getting WindowController: $e');
-      // Fallback - spusť presentation app i bez WindowController
+      // Fallback - start presentation app even without WindowController
       runApp(const PresentationApp());
       return;
     }
   }
 
-  // Hlavní okno aplikace
+  // Main application window
   debugPrint('Starting main window...');
   logger = MyLogger(
     debug: true,
@@ -109,7 +109,7 @@ void main(List<String> args) async {
     fallbackLocale: const Locale('cs'),
     child: MyApp(repositories: repositories),
   ));
-} // Minimální prezentační aplikace BEZ pluginů
+} // Minimal presentation app WITHOUT plugins
 
 class PresentationApp extends StatefulWidget {
   const PresentationApp({super.key});
@@ -119,7 +119,7 @@ class PresentationApp extends StatefulWidget {
 }
 
 class _PresentationAppState extends State<PresentationApp> {
-  String _displayText = 'Čeká na zprávy...';
+  String _displayText = 'Waiting for messages...';
   Song? _currentSong;
 
   @override
@@ -315,7 +315,7 @@ class _PresentationAppState extends State<PresentationApp> {
                 const Icon(Icons.music_note, color: Colors.white, size: 100),
                 const SizedBox(height: 40),
                 Text(
-                  _currentSong?.title ?? 'Prezentační okno',
+                  _currentSong?.title ?? 'Presentation Window',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     color: Colors.white,
