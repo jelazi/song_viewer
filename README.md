@@ -38,25 +38,25 @@ dart run flutter_launcher_icons
 
 
 <div></div>
-<img src="/songs_viewer_bloc/screenshots/screenshot_01.png" width="50%" height="50%" />
+<img src="screenshots/screenshot_01.png" width="50%" height="50%" />
 </div>
 
 
 <div>
-<img src="/songs_viewer_bloc/screenshots/screenshot_02.png" width="50%" height="50%" />
+<img src="screenshots/screenshot_02.png" width="50%" height="50%" />
 </div>
 
 
 <div>
-<img src="/songs_viewer_bloc/screenshots/screenshot_03.png" width="50%" height="50%" />
+<img src="screenshots/screenshot_03.png" width="50%" height="50%" />
 </div>
 
 
 <div>
-<img src="/songs_viewer_bloc/screenshots/screenshot_04.png" width="50%" height="50%" />
+<img src="screenshots/screenshot_04.png" width="50%" height="50%" />
 </div>
 
 
 <div>
-<img src="/songs_viewer_bloc/screenshots/screenshot_05.png" width="50%" height="50%" />
+<img src="screenshots/screenshot_05.png" width="50%" height="50%" />
 </div>

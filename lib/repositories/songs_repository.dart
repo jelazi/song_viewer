@@ -1,5 +1,6 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:collection/collection.dart';
 import 'package:logger_pkg/logger_pkg.dart';
@@ -169,7 +170,7 @@ class SongsRepository {
   }
 
   String getListSongToJson() {
-    return _songs.map((e) => e.toJson()).toList().toString();
+    return jsonEncode(_songs.map((e) => e.toJson()).toList());
   }
 
   Future<void> createGroup(String group) async {

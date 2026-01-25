@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:default_project/model/song/song.dart';
 import 'package:default_project/providers/firebase_provider.dart';
@@ -33,6 +34,7 @@ void main() {
       // Mock default Firebase responses
       when(mockFirebaseProvider.getListSongsFromFirestore()).thenAnswer((_) async => []);
       when(mockFirebaseProvider.getListSongGroupFromFirestore()).thenAnswer((_) async => []);
+      when(mockFirebaseProvider.addSongToFirebase(any)).thenAnswer((_) async => true);
 
       songsRepository = SongsRepository(
         hiveProvider: mockHiveProvider,
@@ -155,6 +157,49 @@ void main() {
 
         expect(result, equals(0));
         verifyNever(mockHiveProvider.getTransposeForSong(any));
+      });
+    });
+
+    group('JSON Export', () {
+      test('should return valid JSON string for songs list', () async {
+        // Arrange
+        final song1 = Song(
+          id: '1',
+          title: 'Test Song 1',
+          lyrics: 'Lyrics 1',
+        );
+        final song2 = Song(
+          id: '2',
+          title: 'Test Song 2',
+          lyrics: 'Lyrics 2',
+        );
+
+        when(mockFirebaseProvider.getListSongsFromFirestore()).thenAnswer((_) async => [song1, song2]);
+
+        // Load songs
+        await songsRepository.loadSongsFromFirebase();
+
+        // Act
+        final result = songsRepository.getListSongToJson();
+
+        // Assert
+        expect(() => jsonDecode(result), returnsNormally);
+        final decoded = jsonDecode(result) as List<dynamic>;
+        expect(decoded.length, equals(2));
+        expect(decoded[0]['id'], equals('1'));
+        expect(decoded[0]['title'], equals('Test Song 1'));
+        expect(decoded[1]['id'], equals('2'));
+        expect(decoded[1]['title'], equals('Test Song 2'));
+      });
+
+      test('should return valid JSON for empty songs list', () {
+        // Act
+        final result = songsRepository.getListSongToJson();
+
+        // Assert
+        expect(() => jsonDecode(result), returnsNormally);
+        final decoded = jsonDecode(result) as List<dynamic>;
+        expect(decoded, isEmpty);
       });
     });
 
