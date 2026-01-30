@@ -155,7 +155,7 @@ class _HomeDrawerState extends State<HomeDrawer> {
                     const SizedBox(
                       width: 10,
                     ),
-                    Text('selectGroups'.tr()),
+                    SizedBox(width: MediaQuery.of(context).size.width * 0.5, child: Text('selectGroups'.tr())),
                   ]),
                   onTap: () {
                     Navigator.of(context).pop();
