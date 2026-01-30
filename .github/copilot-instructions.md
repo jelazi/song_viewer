@@ -20,3 +20,29 @@
   refactor: improve repository method naming
   - Rename getData to fetchData
   - Update method signatures for consistency
+
+## Flutter Best Practices
+- Always use `const` constructors for widgets where possible to improve performance
+- Separate UI logic from business logic using state management patterns like BLoC
+- Use `Keys` for widgets that need to maintain state across rebuilds (e.g., in lists)
+- Prefer `StatelessWidget` over `StatefulWidget` when state is not needed
+- Handle asynchronous operations with `FutureBuilder` or `StreamBuilder` appropriately
+- Use `MediaQuery` for responsive design instead of hard-coded sizes
+- Avoid deep widget trees; use composition and extract widgets into separate classes
+- Follow naming conventions: PascalCase for classes, camelCase for variables and methods
+- Use `debugPrint` instead of `print` for logging in production code
+- Optimize images and assets; use appropriate formats and sizes
+
+## BLoC Patterns
+- When creating a BLoC, always separate into 3 parts: state, bloc, and event (use separate files or classes for clarity)
+- Use immutable state classes with `Equatable` for proper state comparison
+- Define events as classes extending `BlocEvent` or similar, with clear naming (e.g., `LoadDataEvent`)
+- Keep business logic in the BLoC; avoid putting logic in UI widgets
+- Use `BlocBuilder` for rebuilding UI based on state changes
+- Use `BlocListener` for side effects like navigation or showing dialogs
+- Handle errors gracefully in states (e.g., `ErrorState` with error message)
+- Avoid direct access to BLoC from widgets; use `BlocProvider` and `context.read`
+- Test BLoCs with `bloc_test` package, covering events, states, and edge cases
+- Use `mapEventToState` or `on<Event>` methods for event handling
+- When creating an event in BLoC, separate the event from the on event handler - example: on<SearchData>(_filterData); void _filterData(SearchData event, Emitter<ArchiveState> emit) {}
+- Keep BLoCs focused on a single responsibility; split large BLoCs if needed
