@@ -6,6 +6,7 @@
 - Write in English
 - Be detailed and descriptive
 - Use bullet points in commit messages for clarity and structure
+- Never do commit and push at the same time, only if asked
 - The first line should be a general summary of all changes, followed by bullet points for detailed changes
 - Example:
   feat: add user authentication with JWT tokens
