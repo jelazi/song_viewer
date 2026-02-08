@@ -54,6 +54,7 @@ class SongsRepository {
       }
     });
     _firebaseProvider.updateSongList.onValue.listen((event) {
+      logger.d('Received update song list event from Firebase');
       final data = event.snapshot.value;
       if (data != null && data is Map) {
         try {
@@ -175,14 +176,21 @@ class SongsRepository {
     return false;
   }
 
+  UpdateSongListData removeUpdateDataOlderThanThreeDays(UpdateSongListData updateSongListData) {
+    final newMapIdSongs = <String, DateTime>{};
+    updateSongListData.mapIdSongs.forEach((key, value) {
+      if (value.isAfter(DateTime.now().subtract(const Duration(days: 3)))) {
+        newMapIdSongs[key] = value;
+      }
+    });
+    return UpdateSongListData(updateSongListData.lastUpdate, newMapIdSongs);
+  }
+
   Future<void> updateSong(Song song) async {
     await _firebaseProvider.addSongToFirebase(song);
     updateSongListData.lastUpdate = DateTime.now();
-    if (updateSongListData.mapIdSongs.containsKey(song.id)) {
-      updateSongListData.mapIdSongs[song.id] = DateTime.now();
-    } else {
-      updateSongListData.mapIdSongs.addAll({song.id: DateTime.now()});
-    }
+    updateSongListData.mapIdSongs[song.id] = DateTime.now();
+    updateSongListData = removeUpdateDataOlderThanThreeDays(updateSongListData);
     _hiveProvider.setUpdateSongListData('updateSongListData', updateSongListData);
     await _firebaseProvider.setUpdateSongList(updateSongListData);
     _songs.removeWhere((element) => element.id == song.id);
