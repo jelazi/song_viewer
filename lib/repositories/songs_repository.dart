@@ -6,6 +6,7 @@ import 'package:collection/collection.dart';
 import 'package:logger_pkg/logger_pkg.dart';
 
 import '../model/song/song.dart';
+import '../model/update_songlist_data.dart';
 import '../providers/firebase_provider.dart';
 import '../providers/hive_provider.dart';
 import '../services/auxiliary_functions.dart';
@@ -20,6 +21,7 @@ class SongsRepository {
   final isChangedListSongController = StreamController<int>.broadcast();
   Stream<int> get isChangedListSong => isChangedListSongController.stream.asBroadcastStream();
   int isChangedListSongValue = 0;
+  late UpdateSongListData updateSongListData;
 
   final _songs = <Song>[];
   String selectedSongId = '';
@@ -43,6 +45,7 @@ class SongsRepository {
   }
 
   void _init() {
+    updateSongListData = _hiveProvider.getUpdateSongListData('updateSongListData') ?? UpdateSongListData(DateTime(1900), {});
     _firebaseProvider.selectedSong.onValue.listen((event) {
       final data = event.snapshot.value;
       if (data != null && data is Map && data['song'] != null) {
@@ -50,6 +53,26 @@ class SongsRepository {
         selectedSongId = data['song'];
       }
     });
+    _firebaseProvider.updateSongList.onValue.listen((event) {
+      final data = event.snapshot.value;
+      if (data != null && data is Map) {
+        try {
+          final castedData = _convertMapToStringDynamic(data);
+          final newUpdateSongListData = UpdateSongListData.fromJson(castedData);
+          if (newUpdateSongListData.lastUpdate.isAfter(updateSongListData!.lastUpdate)) {
+            updateDataByUpdateSongListData(newUpdateSongListData);
+          }
+        } catch (e) {
+          logger.e('Error update song list from firebase: $e');
+        }
+      }
+    });
+  }
+
+  void updateDataByUpdateSongListData(UpdateSongListData newUpdateSongListData) {
+    updateSongListData = newUpdateSongListData;
+    _hiveProvider.setUpdateSongListData('updateSongListData', updateSongListData);
+    updateSongsFromFirebase();
   }
 
   Future<void> loadSongsFromFirebase() async {
@@ -154,6 +177,14 @@ class SongsRepository {
 
   Future<void> updateSong(Song song) async {
     await _firebaseProvider.addSongToFirebase(song);
+    updateSongListData.lastUpdate = DateTime.now();
+    if (updateSongListData.mapIdSongs.containsKey(song.id)) {
+      updateSongListData.mapIdSongs[song.id] = DateTime.now();
+    } else {
+      updateSongListData.mapIdSongs.addAll({song.id: DateTime.now()});
+    }
+    _hiveProvider.setUpdateSongListData('updateSongListData', updateSongListData);
+    await _firebaseProvider.setUpdateSongList(updateSongListData);
     _songs.removeWhere((element) => element.id == song.id);
     _songs.add(song.copyWith());
   }
@@ -201,5 +232,20 @@ class SongsRepository {
     } else {
       logger.e('Error update group');
     }
+  }
+
+  Map<String, dynamic> _convertMapToStringDynamic(Map map) {
+    final result = <String, dynamic>{};
+    map.forEach((key, value) {
+      final stringKey = key.toString();
+      if (value is Map) {
+        result[stringKey] = _convertMapToStringDynamic(value);
+      } else if (value is List) {
+        result[stringKey] = value.map((item) => item is Map ? _convertMapToStringDynamic(item) : item).toList();
+      } else {
+        result[stringKey] = value;
+      }
+    });
+    return result;
   }
 }

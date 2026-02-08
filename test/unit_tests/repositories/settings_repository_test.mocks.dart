@@ -5,8 +5,9 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i4;
 
+import 'package:default_project/model/update_songlist_data.dart' as _i7;
 import 'package:default_project/model/user.dart' as _i5;
-import 'package:default_project/model/web_interpret.dart' as _i7;
+import 'package:default_project/model/web_interpret.dart' as _i8;
 import 'package:default_project/model/web_song.dart' as _i6;
 import 'package:default_project/providers/hive_provider.dart' as _i3;
 import 'package:hive/hive.dart' as _i2;
@@ -199,6 +200,29 @@ class MockHiveProvider extends _i1.Mock implements _i3.HiveProvider {
       );
 
   @override
+  void setUpdateSongListData(
+    String? key,
+    _i7.UpdateSongListData? value,
+  ) =>
+      super.noSuchMethod(
+        Invocation.method(
+          #setUpdateSongListData,
+          [
+            key,
+            value,
+          ],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  _i7.UpdateSongListData? getUpdateSongListData(String? key) =>
+      (super.noSuchMethod(Invocation.method(
+        #getUpdateSongListData,
+        [key],
+      )) as _i7.UpdateSongListData?);
+
+  @override
   _i6.WebSong? getWebSong(String? key) => (super.noSuchMethod(Invocation.method(
         #getWebSong,
         [key],
@@ -207,7 +231,7 @@ class MockHiveProvider extends _i1.Mock implements _i3.HiveProvider {
   @override
   void setHistoryInterpretToWebBox(
     String? nameWeb,
-    _i7.WebInterpret? interpret,
+    _i8.WebInterpret? interpret,
   ) =>
       super.noSuchMethod(
         Invocation.method(
@@ -221,7 +245,7 @@ class MockHiveProvider extends _i1.Mock implements _i3.HiveProvider {
       );
 
   @override
-  _i7.WebInterpret? getInterpretFromWebBox(
+  _i8.WebInterpret? getInterpretFromWebBox(
     String? nameWeb,
     String? ref,
   ) =>
@@ -231,15 +255,15 @@ class MockHiveProvider extends _i1.Mock implements _i3.HiveProvider {
           nameWeb,
           ref,
         ],
-      )) as _i7.WebInterpret?);
+      )) as _i8.WebInterpret?);
 
   @override
-  List<_i7.WebInterpret> getInterpretsFromWebBox(String? nameWeb) =>
+  List<_i8.WebInterpret> getInterpretsFromWebBox(String? nameWeb) =>
       (super.noSuchMethod(
         Invocation.method(
           #getInterpretsFromWebBox,
           [nameWeb],
         ),
-        returnValue: <_i7.WebInterpret>[],
-      ) as List<_i7.WebInterpret>);
+        returnValue: <_i8.WebInterpret>[],
+      ) as List<_i8.WebInterpret>);
 }

@@ -1,3 +1,4 @@
+import 'package:default_project/model/update_songlist_data.dart';
 import 'package:default_project/model/user.dart';
 import 'package:default_project/model/web_interpret.dart';
 import 'package:default_project/model/web_song.dart';
@@ -41,6 +42,14 @@ class HiveProvider {
 
   void setWebSong(String key, WebSong value) {
     webSongBox.put(key, value);
+  }
+
+  void setUpdateSongListData(String key, UpdateSongListData value) {
+    webSongBox.put(key, value);
+  }
+
+  UpdateSongListData? getUpdateSongListData(String key) {
+    return webSongBox.get(key);
   }
 
   WebSong? getWebSong(String key) {

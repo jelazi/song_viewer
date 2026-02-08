@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:default_project/model/update_songlist_data.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -15,6 +16,7 @@ class FirebaseProvider {
   CollectionReference<Map<String, dynamic>> groupCollection = FirebaseFirestore.instance.collection('groups');
   FirebaseFirestore inst = FirebaseFirestore.instance;
   final DatabaseReference selectedSong = FirebaseDatabase.instance.ref().child('currentSong');
+  final DatabaseReference updateSongList = FirebaseDatabase.instance.ref().child('updateSongList');
 
   FirebaseProvider() {
     inst.settings = const Settings(
@@ -40,6 +42,24 @@ class FirebaseProvider {
           //TODO: listener for current song on database
         }
       });
+      try {
+        updateSongList.onValue.listen((DatabaseEvent event) {
+          final data = event.snapshot.value;
+          if (data != null && data is Map) {
+            //TODO: listener for update song list on database
+          }
+        });
+      } catch (e) {
+        logger.e('Error listening to updateSongList: $e');
+      }
+    } catch (e) {
+      logger.e('$e');
+    }
+  }
+
+  Future<void> setUpdateSongList(UpdateSongListData updateSongListData) async {
+    try {
+      await updateSongList.set(updateSongListData.toJson());
     } catch (e) {
       logger.e('$e');
     }

@@ -12,8 +12,6 @@ class PageResponsive extends StatelessWidget {
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
     double height = MediaQuery.of(context).size.height;
-    print('width: $width');
-    print('height: $height');
     return LayoutBuilder(builder: (context, constraints) {
       if ((Platform.isAndroid || Platform.isIOS) && width < 600) {
         return pageMobile;

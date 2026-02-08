@@ -287,9 +287,7 @@ class _HomePageTabletState extends State<HomePageTablet> {
                 hintText: 'filterInterpret'.tr(),
               ),
             ),
-            SizedBox(
-              height: MediaQuery.of(context).size.height - 125,
-              width: MediaQuery.of(context).size.width - 280,
+            Expanded(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
