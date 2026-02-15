@@ -284,7 +284,7 @@ class _HomePageTabletState extends State<HomePageTablet> {
                 onChanged: (value) => context.read<WebBloc>().add(FilterInterprets(
                       filter: value,
                     )),
-                hintText: 'filterInterpret'.tr(),
+                hintText: state.searchWeb == 2 ? 'filterSongOrInterpret'.tr() : 'filterInterpret'.tr(),
               ),
             ),
             Expanded(
@@ -341,7 +341,14 @@ class _HomePageTabletState extends State<HomePageTablet> {
                             height: MediaQuery.of(context).size.height - 135,
                             child: Column(
                               children: [
-                                Text(state.currentInterpret.title, style: const TextStyle(fontSize: 16, color: AppColor.grey1Color)),
+                                Text(
+                                  state.currentInterpret.title.isNotEmpty
+                                      ? state.currentInterpret.title
+                                      : state.songs.isNotEmpty && state.searchWeb == 2
+                                          ? 'searchResults'.tr()
+                                          : '',
+                                  style: const TextStyle(fontSize: 16, color: AppColor.grey1Color),
+                                ),
                                 SizedBox(
                                   height: MediaQuery.of(context).size.height - 160,
                                   child: ListView(

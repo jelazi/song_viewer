@@ -39,8 +39,7 @@ class WebProvider {
     return dio.Dio().post(
       '${proScholy}graphql',
       data: {
-        'query':
-            '{ song_lyrics(search_string: "$searchString") { id name has_chords authors_pivot { author { name } } } }',
+        'query': '{ song_lyrics(search_string: "$searchString") { id name has_chords authors_pivot { author { name } } } }',
       },
       options: Options(headers: {'Content-Type': 'application/json'}),
     );
@@ -60,8 +59,7 @@ class WebProvider {
     return dio.Dio().post(
       '${proScholy}graphql',
       data: {
-        'query':
-            '{ author(id: $authorId) { id name song_lyrics { id name has_chords } } }',
+        'query': '{ author(id: $authorId) { id name song_lyrics { id name has_chords } } }',
       },
       options: Options(headers: {'Content-Type': 'application/json'}),
     );

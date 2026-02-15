@@ -254,6 +254,8 @@
     "selectPage": "Vyber stránku",
     "selectWebSite": "Vyber vyhledávač",
     "filterInterpret": "Filtruj zpěváka",
+    "filterSongOrInterpret": "Filtruj píseň nebo zpěváka",
+    "searchResults": "Výsledky hledání",
     "saveChanges": "Uložení změn",
     "saveChangesQuestion": "Chcete uložit změny?",
     "editOriginalLyricsLabel": "Editovat originální text",

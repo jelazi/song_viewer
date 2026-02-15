@@ -294,8 +294,7 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
                           );
                         },
                       ),
-                      Container(
-                        height: MediaQuery.of(context).size.height - 120,
+                      Expanded(
                         child: state.twoColumns ? _getLyricsTwoColumnsRenderer(state, scrollController) : _getLyricsOneColumnRenderer(state, scrollController),
                       ),
                     ],

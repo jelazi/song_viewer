@@ -174,6 +174,10 @@ class WebBloc extends Bloc<WebEvent, WebState> {
     }
     if (state.searchWeb == 2) {
       list = await webRepository.findInterpretProScholy(event.filter);
+      final songItems = await webRepository.findSongAndInterpretsFromProScholy(event.filter);
+      final searchedSongs = songItems.whereType<WebSong>().toList();
+      emit(state.copyWith(interprets: list, isSearching: false, filteredInterprets: list, searchWebInterprets: false, songs: searchedSongs, filteredSongs: searchedSongs));
+      return;
     }
     emit(state.copyWith(interprets: list, isSearching: false, filteredInterprets: list, searchWebInterprets: false));
   }
