@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../blocs/export_blocs.dart';
 import '../../../../../services/constants.dart';
+import '../../../widgets/search_field_desktop.dart';
 
 class ListWebSong extends StatefulWidget {
   ListWebSong({
@@ -87,20 +88,16 @@ class _ListWebSongState extends State<ListWebSong> {
           padding: const EdgeInsets.only(bottom: 10),
           height: 50,
           width: 250,
-          child: TextField(
+          child: SearchFieldDesktop(
             controller: _filterInterpretVelkyZpevnik,
-            style: const TextStyle(fontSize: 12),
-            decoration: InputDecoration(
-              border: const OutlineInputBorder(),
-              labelText: 'filterInterpret'.tr(),
-            ),
-            onChanged: (value) {
-              // Do nothing on change, only on submit
-            },
+            labelText: 'filterInterpret'.tr(),
             onSubmitted: (value) {
               context.read<WebBloc>().add(FilterInterprets(
                     filter: value,
                   ));
+            },
+            onClear: () {
+              context.read<WebBloc>().add(const FilterInterprets(filter: ''));
             },
           ),
         ),
@@ -188,20 +185,16 @@ class _ListWebSongState extends State<ListWebSong> {
           padding: const EdgeInsets.only(bottom: 10),
           height: 50,
           width: 250,
-          child: TextField(
+          child: SearchFieldDesktop(
             controller: _filterSongVelkyZpevnik,
-            style: const TextStyle(fontSize: 12),
-            decoration: InputDecoration(
-              border: const OutlineInputBorder(),
-              labelText: 'filterSong'.tr(),
-            ),
-            onChanged: (value) {
-              // Do nothing on change, only on submit
-            },
+            labelText: 'filterSong'.tr(),
             onSubmitted: (value) {
               context.read<WebBloc>().add(FilterInterprets(
                     filter: value,
                   ));
+            },
+            onClear: () {
+              context.read<WebBloc>().add(const FilterInterprets(filter: ''));
             },
           ),
         ),
@@ -264,20 +257,16 @@ class _ListWebSongState extends State<ListWebSong> {
           padding: const EdgeInsets.only(bottom: 10),
           height: 50,
           width: 250,
-          child: TextField(
+          child: SearchFieldDesktop(
             controller: _filterInterpretPisnickyAkordy,
-            style: const TextStyle(fontSize: 12),
-            decoration: InputDecoration(
-              border: const OutlineInputBorder(),
-              labelText: 'filterInterpret'.tr(),
-            ),
-            onChanged: (value) {
-              // Do nothing on change, only on submit
-            },
+            labelText: 'filterInterpret'.tr(),
             onSubmitted: (value) {
               context.read<WebBloc>().add(FilterInterprets(
                     filter: value,
                   ));
+            },
+            onClear: () {
+              context.read<WebBloc>().add(const FilterInterprets(filter: ''));
             },
           ),
         ),
@@ -365,20 +354,16 @@ class _ListWebSongState extends State<ListWebSong> {
           padding: const EdgeInsets.only(bottom: 10),
           height: 50,
           width: 250,
-          child: TextField(
+          child: SearchFieldDesktop(
             controller: _filterSongPisnickyAkordy,
-            style: const TextStyle(fontSize: 12),
-            decoration: InputDecoration(
-              border: const OutlineInputBorder(),
-              labelText: 'filterSong'.tr(),
-            ),
-            onChanged: (value) {
-              // Do nothing on change, only on submit
-            },
+            labelText: 'filterSong'.tr(),
             onSubmitted: (value) {
               context.read<WebBloc>().add(FilterInterprets(
                     filter: value,
                   ));
+            },
+            onClear: () {
+              context.read<WebBloc>().add(const FilterInterprets(filter: ''));
             },
           ),
         ),
@@ -438,20 +423,16 @@ class _ListWebSongState extends State<ListWebSong> {
         padding: const EdgeInsets.only(bottom: 10),
         height: 50,
         width: 250,
-        child: TextField(
+        child: SearchFieldDesktop(
           controller: _filterInterpretProScholy,
-          style: const TextStyle(fontSize: 12),
-          decoration: InputDecoration(
-            border: const OutlineInputBorder(),
-            labelText: 'filterSongOrInterpret'.tr(),
-          ),
-          onChanged: (value) {
-            // Do nothing on change, only on submit
-          },
+          labelText: 'filterSongOrInterpret'.tr(),
           onSubmitted: (value) {
             context.read<WebBloc>().add(FilterInterprets(
                   filter: value,
                 ));
+          },
+          onClear: () {
+            context.read<WebBloc>().add(const FilterInterprets(filter: ''));
           },
         ),
       ),
@@ -566,20 +547,16 @@ class _ListWebSongState extends State<ListWebSong> {
           padding: const EdgeInsets.only(bottom: 10),
           height: 50,
           width: 250,
-          child: TextField(
+          child: SearchFieldDesktop(
             controller: _filterSongProScholy,
-            style: const TextStyle(fontSize: 12),
-            decoration: InputDecoration(
-              border: const OutlineInputBorder(),
-              labelText: 'filterSong'.tr(),
-            ),
-            onChanged: (value) {
-              // Do nothing on change, only on submit
-            },
+            labelText: 'filterSong'.tr(),
             onSubmitted: (value) {
               context.read<WebBloc>().add(FilterSongs(
                     filter: value,
                   ));
+            },
+            onClear: () {
+              context.read<WebBloc>().add(const FilterSongs(filter: ''));
             },
           ),
         ),

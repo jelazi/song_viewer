@@ -88,16 +88,22 @@ class _HomePageMobileState extends State<HomePageMobile> {
                               controller: _filter,
                               decoration: InputDecoration(
                                 hintText: 'filterSong'.tr(),
-                                prefixIcon: const Icon(Icons.search),
-                                suffixIcon: IconButton(
-                                  onPressed: (() {
-                                    _filter.clear();
-                                    context.read<HomePageBloc>().add(const FilterSong(filter: ''));
-                                  }),
-                                  icon: const Icon(Icons.clear),
-                                ),
+                                suffixIcon: _filter.text.isNotEmpty
+                                    ? IconButton(
+                                        onPressed: (() {
+                                          _filter.clear();
+                                          context.read<HomePageBloc>().add(const FilterSong(filter: ''));
+                                          setState(() {});
+                                        }),
+                                        icon: const Icon(Icons.clear),
+                                      )
+                                    : null,
                               ),
                               onChanged: (value) {
+                                // Do nothing on change, only on submit
+                                setState(() {});
+                              },
+                              onSubmitted: (value) {
                                 context.read<HomePageBloc>().add(FilterSong(filter: value));
                               },
                             ),
