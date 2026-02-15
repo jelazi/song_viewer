@@ -108,7 +108,7 @@ class _HomePageMobileState extends State<HomePageMobile> {
                                 ),
                               ),
                               onChanged: (value) {
-                                // Do nothing on change, only on submit
+                                context.read<HomePageBloc>().add(FilterSong(filter: value));
                                 setState(() {});
                               },
                               onSubmitted: (value) {

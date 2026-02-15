@@ -38,7 +38,7 @@ class _ListSongState extends State<ListSong> {
                 child: SearchFieldDesktop(
                   controller: _filter,
                   labelText: 'filterSong'.tr(),
-                  onSubmitted: (value) {
+                  onSearch: (value) {
                     context.read<HomePageBloc>().add(FilterSong(filter: value));
                   },
                   onClear: () {

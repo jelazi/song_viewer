@@ -91,7 +91,7 @@ class _ListWebSongState extends State<ListWebSong> {
           child: SearchFieldDesktop(
             controller: _filterInterpretVelkyZpevnik,
             labelText: 'filterInterpret'.tr(),
-            onSubmitted: (value) {
+            onSearch: (value) {
               context.read<WebBloc>().add(FilterInterprets(
                     filter: value,
                   ));
@@ -188,7 +188,7 @@ class _ListWebSongState extends State<ListWebSong> {
           child: SearchFieldDesktop(
             controller: _filterSongVelkyZpevnik,
             labelText: 'filterSong'.tr(),
-            onSubmitted: (value) {
+            onSearch: (value) {
               context.read<WebBloc>().add(FilterInterprets(
                     filter: value,
                   ));
@@ -260,7 +260,7 @@ class _ListWebSongState extends State<ListWebSong> {
           child: SearchFieldDesktop(
             controller: _filterInterpretPisnickyAkordy,
             labelText: 'filterInterpret'.tr(),
-            onSubmitted: (value) {
+            onSearch: (value) {
               context.read<WebBloc>().add(FilterInterprets(
                     filter: value,
                   ));
@@ -357,7 +357,7 @@ class _ListWebSongState extends State<ListWebSong> {
           child: SearchFieldDesktop(
             controller: _filterSongPisnickyAkordy,
             labelText: 'filterSong'.tr(),
-            onSubmitted: (value) {
+            onSearch: (value) {
               context.read<WebBloc>().add(FilterInterprets(
                     filter: value,
                   ));
@@ -426,7 +426,7 @@ class _ListWebSongState extends State<ListWebSong> {
         child: SearchFieldDesktop(
           controller: _filterInterpretProScholy,
           labelText: 'filterSongOrInterpret'.tr(),
-          onSubmitted: (value) {
+          onSearch: (value) {
             context.read<WebBloc>().add(FilterInterprets(
                   filter: value,
                 ));
@@ -550,7 +550,7 @@ class _ListWebSongState extends State<ListWebSong> {
           child: SearchFieldDesktop(
             controller: _filterSongProScholy,
             labelText: 'filterSong'.tr(),
-            onSubmitted: (value) {
+            onSearch: (value) {
               context.read<WebBloc>().add(FilterSongs(
                     filter: value,
                   ));

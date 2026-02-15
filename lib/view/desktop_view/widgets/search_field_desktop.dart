@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 class SearchFieldDesktop extends StatefulWidget {
   final TextEditingController controller;
   final String labelText;
-  final Function(String) onSubmitted;
+  final Function(String) onSearch;
   final Function? onClear;
 
   const SearchFieldDesktop({
     super.key,
     required this.controller,
     required this.labelText,
-    required this.onSubmitted,
+    required this.onSearch,
     this.onClear,
   });
 
@@ -31,7 +31,7 @@ class _SearchFieldDesktopState extends State<SearchFieldDesktop> {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              onPressed: () => widget.onSubmitted(widget.controller.text),
+              onPressed: () => widget.onSearch(widget.controller.text),
               icon: const Icon(Icons.search),
             ),
             if (widget.controller.text.isNotEmpty)
@@ -47,9 +47,10 @@ class _SearchFieldDesktopState extends State<SearchFieldDesktop> {
         ),
       ),
       onChanged: (value) {
+        widget.onSearch(value);
         setState(() {});
       },
-      onSubmitted: widget.onSubmitted,
+      onSubmitted: widget.onSearch,
     );
   }
 }

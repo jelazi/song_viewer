@@ -281,9 +281,9 @@ class _HomePageTabletState extends State<HomePageTablet> {
               child: FilterFieldTablet(
                 filter: _filterInterpretPisnickyAkordy,
                 clearFilter: () => context.read<WebBloc>().add(const FilterInterprets(filter: '')),
-                onChanged: (value) {
-                  // Do nothing on change, only on submit
-                },
+                onChanged: (value) => context.read<WebBloc>().add(FilterInterprets(
+                      filter: value,
+                    )),
                 onSubmitted: (value) => context.read<WebBloc>().add(FilterInterprets(
                       filter: value,
                     )),
@@ -454,9 +454,7 @@ class _HomePageTabletState extends State<HomePageTablet> {
         FilterFieldTablet(
           filter: _previewFilterSearchSong,
           clearFilter: () => context.read<HomePageBloc>().add(const FilterSong(filter: '')),
-          onChanged: (value) {
-            // Do nothing on change, only on submit
-          },
+          onChanged: (value) => context.read<HomePageBloc>().add(FilterSong(filter: value)),
           onSubmitted: (value) => context.read<HomePageBloc>().add(FilterSong(filter: value)),
           hintText: 'filterSong'.tr(),
         ),
