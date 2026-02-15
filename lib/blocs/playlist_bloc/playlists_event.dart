@@ -104,6 +104,14 @@ class SelectSongInPreviewPlaylist extends PlaylistsEvent {
   List<Object> get props => [selectSongId];
 }
 
+class UpdateSelectedSongInPreviewPlaylist extends PlaylistsEvent {
+  final String selectedSongId;
+  const UpdateSelectedSongInPreviewPlaylist({required this.selectedSongId});
+
+  @override
+  List<Object> get props => [selectedSongId];
+}
+
 class ChangeCurrentColumnPlaylist extends PlaylistsEvent {
   final int column;
   const ChangeCurrentColumnPlaylist({required this.column});

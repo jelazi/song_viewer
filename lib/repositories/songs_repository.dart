@@ -54,7 +54,6 @@ class SongsRepository {
       }
     });
     _firebaseProvider.updateSongList.onValue.listen((event) {
-      logger.d('Received update song list event from Firebase');
       final data = event.snapshot.value;
       if (data != null && data is Map) {
         try {

@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:default_project/blocs/export_blocs.dart';
 import 'package:default_project/repositories/playlist_repository.dart';
 import 'package:default_project/repositories/songs_repository.dart';
@@ -55,7 +56,10 @@ class PlaylistsBloc extends Bloc<PlaylistsEvent, PlaylistsState> {
     on<SelectSongInPreviewPlaylist>(_selectSongInPreviewPlaylist);
     on<ChangeCurrentColumnPlaylist>(_changeCurrentColumnPlaylist);
     on<MoveSongInPlaylist>(_moveSongInPlaylist);
-
+    on<UpdateSelectedSongInPreviewPlaylist>(_updateSelectedSongInPreviewPlaylist);
+    songsRepository.selectSongData.listen((event) {
+      add(UpdateSelectedSongInPreviewPlaylist(selectedSongId: event));
+    });
     add(const _Init());
   }
 
@@ -66,6 +70,7 @@ class PlaylistsBloc extends Bloc<PlaylistsEvent, PlaylistsState> {
       allSongs: songsRepository.songs,
       filteredSongs: [],
       textStyle: TextStyle(fontSize: settingsRepository.previewFontTextSize, color: settingsRepository.previewColorText),
+      selectedSongId: songsRepository.selectedSongId,
       chordStyle: TextStyle(
         fontSize: settingsRepository.previewFontChordSize,
         color: settingsRepository.previewColorChord,
@@ -90,17 +95,22 @@ class PlaylistsBloc extends Bloc<PlaylistsEvent, PlaylistsState> {
     if (event.forEdit) {
       var playlist = event.playlist;
       if (playlist == null) {
-        emit(state.copyWith(currentPlaylist: Playlist(id: null, name: ''), currentSongs: []));
+        emit(state.copyWith(
+          currentPlaylist: Playlist(id: null, name: ''),
+          currentSongs: [],
+        ));
         return;
       }
 
-      emit(state.copyWith(currentPlaylist: event.playlist, currentSongs: currentSongs, filteredSongs: [], namePlaylist: playlist.name));
+      emit(state.copyWith(
+          currentPlaylist: event.playlist, currentSongs: currentSongs, filteredSongs: [], namePlaylist: playlist.name, selectedSongId: songsRepository.selectedSongId));
     } else {
       emit(state.copyWith(
           currentSongs: currentSongs,
           filteredSongs: [],
           currentSong: currentSongs.isNotEmpty ? currentSongs[0] : state.currentSong,
-          indexCurrentSongInPlaylist: currentSongs.isNotEmpty ? 0 : state.indexCurrentSongInPlaylist));
+          indexCurrentSongInPlaylist: currentSongs.isNotEmpty ? 0 : state.indexCurrentSongInPlaylist,
+          selectedSongId: songsRepository.selectedSongId));
     }
   }
 
@@ -249,8 +259,18 @@ class PlaylistsBloc extends Bloc<PlaylistsEvent, PlaylistsState> {
 
   void _selectSongInPreviewPlaylist(SelectSongInPreviewPlaylist event, Emitter<PlaylistsState> emit) {
     final state = this.state;
-    songsRepository.selectSong(event.selectSongId, '', '', '');
-    emit(state.copyWith(selectedSongId: songsRepository.selectedSongId));
+    Song? selectedSong = songsRepository.songs.firstWhereOrNull((element) => element.id == event.selectSongId);
+    if (selectedSong == null) {
+      songsRepository.selectSong(event.selectSongId, '', '', '');
+    } else {
+      songsRepository.selectSong(event.selectSongId, selectedSong.title, selectedSong.interpret ?? '', selectedSong.lyricsWithoutChords);
+      emit(state.copyWith(selectedSongId: songsRepository.selectedSongId));
+    }
+  }
+
+  void _updateSelectedSongInPreviewPlaylist(UpdateSelectedSongInPreviewPlaylist event, Emitter<PlaylistsState> emit) {
+    final state = this.state;
+    emit(state.copyWith(selectedSongId: event.selectedSongId));
   }
 
   int _getCapByIncrement(int increment) {

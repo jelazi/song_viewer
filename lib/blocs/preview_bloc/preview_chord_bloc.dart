@@ -54,6 +54,11 @@ class PreviewChordBloc extends Bloc<PreviewChordEvent, PreviewChordState> {
     on<ChangeHeightWindow>(_changeHeightWindow);
     on<ChangeCurrentColumn>(_changeCurrentColumn);
     on<ChangeLyricFromWebSongUpdate>(_changeLyricFromWebSongUpdate);
+    on<UpdateSelectedSong>(_updateSelectedSong);
+
+    songsRepository.selectSongData.listen((event) {
+      add(UpdateSelectedSong(selectedSongId: event));
+    });
     add(const _Init());
   }
 
@@ -62,6 +67,7 @@ class PreviewChordBloc extends Bloc<PreviewChordEvent, PreviewChordState> {
     emit(state.copyWith(
       textStyle: TextStyle(fontSize: settingsRepository.previewFontTextSize, color: settingsRepository.previewColorText),
       twoColumns: settingsRepository.twoColumns,
+      selectedSongId: songsRepository.selectedSongId,
       chordStyle: TextStyle(
         fontSize: settingsRepository.previewFontChordSize,
         color: settingsRepository.previewColorChord,
@@ -165,6 +171,7 @@ class PreviewChordBloc extends Bloc<PreviewChordEvent, PreviewChordState> {
   void _selectSong(SelectSongInPreview event, Emitter<PreviewChordState> emit) {
     final state = this.state;
     songsRepository.selectSong(event.selectSongId, event.title, event.interpret, event.lyricsWithoutChords);
+
     emit(state.copyWith(selectedSongId: songsRepository.selectedSongId));
   }
 
@@ -212,6 +219,11 @@ class PreviewChordBloc extends Bloc<PreviewChordEvent, PreviewChordState> {
       return;
     }
     emit(state.copyWith(currentColumn: event.column));
+  }
+
+  void _updateSelectedSong(UpdateSelectedSong event, Emitter<PreviewChordState> emit) {
+    final state = this.state;
+    emit(state.copyWith(selectedSongId: event.selectedSongId));
   }
 
   void _changeLyricFromWebSongUpdate(ChangeLyricFromWebSongUpdate event, Emitter<PreviewChordState> emit) async {

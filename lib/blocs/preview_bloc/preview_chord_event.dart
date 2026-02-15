@@ -80,6 +80,14 @@ class SelectSongInPreview extends PreviewChordEvent {
   List<Object> get props => [selectSongId];
 }
 
+class UpdateSelectedSong extends PreviewChordEvent {
+  final String selectedSongId;
+  const UpdateSelectedSong({required this.selectedSongId});
+
+  @override
+  List<Object> get props => [selectedSongId];
+}
+
 class ChangeColumnStatus extends PreviewChordEvent {
   final bool status;
   const ChangeColumnStatus({
