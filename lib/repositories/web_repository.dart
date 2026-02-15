@@ -1,4 +1,6 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'dart:async';
+
 import 'package:beautiful_soup_dart/beautiful_soup.dart';
 import 'package:collection/collection.dart';
 import 'package:default_project/services/auxiliary_functions.dart';
@@ -26,8 +28,6 @@ extension InsertString on String {
 class WebRepository {
   WebProvider webProvider;
   Map<String, String> allInterpretersPisnickyAkordy = {};
-  List<WebSong>? _cachedProScholySongs;
-  bool _isLoadingProScholySongs = false;
 
   WebRepository({
     required this.webProvider,
@@ -270,74 +270,52 @@ class WebRepository {
     return allText;
   }
 
-  void _startPreloadingProScholySongs() {
-    if (_cachedProScholySongs != null || _isLoadingProScholySongs) return;
-    _isLoadingProScholySongs = true;
-    _loadAllProScholySongsInBackground();
-  }
-
-  Future<void> _loadAllProScholySongsInBackground() async {
-    List<WebSong> allSongs = [];
-    try {
-      int page = 1;
-      bool hasMore = true;
-      while (hasMore) {
-        final response = await webProvider.getSongsProScholyPaginated(page: page);
-        if (response.statusCode != 200) break;
-        final data = response.data;
-        if (data == null || data['data'] == null || data['data']['song_lyrics_paginated'] == null) break;
-        final paginated = data['data']['song_lyrics_paginated'];
-        final songs = paginated['data'] as List? ?? [];
-        for (var song in songs) {
-          String authorName = '';
-          if (song['authors_pivot'] != null && (song['authors_pivot'] as List).isNotEmpty) {
-            authorName = song['authors_pivot'][0]['author']['name'] ?? '';
-          }
-          allSongs.add(WebSong(
-            title: song['name'] ?? '',
-            ref: song['id'].toString(),
-            interpret: authorName,
-            ischords: song['has_chords'] ?? false,
-            server: 'zpevnik.proscholy.cz',
-          ));
-        }
-        final paginatorInfo = paginated['paginatorInfo'];
-        hasMore = paginatorInfo?['hasMorePages'] == true;
-        page++;
-      }
-      _cachedProScholySongs = allSongs;
-      logger.i('ProScholy: preloaded ${allSongs.length} songs');
-    } catch (e) {
-      logger.e('Error preloading ProScholy songs: $e');
-    }
-    _isLoadingProScholySongs = false;
-  }
-
   Future<List<WebSong>> searchSongsProScholyLocal(String searchText) async {
-    // Start background preloading if not done yet
-    _startPreloadingProScholySongs();
+    // Use the same Elasticsearch-based search as the ProScholy website.
+    // This returns many relevant results directly from the server with proper relevance scoring.
+    try {
+      final response = await webProvider.searchSongsProScholyElastic(
+        searchString: searchText,
+        page: 1,
+        perPage: 50,
+      );
 
-    // Always get server-side results first (fast, fuzzy, searches lyrics too)
-    final serverResults = await findSongAndInterpretsFromProScholy(searchText);
-    final List<WebSong> serverSongs = serverResults.whereType<WebSong>().toList();
-
-    // If cache is ready, supplement with local search
-    if (_cachedProScholySongs != null && searchText.isNotEmpty) {
-      final query = removeDiacriticsAndWhitespace(searchText.toLowerCase());
-      final localMatches = _cachedProScholySongs!
-          .where((song) => removeDiacriticsAndWhitespace(song.title.toLowerCase()).contains(query) || removeDiacriticsAndWhitespace(song.interpret.toLowerCase()).contains(query))
-          .toList();
-
-      // Merge: server results first, then local results not already in server results
-      final existingIds = serverSongs.map((s) => s.ref).toSet();
-      for (final song in localMatches) {
-        if (!existingIds.contains(song.ref)) {
-          serverSongs.add(song);
-        }
+      if (response.statusCode != 200) {
+        logger.e('ProScholy elastic search error: ${response.statusCode}');
+        return [];
       }
-    }
 
-    return serverSongs;
+      final data = response.data;
+      if (data == null || data['data'] == null || data['data']['search_song_lyrics'] == null) {
+        return [];
+      }
+
+      final searchResult = data['data']['search_song_lyrics'];
+      final songs = searchResult['data'] as List? ?? [];
+      final List<WebSong> results = [];
+
+      for (var song in songs) {
+        String authorName = '';
+        if (song['authors_pivot'] != null && (song['authors_pivot'] as List).isNotEmpty) {
+          authorName = song['authors_pivot'][0]['author']['name'] ?? '';
+        }
+        results.add(WebSong(
+          title: song['name'] ?? '',
+          ref: song['id'].toString(),
+          interpret: authorName,
+          ischords: song['has_chords'] ?? false,
+          server: 'zpevnik.proscholy.cz',
+        ));
+      }
+
+      final paginatorInfo = searchResult['paginatorInfo'];
+      logger.i('ProScholy: found ${paginatorInfo?['total']} total results, returned ${results.length}');
+
+      return results;
+    } catch (e) {
+      logger.e('Error in ProScholy elastic search: $e');
+      return [];
+    }
   }
 
   Future<List<WebItem>> findSongAndInterpretsFromProScholy(String searchText) async {

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart' as dio;
 import 'package:dio/dio.dart';
 import 'package:logger_pkg/logger_pkg.dart';
@@ -40,6 +42,96 @@ class WebProvider {
       '${proScholy}graphql',
       data: {
         'query': '{ song_lyrics(search_string: "$searchString") { id name has_chords authors_pivot { author { name } } } }',
+      },
+      options: Options(headers: {'Content-Type': 'application/json'}),
+    );
+  }
+
+  /// Builds Elasticsearch search_params JSON matching the website's search behavior.
+  String _buildElasticSearchParams(String searchString) {
+    final query = {
+      'bool': {
+        'must': <Map<String, dynamic>>[],
+        'should': <Map<String, dynamic>>[
+          {
+            'multi_match': {
+              'query': searchString,
+              'fields': ['name^2', 'name_.2gram', 'name._3gram'],
+              'type': 'bool_prefix',
+            }
+          },
+          {
+            'multi_match': {
+              'query': searchString,
+              'fields': ['name^2', 'lyrics^3'],
+              'type': 'phrase',
+              'slop': 2,
+            }
+          },
+          {
+            'multi_match': {
+              'query': searchString,
+              'fields': ['name'],
+              'fuzziness': 1,
+            }
+          },
+          {
+            'multi_match': {
+              'query': searchString,
+              'fields': ['authors', 'hymnology'],
+              'fuzziness': 'AUTO',
+            }
+          },
+          {
+            'multi_match': {
+              'query': searchString,
+              'fields': [
+                'song_number^50',
+                'songbook_records.songbook_number',
+                'songbook_records.songbook_full_number^50',
+              ],
+            }
+          },
+        ],
+        'filter': [
+          {
+            'term': {
+              'is_arrangement': {'value': false},
+            }
+          },
+        ],
+      }
+    };
+
+    return jsonEncode({
+      'sort': <dynamic>[],
+      'query': query,
+      'min_score': 0.5,
+    });
+  }
+
+  /// Uses the same Elasticsearch-based search as the ProScholy website.
+  /// Returns paginated results with relevance scoring.
+  Future<Response> searchSongsProScholyElastic({
+    required String searchString,
+    int page = 1,
+    int perPage = 50,
+  }) async {
+    final searchParams = _buildElasticSearchParams(searchString);
+    return dio.Dio().post(
+      '${proScholy}graphql',
+      data: {
+        'query': '''query(\$search_params: String, \$page: Int, \$per_page: Int) {
+          search_song_lyrics(search_params: \$search_params, page: \$page, per_page: \$per_page) {
+            data { id name has_chords authors_pivot { author { name } } }
+            paginatorInfo { currentPage lastPage total hasMorePages }
+          }
+        }''',
+        'variables': {
+          'search_params': searchParams,
+          'page': page,
+          'per_page': perPage,
+        },
       },
       options: Options(headers: {'Content-Type': 'application/json'}),
     );
