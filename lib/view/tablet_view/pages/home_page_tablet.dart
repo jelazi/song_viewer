@@ -29,7 +29,7 @@ class _HomePageTabletState extends State<HomePageTablet> {
   final TextEditingController _filterInterpretVelkyZpevnik = TextEditingController();
   final TextEditingController _filterSongVelkyZpevnik = TextEditingController();
   String selectPage = 'preview';
-  final List<String> _listSearchWeb = ['velkyzpevnik.cz', 'pisnicky-akordy.cz', 'zpevnik.proscholy.cz'];
+  final List<String> _listSearchWeb = ['velkyzpevnik.cz', 'pisnicky-akordy.cz', 'zpevnik.proscholy.cz', 'songs.worshipleaderapp.com'];
 
   bool selectLargeScreen(Size size) {
     bool isLargeScreen = false;
@@ -284,7 +284,7 @@ class _HomePageTabletState extends State<HomePageTablet> {
                 onSearch: (value) => context.read<WebBloc>().add(FilterInterprets(
                       filter: value,
                     )),
-                hintText: state.searchWeb == 2 ? 'filterSongOrInterpret'.tr() : 'filterInterpret'.tr(),
+                hintText: state.searchWeb == 2 ? 'filterSongOrInterpret'.tr() : state.searchWeb == 3 ? 'filterSong'.tr() : 'filterInterpret'.tr(),
               ),
             ),
             Expanded(
@@ -344,7 +344,7 @@ class _HomePageTabletState extends State<HomePageTablet> {
                                 Text(
                                   state.currentInterpret.title.isNotEmpty
                                       ? state.currentInterpret.title
-                                      : state.songs.isNotEmpty && state.searchWeb == 2
+                                      : state.songs.isNotEmpty && (state.searchWeb == 2 || state.searchWeb == 3)
                                           ? 'searchResults'.tr()
                                           : '',
                                   style: const TextStyle(fontSize: 16, color: AppColor.grey1Color),
@@ -579,6 +579,13 @@ class _HomePageTabletState extends State<HomePageTablet> {
                       child: SizedBox(
                         width: 200,
                         child: Text(_listSearchWeb[2]),
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: _listSearchWeb[3],
+                      child: SizedBox(
+                        width: 200,
+                        child: Text(_listSearchWeb[3]),
                       ),
                     ),
                   ],

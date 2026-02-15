@@ -1,6 +1,8 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 part of 'web_bloc.dart';
 
+const _sentinel = Object();
+
 class WebState extends Equatable {
   final WebSong? currentSong;
   final List<WebSong> songs;
@@ -24,6 +26,7 @@ class WebState extends Equatable {
     'velkyzpevnik.cz',
     'pisnicky-akordy.cz',
     'zpevnik.proscholy.cz',
+    'songs.worshipleaderapp.com',
   ];
 
   final int searchType;
@@ -73,7 +76,7 @@ class WebState extends Equatable {
       ];
 
   WebState copyWith({
-    WebSong? currentSong,
+    Object? currentSong = _sentinel,
     List<WebSong>? songs,
     List<WebSong>? filteredSongs,
     List<WebInterpret>? interprets,
@@ -93,7 +96,7 @@ class WebState extends Equatable {
     bool? downloadWebSong,
   }) {
     return WebState(
-      currentSong: currentSong,
+      currentSong: identical(currentSong, _sentinel) ? this.currentSong : currentSong as WebSong?,
       songs: songs ?? this.songs,
       filteredSongs: filteredSongs ?? this.filteredSongs,
       interprets: interprets ?? this.interprets,

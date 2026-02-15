@@ -419,6 +419,76 @@ class WebRepository {
     return songText;
   }
 
+  // ── WorshipLeader (songs.worshipleaderapp.com) ──
+
+  /// Search songs on songs.worshipleaderapp.com.
+  /// Returns a flat list of [WebSong] (no separate interpret list).
+  Future<List<WebSong>> searchSongsWorshipLeader(String searchText) async {
+    final List<WebSong> results = [];
+    try {
+      final response = await webProvider.searchWorshipLeader(query: searchText, limit: 50);
+      if (response.statusCode != 200) {
+        logger.e('WorshipLeader search error: ${response.statusCode}');
+        return results;
+      }
+      final data = response.data;
+      if (data == null || data['data'] == null) return results;
+      for (var song in data['data'] as List) {
+        results.add(WebSong(
+          title: song['title'] ?? '',
+          ref: song['id'].toString(),
+          interpret: '',
+          ischords: (song['has_chord'] ?? 0) == 1,
+          server: 'songs.worshipleaderapp.com',
+        ));
+      }
+      logger.i('WorshipLeader: found ${data['total']} total, returned ${results.length}');
+    } catch (e) {
+      logger.e('Error searching WorshipLeader: $e');
+    }
+    return results;
+  }
+
+  /// Get the full song text (lyrics with chords) from songs.worshipleaderapp.com.
+  Future<String> getTextSongWorshipLeader(String songId) async {
+    String songText = '';
+    try {
+      final id = int.tryParse(songId);
+      if (id == null) return songText;
+      final response = await webProvider.getSongWorshipLeader(id);
+      if (response.statusCode != 200) {
+        logger.e('WorshipLeader get song error: ${response.statusCode}');
+        return songText;
+      }
+      final data = response.data;
+      if (data == null || data['data'] == null) return songText;
+      final songXml = data['data']['songxml'] ?? '';
+      songText = _parseWorshipLeaderSongXml(songXml);
+    } catch (e) {
+      logger.e('Error getting WorshipLeader song: $e');
+    }
+    return songText;
+  }
+
+  /// Parse the songxml format from WorshipLeader into plain text with [chord] notation.
+  String _parseWorshipLeaderSongXml(String songXml) {
+    if (songXml.isEmpty) return '';
+    // Remove <verse> / </verse> tags
+    String text = songXml.replaceAll(RegExp(r'</?verse>'), '');
+    // Convert <chord>X</chord> to [X]
+    text = text.replaceAllMapped(
+      RegExp(r'<chord>([^<]*)</chord>'),
+      (match) => '[${match.group(1)}]',
+    );
+    // Convert <br /> to newline
+    text = text.replaceAll(RegExp(r'<br\s*/?>'), '\n');
+    // Remove any remaining HTML tags
+    text = text.replaceAll(RegExp(r'<[^>]+>'), '');
+    // Clean up multiple newlines
+    text = text.replaceAll(RegExp(r'\n{3,}'), '\n\n');
+    return text.trim();
+  }
+
   Future<dynamic> findSongSupermusic(String text) async {
     dynamic response = await webProvider.getDataSupermusic('najdi.php?hladane=$text&typhladania=textpiesen');
     try {

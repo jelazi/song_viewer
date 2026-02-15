@@ -10,6 +10,7 @@ class WebProvider {
   final String supermusicUrl = 'https://supermusic.cz/';
   final String proScholy = 'https://zpevnik.proscholy.cz/';
   final String pisnickyAkordy = 'https://pisnicky-akordy.cz';
+  final String worshipLeaderUrl = 'https://songs.worshipleaderapp.com';
   final tokenPisnickyAkordy = 'f66490724034594fbc28593a67fffc5cfa6362bd628400e6991879c98639d8e8';
 
   Future<dynamic> testGet() async {
@@ -204,5 +205,29 @@ class WebProvider {
           "Content-Type": "application/json",
           "Authorization": "Bearer $tokenPisnickyAkordy",
         }));
+  }
+
+  /// Search songs on songs.worshipleaderapp.com using their grid API.
+  Future<Response> searchWorshipLeader({
+    required String query,
+    int start = 0,
+    int limit = 50,
+  }) async {
+    return dio.Dio().get(
+      '$worshipLeaderUrl/api/grid',
+      queryParameters: {
+        'query': query,
+        'start': start,
+        'limit': limit,
+      },
+    );
+  }
+
+  /// Get a single song detail from songs.worshipleaderapp.com.
+  Future<Response> getSongWorshipLeader(int songId) async {
+    return dio.Dio().get(
+      '$worshipLeaderUrl/api/get',
+      queryParameters: {'id': songId},
+    );
   }
 }

@@ -262,6 +262,16 @@ class PreviewChordBloc extends Bloc<PreviewChordEvent, PreviewChordState> {
         hiveProvider.setWebSong('zpevnik.proscholy.cz${webSong.ref}', webSong);
       }
     }
+    if (event.typeSearching == 3) {
+      webSong.server = 'songs.worshipleaderapp.com';
+      final savedSong = hiveProvider.getWebSong('songs.worshipleaderapp.com${webSong.ref}');
+      if (savedSong != null) {
+        webSong = savedSong;
+      } else {
+        webSong.lyric = await webRepository.getTextSongWorshipLeader(webSong.ref);
+        hiveProvider.setWebSong('songs.worshipleaderapp.com${webSong.ref}', webSong);
+      }
+    }
     webSong.title = webSong.title.replaceAll('  ', '');
     webSong.title = webSong.title.replaceAll('\n', '');
     Song song = Song(title: webSong.title, interpret: webSong.interpret, id: webSong.server + webSong.ref, lyrics: webSong.lyric);

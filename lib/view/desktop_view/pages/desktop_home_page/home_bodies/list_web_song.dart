@@ -18,6 +18,7 @@ class _ListWebSongState extends State<ListWebSong> {
     'velkyzpevnik.cz',
     'pisnicky-akordy.cz',
     'zpevnik.proscholy.cz',
+    'songs.worshipleaderapp.com',
   ];
   String dropdownValue = 'pisnicky-akordy.cz';
 
@@ -27,6 +28,7 @@ class _ListWebSongState extends State<ListWebSong> {
   final TextEditingController _filterSongVelkyZpevnik = TextEditingController();
   final TextEditingController _filterInterpretProScholy = TextEditingController();
   final TextEditingController _filterSongProScholy = TextEditingController();
+  final TextEditingController _filterWorshipLeader = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<WebBloc, WebState>(
@@ -63,6 +65,7 @@ class _ListWebSongState extends State<ListWebSong> {
                         _filterSongPisnickyAkordy.clear();
                         _filterInterpretProScholy.clear();
                         _filterSongProScholy.clear();
+                        _filterWorshipLeader.clear();
                         dropdownValue = value!;
                         context.read<WebBloc>().add(ChangeSearchWeb(searchWeb: list.indexOf(dropdownValue)));
                       });
@@ -73,7 +76,9 @@ class _ListWebSongState extends State<ListWebSong> {
                   ? getSearchWidgetForVelkyZpevnik(state)
                   : state.searchWeb == 1
                       ? getSearchWidgetForPisnickyAkordy(state)
-                      : getSearchWidgetForProScholy(state),
+                      : state.searchWeb == 2
+                          ? getSearchWidgetForProScholy(state)
+                          : getSearchWidgetForWorshipLeader(state),
             ]));
       },
     );
@@ -221,7 +226,7 @@ class _ListWebSongState extends State<ListWebSong> {
                     children: [
                       IconButton(
                         onPressed: () {
-                          context.read<WebBloc>().add(FilterInterprets(filter: _filterSongVelkyZpevnik.text));
+                          context.read<WebBloc>().add(FilterSongs(filter: _filterSongVelkyZpevnik.text));
                         },
                         icon: const Icon(Icons.search, size: 18),
                       ),
@@ -229,7 +234,7 @@ class _ListWebSongState extends State<ListWebSong> {
                         IconButton(
                           onPressed: () {
                             _filterSongVelkyZpevnik.clear();
-                            context.read<WebBloc>().add(const FilterInterprets(filter: ''));
+                            context.read<WebBloc>().add(const FilterSongs(filter: ''));
                           },
                           icon: const Icon(Icons.clear, size: 18),
                         ),
@@ -237,7 +242,7 @@ class _ListWebSongState extends State<ListWebSong> {
                   ),
                 ),
                 onSubmitted: (value) {
-                  context.read<WebBloc>().add(FilterInterprets(filter: value));
+                  context.read<WebBloc>().add(FilterSongs(filter: value));
                 },
               );
             },
@@ -436,7 +441,7 @@ class _ListWebSongState extends State<ListWebSong> {
                     children: [
                       IconButton(
                         onPressed: () {
-                          context.read<WebBloc>().add(FilterInterprets(filter: _filterSongPisnickyAkordy.text));
+                          context.read<WebBloc>().add(FilterSongs(filter: _filterSongPisnickyAkordy.text));
                         },
                         icon: const Icon(Icons.search, size: 18),
                       ),
@@ -444,7 +449,7 @@ class _ListWebSongState extends State<ListWebSong> {
                         IconButton(
                           onPressed: () {
                             _filterSongPisnickyAkordy.clear();
-                            context.read<WebBloc>().add(const FilterInterprets(filter: ''));
+                            context.read<WebBloc>().add(const FilterSongs(filter: ''));
                           },
                           icon: const Icon(Icons.clear, size: 18),
                         ),
@@ -452,7 +457,7 @@ class _ListWebSongState extends State<ListWebSong> {
                   ),
                 ),
                 onSubmitted: (value) {
-                  context.read<WebBloc>().add(FilterInterprets(filter: value));
+                  context.read<WebBloc>().add(FilterSongs(filter: value));
                 },
               );
             },
@@ -747,6 +752,96 @@ class _ListWebSongState extends State<ListWebSong> {
                 ),
         ),
       )
+    ];
+  }
+
+  List<Widget> getSearchWidgetForWorshipLeader(WebState state) {
+    return [
+      Container(
+        padding: const EdgeInsets.only(bottom: 10),
+        height: 50,
+        width: 250,
+        child: ValueListenableBuilder<TextEditingValue>(
+          valueListenable: _filterWorshipLeader,
+          builder: (context, value, child) {
+            return TextField(
+              controller: _filterWorshipLeader,
+              style: const TextStyle(fontSize: 12),
+              decoration: InputDecoration(
+                border: const OutlineInputBorder(),
+                labelText: 'filterSong'.tr(),
+                suffixIcon: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        context.read<WebBloc>().add(FilterInterprets(filter: _filterWorshipLeader.text));
+                      },
+                      icon: const Icon(Icons.search, size: 18),
+                    ),
+                    if (value.text.isNotEmpty)
+                      IconButton(
+                        onPressed: () {
+                          _filterWorshipLeader.clear();
+                          context.read<WebBloc>().add(const FilterInterprets(filter: ''));
+                        },
+                        icon: const Icon(Icons.clear, size: 18),
+                      ),
+                  ],
+                ),
+              ),
+              onSubmitted: (value) {
+                context.read<WebBloc>().add(FilterInterprets(filter: value));
+              },
+            );
+          },
+        ),
+      ),
+      Expanded(
+        flex: 1,
+        child: state.isSearching
+            ? const Center(
+                child: SizedBox(height: 40, width: 40, child: CircularProgressIndicator()),
+              )
+            : Container(
+                padding: const EdgeInsets.only(left: 10),
+                alignment: Alignment.topLeft,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: state.filteredSongs
+                        .map((song) => MouseRegion(
+                              cursor: SystemMouseCursors.click,
+                              child: GestureDetector(
+                                onTap: () {
+                                  context.read<WebBloc>().add(ChangeCurrentWebSong(
+                                      song: state.currentSong != null && state.currentSong?.ref == song.ref ? null : song,
+                                      typeSearching: 'songs.worshipleaderapp.com'));
+                                },
+                                child: Container(
+                                  height: 30,
+                                  width: 200,
+                                  decoration: const BoxDecoration(
+                                    border: Border(
+                                      top: BorderSide(color: AppColor.grey3Color, width: 1.0),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    song.title,
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        color: state.currentSong != null && state.currentSong?.ref == song.ref ? AppColor.alertErrorColor : AppColor.grey1Color),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ),
+                            ))
+                        .toList(),
+                  ),
+                ),
+              ),
+      ),
     ];
   }
 }

@@ -182,6 +182,7 @@
     "timeBeforeScrolling": "Čas před startem skrolování textu",
     "selectTimeBeforeScrolling": "Vyber čas před startem",
     "filterSong": "Filter song",
+    "filterInterpret": "Filter artist",
     "filterSongOrInterpret": "Filter song or artist",
     "searchResults": "Search results",
     "songsViewer": "Songs Viewer",
