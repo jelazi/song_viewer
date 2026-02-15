@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import '../../../../../blocs/export_blocs.dart';
 import '../../../../../services/constants.dart';
 import '../../../widgets/presentation_playlist_widget.dart';
-import '../../../widgets/search_field_desktop.dart';
 
 class ListSong extends StatefulWidget {
   const ListSong({
@@ -35,14 +34,15 @@ class _ListSongState extends State<ListSong> {
               Container(
                 padding: const EdgeInsets.only(bottom: 10),
                 height: 50,
-                child: SearchFieldDesktop(
+                child: TextField(
                   controller: _filter,
-                  labelText: 'filterSong'.tr(),
-                  onSearch: (value) {
+                  style: const TextStyle(fontSize: 12),
+                  decoration: InputDecoration(
+                    border: const OutlineInputBorder(),
+                    labelText: 'filterSong'.tr(),
+                  ),
+                  onChanged: (value) {
                     context.read<HomePageBloc>().add(FilterSong(filter: value));
-                  },
-                  onClear: () {
-                    context.read<HomePageBloc>().add(const FilterSong(filter: ''));
                   },
                 ),
               ),

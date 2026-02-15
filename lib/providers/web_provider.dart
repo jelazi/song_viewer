@@ -45,17 +45,6 @@ class WebProvider {
     );
   }
 
-  Future<Response> getSongsProScholyPaginated({required int page, int perPage = 500}) async {
-    return dio.Dio().post(
-      '${proScholy}graphql',
-      data: {
-        'query':
-            '{ song_lyrics_paginated(per_page: $perPage, page: $page) { data { id name has_chords authors_pivot { author { name } } } paginatorInfo { total currentPage lastPage hasMorePages } } }',
-      },
-      options: Options(headers: {'Content-Type': 'application/json'}),
-    );
-  }
-
   Future<Response> searchAuthorsProScholy(String searchString) async {
     return dio.Dio().post(
       '${proScholy}graphql',

@@ -88,30 +88,16 @@ class _HomePageMobileState extends State<HomePageMobile> {
                               controller: _filter,
                               decoration: InputDecoration(
                                 hintText: 'filterSong'.tr(),
-                                suffixIcon: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      onPressed: () => context.read<HomePageBloc>().add(FilterSong(filter: _filter.text)),
-                                      icon: const Icon(Icons.search),
-                                    ),
-                                    if (_filter.text.isNotEmpty)
-                                      IconButton(
-                                        onPressed: (() {
-                                          _filter.clear();
-                                          context.read<HomePageBloc>().add(const FilterSong(filter: ''));
-                                          setState(() {});
-                                        }),
-                                        icon: const Icon(Icons.clear),
-                                      ),
-                                  ],
+                                prefixIcon: const Icon(Icons.search),
+                                suffixIcon: IconButton(
+                                  onPressed: (() {
+                                    _filter.clear();
+                                    context.read<HomePageBloc>().add(const FilterSong(filter: ''));
+                                  }),
+                                  icon: const Icon(Icons.clear),
                                 ),
                               ),
                               onChanged: (value) {
-                                context.read<HomePageBloc>().add(FilterSong(filter: value));
-                                setState(() {});
-                              },
-                              onSubmitted: (value) {
                                 context.read<HomePageBloc>().add(FilterSong(filter: value));
                               },
                             ),

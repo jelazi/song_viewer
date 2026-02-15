@@ -284,9 +284,6 @@ class _HomePageTabletState extends State<HomePageTablet> {
                 onChanged: (value) => context.read<WebBloc>().add(FilterInterprets(
                       filter: value,
                     )),
-                onSubmitted: (value) => context.read<WebBloc>().add(FilterInterprets(
-                      filter: value,
-                    )),
                 hintText: state.searchWeb == 2 ? 'filterSongOrInterpret'.tr() : 'filterInterpret'.tr(),
               ),
             ),
@@ -455,7 +452,6 @@ class _HomePageTabletState extends State<HomePageTablet> {
           filter: _previewFilterSearchSong,
           clearFilter: () => context.read<HomePageBloc>().add(const FilterSong(filter: '')),
           onChanged: (value) => context.read<HomePageBloc>().add(FilterSong(filter: value)),
-          onSubmitted: (value) => context.read<HomePageBloc>().add(FilterSong(filter: value)),
           hintText: 'filterSong'.tr(),
         ),
       ],

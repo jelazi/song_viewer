@@ -1,11 +1,11 @@
 import 'package:default_project/services/constants.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-class FilterFieldTablet extends StatefulWidget {
+class FilterFieldTablet extends StatelessWidget {
   final TextEditingController filter;
   final Function clearFilter;
   final Function onChanged;
-  final Function? onSubmitted;
   final String hintText;
 
   const FilterFieldTablet({
@@ -13,15 +13,9 @@ class FilterFieldTablet extends StatefulWidget {
     required this.filter,
     required this.clearFilter,
     required this.onChanged,
-    this.onSubmitted,
     required this.hintText,
   });
 
-  @override
-  State<FilterFieldTablet> createState() => _FilterFieldTabletState();
-}
-
-class _FilterFieldTabletState extends State<FilterFieldTablet> {
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -35,33 +29,21 @@ class _FilterFieldTabletState extends State<FilterFieldTablet> {
       ),
       child: Center(
         child: TextField(
-          controller: widget.filter,
+          controller: filter,
           decoration: InputDecoration(
-            hintText: widget.hintText,
-            suffixIcon: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  onPressed: widget.onSubmitted != null ? () => widget.onSubmitted!(widget.filter.text) : null,
-                  icon: const Icon(Icons.search),
-                ),
-                if (widget.filter.text.isNotEmpty)
-                  IconButton(
-                    onPressed: (() {
-                      widget.filter.clear();
-                      widget.clearFilter();
-                      setState(() {}); // Update UI after clearing
-                    }),
-                    icon: const Icon(Icons.clear),
-                  ),
-              ],
+            hintText: hintText,
+            prefixIcon: const Icon(Icons.search),
+            suffixIcon: IconButton(
+              onPressed: (() {
+                filter.clear();
+                clearFilter();
+              }),
+              icon: const Icon(Icons.clear),
             ),
           ),
           onChanged: (value) {
-            widget.onChanged(value);
-            setState(() {}); // Update UI to show/hide clear button
+            onChanged(value);
           },
-          onSubmitted: widget.onSubmitted != null ? (value) => widget.onSubmitted!(value) : null,
         ),
       ),
     );

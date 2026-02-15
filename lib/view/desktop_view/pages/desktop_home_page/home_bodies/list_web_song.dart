@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 
 import '../../../../../blocs/export_blocs.dart';
 import '../../../../../services/constants.dart';
-import '../../../widgets/search_field_desktop.dart';
 
 class ListWebSong extends StatefulWidget {
   ListWebSong({
@@ -88,16 +87,17 @@ class _ListWebSongState extends State<ListWebSong> {
           padding: const EdgeInsets.only(bottom: 10),
           height: 50,
           width: 250,
-          child: SearchFieldDesktop(
+          child: TextField(
             controller: _filterInterpretVelkyZpevnik,
-            labelText: 'filterInterpret'.tr(),
-            onSearch: (value) {
+            style: const TextStyle(fontSize: 12),
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
+              labelText: 'filterInterpret'.tr(),
+            ),
+            onChanged: (value) {
               context.read<WebBloc>().add(FilterInterprets(
                     filter: value,
                   ));
-            },
-            onClear: () {
-              context.read<WebBloc>().add(const FilterInterprets(filter: ''));
             },
           ),
         ),
@@ -185,16 +185,17 @@ class _ListWebSongState extends State<ListWebSong> {
           padding: const EdgeInsets.only(bottom: 10),
           height: 50,
           width: 250,
-          child: SearchFieldDesktop(
+          child: TextField(
             controller: _filterSongVelkyZpevnik,
-            labelText: 'filterSong'.tr(),
-            onSearch: (value) {
+            style: const TextStyle(fontSize: 12),
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
+              labelText: 'filterSong'.tr(),
+            ),
+            onChanged: (value) {
               context.read<WebBloc>().add(FilterInterprets(
                     filter: value,
                   ));
-            },
-            onClear: () {
-              context.read<WebBloc>().add(const FilterInterprets(filter: ''));
             },
           ),
         ),
@@ -257,16 +258,17 @@ class _ListWebSongState extends State<ListWebSong> {
           padding: const EdgeInsets.only(bottom: 10),
           height: 50,
           width: 250,
-          child: SearchFieldDesktop(
+          child: TextField(
             controller: _filterInterpretPisnickyAkordy,
-            labelText: 'filterInterpret'.tr(),
-            onSearch: (value) {
+            style: const TextStyle(fontSize: 12),
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
+              labelText: 'filterInterpret'.tr(),
+            ),
+            onChanged: (value) {
               context.read<WebBloc>().add(FilterInterprets(
                     filter: value,
                   ));
-            },
-            onClear: () {
-              context.read<WebBloc>().add(const FilterInterprets(filter: ''));
             },
           ),
         ),
@@ -354,16 +356,17 @@ class _ListWebSongState extends State<ListWebSong> {
           padding: const EdgeInsets.only(bottom: 10),
           height: 50,
           width: 250,
-          child: SearchFieldDesktop(
+          child: TextField(
             controller: _filterSongPisnickyAkordy,
-            labelText: 'filterSong'.tr(),
-            onSearch: (value) {
+            style: const TextStyle(fontSize: 12),
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
+              labelText: 'filterSong'.tr(),
+            ),
+            onChanged: (value) {
               context.read<WebBloc>().add(FilterInterprets(
                     filter: value,
                   ));
-            },
-            onClear: () {
-              context.read<WebBloc>().add(const FilterInterprets(filter: ''));
             },
           ),
         ),
@@ -423,16 +426,17 @@ class _ListWebSongState extends State<ListWebSong> {
         padding: const EdgeInsets.only(bottom: 10),
         height: 50,
         width: 250,
-        child: SearchFieldDesktop(
+        child: TextField(
           controller: _filterInterpretProScholy,
-          labelText: 'filterSongOrInterpret'.tr(),
-          onSearch: (value) {
+          style: const TextStyle(fontSize: 12),
+          decoration: InputDecoration(
+            border: const OutlineInputBorder(),
+            labelText: 'filterSongOrInterpret'.tr(),
+          ),
+          onChanged: (value) {
             context.read<WebBloc>().add(FilterInterprets(
                   filter: value,
                 ));
-          },
-          onClear: () {
-            context.read<WebBloc>().add(const FilterInterprets(filter: ''));
           },
         ),
       ),
@@ -481,60 +485,63 @@ class _ListWebSongState extends State<ListWebSong> {
                                 padding: EdgeInsets.only(top: 5, bottom: 3),
                                 child: Text('Autoři', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColor.grey1Color)),
                               ),
-                              ...state.filteredInterprets.map((interpret) => MouseRegion(
-                                    cursor: SystemMouseCursors.click,
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        context.read<WebBloc>().add(ChangeCurrentInterpret(
-                                              interpret: interpret,
-                                            ));
-                                      },
-                                      child: Container(
-                                        height: 30,
-                                        width: 200,
-                                        decoration: const BoxDecoration(
-                                          border: Border(
-                                            top: BorderSide(color: AppColor.grey3Color, width: 1.0),
+                              ...state.filteredInterprets
+                                  .map((interpret) => MouseRegion(
+                                        cursor: SystemMouseCursors.click,
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            context.read<WebBloc>().add(ChangeCurrentInterpret(
+                                                  interpret: interpret,
+                                                ));
+                                          },
+                                          child: Container(
+                                            height: 30,
+                                            width: 200,
+                                            decoration: const BoxDecoration(
+                                              border: Border(
+                                                top: BorderSide(color: AppColor.grey3Color, width: 1.0),
+                                              ),
+                                            ),
+                                            child: Text(
+                                              interpret.title,
+                                              style: const TextStyle(fontSize: 14, color: AppColor.grey1Color),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
                                           ),
                                         ),
-                                        child: Text(
-                                          interpret.title,
-                                          style: const TextStyle(fontSize: 14, color: AppColor.grey1Color),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ),
-                                  ))
+                                      ))
                             ],
                             if (state.filteredSongs.isNotEmpty) ...[
                               const Padding(
                                 padding: EdgeInsets.only(top: 8, bottom: 3),
                                 child: Text('Písně', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColor.grey1Color)),
                               ),
-                              ...state.filteredSongs.map((song) => MouseRegion(
-                                    cursor: SystemMouseCursors.click,
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        context.read<WebBloc>().add(ChangeCurrentWebSong(song: song, typeSearching: 'zpevnik.proscholy.cz'));
-                                      },
-                                      child: Container(
-                                        height: 30,
-                                        width: 200,
-                                        decoration: const BoxDecoration(
-                                          border: Border(
-                                            top: BorderSide(color: AppColor.grey3Color, width: 1.0),
+                              ...state.filteredSongs
+                                  .map((song) => MouseRegion(
+                                        cursor: SystemMouseCursors.click,
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            context.read<WebBloc>().add(ChangeCurrentWebSong(
+                                                song: song, typeSearching: 'zpevnik.proscholy.cz'));
+                                          },
+                                          child: Container(
+                                            height: 30,
+                                            width: 200,
+                                            decoration: const BoxDecoration(
+                                              border: Border(
+                                                top: BorderSide(color: AppColor.grey3Color, width: 1.0),
+                                              ),
+                                            ),
+                                            child: Text(
+                                              '${song.title} - ${song.interpret}',
+                                              style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: state.currentSong != null && state.currentSong?.ref == song.ref ? AppColor.alertErrorColor : AppColor.grey1Color),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
                                           ),
                                         ),
-                                        child: Text(
-                                          '${song.title} - ${song.interpret}',
-                                          style: TextStyle(
-                                              fontSize: 14,
-                                              color: state.currentSong != null && state.currentSong?.ref == song.ref ? AppColor.alertErrorColor : AppColor.grey1Color),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ),
-                                  ))
+                                      ))
                             ],
                           ],
                         ),
@@ -547,16 +554,17 @@ class _ListWebSongState extends State<ListWebSong> {
           padding: const EdgeInsets.only(bottom: 10),
           height: 50,
           width: 250,
-          child: SearchFieldDesktop(
+          child: TextField(
             controller: _filterSongProScholy,
-            labelText: 'filterSong'.tr(),
-            onSearch: (value) {
+            style: const TextStyle(fontSize: 12),
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
+              labelText: 'filterSong'.tr(),
+            ),
+            onChanged: (value) {
               context.read<WebBloc>().add(FilterSongs(
                     filter: value,
                   ));
-            },
-            onClear: () {
-              context.read<WebBloc>().add(const FilterSongs(filter: ''));
             },
           ),
         ),
