@@ -95,6 +95,9 @@ class _ListWebSongState extends State<ListWebSong> {
               labelText: 'filterInterpret'.tr(),
             ),
             onChanged: (value) {
+              // Do nothing on change, only on submit
+            },
+            onSubmitted: (value) {
               context.read<WebBloc>().add(FilterInterprets(
                     filter: value,
                   ));
@@ -193,6 +196,9 @@ class _ListWebSongState extends State<ListWebSong> {
               labelText: 'filterSong'.tr(),
             ),
             onChanged: (value) {
+              // Do nothing on change, only on submit
+            },
+            onSubmitted: (value) {
               context.read<WebBloc>().add(FilterInterprets(
                     filter: value,
                   ));
@@ -266,6 +272,9 @@ class _ListWebSongState extends State<ListWebSong> {
               labelText: 'filterInterpret'.tr(),
             ),
             onChanged: (value) {
+              // Do nothing on change, only on submit
+            },
+            onSubmitted: (value) {
               context.read<WebBloc>().add(FilterInterprets(
                     filter: value,
                   ));
@@ -364,6 +373,9 @@ class _ListWebSongState extends State<ListWebSong> {
               labelText: 'filterSong'.tr(),
             ),
             onChanged: (value) {
+              // Do nothing on change, only on submit
+            },
+            onSubmitted: (value) {
               context.read<WebBloc>().add(FilterInterprets(
                     filter: value,
                   ));
@@ -434,6 +446,9 @@ class _ListWebSongState extends State<ListWebSong> {
             labelText: 'filterSongOrInterpret'.tr(),
           ),
           onChanged: (value) {
+            // Do nothing on change, only on submit
+          },
+          onSubmitted: (value) {
             context.read<WebBloc>().add(FilterInterprets(
                   filter: value,
                 ));
@@ -485,63 +500,60 @@ class _ListWebSongState extends State<ListWebSong> {
                                 padding: EdgeInsets.only(top: 5, bottom: 3),
                                 child: Text('Autoři', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColor.grey1Color)),
                               ),
-                              ...state.filteredInterprets
-                                  .map((interpret) => MouseRegion(
-                                        cursor: SystemMouseCursors.click,
-                                        child: GestureDetector(
-                                          onTap: () {
-                                            context.read<WebBloc>().add(ChangeCurrentInterpret(
-                                                  interpret: interpret,
-                                                ));
-                                          },
-                                          child: Container(
-                                            height: 30,
-                                            width: 200,
-                                            decoration: const BoxDecoration(
-                                              border: Border(
-                                                top: BorderSide(color: AppColor.grey3Color, width: 1.0),
-                                              ),
-                                            ),
-                                            child: Text(
-                                              interpret.title,
-                                              style: const TextStyle(fontSize: 14, color: AppColor.grey1Color),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
+                              ...state.filteredInterprets.map((interpret) => MouseRegion(
+                                    cursor: SystemMouseCursors.click,
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        context.read<WebBloc>().add(ChangeCurrentInterpret(
+                                              interpret: interpret,
+                                            ));
+                                      },
+                                      child: Container(
+                                        height: 30,
+                                        width: 200,
+                                        decoration: const BoxDecoration(
+                                          border: Border(
+                                            top: BorderSide(color: AppColor.grey3Color, width: 1.0),
                                           ),
                                         ),
-                                      ))
+                                        child: Text(
+                                          interpret.title,
+                                          style: const TextStyle(fontSize: 14, color: AppColor.grey1Color),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ),
+                                  ))
                             ],
                             if (state.filteredSongs.isNotEmpty) ...[
                               const Padding(
                                 padding: EdgeInsets.only(top: 8, bottom: 3),
                                 child: Text('Písně', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColor.grey1Color)),
                               ),
-                              ...state.filteredSongs
-                                  .map((song) => MouseRegion(
-                                        cursor: SystemMouseCursors.click,
-                                        child: GestureDetector(
-                                          onTap: () {
-                                            context.read<WebBloc>().add(ChangeCurrentWebSong(
-                                                song: song, typeSearching: 'zpevnik.proscholy.cz'));
-                                          },
-                                          child: Container(
-                                            height: 30,
-                                            width: 200,
-                                            decoration: const BoxDecoration(
-                                              border: Border(
-                                                top: BorderSide(color: AppColor.grey3Color, width: 1.0),
-                                              ),
-                                            ),
-                                            child: Text(
-                                              '${song.title} - ${song.interpret}',
-                                              style: TextStyle(
-                                                  fontSize: 14,
-                                                  color: state.currentSong != null && state.currentSong?.ref == song.ref ? AppColor.alertErrorColor : AppColor.grey1Color),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
+                              ...state.filteredSongs.map((song) => MouseRegion(
+                                    cursor: SystemMouseCursors.click,
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        context.read<WebBloc>().add(ChangeCurrentWebSong(song: song, typeSearching: 'zpevnik.proscholy.cz'));
+                                      },
+                                      child: Container(
+                                        height: 30,
+                                        width: 200,
+                                        decoration: const BoxDecoration(
+                                          border: Border(
+                                            top: BorderSide(color: AppColor.grey3Color, width: 1.0),
                                           ),
                                         ),
-                                      ))
+                                        child: Text(
+                                          '${song.title} - ${song.interpret}',
+                                          style: TextStyle(
+                                              fontSize: 14,
+                                              color: state.currentSong != null && state.currentSong?.ref == song.ref ? AppColor.alertErrorColor : AppColor.grey1Color),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ),
+                                  ))
                             ],
                           ],
                         ),
@@ -562,6 +574,9 @@ class _ListWebSongState extends State<ListWebSong> {
               labelText: 'filterSong'.tr(),
             ),
             onChanged: (value) {
+              // Do nothing on change, only on submit
+            },
+            onSubmitted: (value) {
               context.read<WebBloc>().add(FilterSongs(
                     filter: value,
                   ));

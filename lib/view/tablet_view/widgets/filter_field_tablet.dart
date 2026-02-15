@@ -6,6 +6,7 @@ class FilterFieldTablet extends StatelessWidget {
   final TextEditingController filter;
   final Function clearFilter;
   final Function onChanged;
+  final Function? onSubmitted;
   final String hintText;
 
   const FilterFieldTablet({
@@ -13,6 +14,7 @@ class FilterFieldTablet extends StatelessWidget {
     required this.filter,
     required this.clearFilter,
     required this.onChanged,
+    this.onSubmitted,
     required this.hintText,
   });
 
@@ -33,17 +35,27 @@ class FilterFieldTablet extends StatelessWidget {
           decoration: InputDecoration(
             hintText: hintText,
             prefixIcon: const Icon(Icons.search),
-            suffixIcon: IconButton(
-              onPressed: (() {
-                filter.clear();
-                clearFilter();
-              }),
-              icon: const Icon(Icons.clear),
+            suffixIcon: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  onPressed: onSubmitted != null ? () => onSubmitted!(filter.text) : null,
+                  icon: const Icon(Icons.search),
+                ),
+                IconButton(
+                  onPressed: (() {
+                    filter.clear();
+                    clearFilter();
+                  }),
+                  icon: const Icon(Icons.clear),
+                ),
+              ],
             ),
           ),
           onChanged: (value) {
             onChanged(value);
           },
+          onSubmitted: onSubmitted != null ? (value) => onSubmitted!(value) : null,
         ),
       ),
     );

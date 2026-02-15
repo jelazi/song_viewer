@@ -42,6 +42,9 @@ class _ListSongState extends State<ListSong> {
                     labelText: 'filterSong'.tr(),
                   ),
                   onChanged: (value) {
+                    // Do nothing on change, only on submit
+                  },
+                  onSubmitted: (value) {
                     context.read<HomePageBloc>().add(FilterSong(filter: value));
                   },
                 ),
