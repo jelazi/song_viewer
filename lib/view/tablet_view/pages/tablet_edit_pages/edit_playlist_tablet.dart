@@ -104,21 +104,37 @@ class _EditPlaylistTabletState extends State<EditPlaylistTablet> {
                 Expanded(
                   child: Column(
                     children: [
-                      TextField(
-                        controller: _filter,
-                        decoration: InputDecoration(
-                          hintText: 'filterSong'.tr(),
-                          prefixIcon: const Icon(Icons.search),
-                          suffixIcon: IconButton(
-                            onPressed: () {
-                              _filter.clear();
-                              context.read<PlaylistsBloc>().add(const FilterSongPlaylist(filter: ''));
+                      ValueListenableBuilder<TextEditingValue>(
+                        valueListenable: _filter,
+                        builder: (context, value, child) {
+                          return TextField(
+                            controller: _filter,
+                            decoration: InputDecoration(
+                              hintText: 'filterSong'.tr(),
+                              suffixIcon: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    onPressed: () {
+                                      context.read<PlaylistsBloc>().add(FilterSongPlaylist(filter: _filter.text));
+                                    },
+                                    icon: const Icon(Icons.search),
+                                  ),
+                                  if (value.text.isNotEmpty)
+                                    IconButton(
+                                      onPressed: () {
+                                        _filter.clear();
+                                        context.read<PlaylistsBloc>().add(const FilterSongPlaylist(filter: ''));
+                                      },
+                                      icon: const Icon(Icons.clear),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            onSubmitted: (value) {
+                              context.read<PlaylistsBloc>().add(FilterSongPlaylist(filter: value));
                             },
-                            icon: const Icon(Icons.clear),
-                          ),
-                        ),
-                        onChanged: (value) {
-                          context.read<PlaylistsBloc>().add(FilterSongPlaylist(filter: value));
+                          );
                         },
                       ),
                       Expanded(

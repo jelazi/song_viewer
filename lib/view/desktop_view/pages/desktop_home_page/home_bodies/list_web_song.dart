@@ -87,17 +87,39 @@ class _ListWebSongState extends State<ListWebSong> {
           padding: const EdgeInsets.only(bottom: 10),
           height: 50,
           width: 250,
-          child: TextField(
-            controller: _filterInterpretVelkyZpevnik,
-            style: const TextStyle(fontSize: 12),
-            decoration: InputDecoration(
-              border: const OutlineInputBorder(),
-              labelText: 'filterInterpret'.tr(),
-            ),
-            onChanged: (value) {
-              context.read<WebBloc>().add(FilterInterprets(
-                    filter: value,
-                  ));
+          child: ValueListenableBuilder<TextEditingValue>(
+            valueListenable: _filterInterpretVelkyZpevnik,
+            builder: (context, value, child) {
+              return TextField(
+                controller: _filterInterpretVelkyZpevnik,
+                style: const TextStyle(fontSize: 12),
+                decoration: InputDecoration(
+                  border: const OutlineInputBorder(),
+                  labelText: 'filterInterpret'.tr(),
+                  suffixIcon: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        onPressed: () {
+                          context.read<WebBloc>().add(FilterInterprets(filter: _filterInterpretVelkyZpevnik.text));
+                        },
+                        icon: const Icon(Icons.search, size: 18),
+                      ),
+                      if (value.text.isNotEmpty)
+                        IconButton(
+                          onPressed: () {
+                            _filterInterpretVelkyZpevnik.clear();
+                            context.read<WebBloc>().add(const FilterInterprets(filter: ''));
+                          },
+                          icon: const Icon(Icons.clear, size: 18),
+                        ),
+                    ],
+                  ),
+                ),
+                onSubmitted: (value) {
+                  context.read<WebBloc>().add(FilterInterprets(filter: value));
+                },
+              );
             },
           ),
         ),
@@ -185,17 +207,39 @@ class _ListWebSongState extends State<ListWebSong> {
           padding: const EdgeInsets.only(bottom: 10),
           height: 50,
           width: 250,
-          child: TextField(
-            controller: _filterSongVelkyZpevnik,
-            style: const TextStyle(fontSize: 12),
-            decoration: InputDecoration(
-              border: const OutlineInputBorder(),
-              labelText: 'filterSong'.tr(),
-            ),
-            onChanged: (value) {
-              context.read<WebBloc>().add(FilterInterprets(
-                    filter: value,
-                  ));
+          child: ValueListenableBuilder<TextEditingValue>(
+            valueListenable: _filterSongVelkyZpevnik,
+            builder: (context, value, child) {
+              return TextField(
+                controller: _filterSongVelkyZpevnik,
+                style: const TextStyle(fontSize: 12),
+                decoration: InputDecoration(
+                  border: const OutlineInputBorder(),
+                  labelText: 'filterSong'.tr(),
+                  suffixIcon: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        onPressed: () {
+                          context.read<WebBloc>().add(FilterInterprets(filter: _filterSongVelkyZpevnik.text));
+                        },
+                        icon: const Icon(Icons.search, size: 18),
+                      ),
+                      if (value.text.isNotEmpty)
+                        IconButton(
+                          onPressed: () {
+                            _filterSongVelkyZpevnik.clear();
+                            context.read<WebBloc>().add(const FilterInterprets(filter: ''));
+                          },
+                          icon: const Icon(Icons.clear, size: 18),
+                        ),
+                    ],
+                  ),
+                ),
+                onSubmitted: (value) {
+                  context.read<WebBloc>().add(FilterInterprets(filter: value));
+                },
+              );
             },
           ),
         ),
@@ -258,17 +302,39 @@ class _ListWebSongState extends State<ListWebSong> {
           padding: const EdgeInsets.only(bottom: 10),
           height: 50,
           width: 250,
-          child: TextField(
-            controller: _filterInterpretPisnickyAkordy,
-            style: const TextStyle(fontSize: 12),
-            decoration: InputDecoration(
-              border: const OutlineInputBorder(),
-              labelText: 'filterInterpret'.tr(),
-            ),
-            onChanged: (value) {
-              context.read<WebBloc>().add(FilterInterprets(
-                    filter: value,
-                  ));
+          child: ValueListenableBuilder<TextEditingValue>(
+            valueListenable: _filterInterpretPisnickyAkordy,
+            builder: (context, value, child) {
+              return TextField(
+                controller: _filterInterpretPisnickyAkordy,
+                style: const TextStyle(fontSize: 12),
+                decoration: InputDecoration(
+                  border: const OutlineInputBorder(),
+                  labelText: 'filterInterpret'.tr(),
+                  suffixIcon: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        onPressed: () {
+                          context.read<WebBloc>().add(FilterInterprets(filter: _filterInterpretPisnickyAkordy.text));
+                        },
+                        icon: const Icon(Icons.search, size: 18),
+                      ),
+                      if (value.text.isNotEmpty)
+                        IconButton(
+                          onPressed: () {
+                            _filterInterpretPisnickyAkordy.clear();
+                            context.read<WebBloc>().add(const FilterInterprets(filter: ''));
+                          },
+                          icon: const Icon(Icons.clear, size: 18),
+                        ),
+                    ],
+                  ),
+                ),
+                onSubmitted: (value) {
+                  context.read<WebBloc>().add(FilterInterprets(filter: value));
+                },
+              );
             },
           ),
         ),
@@ -356,17 +422,39 @@ class _ListWebSongState extends State<ListWebSong> {
           padding: const EdgeInsets.only(bottom: 10),
           height: 50,
           width: 250,
-          child: TextField(
-            controller: _filterSongPisnickyAkordy,
-            style: const TextStyle(fontSize: 12),
-            decoration: InputDecoration(
-              border: const OutlineInputBorder(),
-              labelText: 'filterSong'.tr(),
-            ),
-            onChanged: (value) {
-              context.read<WebBloc>().add(FilterInterprets(
-                    filter: value,
-                  ));
+          child: ValueListenableBuilder<TextEditingValue>(
+            valueListenable: _filterSongPisnickyAkordy,
+            builder: (context, value, child) {
+              return TextField(
+                controller: _filterSongPisnickyAkordy,
+                style: const TextStyle(fontSize: 12),
+                decoration: InputDecoration(
+                  border: const OutlineInputBorder(),
+                  labelText: 'filterSong'.tr(),
+                  suffixIcon: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        onPressed: () {
+                          context.read<WebBloc>().add(FilterInterprets(filter: _filterSongPisnickyAkordy.text));
+                        },
+                        icon: const Icon(Icons.search, size: 18),
+                      ),
+                      if (value.text.isNotEmpty)
+                        IconButton(
+                          onPressed: () {
+                            _filterSongPisnickyAkordy.clear();
+                            context.read<WebBloc>().add(const FilterInterprets(filter: ''));
+                          },
+                          icon: const Icon(Icons.clear, size: 18),
+                        ),
+                    ],
+                  ),
+                ),
+                onSubmitted: (value) {
+                  context.read<WebBloc>().add(FilterInterprets(filter: value));
+                },
+              );
             },
           ),
         ),
@@ -426,17 +514,39 @@ class _ListWebSongState extends State<ListWebSong> {
         padding: const EdgeInsets.only(bottom: 10),
         height: 50,
         width: 250,
-        child: TextField(
-          controller: _filterInterpretProScholy,
-          style: const TextStyle(fontSize: 12),
-          decoration: InputDecoration(
-            border: const OutlineInputBorder(),
-            labelText: 'filterSongOrInterpret'.tr(),
-          ),
-          onChanged: (value) {
-            context.read<WebBloc>().add(FilterInterprets(
-                  filter: value,
-                ));
+        child: ValueListenableBuilder<TextEditingValue>(
+          valueListenable: _filterInterpretProScholy,
+          builder: (context, value, child) {
+            return TextField(
+              controller: _filterInterpretProScholy,
+              style: const TextStyle(fontSize: 12),
+              decoration: InputDecoration(
+                border: const OutlineInputBorder(),
+                labelText: 'filterSongOrInterpret'.tr(),
+                suffixIcon: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        context.read<WebBloc>().add(FilterInterprets(filter: _filterInterpretProScholy.text));
+                      },
+                      icon: const Icon(Icons.search, size: 18),
+                    ),
+                    if (value.text.isNotEmpty)
+                      IconButton(
+                        onPressed: () {
+                          _filterInterpretProScholy.clear();
+                          context.read<WebBloc>().add(const FilterInterprets(filter: ''));
+                        },
+                        icon: const Icon(Icons.clear, size: 18),
+                      ),
+                  ],
+                ),
+              ),
+              onSubmitted: (value) {
+                context.read<WebBloc>().add(FilterInterprets(filter: value));
+              },
+            );
           },
         ),
       ),
@@ -554,17 +664,39 @@ class _ListWebSongState extends State<ListWebSong> {
           padding: const EdgeInsets.only(bottom: 10),
           height: 50,
           width: 250,
-          child: TextField(
-            controller: _filterSongProScholy,
-            style: const TextStyle(fontSize: 12),
-            decoration: InputDecoration(
-              border: const OutlineInputBorder(),
-              labelText: 'filterSong'.tr(),
-            ),
-            onChanged: (value) {
-              context.read<WebBloc>().add(FilterSongs(
-                    filter: value,
-                  ));
+          child: ValueListenableBuilder<TextEditingValue>(
+            valueListenable: _filterSongProScholy,
+            builder: (context, value, child) {
+              return TextField(
+                controller: _filterSongProScholy,
+                style: const TextStyle(fontSize: 12),
+                decoration: InputDecoration(
+                  border: const OutlineInputBorder(),
+                  labelText: 'filterSong'.tr(),
+                  suffixIcon: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        onPressed: () {
+                          context.read<WebBloc>().add(FilterSongs(filter: _filterSongProScholy.text));
+                        },
+                        icon: const Icon(Icons.search, size: 18),
+                      ),
+                      if (value.text.isNotEmpty)
+                        IconButton(
+                          onPressed: () {
+                            _filterSongProScholy.clear();
+                            context.read<WebBloc>().add(const FilterSongs(filter: ''));
+                          },
+                          icon: const Icon(Icons.clear, size: 18),
+                        ),
+                    ],
+                  ),
+                ),
+                onSubmitted: (value) {
+                  context.read<WebBloc>().add(FilterSongs(filter: value));
+                },
+              );
             },
           ),
         ),

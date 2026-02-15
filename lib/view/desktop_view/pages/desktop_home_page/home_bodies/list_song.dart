@@ -34,15 +34,39 @@ class _ListSongState extends State<ListSong> {
               Container(
                 padding: const EdgeInsets.only(bottom: 10),
                 height: 50,
-                child: TextField(
-                  controller: _filter,
-                  style: const TextStyle(fontSize: 12),
-                  decoration: InputDecoration(
-                    border: const OutlineInputBorder(),
-                    labelText: 'filterSong'.tr(),
-                  ),
-                  onChanged: (value) {
-                    context.read<HomePageBloc>().add(FilterSong(filter: value));
+                child: ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: _filter,
+                  builder: (context, value, child) {
+                    return TextField(
+                      controller: _filter,
+                      style: const TextStyle(fontSize: 12),
+                      decoration: InputDecoration(
+                        border: const OutlineInputBorder(),
+                        labelText: 'filterSong'.tr(),
+                        suffixIcon: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              onPressed: () {
+                                context.read<HomePageBloc>().add(FilterSong(filter: _filter.text));
+                              },
+                              icon: const Icon(Icons.search, size: 18),
+                            ),
+                            if (value.text.isNotEmpty)
+                              IconButton(
+                                onPressed: () {
+                                  _filter.clear();
+                                  context.read<HomePageBloc>().add(const FilterSong(filter: ''));
+                                },
+                                icon: const Icon(Icons.clear, size: 18),
+                              ),
+                          ],
+                        ),
+                      ),
+                      onSubmitted: (value) {
+                        context.read<HomePageBloc>().add(FilterSong(filter: value));
+                      },
+                    );
                   },
                 ),
               ),

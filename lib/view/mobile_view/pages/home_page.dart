@@ -84,21 +84,37 @@ class _HomePageMobileState extends State<HomePageMobile> {
                             border: Border.all(color: AppColor.primaryColor),
                           ),
                           child: Center(
-                            child: TextField(
-                              controller: _filter,
-                              decoration: InputDecoration(
-                                hintText: 'filterSong'.tr(),
-                                prefixIcon: const Icon(Icons.search),
-                                suffixIcon: IconButton(
-                                  onPressed: (() {
-                                    _filter.clear();
-                                    context.read<HomePageBloc>().add(const FilterSong(filter: ''));
-                                  }),
-                                  icon: const Icon(Icons.clear),
-                                ),
-                              ),
-                              onChanged: (value) {
-                                context.read<HomePageBloc>().add(FilterSong(filter: value));
+                            child: ValueListenableBuilder<TextEditingValue>(
+                              valueListenable: _filter,
+                              builder: (context, value, child) {
+                                return TextField(
+                                  controller: _filter,
+                                  decoration: InputDecoration(
+                                    hintText: 'filterSong'.tr(),
+                                    suffixIcon: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          onPressed: () {
+                                            context.read<HomePageBloc>().add(FilterSong(filter: _filter.text));
+                                          },
+                                          icon: const Icon(Icons.search),
+                                        ),
+                                        if (value.text.isNotEmpty)
+                                          IconButton(
+                                            onPressed: () {
+                                              _filter.clear();
+                                              context.read<HomePageBloc>().add(const FilterSong(filter: ''));
+                                            },
+                                            icon: const Icon(Icons.clear),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                  onSubmitted: (value) {
+                                    context.read<HomePageBloc>().add(FilterSong(filter: value));
+                                  },
+                                );
                               },
                             ),
                           ),

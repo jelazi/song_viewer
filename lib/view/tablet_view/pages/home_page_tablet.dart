@@ -281,7 +281,7 @@ class _HomePageTabletState extends State<HomePageTablet> {
               child: FilterFieldTablet(
                 filter: _filterInterpretPisnickyAkordy,
                 clearFilter: () => context.read<WebBloc>().add(const FilterInterprets(filter: '')),
-                onChanged: (value) => context.read<WebBloc>().add(FilterInterprets(
+                onSearch: (value) => context.read<WebBloc>().add(FilterInterprets(
                       filter: value,
                     )),
                 hintText: state.searchWeb == 2 ? 'filterSongOrInterpret'.tr() : 'filterInterpret'.tr(),
@@ -451,7 +451,7 @@ class _HomePageTabletState extends State<HomePageTablet> {
         FilterFieldTablet(
           filter: _previewFilterSearchSong,
           clearFilter: () => context.read<HomePageBloc>().add(const FilterSong(filter: '')),
-          onChanged: (value) => context.read<HomePageBloc>().add(FilterSong(filter: value)),
+          onSearch: (value) => context.read<HomePageBloc>().add(FilterSong(filter: value)),
           hintText: 'filterSong'.tr(),
         ),
       ],

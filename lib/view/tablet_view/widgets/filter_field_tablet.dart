@@ -1,18 +1,17 @@
 import 'package:default_project/services/constants.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 class FilterFieldTablet extends StatelessWidget {
   final TextEditingController filter;
   final Function clearFilter;
-  final Function onChanged;
+  final Function onSearch;
   final String hintText;
 
   const FilterFieldTablet({
     super.key,
     required this.filter,
     required this.clearFilter,
-    required this.onChanged,
+    required this.onSearch,
     required this.hintText,
   });
 
@@ -28,21 +27,37 @@ class FilterFieldTablet extends StatelessWidget {
         border: Border.all(color: AppColor.grey3Color),
       ),
       child: Center(
-        child: TextField(
-          controller: filter,
-          decoration: InputDecoration(
-            hintText: hintText,
-            prefixIcon: const Icon(Icons.search),
-            suffixIcon: IconButton(
-              onPressed: (() {
-                filter.clear();
-                clearFilter();
-              }),
-              icon: const Icon(Icons.clear),
-            ),
-          ),
-          onChanged: (value) {
-            onChanged(value);
+        child: ValueListenableBuilder<TextEditingValue>(
+          valueListenable: filter,
+          builder: (context, value, child) {
+            return TextField(
+              controller: filter,
+              decoration: InputDecoration(
+                hintText: hintText,
+                suffixIcon: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        onSearch(filter.text);
+                      },
+                      icon: const Icon(Icons.search),
+                    ),
+                    if (value.text.isNotEmpty)
+                      IconButton(
+                        onPressed: () {
+                          filter.clear();
+                          clearFilter();
+                        },
+                        icon: const Icon(Icons.clear),
+                      ),
+                  ],
+                ),
+              ),
+              onSubmitted: (value) {
+                onSearch(value);
+              },
+            );
           },
         ),
       ),
