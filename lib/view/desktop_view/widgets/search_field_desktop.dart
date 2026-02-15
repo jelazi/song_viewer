@@ -27,16 +27,24 @@ class _SearchFieldDesktopState extends State<SearchFieldDesktop> {
       decoration: InputDecoration(
         border: const OutlineInputBorder(),
         labelText: widget.labelText,
-        suffixIcon: widget.controller.text.isNotEmpty
-            ? IconButton(
+        suffixIcon: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              onPressed: () => widget.onSubmitted(widget.controller.text),
+              icon: const Icon(Icons.search),
+            ),
+            if (widget.controller.text.isNotEmpty)
+              IconButton(
                 onPressed: () {
                   widget.controller.clear();
                   widget.onClear?.call();
                   setState(() {});
                 },
                 icon: const Icon(Icons.clear),
-              )
-            : null,
+              ),
+          ],
+        ),
       ),
       onChanged: (value) {
         setState(() {});

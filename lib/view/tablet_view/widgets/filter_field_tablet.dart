@@ -38,16 +38,24 @@ class _FilterFieldTabletState extends State<FilterFieldTablet> {
           controller: widget.filter,
           decoration: InputDecoration(
             hintText: widget.hintText,
-            suffixIcon: widget.filter.text.isNotEmpty
-                ? IconButton(
+            suffixIcon: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  onPressed: widget.onSubmitted != null ? () => widget.onSubmitted!(widget.filter.text) : null,
+                  icon: const Icon(Icons.search),
+                ),
+                if (widget.filter.text.isNotEmpty)
+                  IconButton(
                     onPressed: (() {
                       widget.filter.clear();
                       widget.clearFilter();
                       setState(() {}); // Update UI after clearing
                     }),
                     icon: const Icon(Icons.clear),
-                  )
-                : null,
+                  ),
+              ],
+            ),
           ),
           onChanged: (value) {
             widget.onChanged(value);
