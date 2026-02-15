@@ -23,6 +23,7 @@ class WebState extends Equatable {
   final listSearchWeb = [
     'velkyzpevnik.cz',
     'pisnicky-akordy.cz',
+    'zpevnik.proscholy.cz',
   ];
 
   final int searchType;

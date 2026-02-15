@@ -29,7 +29,7 @@ class _HomePageTabletState extends State<HomePageTablet> {
   final TextEditingController _filterInterpretVelkyZpevnik = TextEditingController();
   final TextEditingController _filterSongVelkyZpevnik = TextEditingController();
   String selectPage = 'preview';
-  final List<String> _listSearchWeb = ['velkyzpevnik.cz', 'pisnicky-akordy.cz'];
+  final List<String> _listSearchWeb = ['velkyzpevnik.cz', 'pisnicky-akordy.cz', 'zpevnik.proscholy.cz'];
 
   bool selectLargeScreen(Size size) {
     bool isLargeScreen = false;
@@ -565,6 +565,13 @@ class _HomePageTabletState extends State<HomePageTablet> {
                       child: SizedBox(
                         width: 200,
                         child: Text(_listSearchWeb[1]),
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: _listSearchWeb[2],
+                      child: SizedBox(
+                        width: 200,
+                        child: Text(_listSearchWeb[2]),
                       ),
                     ),
                   ],

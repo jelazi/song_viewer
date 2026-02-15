@@ -51,7 +51,7 @@ class WebBloc extends Bloc<WebEvent, WebState> {
     add(const _Init());
   }
 
-  final listSearchWeb = ['velkyzpevnik.cz', 'pisnicky-akordy.cz'];
+  final listSearchWeb = ['velkyzpevnik.cz', 'pisnicky-akordy.cz', 'zpevnik.proscholy.cz'];
 
   void _init(_Init event, Emitter<WebState> emit) async {
     final state = this.state;
@@ -102,6 +102,16 @@ class WebBloc extends Bloc<WebEvent, WebState> {
           hiveProvider.setWebSong('pisnicky-akordy.cz${currentSong.ref}', currentSong);
         }
       }
+      if (event.typeSearching == 'zpevnik.proscholy.cz') {
+        currentSong.server = 'zpevnik.proscholy.cz';
+        final savedSong = hiveProvider.getWebSong('zpevnik.proscholy.cz${currentSong.ref}');
+        if (savedSong != null) {
+          currentSong = savedSong;
+        } else {
+          currentSong.lyric = await webRepository.getTextSongProScholy(currentSong.ref);
+          hiveProvider.setWebSong('zpevnik.proscholy.cz${currentSong.ref}', currentSong);
+        }
+      }
 
       emit(state.copyWith(currentSong: currentSong, downloadWebSong: false));
     } else {
@@ -118,6 +128,9 @@ class WebBloc extends Bloc<WebEvent, WebState> {
       }
       if (state.searchWeb == 1) {
         songs = await webRepository.findSongOfInterpretPisnickyAkordy(event.interpret?.ref ?? '');
+      }
+      if (state.searchWeb == 2 && event.interpret != null) {
+        songs = await webRepository.findSongByInterpretFromProScholy(event.interpret!);
       }
       hiveProvider.setHistoryInterpretToWebBox(listSearchWeb[state.searchWeb], event.interpret!);
       final historyInterprets = hiveProvider.getInterpretsFromWebBox(listSearchWeb[state.searchWeb]);
@@ -158,6 +171,9 @@ class WebBloc extends Bloc<WebEvent, WebState> {
 
     if (state.searchWeb == 1) {
       list = await webRepository.findInterpretPisnickyAkordy(event.filter);
+    }
+    if (state.searchWeb == 2) {
+      list = await webRepository.findInterpretProScholy(event.filter);
     }
     emit(state.copyWith(interprets: list, isSearching: false, filteredInterprets: list, searchWebInterprets: false));
   }

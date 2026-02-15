@@ -268,24 +268,105 @@ class WebRepository {
     return allText;
   }
 
-  Future<dynamic> findSongProScholy(String text) async {
-    String formatText = text.replaceAll(' ', '_');
-    var response = await webProvider.getDataProScholy('?vyhledavani=$formatText');
-
+  Future<List<WebItem>> findSongAndInterpretsFromProScholy(String searchText) async {
+    List<WebItem> items = [];
     try {
-      List<Element> songslist = response.getElementsByClassName('container');
-      logger.v('test');
+      final response = await webProvider.searchSongsProScholy(searchText);
+      if (response.statusCode != 200) {
+        logger.e('error status Code ${response.statusCode}');
+        return items;
+      }
+      final data = response.data;
+      if (data != null && data['data'] != null && data['data']['song_lyrics'] != null) {
+        for (var song in data['data']['song_lyrics']) {
+          String authorName = '';
+          if (song['authors_pivot'] != null && (song['authors_pivot'] as List).isNotEmpty) {
+            authorName = song['authors_pivot'][0]['author']['name'] ?? '';
+          }
+          items.add(WebSong(
+            title: song['name'] ?? '',
+            ref: song['id'].toString(),
+            interpret: authorName,
+            ischords: song['has_chords'] ?? false,
+            server: 'zpevnik.proscholy.cz',
+          ));
+        }
+      }
     } catch (e) {
       logger.e('error: $e');
     }
-
-    return '';
+    return items;
   }
 
-  Future<dynamic> findInterpretProScholy(String text) async {
-    String formatText = text.replaceAll(' ', '_');
-    var response = await webProvider.getDataProScholy('?vyhledavani=$formatText&autori=ano');
-    return '';
+  Future<List<WebInterpret>> findInterpretProScholy(String searchText) async {
+    List<WebInterpret> interprets = [];
+    try {
+      final response = await webProvider.searchAuthorsProScholy(searchText);
+      if (response.statusCode != 200) {
+        logger.e('error status Code ${response.statusCode}');
+        return interprets;
+      }
+      final data = response.data;
+      if (data != null && data['data'] != null && data['data']['authors'] != null) {
+        for (var author in data['data']['authors']) {
+          interprets.add(WebInterpret(
+            title: author['name'] ?? '',
+            ref: author['id'].toString(),
+          ));
+        }
+      }
+    } catch (e) {
+      logger.e('error: $e');
+    }
+    return interprets;
+  }
+
+  Future<List<WebSong>> findSongByInterpretFromProScholy(WebInterpret interpret) async {
+    List<WebSong> songs = [];
+    try {
+      final response = await webProvider.getSongsByAuthorProScholy(interpret.ref);
+      if (response.statusCode != 200) {
+        logger.e('error status Code ${response.statusCode}');
+        return songs;
+      }
+      final data = response.data;
+      if (data != null && data['data'] != null && data['data']['author'] != null) {
+        final author = data['data']['author'];
+        final songLyrics = author['song_lyrics'];
+        if (songLyrics != null) {
+          for (var song in songLyrics) {
+            songs.add(WebSong(
+              title: song['name'] ?? '',
+              ref: song['id'].toString(),
+              interpret: author['name'] ?? '',
+              ischords: song['has_chords'] ?? false,
+              server: 'zpevnik.proscholy.cz',
+            ));
+          }
+        }
+      }
+    } catch (e) {
+      logger.e('error: $e');
+    }
+    return songs;
+  }
+
+  Future<String> getTextSongProScholy(String songId) async {
+    String songText = '';
+    try {
+      final response = await webProvider.getSongLyricsProScholy(songId);
+      if (response.statusCode != 200) {
+        logger.e('error status Code ${response.statusCode}');
+        return songText;
+      }
+      final data = response.data;
+      if (data != null && data['data'] != null && data['data']['song_lyric'] != null) {
+        songText = data['data']['song_lyric']['lyrics'] ?? '';
+      }
+    } catch (e) {
+      logger.e('error: $e');
+    }
+    return songText;
   }
 
   Future<dynamic> findSongSupermusic(String text) async {
