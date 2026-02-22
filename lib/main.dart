@@ -129,7 +129,6 @@ class _PresentationAppState extends State<PresentationApp> {
   int _totalPages = 1;
   bool _showTitle = true;
   bool _showPageNumber = true;
-  int _linesPerPage = 8;
   final FocusNode _presentationFocusNode = FocusNode();
 
   @override
@@ -188,7 +187,6 @@ class _PresentationAppState extends State<PresentationApp> {
                 _totalPages = data['totalPages'] ?? 1;
                 _showTitle = data['showTitle'] ?? true;
                 _showPageNumber = data['showPageNumber'] ?? true;
-                _linesPerPage = data['linesPerPage'] ?? 8;
               });
             }
           } else {
@@ -301,7 +299,6 @@ class _PresentationAppState extends State<PresentationApp> {
                 _totalPages = data['totalPages'] ?? _totalPages;
                 _showTitle = data['showTitle'] ?? _showTitle;
                 _showPageNumber = data['showPageNumber'] ?? _showPageNumber;
-                _linesPerPage = data['linesPerPage'] ?? _linesPerPage;
               });
             }
             return 'ok';
@@ -345,6 +342,15 @@ class _PresentationAppState extends State<PresentationApp> {
       }
     });
     debugPrint('Page data handler setup complete');
+
+    // Signal to native bridge that the Dart handler is now registered.
+    // Swift will flush any messages that were buffered during engine startup.
+    const navigateBridge = MethodChannel('com.songviewer/navigate_bridge');
+    navigateBridge.invokeMethod('sub_window_ready').then((_) {
+      debugPrint('Sub-window ready signal sent to native bridge');
+    }).catchError((e) {
+      debugPrint('Error sending sub_window_ready: $e');
+    });
   }
 
   String _extractLyrics(Song song) {

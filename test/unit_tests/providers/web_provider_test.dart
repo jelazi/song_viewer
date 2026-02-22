@@ -10,6 +10,7 @@ import 'web_provider_test.mocks.dart';
 void main() {
   group('WebProvider', () {
     late WebProvider webProvider;
+    // ignore: unused_local_variable
     late MockDio mockDio;
 
     setUp(() {
@@ -45,6 +46,7 @@ void main() {
     group('Network Requests', () {
       test('getDataSupermusic - vytvoří správný požadavek', () async {
         const testRequir = 'test-path';
+        // ignore: unused_local_variable
         final expectedUrl = '${webProvider.supermusicUrl}$testRequir';
 
         // Tento test je obtížný bez mockování Dio v konstruktoru
@@ -53,6 +55,7 @@ void main() {
       });
 
       test('getDataVelkyZpevnik - vrátí Response', () async {
+        // ignore: unused_local_variable
         const testRequir = 'test-path';
 
         // Tento test vyžaduje buď mock Dio, nebo skutečnou síťovou komunikaci
@@ -62,6 +65,7 @@ void main() {
 
       test('getDataProScholy - vytvoří správný požadavek', () async {
         const testRequir = 'test-path';
+        // ignore: unused_local_variable
         final expectedUrl = '${webProvider.proScholy}$testRequir';
 
         expect(webProvider.proScholy, isNotEmpty);
@@ -69,6 +73,7 @@ void main() {
 
       test('getDataFromPisnickyAkordy - vytvoří URL s parametry', () async {
         const testRequir = 'test-path';
+        // ignore: unused_local_variable
         final expectedUrl = '${webProvider.pisnickyAkordy}/$testRequir?tmpl=component&print=1&layout=default';
 
         // Ověření, že URL obsahuje správný základ
@@ -78,6 +83,7 @@ void main() {
 
     group('Search Operations', () {
       test('searchVelkyZpevnik - vytvoří správný požadavek s query parametry', () async {
+        // ignore: unused_local_variable
         const searchString = 'test search';
 
         // Tento test by vyžadoval mockování Dio
@@ -85,6 +91,7 @@ void main() {
       });
 
       test('searchPisnickyAkordy - vytvoří POST požadavek s správnými headers', () async {
+        // ignore: unused_local_variable
         const searchString = 'test search';
 
         // Ověření, že metoda existuje a token je nastaven
@@ -93,6 +100,7 @@ void main() {
 
       test('searchInterpretByFirstLetterPisnickyAkordy - použije správný URL pattern', () async {
         const firstLetter = 'a';
+        // ignore: unused_local_variable
         final expectedUrl = '${webProvider.pisnickyAkordy}/#$firstLetter';
 
         expect(webProvider.pisnickyAkordy, isNotEmpty);
@@ -100,6 +108,7 @@ void main() {
 
       test('getSongsFromInterpretPisnickyAkordy - vytvoří URL s interpret parametrem', () async {
         const interpret = '/test-interpret';
+        // ignore: unused_local_variable
         final expectedUrl = '${webProvider.pisnickyAkordy}$interpret#az';
 
         expect(webProvider.pisnickyAkordy, isNotEmpty);

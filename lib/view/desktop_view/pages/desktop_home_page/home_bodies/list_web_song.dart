@@ -87,7 +87,7 @@ class _ListWebSongState extends State<ListWebSong> {
   List<Widget> getSearchWidgetForVelkyZpevnik(WebState state) {
     return [
       Visibility(
-        visible: state.currentInterpret == null,
+        visible: state.currentInterpret.title.isEmpty,
         child: Container(
           padding: const EdgeInsets.only(bottom: 10),
           height: 50,
@@ -129,18 +129,16 @@ class _ListWebSongState extends State<ListWebSong> {
           ),
         ),
       ),
-      state.currentInterpret != null
+      state.currentInterpret.title.isNotEmpty
           ? Align(
               alignment: Alignment.centerLeft,
               child: MouseRegion(
                 cursor: SystemMouseCursors.click,
                 child: GestureDetector(
                   onTap: () {
-                    if (state.currentInterpret?.title == state.currentInterpret?.title) {
-                      context.read<WebBloc>().add(const ChangeCurrentInterpret(
-                            interpret: null,
-                          ));
-                    }
+                    context.read<WebBloc>().add(const ChangeCurrentInterpret(
+                          interpret: null,
+                        ));
                   },
                   child: Container(
                     height: 30,
@@ -149,7 +147,7 @@ class _ListWebSongState extends State<ListWebSong> {
                     decoration: BoxDecoration(border: Border.all(), borderRadius: BorderRadius.circular(5)),
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      state.currentInterpret?.title ?? '',
+                      state.currentInterpret.title,
                       style: const TextStyle(fontSize: 14, color: AppColor.alertErrorColor),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -175,7 +173,7 @@ class _ListWebSongState extends State<ListWebSong> {
                                     cursor: SystemMouseCursors.click,
                                     child: GestureDetector(
                                       onTap: () {
-                                        if (state.currentInterpret?.title == interpret.title) {
+                                        if (state.currentInterpret.title == interpret.title) {
                                           context.read<WebBloc>().add(const ChangeCurrentInterpret(
                                                 interpret: null,
                                               ));
@@ -195,7 +193,7 @@ class _ListWebSongState extends State<ListWebSong> {
                                         ),
                                         child: Text(
                                           interpret.title,
-                                          style: TextStyle(fontSize: 14, color: state.currentInterpret?.title == interpret.title ? AppColor.alertErrorColor : AppColor.grey1Color),
+                                          style: TextStyle(fontSize: 14, color: state.currentInterpret.title == interpret.title ? AppColor.alertErrorColor : AppColor.grey1Color),
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
@@ -207,7 +205,7 @@ class _ListWebSongState extends State<ListWebSong> {
                     ),
             ),
       Visibility(
-        visible: state.currentInterpret != null,
+        visible: state.currentInterpret.title.isNotEmpty,
         child: Container(
           padding: const EdgeInsets.only(bottom: 10),
           height: 50,
@@ -250,7 +248,7 @@ class _ListWebSongState extends State<ListWebSong> {
         ),
       ),
       Visibility(
-        visible: state.currentInterpret != null,
+        visible: state.currentInterpret.title.isNotEmpty,
         child: Expanded(
           flex: 10,
           child: state.isSearching
@@ -301,7 +299,7 @@ class _ListWebSongState extends State<ListWebSong> {
   List<Widget> getSearchWidgetForPisnickyAkordy(WebState state) {
     return [
       Visibility(
-        visible: state.currentInterpret == null,
+        visible: state.currentInterpret.title.isEmpty,
         child: Container(
           margin: EdgeInsets.only(top: 10),
           padding: const EdgeInsets.only(bottom: 10),
@@ -344,18 +342,16 @@ class _ListWebSongState extends State<ListWebSong> {
           ),
         ),
       ),
-      state.currentInterpret != null
+      state.currentInterpret.title.isNotEmpty
           ? Align(
               alignment: Alignment.centerLeft,
               child: MouseRegion(
                 cursor: SystemMouseCursors.click,
                 child: GestureDetector(
                   onTap: () {
-                    if (state.currentInterpret?.title == state.currentInterpret?.title) {
-                      context.read<WebBloc>().add(const ChangeCurrentInterpret(
-                            interpret: null,
-                          ));
-                    }
+                    context.read<WebBloc>().add(const ChangeCurrentInterpret(
+                          interpret: null,
+                        ));
                   },
                   child: Container(
                     height: 30,
@@ -364,7 +360,7 @@ class _ListWebSongState extends State<ListWebSong> {
                     decoration: BoxDecoration(border: Border.all(), borderRadius: BorderRadius.circular(5)),
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      state.currentInterpret?.title ?? '',
+                      state.currentInterpret.title,
                       style: const TextStyle(fontSize: 14, color: AppColor.alertErrorColor),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -390,7 +386,7 @@ class _ListWebSongState extends State<ListWebSong> {
                                     cursor: SystemMouseCursors.click,
                                     child: GestureDetector(
                                       onTap: () {
-                                        if (state.currentInterpret?.title == interpret.title) {
+                                        if (state.currentInterpret.title == interpret.title) {
                                           context.read<WebBloc>().add(const ChangeCurrentInterpret(
                                                 interpret: null,
                                               ));
@@ -410,7 +406,7 @@ class _ListWebSongState extends State<ListWebSong> {
                                         ),
                                         child: Text(
                                           interpret.title,
-                                          style: TextStyle(fontSize: 14, color: state.currentInterpret?.title == interpret.title ? AppColor.alertErrorColor : AppColor.grey1Color),
+                                          style: TextStyle(fontSize: 14, color: state.currentInterpret.title == interpret.title ? AppColor.alertErrorColor : AppColor.grey1Color),
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
@@ -422,7 +418,7 @@ class _ListWebSongState extends State<ListWebSong> {
                     ),
             ),
       Visibility(
-        visible: state.currentInterpret != null,
+        visible: state.currentInterpret.title.isNotEmpty,
         child: Container(
           padding: const EdgeInsets.only(bottom: 10),
           height: 50,
@@ -465,7 +461,7 @@ class _ListWebSongState extends State<ListWebSong> {
         ),
       ),
       Visibility(
-        visible: state.currentInterpret != null,
+        visible: state.currentInterpret.title.isNotEmpty,
         child: Expanded(
           flex: 10,
           child: state.isSearching
@@ -555,7 +551,7 @@ class _ListWebSongState extends State<ListWebSong> {
           },
         ),
       ),
-      state.currentInterpret != null && state.currentInterpret.title.isNotEmpty
+      state.currentInterpret.title.isNotEmpty
           ? Align(
               alignment: Alignment.centerLeft,
               child: MouseRegion(
@@ -661,7 +657,7 @@ class _ListWebSongState extends State<ListWebSong> {
                     ),
             ),
       Visibility(
-        visible: state.currentInterpret != null,
+        visible: state.currentInterpret.title.isNotEmpty,
         child: Container(
           padding: const EdgeInsets.only(bottom: 10),
           height: 50,
@@ -704,7 +700,7 @@ class _ListWebSongState extends State<ListWebSong> {
         ),
       ),
       Visibility(
-        visible: state.currentInterpret != null,
+        visible: state.currentInterpret.title.isNotEmpty,
         child: Expanded(
           flex: 10,
           child: state.isSearching

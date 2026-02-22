@@ -24,8 +24,8 @@ class ChangeSongValue extends EditSongEvent {
   final dynamic value;
   final String nameValue;
   final String appVersion;
-  TextSelection? selection;
-  ChangeSongValue({required this.value, required this.nameValue, required this.appVersion, this.selection});
+  final TextSelection? selection;
+  const ChangeSongValue({required this.value, required this.nameValue, required this.appVersion, this.selection});
 }
 
 class CheckModifiedSong extends EditSongEvent {

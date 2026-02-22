@@ -3,6 +3,7 @@ import '../providers/firebase_provider.dart';
 import '../providers/hive_provider.dart';
 
 class PlaylistRepository {
+  // ignore: unused_field
   final HiveProvider _hiveProvider;
   final FirebaseProvider _firebaseProvider;
 

@@ -68,7 +68,7 @@ class UsersBloc extends Bloc<UsersEvent, UsersState> {
 
   void _logoutUser(LogoutUser event, Emitter<UsersState> emit) async {
     final state = this.state;
-    final result = usersRepository.logoutUser();
+    usersRepository.logoutUser();
     emit(state.copyWith(currentUser: null));
   }
 

@@ -81,7 +81,6 @@ class WebBloc extends Bloc<WebEvent, WebState> {
     final eventSong = event.song;
     if (eventSong != null) {
       WebSong currentSong = WebSong(title: eventSong.title, ref: eventSong.ref, interpret: eventSong.interpret);
-      var text = '';
       if (event.typeSearching == 'velkyzpevnik.cz') {
         currentSong.server = 'velkyzpevnik.cz';
         final savedSong = hiveProvider.getWebSong('velkyzpevnik.cz${currentSong.ref}');
@@ -222,7 +221,6 @@ class WebBloc extends Bloc<WebEvent, WebState> {
   }
 
   void _testWebEvent(TestWebEvent event, Emitter<WebState> emit) async {
-    final state = this.state;
-    final result = await webRepository.testGetSong();
+    await webRepository.testGetSong();
   }
 }

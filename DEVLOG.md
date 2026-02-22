@@ -1,5 +1,27 @@
 # Development Log
 
+## 2026-02-22 - Fix MissingPluginException race condition with ready-handshake
+
+### What was done
+1. **Root cause identified**: Race condition between Swift creating `subWindowPageChannel` (immediate) and the sub-window's Dart engine registering its `page_data` handler in `_setupMessageHandler()` (delayed by engine boot + widget tree build). Messages forwarded during this gap arrive at the sub-window engine with no handler → returns null → `MissingPluginException`.
+2. **Fix — ready-handshake with Swift-side message buffering**:
+   - Swift: Added `subWindowReady` flag and `pendingPageMessages` buffer
+   - When the bridge receives messages and `subWindowReady` is false, messages are buffered instead of forwarded
+   - Sub-window Dart: After `pageDataChannel.setMethodCallHandler(...)` completes, sends `sub_window_ready` signal via `navigate_bridge` channel
+   - Swift: Intercepts `sub_window_ready` in `navigate_bridge` handler, sets `subWindowReady = true`, flushes all buffered messages to the now-ready sub-window
+   - All close paths (bridge close, window control close, X button close, new sub-window creation) reset `subWindowReady` and clear the pending buffer
+
+### Files modified
+- `macos/Runner/MainFlutterWindow.swift` — Added `subWindowReady` flag, `pendingPageMessages` buffer, buffering logic in bridge handler, flush logic in `navigate_bridge` `sub_window_ready` intercept, reset in all close/cleanup paths
+- `lib/main.dart` — Added `sub_window_ready` signal via `navigate_bridge` after `page_data` handler registration in `_setupMessageHandler()`
+
+### Current state
+- No Dart compilation errors (flutter analyze passes, 232 pre-existing infos/warnings)
+- Messages sent during sub-window startup are buffered and flushed on ready
+- All window lifecycle paths properly reset the ready state
+
+---
+
 ## 2026-02-22 - Screen selection, font size control, live settings reload
 
 ### What was done

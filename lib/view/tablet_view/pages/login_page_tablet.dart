@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import '../../../blocs/export_blocs.dart';
 
 class LoginPageTablet extends StatelessWidget {
-  TextEditingController usernameController = TextEditingController();
-  TextEditingController passwordController = TextEditingController();
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
   LoginPageTablet({super.key});
 
 //login page

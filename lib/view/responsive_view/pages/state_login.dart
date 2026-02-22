@@ -10,8 +10,8 @@ import '../../../blocs/export_blocs.dart';
 import '../../desktop_view/pages/desktop_home_page/desktop_home_page.dart';
 
 class StateLogin extends StatelessWidget {
-  SettingsRepository settingsRepository;
-  StateLogin({super.key, required this.settingsRepository});
+  final SettingsRepository settingsRepository;
+  const StateLogin({super.key, required this.settingsRepository});
 
   @override
   Widget build(BuildContext context) {

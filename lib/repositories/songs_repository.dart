@@ -59,7 +59,7 @@ class SongsRepository {
         try {
           final castedData = _convertMapToStringDynamic(data);
           final newUpdateSongListData = UpdateSongListData.fromJson(castedData);
-          if (newUpdateSongListData.lastUpdate.isAfter(updateSongListData!.lastUpdate)) {
+          if (newUpdateSongListData.lastUpdate.isAfter(updateSongListData.lastUpdate)) {
             updateDataByUpdateSongListData(newUpdateSongListData);
           }
         } catch (e) {

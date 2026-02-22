@@ -16,7 +16,7 @@ class RibbonButton extends StatefulWidget {
   final Widget icon;
   final Function onPressed;
   final bool isEnabled;
-  bool isSelected = false;
+  final bool isSelected;
 
   @override
   State<RibbonButton> createState() => _RibbonButtonState();

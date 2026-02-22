@@ -44,7 +44,7 @@ class WebRepository {
 
     final response = await findSongAndInterpretsFromVelkyZpevnik('žalman');
     final resSong = await findSongByInterpretFromVelkyZpevnik(response.first as WebInterpret);
-    final song = await getTextSongVelkyZpevnik(resSong[5]);
+    await getTextSongVelkyZpevnik(resSong[5]);
 
     return '';
   }
@@ -137,7 +137,7 @@ class WebRepository {
       for (MapEntry<String, String> entry in parsedSongs.entries) {
         String title = entry.key;
         bool isChords = title.contains('akordy a text písně');
-        if (title.contains(' akordy a text písně')) {
+        if (isChords) {
           title = title.replaceAll('akordy a text písně', '');
         } else if (title.contains(' text písně')) {
           title = title.replaceAll('text písně', '');

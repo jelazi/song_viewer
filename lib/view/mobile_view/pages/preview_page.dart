@@ -211,7 +211,6 @@ class _PreviewPageMobileState extends State<PreviewPageMobile> {
 
   Widget _getLyricsRenderer(PreviewChordState state, ScrollController scrollController) {
     String lyric = state.data.song?.lyrics ?? '';
-    List<String> list = lyric.split('\n');
     //TODO: controller.notes.value = List.generate(list.length + 1, (index) => RxString(''));
     if (state.twoColumns) {
       List<String> splittedLyric = state.lyricWithColumns(true, true, TypeLyric.translate);

@@ -231,7 +231,6 @@ class PreviewChordBloc extends Bloc<PreviewChordEvent, PreviewChordState> {
 
     WebSong webSong = event.webSong;
 
-    var text = '';
     if (event.typeSearching == 0) {
       webSong.server = 'velkyzpevnik.cz';
       final savedSong = hiveProvider.getWebSong('velkyzpevnik.cz${webSong.ref}');

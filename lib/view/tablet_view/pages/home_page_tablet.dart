@@ -284,7 +284,11 @@ class _HomePageTabletState extends State<HomePageTablet> {
                 onSearch: (value) => context.read<WebBloc>().add(FilterInterprets(
                       filter: value,
                     )),
-                hintText: state.searchWeb == 2 ? 'filterSongOrInterpret'.tr() : state.searchWeb == 3 ? 'filterSong'.tr() : 'filterInterpret'.tr(),
+                hintText: state.searchWeb == 2
+                    ? 'filterSongOrInterpret'.tr()
+                    : state.searchWeb == 3
+                        ? 'filterSong'.tr()
+                        : 'filterInterpret'.tr(),
               ),
             ),
             Expanded(
@@ -643,7 +647,7 @@ class WebInterpretCard extends StatelessWidget {
               ),
               child: Text(
                 interpret.title,
-                style: TextStyle(fontSize: 14, color: state.currentInterpret?.title == interpret.title ? AppColor.alertErrorColor : AppColor.grey1Color),
+                style: TextStyle(fontSize: 14, color: state.currentInterpret.title == interpret.title ? AppColor.alertErrorColor : AppColor.grey1Color),
                 overflow: TextOverflow.ellipsis,
               ),
             ),

@@ -156,6 +156,7 @@ class _EditPageTabletState extends State<EditPageTablet> {
     );
   }
 
+  // ignore: unused_element
   Future<bool> _onWillPop(EditSongState state) async {
     final oldSong = context.read<EditSongBloc>().songsRepository.getSongById(state.currentEditSong.id);
     final listModified = oldSong?.checkModifiedSong(state.currentEditSong, false) ?? [];

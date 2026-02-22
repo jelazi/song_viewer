@@ -123,7 +123,9 @@ class _EditSpanDesktopState extends State<EditSpanDesktop> {
   bool isOpen = false;
 
   void _showChordMenu(BuildContext context, Offset position, int index) {
+    // ignore: unused_local_variable
     double dx = position.dx;
+    // ignore: unused_local_variable
     double dy = position.dy;
     showMenu(
       context: context,

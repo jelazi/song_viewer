@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:logger_pkg/logger_pkg.dart';
 
 import '../../../../services/constants.dart';
 import '../../../../services/enums.dart';
