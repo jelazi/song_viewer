@@ -18,8 +18,9 @@ class ClosePresentation extends PresentationEvent {
 
 class UpdatePresentationSong extends PresentationEvent {
   final Song song;
+  final int? page;
 
-  const UpdatePresentationSong({required this.song});
+  const UpdatePresentationSong({required this.song, this.page});
 }
 
 class ToggleFullScreen extends PresentationEvent {

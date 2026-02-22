@@ -9,6 +9,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../../../blocs/export_blocs.dart';
+import '../../../model/playlist.dart';
 import '../../../model/song/song.dart';
 import 'my_toast.dart';
 import 'ribbon_button.dart';
@@ -45,13 +46,13 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
         } else if (state.bodyName == 'preview') {
           _tabController = TabController(length: 2, vsync: this);
         } else if (state.bodyName == 'web') {
-          _tabController = TabController(length: 1, vsync: this);
+          _tabController = TabController(length: 2, vsync: this);
         } else if (state.bodyName == 'groups') {
-          _tabController = TabController(length: 1, vsync: this);
+          _tabController = TabController(length: 2, vsync: this, initialIndex: 1);
         } else if (state.bodyName == 'users') {
-          _tabController = TabController(length: 1, vsync: this);
+          _tabController = TabController(length: 2, vsync: this, initialIndex: 1);
         } else if (state.bodyName == 'presentation_settings') {
-          _tabController = TabController(length: 1, vsync: this);
+          _tabController = TabController(length: 2, vsync: this, initialIndex: 1);
         } else {
           _tabController = TabController(length: 1, vsync: this);
         }
@@ -97,6 +98,7 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
                                       controller: _tabController,
                                       tabs: [
                                         Tab(text: 'home'.tr()),
+                                        Tab(text: 'settings'.tr()),
                                       ],
                                     )
                                   : state.bodyName == 'groups'
@@ -104,7 +106,13 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
                                           isScrollable: true,
                                           tabAlignment: TabAlignment.start,
                                           controller: _tabController,
+                                          onTap: (index) {
+                                            if (index == 0) {
+                                              context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: 'preview'));
+                                            }
+                                          },
                                           tabs: [
+                                            Tab(text: 'home'.tr()),
                                             Tab(text: 'settings'.tr()),
                                           ],
                                         )
@@ -113,7 +121,13 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
                                               isScrollable: true,
                                               tabAlignment: TabAlignment.start,
                                               controller: _tabController,
+                                              onTap: (index) {
+                                                if (index == 0) {
+                                                  context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: 'preview'));
+                                                }
+                                              },
                                               tabs: [
+                                                Tab(text: 'home'.tr()),
                                                 Tab(text: 'settings'.tr()),
                                               ],
                                             )
@@ -122,7 +136,13 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
                                                   isScrollable: true,
                                                   tabAlignment: TabAlignment.start,
                                                   controller: _tabController,
+                                                  onTap: (index) {
+                                                    if (index == 0) {
+                                                      context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: 'preview'));
+                                                    }
+                                                  },
                                                   tabs: [
+                                                    Tab(text: 'home'.tr()),
                                                     Tab(text: 'settings'.tr()),
                                                   ],
                                                 )
@@ -157,6 +177,7 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
                                   ? TabBarView(
                                       controller: _tabController,
                                       children: const [
+                                        HomeTabbar(),
                                         SettingsTabbar(),
                                       ],
                                     )
@@ -165,12 +186,14 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
                                           controller: _tabController,
                                           children: const [
                                             HomeTabbar(),
+                                            SettingsTabbar(),
                                           ],
                                         )
                                       : state.bodyName == 'users'
                                           ? TabBarView(
                                               controller: _tabController,
-                                              children: [
+                                              children: const [
+                                                HomeTabbar(),
                                                 SettingsTabbar(),
                                               ],
                                             )
@@ -178,6 +201,7 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
                                               ? TabBarView(
                                                   controller: _tabController,
                                                   children: const [
+                                                    HomeTabbar(),
                                                     SettingsTabbar(),
                                                   ],
                                                 )
@@ -835,6 +859,7 @@ class HomeTabbar extends StatelessWidget {
       showChords: settingsState.presentationShowChords,
       currentPage: result.currentPage,
       totalPages: result.totalPages,
+      linesPerPage: settingsState.presentationLinesPerPage,
       showTitle: settingsState.presentationShowTitle,
       showPageNumber: settingsState.presentationShowPageNumber,
     );
@@ -906,76 +931,194 @@ class HomeTabbar extends StatelessWidget {
 
   void _showLoadPlaylistDialog(BuildContext context) {
     final playlistsBloc = context.read<PlaylistsBloc>();
+    final allSongs = context.read<HomePageBloc>().songsRepository.songs;
+    int? expandedIndex; // which playlist is expanded (-1 = none)
+
+    // Resolve song IDs to Song objects
+    List<Song> resolveSongs(List<String> songIds) {
+      final songs = <Song>[];
+      for (final id in songIds) {
+        try {
+          final song = allSongs.firstWhere((s) => s.id == id);
+          songs.add(song);
+        } catch (_) {
+          // Song not found, skip
+        }
+      }
+      return songs;
+    }
 
     showDialog(
       context: context,
       builder: (dialogContext) {
-        return BlocBuilder<PlaylistsBloc, PlaylistsState>(
-          builder: (context, playlistsState) {
-            final playlists = playlistsState.playlists;
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return BlocBuilder<PlaylistsBloc, PlaylistsState>(
+              builder: (context, playlistsState) {
+                final playlists = playlistsState.playlists;
 
-            return AlertDialog(
-              title: const Text('Načíst playlist'),
-              content: SizedBox(
-                width: 400,
-                height: 400,
-                child: playlists.isEmpty
-                    ? const Center(
-                        child: Text(
-                          'Žádné uložené playlisty',
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                      )
-                    : ListView.builder(
-                        itemCount: playlists.length,
-                        itemBuilder: (context, index) {
-                          final playlist = playlists[index];
-                          return ListTile(
-                            leading: const Icon(Icons.playlist_play),
-                            title: Text(playlist.name, style: const TextStyle(fontSize: 14)),
-                            subtitle: Text(
-                              '${playlist.listSongIds.length} písní',
-                              style: const TextStyle(fontSize: 12),
+                return AlertDialog(
+                  title: const Text('Načíst playlist'),
+                  content: SizedBox(
+                    width: 500,
+                    height: 500,
+                    child: playlists.isEmpty
+                        ? const Center(
+                            child: Text(
+                              'Žádné uložené playlisty',
+                              style: TextStyle(color: Colors.grey),
                             ),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: const Icon(Icons.download, size: 20),
-                                  tooltip: 'Načíst do prezentace',
-                                  onPressed: () {
-                                    context.read<PresentationPlaylistBloc>().add(
-                                          LoadPresentationPlaylist(playlist: playlist),
-                                        );
-                                    Navigator.pop(dialogContext);
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text('Playlist "${playlist.name}" načten'),
-                                        backgroundColor: Colors.green,
-                                        duration: const Duration(seconds: 2),
+                          )
+                        : ListView.builder(
+                            itemCount: playlists.length,
+                            itemBuilder: (context, index) {
+                              final playlist = playlists[index];
+                              final isExpanded = expandedIndex == index;
+                              final songs = isExpanded ? resolveSongs(playlist.listSongIds) : <Song>[];
+
+                              return Column(
+                                children: [
+                                  InkWell(
+                                    onTap: () {
+                                      setDialogState(() {
+                                        expandedIndex = isExpanded ? null : index;
+                                      });
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                      decoration: BoxDecoration(
+                                        color: isExpanded ? Colors.blue.withOpacity(0.08) : null,
+                                        border: const Border(bottom: BorderSide(color: Colors.black12)),
                                       ),
-                                    );
-                                  },
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.delete, size: 20, color: Colors.red),
-                                  tooltip: 'Smazat playlist',
-                                  onPressed: () {
-                                    playlistsBloc.add(DeletePlaylist(playlist: playlist));
-                                  },
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext),
-                  child: const Text('Zavřít'),
-                ),
-              ],
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            isExpanded ? Icons.expand_less : Icons.expand_more,
+                                            size: 20,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          const Icon(Icons.playlist_play, size: 20),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(playlist.name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                                                Text(
+                                                  '${playlist.listSongIds.length} písní',
+                                                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(Icons.download, size: 20),
+                                            tooltip: 'Načíst do prezentace',
+                                            onPressed: () {
+                                              context.read<PresentationPlaylistBloc>().add(
+                                                    LoadPresentationPlaylist(playlist: playlist),
+                                                  );
+                                              Navigator.pop(dialogContext);
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(
+                                                  content: Text('Playlist "${playlist.name}" načten'),
+                                                  backgroundColor: Colors.green,
+                                                  duration: const Duration(seconds: 2),
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(Icons.delete, size: 20, color: Colors.red),
+                                            tooltip: 'Smazat playlist',
+                                            onPressed: () {
+                                              playlistsBloc.add(DeletePlaylist(playlist: playlist));
+                                              if (isExpanded) {
+                                                setDialogState(() {
+                                                  expandedIndex = null;
+                                                });
+                                              }
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  // Expanded song list
+                                  if (isExpanded)
+                                    Container(
+                                      constraints: const BoxConstraints(maxHeight: 250),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.withOpacity(0.05),
+                                        border: const Border(bottom: BorderSide(color: Colors.black12)),
+                                      ),
+                                      child: songs.isEmpty
+                                          ? const Padding(
+                                              padding: EdgeInsets.all(12),
+                                              child: Text('Žádné písně', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                                            )
+                                          : ReorderableListView.builder(
+                                              shrinkWrap: true,
+                                              itemCount: songs.length,
+                                              onReorder: (oldIdx, newIdx) {
+                                                if (newIdx > oldIdx) newIdx--;
+                                                final ids = List<String>.from(playlist.listSongIds);
+                                                final movedId = ids.removeAt(oldIdx);
+                                                ids.insert(newIdx, movedId);
+                                                // Update the playlist in Firebase
+                                                final updatedPlaylist = Playlist(
+                                                  id: playlist.id,
+                                                  name: playlist.name,
+                                                );
+                                                updatedPlaylist.listSongIds = ids;
+                                                playlistsBloc.add(UpdatePlaylistDirect(playlist: updatedPlaylist));
+                                                setDialogState(() {});
+                                              },
+                                              itemBuilder: (context, songIndex) {
+                                                final song = songs[songIndex];
+                                                return ListTile(
+                                                  key: ValueKey('${playlist.id}_${song.id}_$songIndex'),
+                                                  dense: true,
+                                                  leading: Text(
+                                                    '${songIndex + 1}.',
+                                                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                                  ),
+                                                  title: Text(song.title, style: const TextStyle(fontSize: 13)),
+                                                  subtitle: song.interpret != null && song.interpret!.isNotEmpty
+                                                      ? Text(song.interpret!, style: const TextStyle(fontSize: 11, color: Colors.grey))
+                                                      : null,
+                                                  trailing: IconButton(
+                                                    icon: const Icon(Icons.remove_circle_outline, size: 18, color: Colors.red),
+                                                    tooltip: 'Odebrat z playlistu',
+                                                    onPressed: () {
+                                                      final ids = List<String>.from(playlist.listSongIds);
+                                                      ids.removeAt(songIndex);
+                                                      final updatedPlaylist = Playlist(
+                                                        id: playlist.id,
+                                                        name: playlist.name,
+                                                      );
+                                                      updatedPlaylist.listSongIds = ids;
+                                                      playlistsBloc.add(UpdatePlaylistDirect(playlist: updatedPlaylist));
+                                                      setDialogState(() {});
+                                                    },
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                    ),
+                                ],
+                              );
+                            },
+                          ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(dialogContext),
+                      child: const Text('Zavřít'),
+                    ),
+                  ],
+                );
+              },
             );
           },
         );

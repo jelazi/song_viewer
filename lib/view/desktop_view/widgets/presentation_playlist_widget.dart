@@ -7,10 +7,12 @@ import '../../../model/song/song.dart';
 /// Widget for managing presentation playlist with drag & drop support
 class PresentationPlaylistWidget extends StatelessWidget {
   final Function(Song)? onSongSelected;
+  final Function(Song, int)? onSongDoubleTap;
 
   const PresentationPlaylistWidget({
     super.key,
     this.onSongSelected,
+    this.onSongDoubleTap,
   });
 
   @override
@@ -221,6 +223,14 @@ class PresentationPlaylistWidget extends StatelessWidget {
               );
           if (onSongSelected != null) {
             onSongSelected!(song);
+          }
+        },
+        onDoubleTap: () {
+          context.read<PresentationPlaylistBloc>().add(
+                SelectPresentationSong(index: index),
+              );
+          if (onSongDoubleTap != null) {
+            onSongDoubleTap!(song, index);
           }
         },
         borderRadius: BorderRadius.circular(8),

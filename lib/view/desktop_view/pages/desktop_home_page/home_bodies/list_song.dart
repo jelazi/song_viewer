@@ -8,8 +8,11 @@ import '../../../../../services/constants.dart';
 import '../../../widgets/presentation_playlist_widget.dart';
 
 class ListSong extends StatefulWidget {
+  final double? width;
+
   const ListSong({
     super.key,
+    this.width,
   });
 
   @override
@@ -25,7 +28,7 @@ class _ListSongState extends State<ListSong> {
     return BlocBuilder<HomePageBloc, HomePageState>(
       builder: (context, state) {
         return Container(
-            width: 300,
+            width: widget.width ?? 300,
             padding: const EdgeInsets.all(5),
             decoration: const BoxDecoration(
               border: Border(left: BorderSide(color: AppColor.grey3Color, width: 1.0), right: BorderSide(color: AppColor.grey3Color, width: 1.0)),
@@ -205,7 +208,71 @@ class _ListSongState extends State<ListSong> {
                                 showChords: settingsState.presentationShowChords,
                                 currentPage: result.currentPage,
                                 totalPages: result.totalPages,
+                                linesPerPage: settingsState.presentationLinesPerPage,
                               );
+                            },
+                            onSongDoubleTap: (song, index) {
+                              // Double-click starts presentation from this song
+                              final manager = PresentationWindowManager();
+                              final presentationBloc = context.read<PresentationBloc>();
+                              final settingsState = context.read<SettingsBloc>().state;
+
+                              // Update presentation bloc with the song
+                              presentationBloc.add(UpdatePresentationSong(song: song));
+                              presentationBloc.add(UpdatePresentationSettings(
+                                linesPerPage: settingsState.presentationLinesPerPage,
+                                fontSize: settingsState.presentationFontSize,
+                                textColor: settingsState.presentationFontColor,
+                                showChords: settingsState.presentationShowChords,
+                                screenIndex: settingsState.presentationScreenIndex,
+                              ));
+
+                              // Compute first page of this song
+                              final result = PresentationBloc.computePageContent(
+                                song: song,
+                                linesPerPage: settingsState.presentationLinesPerPage,
+                                showChords: settingsState.presentationShowChords,
+                                page: 0,
+                              );
+
+                              if (manager.isPresentationWindowOpen) {
+                                // Presentation already open - just send the new song
+                                manager.sendPageToPresentation(
+                                  context,
+                                  title: song.title,
+                                  pageContent: result.pageContent,
+                                  fontSize: settingsState.presentationFontSize,
+                                  textColor: settingsState.presentationFontColor,
+                                  showChords: settingsState.presentationShowChords,
+                                  currentPage: result.currentPage,
+                                  totalPages: result.totalPages,
+                                  linesPerPage: settingsState.presentationLinesPerPage,
+                                  showTitle: settingsState.presentationShowTitle,
+                                  showPageNumber: settingsState.presentationShowPageNumber,
+                                );
+                              } else {
+                                // Open presentation window from this song
+                                manager.openPresentationWindow(
+                                  context,
+                                  title: song.title,
+                                  pageContent: result.pageContent,
+                                  fontSize: settingsState.presentationFontSize,
+                                  textColor: settingsState.presentationFontColor,
+                                  showChords: settingsState.presentationShowChords,
+                                  currentPage: result.currentPage,
+                                  totalPages: result.totalPages,
+                                  linesPerPage: settingsState.presentationLinesPerPage,
+                                  showTitle: settingsState.presentationShowTitle,
+                                  showPageNumber: settingsState.presentationShowPageNumber,
+                                );
+                              }
+
+                              // Re-request focus so keyboard shortcuts work
+                              Future.delayed(const Duration(milliseconds: 300), () {
+                                if (context.mounted) {
+                                  FocusScope.of(context).requestFocus();
+                                }
+                              });
                             },
                           ),
                         ),

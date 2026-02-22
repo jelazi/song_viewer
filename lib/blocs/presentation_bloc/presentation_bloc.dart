@@ -125,7 +125,7 @@ class PresentationBloc extends Bloc<PresentationEvent, PresentationState> {
     UpdatePresentationSong event,
     Emitter<PresentationState> emit,
   ) {
-    final newState = _recalculatePages(state, newSong: event.song, newPage: 0);
+    final newState = _recalculatePages(state, newSong: event.song, newPage: event.page ?? 0);
     emit(newState);
   }
 

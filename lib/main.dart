@@ -1,6 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:bot_toast/bot_toast.dart';
 import 'package:default_project/model/update_songlist_data.dart';
@@ -129,6 +130,7 @@ class _PresentationAppState extends State<PresentationApp> {
   int _totalPages = 1;
   bool _showTitle = true;
   bool _showPageNumber = true;
+  int _linesPerPage = 8;
 
   @override
   void initState() {
@@ -179,6 +181,7 @@ class _PresentationAppState extends State<PresentationApp> {
                 _totalPages = data['totalPages'] ?? 1;
                 _showTitle = data['showTitle'] ?? true;
                 _showPageNumber = data['showPageNumber'] ?? true;
+                _linesPerPage = data['linesPerPage'] ?? 8;
               });
             }
           } else {
@@ -291,6 +294,7 @@ class _PresentationAppState extends State<PresentationApp> {
                   _totalPages = data['totalPages'] ?? _totalPages;
                   _showTitle = data['showTitle'] ?? _showTitle;
                   _showPageNumber = data['showPageNumber'] ?? _showPageNumber;
+                  _linesPerPage = data['linesPerPage'] ?? _linesPerPage;
                 });
               }
               return 'ok';
@@ -360,74 +364,129 @@ class _PresentationAppState extends State<PresentationApp> {
       debugShowCheckedModeBanner: false,
       home: Scaffold(
         backgroundColor: Colors.black,
-        body: Padding(
-          padding: const EdgeInsets.all(40),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Page content - no scrolling, fixed lines
-              Expanded(
-                child: Center(
-                  child: _pageContent.isEmpty
-                      ? const SizedBox.shrink()
-                      : Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: _pageContent.split('\n').map((line) {
-                            // Check if line looks like a chord line (contains common chord patterns)
-                            final isChordLine = _showChords && RegExp(r'\[.*?\]').hasMatch(line);
-                            final displayLine = line.replaceAll(RegExp(r'[\[\]]'), '');
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 2),
-                              child: Text(
-                                displayLine,
-                                style: TextStyle(
-                                  color: isChordLine ? _textColor.withValues(alpha: 0.7) : _textColor,
-                                  fontSize: _fontSize,
-                                  height: 1.4,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            // Auto-calculate font size based on available height and width
+            final availableWidth = constraints.maxWidth - 80; // padding (40 left + 40 right)
+            final availableHeight = constraints.maxHeight - 80; // padding (40 top + 40 bottom)
+            final bottomBarHeight = (_showTitle || _showPageNumber) ? 30.0 : 0.0;
+            final contentHeight = availableHeight - bottomBarHeight;
+            final lineHeight = 1.4; // line height multiplier
+            final verticalPadding = 4.0; // vertical padding per line (2 top + 2 bottom)
+
+            // Font size based on height: fit all lines vertically
+            final heightBasedFontSize = (contentHeight / (_linesPerPage * (lineHeight + verticalPadding / contentHeight * _linesPerPage))).clamp(12.0, 120.0);
+
+            // Font size based on width: find the longest line and ensure it fits
+            final lines = _pageContent.isEmpty ? <String>[] : _pageContent.split('\n');
+            double widthBasedFontSize = heightBasedFontSize;
+
+            if (lines.isNotEmpty) {
+              // Find the longest line
+              String longestLine = '';
+              for (final line in lines) {
+                final displayLine = line.replaceAll(RegExp(r'[\[\]]'), '');
+                if (displayLine.length > longestLine.length) {
+                  longestLine = displayLine;
+                }
+              }
+
+              if (longestLine.isNotEmpty) {
+                // Binary search for max font size that fits width
+                double lo = 8.0;
+                double hi = heightBasedFontSize;
+                while (hi - lo > 0.5) {
+                  final mid = (lo + hi) / 2;
+                  final tp = TextPainter(
+                    text: TextSpan(
+                      text: longestLine,
+                      style: TextStyle(fontSize: mid, height: lineHeight),
+                    ),
+                    maxLines: 1,
+                    textDirection: ui.TextDirection.ltr,
+                  )..layout();
+                  if (tp.width <= availableWidth) {
+                    lo = mid;
+                  } else {
+                    hi = mid;
+                  }
+                }
+                widthBasedFontSize = lo;
+              }
+            }
+
+            // Use the SMALLER of the two to ensure no overflow in either direction
+            final autoFontSize = widthBasedFontSize.clamp(12.0, heightBasedFontSize);
+
+            return Padding(
+              padding: const EdgeInsets.all(40),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Page content - no scrolling, fixed lines
+                  Expanded(
+                    child: Center(
+                      child: _pageContent.isEmpty
+                          ? const SizedBox.shrink()
+                          : Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: _pageContent.split('\n').map((line) {
+                                // Check if line looks like a chord line (contains common chord patterns)
+                                final isChordLine = _showChords && RegExp(r'\[.*?\]').hasMatch(line);
+                                final displayLine = line.replaceAll(RegExp(r'[\[\]]'), '');
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 2),
+                                  child: Text(
+                                    displayLine,
+                                    style: TextStyle(
+                                      color: isChordLine ? _textColor.withValues(alpha: 0.7) : _textColor,
+                                      fontSize: autoFontSize,
+                                      height: lineHeight,
+                                    ),
+                                    softWrap: false,
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                    ),
+                  ),
+                  // Bottom bar: title (left) + page number (right)
+                  if (_showTitle || _showPageNumber)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        if (_showTitle)
+                          Flexible(
+                            child: Text(
+                              _title,
+                              style: TextStyle(
+                                color: _textColor.withValues(alpha: 0.4),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
                               ),
-                            );
-                          }).toList(),
-                        ),
-                ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                          )
+                        else
+                          const SizedBox.shrink(),
+                        if (_showPageNumber)
+                          Text(
+                            '${_currentPage + 1} / $_totalPages',
+                            style: TextStyle(
+                              color: _textColor.withValues(alpha: 0.4),
+                              fontSize: 14,
+                            ),
+                          )
+                        else
+                          const SizedBox.shrink(),
+                      ],
+                    ),
+                ],
               ),
-              // Bottom bar: title (left) + page number (right)
-              if (_showTitle || _showPageNumber)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    if (_showTitle)
-                      Flexible(
-                        child: Text(
-                          _title,
-                          style: TextStyle(
-                            color: _textColor.withValues(alpha: 0.4),
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
-                      )
-                    else
-                      const SizedBox.shrink(),
-                    if (_showPageNumber)
-                      Text(
-                        '${_currentPage + 1} / $_totalPages',
-                        style: TextStyle(
-                          color: _textColor.withValues(alpha: 0.4),
-                          fontSize: 14,
-                        ),
-                      )
-                    else
-                      const SizedBox.shrink(),
-                  ],
-                ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );

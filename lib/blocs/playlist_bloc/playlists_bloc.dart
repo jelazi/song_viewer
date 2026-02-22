@@ -57,6 +57,7 @@ class PlaylistsBloc extends Bloc<PlaylistsEvent, PlaylistsState> {
     on<ChangeCurrentColumnPlaylist>(_changeCurrentColumnPlaylist);
     on<MoveSongInPlaylist>(_moveSongInPlaylist);
     on<UpdateSelectedSongInPreviewPlaylist>(_updateSelectedSongInPreviewPlaylist);
+    on<UpdatePlaylistDirect>(_updatePlaylistDirect);
     songsRepository.selectSongData.listen((event) {
       add(UpdateSelectedSongInPreviewPlaylist(selectedSongId: event));
     });
@@ -341,5 +342,15 @@ class PlaylistsBloc extends Bloc<PlaylistsEvent, PlaylistsState> {
     final song = currentSongs.removeAt(event.oldIndex);
     currentSongs.insert(event.newIndex, song);
     emit(state.copyWith(currentSongs: currentSongs));
+  }
+
+  Future<void> _updatePlaylistDirect(UpdatePlaylistDirect event, Emitter<PlaylistsState> emit) async {
+    final state = this.state;
+    final result = await playlistRepository.savePlaylist(event.playlist);
+    if (result == false) {
+      MyToast.showText(text: 'Error updating playlist', typeNotification: TypeNotification.error);
+      return;
+    }
+    emit(state.copyWith(playlists: List<Playlist>.from(playlistRepository.playlists)));
   }
 }

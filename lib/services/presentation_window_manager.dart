@@ -34,6 +34,7 @@ class PresentationWindowManager {
     required bool showChords,
     required int currentPage,
     required int totalPages,
+    int linesPerPage = 8,
     bool showTitle = true,
     bool showPageNumber = true,
   }) async {
@@ -83,6 +84,7 @@ class PresentationWindowManager {
         'showChords': showChords,
         'currentPage': currentPage,
         'totalPages': totalPages,
+        'linesPerPage': linesPerPage,
       });
 
       final window = await WindowController.create(WindowConfiguration(
@@ -131,6 +133,7 @@ class PresentationWindowManager {
     required bool showChords,
     required int currentPage,
     required int totalPages,
+    int linesPerPage = 8,
     bool showTitle = true,
     bool showPageNumber = true,
   }) async {
@@ -149,6 +152,7 @@ class PresentationWindowManager {
         'showChords': showChords,
         'currentPage': currentPage,
         'totalPages': totalPages,
+        'linesPerPage': linesPerPage,
         'showTitle': showTitle,
         'showPageNumber': showPageNumber,
       });

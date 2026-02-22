@@ -126,3 +126,11 @@ class MoveSongInPlaylist extends PlaylistsEvent {
   @override
   List<Object> get props => [oldIndex, newIndex];
 }
+
+/// Directly update a playlist (e.g. reorder or remove songs from load dialog)
+class UpdatePlaylistDirect extends PlaylistsEvent {
+  final Playlist playlist;
+  const UpdatePlaylistDirect({required this.playlist});
+  @override
+  List<Object> get props => [playlist];
+}

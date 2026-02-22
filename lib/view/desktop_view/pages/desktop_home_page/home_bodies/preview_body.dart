@@ -23,6 +23,7 @@ class PreviewBody extends StatefulWidget {
 class _PreviewBodyState extends State<PreviewBody> {
   ScrollController scrollController = ScrollController();
   OverlayEntry? overlayChord;
+  double _listSongWidth = 300.0;
 
   @override
   void initState() {
@@ -51,7 +52,28 @@ class _PreviewBodyState extends State<PreviewBody> {
       builder: (context, state) {
         return Row(
           children: [
-            const ListSong(),
+            ListSong(width: _listSongWidth),
+            // Resizable vertical divider between song list and content
+            MouseRegion(
+              cursor: SystemMouseCursors.resizeColumn,
+              child: GestureDetector(
+                onHorizontalDragUpdate: (details) {
+                  setState(() {
+                    _listSongWidth = (_listSongWidth + details.delta.dx).clamp(200.0, 600.0);
+                  });
+                },
+                child: Container(
+                  width: 8,
+                  color: Colors.transparent,
+                  child: Center(
+                    child: Container(
+                      width: 2,
+                      color: AppColor.grey3Color,
+                    ),
+                  ),
+                ),
+              ),
+            ),
             Expanded(child: BlocBuilder<PreviewChordBloc, PreviewChordState>(
               builder: (context, state) {
                 if (state.data.song == null) {
