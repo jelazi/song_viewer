@@ -131,6 +131,7 @@ class _PresentationAppState extends State<PresentationApp> {
   bool _showTitle = true;
   bool _showPageNumber = true;
   int _linesPerPage = 8;
+  final FocusNode _presentationFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -206,8 +207,12 @@ class _PresentationAppState extends State<PresentationApp> {
 
   void _setupMessageHandler() async {
     try {
-      final controller = await WindowController.fromCurrentEngine();
-      await controller.setWindowMethodHandler((call) async {
+      // Use unidirectional channel so the main window can invoke without registering
+      const presentationChannel = WindowMethodChannel(
+        'songs_viewer/presentation',
+        mode: ChannelMode.unidirectional,
+      );
+      await presentationChannel.setMethodCallHandler((call) async {
         debugPrint('PresentationApp received method: ${call.method}');
 
         switch (call.method) {
@@ -358,135 +363,178 @@ class _PresentationAppState extends State<PresentationApp> {
   }
 
   @override
+  void dispose() {
+    _presentationFocusNode.dispose();
+    super.dispose();
+  }
+
+  /// Forward key events from presentation window to main window
+  void _handlePresentationKeyEvent(KeyEvent event) {
+    if (event is! KeyDownEvent) return;
+
+    final key = event.logicalKey;
+    String? command;
+
+    if (key == LogicalKeyboardKey.arrowRight || key == LogicalKeyboardKey.space) {
+      command = 'forward';
+    } else if (key == LogicalKeyboardKey.arrowLeft || key == LogicalKeyboardKey.backspace) {
+      command = 'backward';
+    } else if (key == LogicalKeyboardKey.escape) {
+      command = 'escape';
+    }
+
+    if (command != null) {
+      try {
+        const navigateChannel = WindowMethodChannel(
+          'songs_viewer/navigate',
+          mode: ChannelMode.unidirectional,
+        );
+        navigateChannel.invokeMethod('navigate', command);
+      } catch (e) {
+        debugPrint('Error forwarding key event to main window: $e');
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     debugPrint('PresentationApp building...');
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        backgroundColor: Colors.black,
-        body: LayoutBuilder(
-          builder: (context, constraints) {
-            // Auto-calculate font size based on available height and width
-            final availableWidth = constraints.maxWidth - 80; // padding (40 left + 40 right)
-            final availableHeight = constraints.maxHeight - 80; // padding (40 top + 40 bottom)
-            final bottomBarHeight = (_showTitle || _showPageNumber) ? 30.0 : 0.0;
-            final contentHeight = availableHeight - bottomBarHeight;
-            final lineHeight = 1.4; // line height multiplier
-            final verticalPadding = 4.0; // vertical padding per line (2 top + 2 bottom)
+      home: KeyboardListener(
+        focusNode: _presentationFocusNode,
+        autofocus: true,
+        onKeyEvent: _handlePresentationKeyEvent,
+        child: Scaffold(
+          backgroundColor: Colors.black,
+          body: LayoutBuilder(
+            builder: (context, constraints) {
+              // Auto-calculate font size based on available height and width
+              final availableWidth = constraints.maxWidth - 80; // padding (40 left + 40 right)
+              final availableHeight = constraints.maxHeight - 80; // padding (40 top + 40 bottom)
+              final bottomBarHeight = (_showTitle || _showPageNumber) ? 30.0 : 0.0;
+              final contentHeight = availableHeight - bottomBarHeight;
+              final lineHeight = 1.4; // line height multiplier
+              final verticalPadding = 4.0; // vertical padding per line (2 top + 2 bottom)
 
-            // Font size based on height: fit all lines vertically
-            final heightBasedFontSize = (contentHeight / (_linesPerPage * (lineHeight + verticalPadding / contentHeight * _linesPerPage))).clamp(12.0, 120.0);
+              // Count actual lines in content
+              final lines = _pageContent.isEmpty ? <String>[] : _pageContent.split('\n');
+              final actualLineCount = lines.isNotEmpty ? lines.length : _linesPerPage;
 
-            // Font size based on width: find the longest line and ensure it fits
-            final lines = _pageContent.isEmpty ? <String>[] : _pageContent.split('\n');
-            double widthBasedFontSize = heightBasedFontSize;
+              // Font size based on height: N * (fontSize * lineHeight + verticalPadding) <= contentHeight
+              // => fontSize <= (contentHeight - N * verticalPadding) / (N * lineHeight)
+              final heightBasedFontSize = ((contentHeight - actualLineCount * verticalPadding) / (actualLineCount * lineHeight)).clamp(12.0, 120.0);
 
-            if (lines.isNotEmpty) {
-              // Find the longest line
-              String longestLine = '';
-              for (final line in lines) {
-                final displayLine = line.replaceAll(RegExp(r'[\[\]]'), '');
-                if (displayLine.length > longestLine.length) {
-                  longestLine = displayLine;
-                }
-              }
+              // Font size based on width: find the longest line and ensure it fits
+              double widthBasedFontSize = heightBasedFontSize;
 
-              if (longestLine.isNotEmpty) {
-                // Binary search for max font size that fits width
-                double lo = 8.0;
-                double hi = heightBasedFontSize;
-                while (hi - lo > 0.5) {
-                  final mid = (lo + hi) / 2;
-                  final tp = TextPainter(
-                    text: TextSpan(
-                      text: longestLine,
-                      style: TextStyle(fontSize: mid, height: lineHeight),
-                    ),
-                    maxLines: 1,
-                    textDirection: ui.TextDirection.ltr,
-                  )..layout();
-                  if (tp.width <= availableWidth) {
-                    lo = mid;
-                  } else {
-                    hi = mid;
+              if (lines.isNotEmpty) {
+                // Find the longest line
+                String longestLine = '';
+                for (final line in lines) {
+                  final displayLine = line.replaceAll(RegExp(r'[\[\]]'), '');
+                  if (displayLine.length > longestLine.length) {
+                    longestLine = displayLine;
                   }
                 }
-                widthBasedFontSize = lo;
+
+                if (longestLine.isNotEmpty) {
+                  // Binary search for max font size that fits width
+                  double lo = 8.0;
+                  double hi = heightBasedFontSize;
+                  while (hi - lo > 0.5) {
+                    final mid = (lo + hi) / 2;
+                    final tp = TextPainter(
+                      text: TextSpan(
+                        text: longestLine,
+                        style: TextStyle(fontSize: mid, height: lineHeight),
+                      ),
+                      maxLines: 1,
+                      textDirection: ui.TextDirection.ltr,
+                    )..layout();
+                    if (tp.width <= availableWidth) {
+                      lo = mid;
+                    } else {
+                      hi = mid;
+                    }
+                  }
+                  widthBasedFontSize = lo;
+                }
               }
-            }
 
-            // Use the SMALLER of the two to ensure no overflow in either direction
-            final autoFontSize = widthBasedFontSize.clamp(12.0, heightBasedFontSize);
+              // Use the SMALLER of the two to ensure no overflow in either direction
+              final autoFontSize = widthBasedFontSize.clamp(12.0, heightBasedFontSize);
 
-            return Padding(
-              padding: const EdgeInsets.all(40),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Page content - no scrolling, fixed lines
-                  Expanded(
-                    child: Center(
-                      child: _pageContent.isEmpty
-                          ? const SizedBox.shrink()
-                          : Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: _pageContent.split('\n').map((line) {
-                                // Check if line looks like a chord line (contains common chord patterns)
-                                final isChordLine = _showChords && RegExp(r'\[.*?\]').hasMatch(line);
-                                final displayLine = line.replaceAll(RegExp(r'[\[\]]'), '');
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 2),
-                                  child: Text(
-                                    displayLine,
-                                    style: TextStyle(
-                                      color: isChordLine ? _textColor.withValues(alpha: 0.7) : _textColor,
-                                      fontSize: autoFontSize,
-                                      height: lineHeight,
+              return Padding(
+                padding: const EdgeInsets.all(40),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Page content - no scrolling, fixed lines
+                    Expanded(
+                      child: Center(
+                        child: _pageContent.isEmpty
+                            ? const SizedBox.shrink()
+                            : Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: _pageContent.split('\n').map((line) {
+                                  // Check if line looks like a chord line (contains common chord patterns)
+                                  final isChordLine = _showChords && RegExp(r'\[.*?\]').hasMatch(line);
+                                  final displayLine = line.replaceAll(RegExp(r'[\[\]]'), '');
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 2),
+                                    child: Text(
+                                      displayLine,
+                                      style: TextStyle(
+                                        color: isChordLine ? _textColor.withValues(alpha: 0.7) : _textColor,
+                                        fontSize: autoFontSize,
+                                        height: lineHeight,
+                                      ),
+                                      softWrap: false,
                                     ),
-                                    softWrap: false,
-                                  ),
-                                );
-                              }).toList(),
-                            ),
+                                  );
+                                }).toList(),
+                              ),
+                      ),
                     ),
-                  ),
-                  // Bottom bar: title (left) + page number (right)
-                  if (_showTitle || _showPageNumber)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        if (_showTitle)
-                          Flexible(
-                            child: Text(
-                              _title,
+                    // Bottom bar: title (left) + page number (right)
+                    if (_showTitle || _showPageNumber)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          if (_showTitle)
+                            Flexible(
+                              child: Text(
+                                _title,
+                                style: TextStyle(
+                                  color: _textColor.withValues(alpha: 0.4),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                            )
+                          else
+                            const SizedBox.shrink(),
+                          if (_showPageNumber)
+                            Text(
+                              '${_currentPage + 1} / $_totalPages',
                               style: TextStyle(
                                 color: _textColor.withValues(alpha: 0.4),
                                 fontSize: 14,
-                                fontWeight: FontWeight.w500,
                               ),
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
-                            ),
-                          )
-                        else
-                          const SizedBox.shrink(),
-                        if (_showPageNumber)
-                          Text(
-                            '${_currentPage + 1} / $_totalPages',
-                            style: TextStyle(
-                              color: _textColor.withValues(alpha: 0.4),
-                              fontSize: 14,
-                            ),
-                          )
-                        else
-                          const SizedBox.shrink(),
-                      ],
-                    ),
-                ],
-              ),
-            );
-          },
+                            )
+                          else
+                            const SizedBox.shrink(),
+                        ],
+                      ),
+                  ],
+                ),
+              );
+            },
+          ),
         ),
       ),
     );

@@ -1,5 +1,46 @@
 # Development Log
 
+## 2026-02-22 - Fix CHANNEL_UNREGISTERED errors with desktop_multi_window v0.3.0
+
+### What was done
+- **Root cause**: `WindowController.invokeMethod` in v0.3.0 uses a **bidirectional** `WindowMethodChannel` internally. Both engines (main + sub-window) must register on the channel. The main window never registered, causing `CHANNEL_UNREGISTERED` errors on every `invokeMethod` call.
+- **Fix**: Replaced all `_presentationWindowController!.invokeMethod(...)` calls with a custom **unidirectional** `WindowMethodChannel('songs_viewer/presentation')`. The sub-window registers as the sole handler. Any engine can invoke.
+- **Sub-window handler**: Changed `_setupMessageHandler()` in `PresentationApp` from `controller.setWindowMethodHandler()` (bidirectional) to `presentationChannel.setMethodCallHandler()` (unidirectional).
+- **Retry logic**: Added `_invokeWithRetry()` to `PresentationWindowManager` — retries up to 5 times with 500ms delays when the sub-window hasn't registered yet (startup timing).
+
+### Files modified
+- `lib/main.dart` - `_setupMessageHandler()` now uses unidirectional `WindowMethodChannel('songs_viewer/presentation')`
+- `lib/services/presentation_window_manager.dart` - All `invokeMethod` calls use the shared unidirectional channel + retry helper
+
+### Current state
+- Two unidirectional channels: `songs_viewer/presentation` (main→sub, page updates/close) and `songs_viewer/navigate` (sub→main, keyboard forwarding)
+- No compilation errors
+
+---
+
+## 2025-01-XX - Fix keyboard forwarding between presentation windows
+
+### What was done
+- **Fixed focus/keyboard issue in presentation mode** - The previous approach of `windowManager.focus()` to bring the main window to front was causing the presentation window to be hidden behind the main window (black screen). Reverted that approach entirely.
+- **Implemented cross-window keyboard forwarding** - Added `KeyboardListener` to `PresentationApp` (sub-window) that captures arrow keys, space, backspace, and escape. These key events are forwarded to the main window via `WindowMethodChannel` (desktop_multi_window v0.3.0 API).
+- **Fixed API for desktop_multi_window v0.3.0** - The old `DesktopMultiWindow.invokeMethod` / `DesktopMultiWindow.setMethodHandler` API was removed in v0.3.0. Replaced with `WindowMethodChannel('songs_viewer/navigate', mode: ChannelMode.unidirectional)` for inter-window communication.
+- **Main window receives navigation commands** - `DesktopHomePage` listens on the `WindowMethodChannel` and invokes the same `_navigateForward` / `_navigateBackward` / escape logic as local keyboard events.
+
+### Files modified
+- `lib/main.dart` - Added `_presentationFocusNode`, `KeyboardListener` wrapper, `_handlePresentationKeyEvent()` that sends commands via `WindowMethodChannel`
+- `lib/view/desktop_view/pages/desktop_home_page/desktop_home_page.dart` - Added `_navigateChannel` (static const `WindowMethodChannel`), `initState()` registers handler, `dispose()` clears handler, `_handleRemoteNavigation()` method
+- `lib/services/presentation_window_manager.dart` - Reverted `windowManager.focus()` and removed `_focusMainWindow()` method
+
+### Current state
+- Keyboard shortcuts (arrows, space, backspace, escape) now work from EITHER window - the main window or the presentation window
+- Presentation window is no longer hidden/covered by the main window
+- No compilation errors (only pre-existing info-level warnings)
+
+### Known issues
+- None new
+
+---
+
 ## 2025-01-XX - Presentation UX fixes batch 3 (5 tasks)
 
 ### What was done

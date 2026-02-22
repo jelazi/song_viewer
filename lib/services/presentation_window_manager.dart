@@ -6,6 +6,13 @@ import 'package:flutter/material.dart';
 import '../blocs/desktop_ribbon_menu/desktop_ribbon_menu_bloc.dart';
 import '../model/song/song.dart';
 
+/// Unidirectional channel for main → presentation window communication.
+/// The sub-window registers as the sole handler; any engine can invoke.
+const _presentationChannel = WindowMethodChannel(
+  'songs_viewer/presentation',
+  mode: ChannelMode.unidirectional,
+);
+
 /// Manager for presentation window operations
 class PresentationWindowManager {
   // Singleton instance
@@ -61,6 +68,7 @@ class PresentationWindowManager {
               showTitle: showTitle,
               showPageNumber: showPageNumber,
             );
+            // Re-focus the main window so keyboard shortcuts work
             _ribbonMenuBloc?.add(const ChangePresentationWindowState(isOpen: true));
             return;
           } else {
@@ -144,7 +152,7 @@ class PresentationWindowManager {
 
     try {
       debugPrint('Sending page to presentation: $title (page ${currentPage + 1}/$totalPages)');
-      await _presentationWindowController!.invokeMethod('update_page', {
+      await _invokeWithRetry('update_page', {
         'title': title,
         'pageContent': pageContent,
         'fontSize': fontSize,
@@ -171,7 +179,7 @@ class PresentationWindowManager {
 
     try {
       debugPrint('Sending song to presentation: ${song.title}');
-      await _presentationWindowController!.invokeMethod('update_song', song.toJson());
+      await _invokeWithRetry('update_song', song.toJson());
       debugPrint('Song sent successfully');
 
       if (context.mounted) {
@@ -188,13 +196,33 @@ class PresentationWindowManager {
     }
   }
 
+  /// Invoke a method on the presentation channel with retry logic.
+  /// The sub-window needs a moment to register its handler after creation.
+  Future<dynamic> _invokeWithRetry(String method, [dynamic arguments]) async {
+    const maxRetries = 5;
+    const retryDelay = Duration(milliseconds: 500);
+
+    for (var attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        return await _presentationChannel.invokeMethod(method, arguments);
+      } on WindowChannelException catch (e) {
+        if (e.code == 'CHANNEL_UNREGISTERED' && attempt < maxRetries - 1) {
+          debugPrint('Channel not ready yet, retrying in ${retryDelay.inMilliseconds}ms... (attempt ${attempt + 1}/$maxRetries)');
+          await Future.delayed(retryDelay);
+        } else {
+          rethrow;
+        }
+      }
+    }
+  }
+
   /// Close presentation window
   Future<void> closePresentationWindow() async {
     if (_presentationWindowController != null) {
       try {
         debugPrint('Closing presentation window...');
 
-        await _presentationWindowController!.invokeMethod('close_window_with_exit');
+        await _invokeWithRetry('close_window_with_exit');
         debugPrint('Close command sent');
       } catch (e) {
         debugPrint('Error closing presentation window: $e');

@@ -1,3 +1,4 @@
+import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -22,8 +23,50 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
   final FocusNode _focusNode = FocusNode();
   bool _isBlackScreen = false; // tracks if we're showing a black transition screen
 
+  static const _navigateChannel = WindowMethodChannel(
+    'songs_viewer/navigate',
+    mode: ChannelMode.unidirectional,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    // Listen for navigation commands forwarded from the presentation window
+    _navigateChannel.setMethodCallHandler((call) async {
+      if (call.method == 'navigate') {
+        final command = call.arguments as String;
+        _handleRemoteNavigation(command);
+        return 'ok';
+      }
+      return null;
+    });
+  }
+
+  /// Handle navigation commands from the presentation window
+  void _handleRemoteNavigation(String command) {
+    final presentationBloc = context.read<PresentationBloc>();
+    final playlistBloc = context.read<PresentationPlaylistBloc>();
+    final settingsState = context.read<SettingsBloc>().state;
+    final ribbonState = context.read<DesktopRibbonMenuBloc>().state;
+
+    if (!ribbonState.isPresentationWindowOpen) return;
+
+    switch (command) {
+      case 'forward':
+        _navigateForward(presentationBloc, playlistBloc, settingsState);
+        break;
+      case 'backward':
+        _navigateBackward(presentationBloc, playlistBloc, settingsState);
+        break;
+      case 'escape':
+        PresentationWindowManager().closePresentationWindow();
+        break;
+    }
+  }
+
   @override
   void dispose() {
+    _navigateChannel.setMethodCallHandler(null);
     _focusNode.dispose();
     super.dispose();
   }
@@ -319,7 +362,7 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
               Widget homeBody = Container();
               switch (state.bodyName) {
                 case 'preview':
-                  homeBody = const PreviewBody();
+                  homeBody = PreviewBody(onRequestFocus: () => _focusNode.requestFocus());
                   break;
                 case 'edit':
                   homeBody = const EditBody();
@@ -337,7 +380,7 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
                   homeBody = const PresentationSettingsBody();
                   break;
                 default:
-                  return const PreviewBody();
+                  return PreviewBody(onRequestFocus: () => _focusNode.requestFocus());
               }
               return Column(
                 children: [

@@ -9,10 +9,12 @@ import '../../../widgets/presentation_playlist_widget.dart';
 
 class ListSong extends StatefulWidget {
   final double? width;
+  final VoidCallback? onRequestFocus;
 
   const ListSong({
     super.key,
     this.width,
+    this.onRequestFocus,
   });
 
   @override
@@ -269,9 +271,7 @@ class _ListSongState extends State<ListSong> {
 
                               // Re-request focus so keyboard shortcuts work
                               Future.delayed(const Duration(milliseconds: 300), () {
-                                if (context.mounted) {
-                                  FocusScope.of(context).requestFocus();
-                                }
+                                widget.onRequestFocus?.call();
                               });
                             },
                           ),

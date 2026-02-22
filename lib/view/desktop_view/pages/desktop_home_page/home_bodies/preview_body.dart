@@ -14,7 +14,9 @@ import '../../../../mobile_view/widgets/chords_lyric/guitar_tabs.dart';
 import '../../../../mobile_view/widgets/my_floating_button.dart';
 
 class PreviewBody extends StatefulWidget {
-  const PreviewBody({super.key});
+  final VoidCallback? onRequestFocus;
+
+  const PreviewBody({super.key, this.onRequestFocus});
 
   @override
   State<PreviewBody> createState() => _PreviewBodyState();
@@ -52,7 +54,7 @@ class _PreviewBodyState extends State<PreviewBody> {
       builder: (context, state) {
         return Row(
           children: [
-            ListSong(width: _listSongWidth),
+            ListSong(width: _listSongWidth, onRequestFocus: widget.onRequestFocus),
             // Resizable vertical divider between song list and content
             MouseRegion(
               cursor: SystemMouseCursors.resizeColumn,
