@@ -33,10 +33,72 @@ class _EditChordsBodyState extends State<EditChordsBody> {
                   children: [
                     Text(state.currentEditSong.title, style: const TextStyle(fontSize: 15)),
                     SizedBox(
-                      width: 320,
+                      width: 400,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
+                          MouseRegion(
+                            cursor: SystemMouseCursors.click,
+                            child: GestureDetector(
+                                onTap: () {
+                                  context.read<EditSongBloc>().add(TransposeChordPermanent(transposeIncrement: -1, isOriginalLyric: state.isOriginalLyrics));
+                                },
+                                child: Container(
+                                    height: 30,
+                                    width: 40,
+                                    margin: const EdgeInsets.only(left: 5, right: 5),
+                                    decoration: BoxDecoration(
+                                      color: AppColor.defaultBackgroundColor,
+                                      border: Border.all(color: AppColor.grey1Color),
+                                      borderRadius: BorderRadius.circular(5),
+                                    ),
+                                    child: const Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.remove,
+                                          size: 16,
+                                          color: Colors.black,
+                                        ),
+                                        Icon(
+                                          Icons.music_note,
+                                          size: 16,
+                                          color: Colors.black,
+                                        ),
+                                      ],
+                                    ))),
+                          ),
+                          MouseRegion(
+                            cursor: SystemMouseCursors.click,
+                            child: GestureDetector(
+                                onTap: () {
+                                  context.read<EditSongBloc>().add(TransposeChordPermanent(transposeIncrement: 1, isOriginalLyric: state.isOriginalLyrics));
+                                },
+                                child: Container(
+                                    height: 30,
+                                    width: 40,
+                                    margin: const EdgeInsets.only(left: 5, right: 5),
+                                    decoration: BoxDecoration(
+                                      color: AppColor.defaultBackgroundColor,
+                                      border: Border.all(color: AppColor.grey1Color),
+                                      borderRadius: BorderRadius.circular(5),
+                                    ),
+                                    child: const Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.add,
+                                          size: 16,
+                                          color: Colors.black,
+                                        ),
+                                        Icon(
+                                          Icons.music_note,
+                                          size: 16,
+                                          color: Colors.black,
+                                        ),
+                                      ],
+                                    ))),
+                          ),
                           MouseRegion(
                             cursor: SystemMouseCursors.click,
                             child: GestureDetector(
@@ -62,7 +124,7 @@ class _EditChordsBodyState extends State<EditChordsBody> {
                                 },
                                 child: Container(
                                     height: 30,
-                                    width: 150,
+                                    width: 30,
                                     margin: const EdgeInsets.only(left: 5, right: 5),
                                     decoration: BoxDecoration(
                                       color: state.isOriginalLyrics
@@ -75,7 +137,8 @@ class _EditChordsBodyState extends State<EditChordsBody> {
                                       border: Border.all(color: AppColor.grey1Color),
                                       borderRadius: BorderRadius.circular(5),
                                     ),
-                                    child: Center(child: Text('save'.tr())))),
+                                    child:
+                                        Center(child: Icon(Icons.save, size: 16, color: state.currentText == state.currentEditSong.originalLyrics ? Colors.black : Colors.white)))),
                           )
                         ],
                       ),

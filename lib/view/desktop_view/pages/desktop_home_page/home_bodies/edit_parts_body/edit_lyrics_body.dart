@@ -72,7 +72,7 @@ class _EditLyricsBodyState extends State<EditLyricsBody> {
                                 },
                                 child: Container(
                                     height: 30,
-                                    width: 150,
+                                    width: 30,
                                     margin: const EdgeInsets.only(left: 5, right: 5),
                                     decoration: BoxDecoration(
                                       color: state.isOriginalLyrics
@@ -85,7 +85,8 @@ class _EditLyricsBodyState extends State<EditLyricsBody> {
                                       border: Border.all(color: AppColor.grey1Color),
                                       borderRadius: BorderRadius.circular(5),
                                     ),
-                                    child: Center(child: Text('save'.tr())))),
+                                    child:
+                                        Center(child: Icon(Icons.save, size: 16, color: state.currentText == state.currentEditSong.originalLyrics ? Colors.black : Colors.white)))),
                           )
                         ],
                       ),

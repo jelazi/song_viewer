@@ -5,11 +5,9 @@ abstract class PresentationEvent {
 }
 
 class OpenPresentation extends PresentationEvent {
-  final Song song;
   final bool useSecondaryMonitor;
 
   const OpenPresentation({
-    required this.song,
     this.useSecondaryMonitor = true,
   });
 }
@@ -48,4 +46,31 @@ class SetFontSize extends PresentationEvent {
   final double fontSize;
 
   const SetFontSize({required this.fontSize});
+}
+
+/// Navigate to next page of lyrics
+class NextPresentationPage extends PresentationEvent {
+  const NextPresentationPage();
+}
+
+/// Navigate to previous page of lyrics
+class PreviousPresentationPage extends PresentationEvent {
+  const PreviousPresentationPage();
+}
+
+/// Update presentation settings
+class UpdatePresentationSettings extends PresentationEvent {
+  final int? linesPerPage;
+  final double? fontSize;
+  final Color? textColor;
+  final bool? showChords;
+  final int? screenIndex;
+
+  const UpdatePresentationSettings({
+    this.linesPerPage,
+    this.fontSize,
+    this.textColor,
+    this.showChords,
+    this.screenIndex,
+  });
 }

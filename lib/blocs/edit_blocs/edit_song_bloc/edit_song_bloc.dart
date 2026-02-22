@@ -281,10 +281,10 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
 
   void _transposeChords(TransposeChordPermanent event, Emitter<EditSongState> emit) {
     final state = this.state;
-    var lyric = event.isOriginalLyric ? state.currentEditSong.originalLyrics ?? '' : state.currentEditSong.lyrics;
+    var lyric = state.currentText;
     var newLyric = '';
     try {
-      RegExp exp = RegExp(r'\[.?.?.?.?.?\]');
+      RegExp exp = RegExp(r'\[[^\]]+\]');
 
       newLyric = lyric.replaceAllMapped(exp, (match) {
         String? result = (match.group(0));
@@ -303,12 +303,7 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
       originalLyrics: event.isOriginalLyric ? newLyric : state.currentEditSong.originalLyrics,
     );
     final listUniqueChords = newSong.getAllUniqueChordsFromSong(event.isOriginalLyric ? TypeLyric.original : TypeLyric.translate);
-    emit(state.copyWith(
-        currentText: newLyric,
-        currentEditSong: state.currentEditSong.copyWith(lyrics: newLyric),
-        listUniqueChords: listUniqueChords,
-        selectChord: '',
-        transposeIncrement: event.transposeIncrement));
+    emit(state.copyWith(currentText: newLyric, listUniqueChords: listUniqueChords, selectChord: '', transposeIncrement: event.transposeIncrement));
   }
 
   void _changeFontSizeEdit(ChangeFontSizeEdit event, Emitter<EditSongState> emit) {

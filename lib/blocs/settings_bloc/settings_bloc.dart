@@ -28,6 +28,11 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
           isEditIconVisible: false,
           autoHideTopBar: false,
           typeClickCard: TypeClickCard.none,
+          presentationScreenIndex: 0,
+          presentationLinesPerPage: 8,
+          presentationFontSize: 36.0,
+          presentationFontColor: Colors.white,
+          presentationShowChords: false,
         )) {
     on<_SettingsInitial>(_settingsInitial);
     on<ChangeSettingsValue>(_changeSettingsValue);
@@ -62,6 +67,11 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       isEditIconVisible: settingsRepository.isEditIconVisible,
       autoHideTopBar: settingsRepository.autoHideTopBar,
       typeClickCard: settingsRepository.typeClickCard,
+      presentationScreenIndex: settingsRepository.presentationScreenIndex,
+      presentationLinesPerPage: settingsRepository.presentationLinesPerPage,
+      presentationFontSize: settingsRepository.presentationFontSize,
+      presentationFontColor: settingsRepository.presentationFontColor,
+      presentationShowChords: settingsRepository.presentationShowChords,
     ));
   }
 }

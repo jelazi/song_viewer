@@ -24,26 +24,41 @@ class PresentationWindowManager {
     _ribbonMenuBloc = bloc;
   }
 
-  /// Open presentation window with song data
-  Future<void> openPresentationWindow(BuildContext context, Song song) async {
+  /// Open presentation window with page content
+  Future<void> openPresentationWindow(
+    BuildContext context, {
+    required String title,
+    required String pageContent,
+    required double fontSize,
+    required Color textColor,
+    required bool showChords,
+    required int currentPage,
+    required int totalPages,
+  }) async {
     if (!context.mounted) return;
 
     try {
       // Check if window controller exists and if the window is still alive
       if (_presentationWindowController != null) {
         try {
-          // Try to check if window still exists by getting all windows
           final allWindows = await WindowController.getAll();
           final windowExists = allWindows.any((w) => w.windowId == _presentationWindowController!.windowId);
 
           if (windowExists) {
-            // Window exists, just show it
             await _presentationWindowController!.show();
-            await sendSongToPresentation(context, song);
+            await sendPageToPresentation(
+              context,
+              title: title,
+              pageContent: pageContent,
+              fontSize: fontSize,
+              textColor: textColor,
+              showChords: showChords,
+              currentPage: currentPage,
+              totalPages: totalPages,
+            );
             _ribbonMenuBloc?.add(const ChangePresentationWindowState(isOpen: true));
             return;
           } else {
-            // Window was closed, clear the controller
             debugPrint('Window was closed externally, creating new one');
             _presentationWindowController = null;
           }
@@ -55,28 +70,34 @@ class PresentationWindowManager {
 
       debugPrint('Creating new presentation window...');
 
-      // Create new window with song data in arguments as JSON string
-      final songJsonString = jsonEncode(song.toJson());
+      // Create new window with initial data
+      final initData = jsonEncode({
+        'title': title,
+        'pageContent': pageContent,
+        'fontSize': fontSize,
+        'textColor': textColor.toARGB32(),
+        'showChords': showChords,
+        'currentPage': currentPage,
+        'totalPages': totalPages,
+      });
+
       final window = await WindowController.create(WindowConfiguration(
-        arguments: songJsonString,
+        arguments: initData,
       ));
 
       _presentationWindowController = window;
 
       debugPrint('Window created: ${window.windowId}');
-
-      // Show the window (Swift callback will handle fullscreen)
       await window.show();
 
-      // Notify bloc about state change
       _ribbonMenuBloc?.add(const ChangePresentationWindowState(isOpen: true));
 
-      debugPrint('Window shown with song data in arguments');
+      debugPrint('Window shown with page data');
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Presentation window opened'),
+            content: Text('Prezentační okno otevřeno'),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 2),
           ),
@@ -96,7 +117,40 @@ class PresentationWindowManager {
     }
   }
 
-  /// Send song to existing presentation window
+  /// Send page content to existing presentation window
+  Future<void> sendPageToPresentation(
+    BuildContext context, {
+    required String title,
+    required String pageContent,
+    required double fontSize,
+    required Color textColor,
+    required bool showChords,
+    required int currentPage,
+    required int totalPages,
+  }) async {
+    if (_presentationWindowController == null) {
+      debugPrint('No presentation window available');
+      return;
+    }
+
+    try {
+      debugPrint('Sending page to presentation: $title (page ${currentPage + 1}/$totalPages)');
+      await _presentationWindowController!.invokeMethod('update_page', {
+        'title': title,
+        'pageContent': pageContent,
+        'fontSize': fontSize,
+        'textColor': textColor.toARGB32(),
+        'showChords': showChords,
+        'currentPage': currentPage,
+        'totalPages': totalPages,
+      });
+      debugPrint('Page sent successfully');
+    } catch (e) {
+      debugPrint('Error sending page: $e');
+    }
+  }
+
+  /// Legacy: Send full song to existing presentation window
   Future<void> sendSongToPresentation(BuildContext context, Song song) async {
     if (_presentationWindowController == null) {
       debugPrint('No presentation window available');
@@ -128,7 +182,6 @@ class PresentationWindowManager {
       try {
         debugPrint('Closing presentation window...');
 
-        // Send single command to exit fullscreen and close
         await _presentationWindowController!.invokeMethod('close_window_with_exit');
         debugPrint('Close command sent');
       } catch (e) {
@@ -137,7 +190,6 @@ class PresentationWindowManager {
 
       _presentationWindowController = null;
 
-      // Notify bloc about state change
       _ribbonMenuBloc?.add(const ChangePresentationWindowState(isOpen: false));
     }
   }

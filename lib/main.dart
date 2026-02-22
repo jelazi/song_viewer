@@ -120,13 +120,18 @@ class PresentationApp extends StatefulWidget {
 }
 
 class _PresentationAppState extends State<PresentationApp> {
-  String _displayText = 'Waiting for messages...';
-  Song? _currentSong;
+  String _title = 'Presentation Window';
+  String _pageContent = 'Waiting for messages...';
+  double _fontSize = 36.0;
+  Color _textColor = Colors.white;
+  bool _showChords = false;
+  int _currentPage = 0;
+  int _totalPages = 1;
 
   @override
   void initState() {
     super.initState();
-    _loadInitialSongData();
+    _loadInitialData();
     _setupMessageHandler();
 
     // Force window to show after first frame is rendered
@@ -142,7 +147,7 @@ class _PresentationAppState extends State<PresentationApp> {
     });
   }
 
-  void _loadInitialSongData() async {
+  void _loadInitialData() async {
     try {
       final controller = await WindowController.fromCurrentEngine();
       final arguments = controller.arguments;
@@ -152,22 +157,43 @@ class _PresentationAppState extends State<PresentationApp> {
 
       if (arguments.isNotEmpty) {
         try {
-          final songJson = jsonDecode(arguments) as Map<String, dynamic>;
-          final song = Song.fromJson(songJson);
-          debugPrint('Loaded song from arguments: ${song.title}');
+          final data = jsonDecode(arguments) as Map<String, dynamic>;
 
-          if (mounted) {
-            setState(() {
-              _currentSong = song;
-              _displayText = _extractLyrics(song);
-            });
+          // Check if it's new page-based format or legacy song format
+          if (data.containsKey('pageContent')) {
+            if (mounted) {
+              setState(() {
+                _title = data['title'] ?? 'Presentation';
+                _pageContent = data['pageContent'] ?? '';
+                _fontSize = (data['fontSize'] ?? 36.0).toDouble();
+                _textColor = Color.fromARGB(
+                  (data['textColor'] ?? 0xFFFFFFFF) >> 24 & 0xFF,
+                  (data['textColor'] ?? 0xFFFFFFFF) >> 16 & 0xFF,
+                  (data['textColor'] ?? 0xFFFFFFFF) >> 8 & 0xFF,
+                  (data['textColor'] ?? 0xFFFFFFFF) & 0xFF,
+                );
+                _showChords = data['showChords'] ?? false;
+                _currentPage = data['currentPage'] ?? 0;
+                _totalPages = data['totalPages'] ?? 1;
+              });
+            }
+          } else {
+            // Legacy format: full song JSON
+            final song = Song.fromJson(data);
+            debugPrint('Loaded song from arguments: ${song.title}');
+            if (mounted) {
+              setState(() {
+                _title = song.title;
+                _pageContent = _extractLyrics(song);
+              });
+            }
           }
         } catch (e) {
-          debugPrint('Error parsing song from arguments: $e');
+          debugPrint('Error parsing initial data: $e');
         }
       }
     } catch (e) {
-      debugPrint('Error loading initial song data: $e');
+      debugPrint('Error loading initial data: $e');
     }
   }
 
@@ -192,10 +218,8 @@ class _PresentationAppState extends State<PresentationApp> {
 
           case 'close_window_native':
             debugPrint('Received close window native command');
-            // Close window by calling native close
             if (Platform.isMacOS) {
               try {
-                // First exit fullscreen if needed
                 final platform = const MethodChannel('com.songviewer/window');
                 await platform.invokeMethod('exitFullscreen');
                 await Future.delayed(const Duration(milliseconds: 300));
@@ -208,7 +232,6 @@ class _PresentationAppState extends State<PresentationApp> {
 
           case 'enter_fullscreen':
             debugPrint('Received enter fullscreen command');
-            // Enter fullscreen by calling native method
             if (Platform.isMacOS) {
               try {
                 final platform = const MethodChannel('com.songviewer/window');
@@ -221,7 +244,6 @@ class _PresentationAppState extends State<PresentationApp> {
 
           case 'exit_fullscreen':
             debugPrint('Received exit fullscreen command');
-            // Exit fullscreen by calling native method
             if (Platform.isMacOS) {
               try {
                 final platform = const MethodChannel('com.songviewer/window');
@@ -234,7 +256,6 @@ class _PresentationAppState extends State<PresentationApp> {
 
           case 'close_window':
             debugPrint('Received close command');
-            // Close window by calling native close
             if (Platform.isMacOS) {
               try {
                 final platform = const MethodChannel('com.songviewer/window');
@@ -245,10 +266,37 @@ class _PresentationAppState extends State<PresentationApp> {
             }
             return 'ok';
 
+          case 'update_page':
+            try {
+              debugPrint('Received page update');
+              final rawMap = call.arguments as Map;
+              final data = Map<String, dynamic>.from(rawMap);
+              if (mounted) {
+                setState(() {
+                  _title = data['title'] ?? _title;
+                  _pageContent = data['pageContent'] ?? '';
+                  _fontSize = (data['fontSize'] ?? _fontSize).toDouble();
+                  _textColor = Color.fromARGB(
+                    ((data['textColor'] ?? _textColor.toARGB32()) >> 24) & 0xFF,
+                    ((data['textColor'] ?? _textColor.toARGB32()) >> 16) & 0xFF,
+                    ((data['textColor'] ?? _textColor.toARGB32()) >> 8) & 0xFF,
+                    (data['textColor'] ?? _textColor.toARGB32()) & 0xFF,
+                  );
+                  _showChords = data['showChords'] ?? _showChords;
+                  _currentPage = data['currentPage'] ?? _currentPage;
+                  _totalPages = data['totalPages'] ?? _totalPages;
+                });
+              }
+              return 'ok';
+            } catch (e, stackTrace) {
+              debugPrint('Error processing page data: $e');
+              debugPrint('Stack trace: $stackTrace');
+              return 'error: $e';
+            }
+
           case 'update_song':
             try {
               debugPrint('Received arguments type: ${call.arguments.runtimeType}');
-              // Convert from Map<Object?, Object?> to Map<String, dynamic>
               final rawMap = call.arguments as Map;
               final songJson = Map<String, dynamic>.from(rawMap);
               debugPrint('Converted to Map<String, dynamic>, parsing Song...');
@@ -256,8 +304,8 @@ class _PresentationAppState extends State<PresentationApp> {
               debugPrint('Song parsed successfully: ${song.title}');
               if (mounted) {
                 setState(() {
-                  _currentSong = song;
-                  _displayText = _extractLyrics(song);
+                  _title = song.title;
+                  _pageContent = _extractLyrics(song);
                 });
               }
               return 'ok';
@@ -270,7 +318,7 @@ class _PresentationAppState extends State<PresentationApp> {
             final text = call.arguments as String;
             if (mounted) {
               setState(() {
-                _displayText = text;
+                _pageContent = text;
               });
             }
             return 'ok';
@@ -286,7 +334,6 @@ class _PresentationAppState extends State<PresentationApp> {
   }
 
   String _extractLyrics(Song song) {
-    // Remove chords in brackets [C], [Am], etc.
     final lines = song.lyrics.split('\n');
     final lyricsWithoutChords = StringBuffer();
 
@@ -307,35 +354,60 @@ class _PresentationAppState extends State<PresentationApp> {
       debugShowCheckedModeBanner: false,
       home: Scaffold(
         backgroundColor: Colors.black,
-        body: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(40),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.music_note, color: Colors.white, size: 100),
-                const SizedBox(height: 40),
-                Text(
-                  _currentSong?.title ?? 'Presentation Window',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 48,
-                    fontWeight: FontWeight.bold,
+        body: Padding(
+          padding: const EdgeInsets.all(40),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Title
+              Text(
+                _title,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: _textColor,
+                  fontSize: _fontSize * 1.3,
+                  fontWeight: FontWeight.bold,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
+              ),
+              const SizedBox(height: 30),
+              // Page content - no scrolling, fixed lines
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: _pageContent.split('\n').map((line) {
+                      // Check if line looks like a chord line (contains common chord patterns)
+                      final isChordLine = _showChords && RegExp(r'\[.*?\]').hasMatch(line);
+                      final displayLine = line.replaceAll(RegExp(r'[\[\]]'), '');
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2),
+                        child: Text(
+                          displayLine,
+                          style: TextStyle(
+                            color: isChordLine ? _textColor.withValues(alpha: 0.7) : _textColor,
+                            fontSize: _fontSize,
+                            height: 1.4,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      );
+                    }).toList(),
                   ),
                 ),
-                const SizedBox(height: 40),
-                Text(
-                  _displayText,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 32,
-                    height: 1.5,
-                  ),
+              ),
+              // Page indicator
+              Text(
+                '${_currentPage + 1} / $_totalPages',
+                style: TextStyle(
+                  color: _textColor.withValues(alpha: 0.4),
+                  fontSize: 14,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

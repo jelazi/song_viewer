@@ -13,6 +13,12 @@ class SettingsState extends Equatable {
   final bool isEditIconVisible;
   final bool autoHideTopBar;
   final TypeClickCard typeClickCard;
+  // Presentation settings
+  final int presentationScreenIndex;
+  final int presentationLinesPerPage;
+  final double presentationFontSize;
+  final Color presentationFontColor;
+  final bool presentationShowChords;
   const SettingsState({
     required this.previewFontTextSize,
     required this.previewFontChordSize,
@@ -25,6 +31,11 @@ class SettingsState extends Equatable {
     required this.isEditIconVisible,
     required this.autoHideTopBar,
     required this.typeClickCard,
+    required this.presentationScreenIndex,
+    required this.presentationLinesPerPage,
+    required this.presentationFontSize,
+    required this.presentationFontColor,
+    required this.presentationShowChords,
   });
 
   @override
@@ -40,6 +51,11 @@ class SettingsState extends Equatable {
         isEditIconVisible,
         autoHideTopBar,
         typeClickCard,
+        presentationScreenIndex,
+        presentationLinesPerPage,
+        presentationFontSize,
+        presentationFontColor,
+        presentationShowChords,
       ];
 
   SettingsState copyWith({
@@ -54,6 +70,11 @@ class SettingsState extends Equatable {
     bool? isEditIconVisible,
     bool? autoHideTopBar,
     TypeClickCard? typeClickCard,
+    int? presentationScreenIndex,
+    int? presentationLinesPerPage,
+    double? presentationFontSize,
+    Color? presentationFontColor,
+    bool? presentationShowChords,
   }) {
     return SettingsState(
       previewFontTextSize: previewFontTextSize ?? this.previewFontTextSize,
@@ -67,6 +88,11 @@ class SettingsState extends Equatable {
       isEditIconVisible: isEditIconVisible ?? this.isEditIconVisible,
       autoHideTopBar: autoHideTopBar ?? this.autoHideTopBar,
       typeClickCard: typeClickCard ?? this.typeClickCard,
+      presentationScreenIndex: presentationScreenIndex ?? this.presentationScreenIndex,
+      presentationLinesPerPage: presentationLinesPerPage ?? this.presentationLinesPerPage,
+      presentationFontSize: presentationFontSize ?? this.presentationFontSize,
+      presentationFontColor: presentationFontColor ?? this.presentationFontColor,
+      presentationShowChords: presentationShowChords ?? this.presentationShowChords,
     );
   }
 }
@@ -84,5 +110,10 @@ class SettingsInitial extends SettingsState {
     required super.isEditIconVisible,
     required super.autoHideTopBar,
     required super.typeClickCard,
+    required super.presentationScreenIndex,
+    required super.presentationLinesPerPage,
+    required super.presentationFontSize,
+    required super.presentationFontColor,
+    required super.presentationShowChords,
   });
 }

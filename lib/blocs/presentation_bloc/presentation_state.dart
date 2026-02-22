@@ -11,6 +11,14 @@ class PresentationState {
   final Color backgroundColor;
   final Color textColor;
   final double fontSize;
+  // Pagination
+  final int currentPage;
+  final int totalPages;
+  final int linesPerPage;
+  final bool showChords;
+  final int screenIndex;
+  // Computed page content
+  final List<String> pageLines;
 
   const PresentationState({
     this.currentSong,
@@ -23,6 +31,12 @@ class PresentationState {
     this.backgroundColor = Colors.black,
     this.textColor = Colors.white,
     this.fontSize = 36.0,
+    this.currentPage = 0,
+    this.totalPages = 1,
+    this.linesPerPage = 8,
+    this.showChords = false,
+    this.screenIndex = 0,
+    this.pageLines = const [],
   });
 
   PresentationState copyWith({
@@ -36,6 +50,12 @@ class PresentationState {
     Color? backgroundColor,
     Color? textColor,
     double? fontSize,
+    int? currentPage,
+    int? totalPages,
+    int? linesPerPage,
+    bool? showChords,
+    int? screenIndex,
+    List<String>? pageLines,
   }) {
     return PresentationState(
       currentSong: currentSong ?? this.currentSong,
@@ -48,6 +68,21 @@ class PresentationState {
       backgroundColor: backgroundColor ?? this.backgroundColor,
       textColor: textColor ?? this.textColor,
       fontSize: fontSize ?? this.fontSize,
+      currentPage: currentPage ?? this.currentPage,
+      totalPages: totalPages ?? this.totalPages,
+      linesPerPage: linesPerPage ?? this.linesPerPage,
+      showChords: showChords ?? this.showChords,
+      screenIndex: screenIndex ?? this.screenIndex,
+      pageLines: pageLines ?? this.pageLines,
     );
   }
+
+  /// Whether there is a next page
+  bool get hasNextPage => currentPage < totalPages - 1;
+
+  /// Whether there is a previous page
+  bool get hasPreviousPage => currentPage > 0;
+
+  /// Get current page content as string
+  String get currentPageContent => pageLines.join('\n');
 }

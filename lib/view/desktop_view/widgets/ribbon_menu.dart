@@ -47,9 +47,9 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
         } else if (state.bodyName == 'web') {
           _tabController = TabController(length: 1, vsync: this);
         } else if (state.bodyName == 'groups') {
-          _tabController = TabController(length: 2, vsync: this);
+          _tabController = TabController(length: 1, vsync: this);
         } else if (state.bodyName == 'users') {
-          _tabController = TabController(length: 2, vsync: this);
+          _tabController = TabController(length: 1, vsync: this);
         } else {
           _tabController = TabController(length: 1, vsync: this);
         }
@@ -103,7 +103,6 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
                                           tabAlignment: TabAlignment.start,
                                           controller: _tabController,
                                           tabs: [
-                                            Tab(text: 'home'.tr()),
                                             Tab(text: 'settings'.tr()),
                                           ],
                                         )
@@ -113,7 +112,6 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
                                               tabAlignment: TabAlignment.start,
                                               controller: _tabController,
                                               tabs: [
-                                                Tab(text: 'home'.tr()),
                                                 Tab(text: 'settings'.tr()),
                                               ],
                                             )
@@ -148,7 +146,6 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
                                   ? TabBarView(
                                       controller: _tabController,
                                       children: const [
-                                        HomeTabbar(),
                                         SettingsTabbar(),
                                       ],
                                     )
@@ -163,8 +160,7 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
                                           ? TabBarView(
                                               controller: _tabController,
                                               children: [
-                                                Container(),
-                                                Container(),
+                                                SettingsTabbar(),
                                               ],
                                             )
                                           : TabBarView(
@@ -180,8 +176,6 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
               _getTopButton('preview', Icons.preview),
               _getTopButton('edit', Icons.edit),
               _getTopButton('web', Icons.web),
-              _getTopButton('groups', Icons.folder_shared),
-              _getTopButton('users', Icons.people),
             ],
           ),
         );
@@ -325,6 +319,36 @@ class SettingsTabbar extends StatelessWidget {
                 );
               },
             ),
+            RibbonButton(
+                text: 'groups'.tr(),
+                icon: const Icon(
+                  Icons.group,
+                  color: Colors.black,
+                ),
+                isEnabled: true,
+                onPressed: () {
+                  context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: 'groups'));
+                }),
+            RibbonButton(
+                text: 'users'.tr(),
+                icon: const Icon(
+                  Icons.person,
+                  color: Colors.black,
+                ),
+                isEnabled: true,
+                onPressed: () {
+                  context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: 'users'));
+                }),
+            RibbonButton(
+                text: 'Nastavení prezentace',
+                icon: const Icon(
+                  Icons.present_to_all,
+                  color: Colors.black,
+                ),
+                isEnabled: true,
+                onPressed: () {
+                  context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: 'presentation_settings'));
+                }),
           ],
         ));
   }
@@ -665,32 +689,182 @@ class HomeTabbar extends StatelessWidget {
       builder: (context, ribbonState) {
         final isOpen = ribbonState.isPresentationWindowOpen;
 
-        return BlocBuilder<PreviewChordBloc, PreviewChordState>(
-          builder: (context, previewState) {
-            return RibbonButton(
-                text: isOpen ? 'Zavřít prezentaci' : 'present'.tr(),
-                isEnabled: true,
-                icon: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+        return BlocBuilder<PresentationPlaylistBloc, PresentationPlaylistState>(
+          builder: (context, playlistState) {
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Presentation button - only enabled if playlist is not empty
+                RibbonButton(
+                    text: isOpen ? 'Zavřít prezentaci' : 'Prezentace (F5)',
+                    isEnabled: isOpen || playlistState.isNotEmpty,
+                    icon: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          isOpen ? Icons.close_fullscreen : Icons.present_to_all,
+                          size: 18,
+                          color: (isOpen || playlistState.isNotEmpty) ? Colors.black : Colors.grey,
+                        ),
+                      ],
+                    ),
+                    onPressed: () async {
+                      final manager = PresentationWindowManager();
+                      if (isOpen) {
+                        await manager.closePresentationWindow();
+                      } else if (playlistState.isNotEmpty) {
+                        _openPresentationFromPlaylist(context);
+                      }
+                    }),
+                // Add songs to playlist dialog button
+                RibbonButton(
+                    text: 'Přidat do playlistu',
+                    isEnabled: true,
+                    icon: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.playlist_add, size: 18, color: Colors.black),
+                      ],
+                    ),
+                    onPressed: () {
+                      _showAddSongsDialog(context);
+                    }),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _openPresentationFromPlaylist(BuildContext context) {
+    final playlistBloc = context.read<PresentationPlaylistBloc>();
+    final presentationBloc = context.read<PresentationBloc>();
+    final settingsState = context.read<SettingsBloc>().state;
+    final manager = PresentationWindowManager();
+
+    if (playlistBloc.state.isEmpty) return;
+
+    // Select first song if none selected
+    if (playlistBloc.state.currentSong == null) {
+      playlistBloc.add(const SelectPresentationSong(index: 0));
+    }
+
+    // Apply settings to presentation bloc
+    presentationBloc.add(UpdatePresentationSettings(
+      linesPerPage: settingsState.presentationLinesPerPage,
+      fontSize: settingsState.presentationFontSize,
+      textColor: settingsState.presentationFontColor,
+      showChords: settingsState.presentationShowChords,
+      screenIndex: settingsState.presentationScreenIndex,
+    ));
+
+    // Get song directly from playlist (don't rely on BLoC state timing)
+    final currentSong = playlistBloc.state.currentSong ?? (playlistBloc.state.isNotEmpty ? playlistBloc.state.playlist.songs.first : null);
+
+    if (currentSong == null) return;
+
+    // Update presentation bloc with the song
+    presentationBloc.add(UpdatePresentationSong(song: currentSong));
+
+    // Compute page content directly — no race condition
+    final result = PresentationBloc.computePageContent(
+      song: currentSong,
+      linesPerPage: settingsState.presentationLinesPerPage,
+      showChords: settingsState.presentationShowChords,
+      page: 0,
+    );
+
+    debugPrint('Opening presentation from playlist: ${currentSong.title}, '
+        'pageContent length: ${result.pageContent.length}, '
+        'totalPages: ${result.totalPages}');
+
+    // Open window immediately with computed content
+    manager.openPresentationWindow(
+      context,
+      title: currentSong.title,
+      pageContent: result.pageContent,
+      fontSize: settingsState.presentationFontSize,
+      textColor: settingsState.presentationFontColor,
+      showChords: settingsState.presentationShowChords,
+      currentPage: result.currentPage,
+      totalPages: result.totalPages,
+    );
+  }
+
+  void _showAddSongsDialog(BuildContext context) {
+    final homePageBloc = context.read<HomePageBloc>();
+    final allSongs = homePageBloc.state.listSong;
+    final TextEditingController searchController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final filter = searchController.text.toLowerCase();
+            final filteredSongs =
+                filter.isEmpty ? allSongs : allSongs.where((s) => s.title.toLowerCase().contains(filter) || (s.interpret?.toLowerCase().contains(filter) ?? false)).toList();
+
+            return AlertDialog(
+              title: const Text('Přidat písně do prezentačního playlistu'),
+              content: SizedBox(
+                width: 400,
+                height: 500,
+                child: Column(
                   children: [
-                    Icon(
-                      isOpen ? Icons.close_fullscreen : Icons.present_to_all,
-                      size: 18,
-                      color: Colors.black,
+                    TextField(
+                      controller: searchController,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        labelText: 'Hledat...',
+                        prefixIcon: Icon(Icons.search),
+                      ),
+                      onChanged: (_) => setDialogState(() {}),
+                    ),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: filteredSongs.length,
+                        itemBuilder: (context, index) {
+                          final song = filteredSongs[index];
+                          return ListTile(
+                            dense: true,
+                            title: Text(song.title, style: const TextStyle(fontSize: 13)),
+                            subtitle: song.interpret != null && song.interpret!.isNotEmpty ? Text(song.interpret!, style: const TextStyle(fontSize: 11)) : null,
+                            trailing: IconButton(
+                              icon: const Icon(Icons.add, size: 18),
+                              onPressed: () {
+                                context.read<PresentationPlaylistBloc>().add(
+                                      AddSongToPresentation(song: song),
+                                    );
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('${song.title} přidána'),
+                                    duration: const Duration(milliseconds: 800),
+                                  ),
+                                );
+                              },
+                            ),
+                            onTap: () {
+                              context.read<PresentationPlaylistBloc>().add(
+                                    AddSongToPresentation(song: song),
+                                  );
+                            },
+                          );
+                        },
+                      ),
                     ),
                   ],
                 ),
-                onPressed: () async {
-                  final manager = PresentationWindowManager();
-                  if (isOpen) {
-                    // Close presentation window
-                    await manager.closePresentationWindow();
-                  } else {
-                    // Open with current song or empty song
-                    final song = previewState.data.song ?? Song.empty();
-                    await manager.openPresentationWindow(context, song);
-                  }
-                });
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text('Zavřít'),
+                ),
+              ],
+            );
           },
         );
       },

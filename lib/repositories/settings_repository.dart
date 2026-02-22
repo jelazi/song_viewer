@@ -25,6 +25,13 @@ class SettingsRepository {
   String buildNumber = '';
   TypeClickCard _typeClickCard = TypeClickCard.none;
 
+  // Presentation settings
+  int _presentationScreenIndex = 0;
+  int _presentationLinesPerPage = 8;
+  double _presentationFontSize = 36.0;
+  Color _presentationFontColor = const Color(0xFFFFFFFF);
+  bool _presentationShowChords = false;
+
   SettingsRepository({
     required this.hiveProvider,
   });
@@ -87,6 +94,12 @@ class SettingsRepository {
     return _typeClickCard;
   }
 
+  int get presentationScreenIndex => _presentationScreenIndex;
+  int get presentationLinesPerPage => _presentationLinesPerPage;
+  double get presentationFontSize => _presentationFontSize;
+  Color get presentationFontColor => _presentationFontColor;
+  bool get presentationShowChords => _presentationShowChords;
+
   Future<void> loadLocalSettings() async {
     _previewFontTextSize = await hiveProvider.getSettingsValue('previewFontTextSize') ?? 20;
     _previewFontChordSize = await hiveProvider.getSettingsValue('previewFontChordSize') ?? 20;
@@ -101,6 +114,14 @@ class SettingsRepository {
     _currentUser = await hiveProvider.getSettingsValue('currentUser') ?? User.empty();
     _typeClickCard = await hiveProvider.getSettingsValue('typeClickCard') ?? TypeClickCard.none;
     _twoColumns = await hiveProvider.getSettingsValue('twoColumns') ?? false;
+
+    // Presentation settings
+    _presentationScreenIndex = await hiveProvider.getSettingsValue('presentationScreenIndex') ?? 0;
+    _presentationLinesPerPage = await hiveProvider.getSettingsValue('presentationLinesPerPage') ?? 8;
+    _presentationFontSize = (await hiveProvider.getSettingsValue('presentationFontSize') ?? 36.0).toDouble();
+    final fontColorValue = await hiveProvider.getSettingsValue('presentationFontColor');
+    _presentationFontColor = fontColorValue != null ? Color(fontColorValue) : const Color(0xFFFFFFFF);
+    _presentationShowChords = await hiveProvider.getSettingsValue('presentationShowChords') ?? false;
   }
 
   void setCurrentUser(User user) {
@@ -193,6 +214,36 @@ class SettingsRepository {
         {
           _twoColumns = value;
           hiveProvider.setSettingsValue('twoColumns', value);
+          break;
+        }
+      case 'presentationScreenIndex':
+        {
+          _presentationScreenIndex = value;
+          hiveProvider.setSettingsValue('presentationScreenIndex', value);
+          break;
+        }
+      case 'presentationLinesPerPage':
+        {
+          _presentationLinesPerPage = value;
+          hiveProvider.setSettingsValue('presentationLinesPerPage', value);
+          break;
+        }
+      case 'presentationFontSize':
+        {
+          _presentationFontSize = value;
+          hiveProvider.setSettingsValue('presentationFontSize', value);
+          break;
+        }
+      case 'presentationFontColor':
+        {
+          _presentationFontColor = value;
+          hiveProvider.setSettingsValue('presentationFontColor', (value as Color).value);
+          break;
+        }
+      case 'presentationShowChords':
+        {
+          _presentationShowChords = value;
+          hiveProvider.setSettingsValue('presentationShowChords', value);
           break;
         }
     }

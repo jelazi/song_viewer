@@ -181,7 +181,31 @@ class _ListSongState extends State<ListSong> {
                           height: playlistHeight,
                           child: PresentationPlaylistWidget(
                             onSongSelected: (song) {
-                              PresentationWindowManager().sendSongToPresentation(context, song);
+                              final manager = PresentationWindowManager();
+                              if (!manager.isPresentationWindowOpen) return;
+
+                              // Update the song in the presentation bloc
+                              final presentationBloc = context.read<PresentationBloc>();
+                              final settingsState = context.read<SettingsBloc>().state;
+                              presentationBloc.add(UpdatePresentationSong(song: song));
+
+                              // Compute page content directly — no race condition
+                              final result = PresentationBloc.computePageContent(
+                                song: song,
+                                linesPerPage: settingsState.presentationLinesPerPage,
+                                showChords: settingsState.presentationShowChords,
+                                page: 0,
+                              );
+                              manager.sendPageToPresentation(
+                                context,
+                                title: song.title,
+                                pageContent: result.pageContent,
+                                fontSize: settingsState.presentationFontSize,
+                                textColor: settingsState.presentationFontColor,
+                                showChords: settingsState.presentationShowChords,
+                                currentPage: result.currentPage,
+                                totalPages: result.totalPages,
+                              );
                             },
                           ),
                         ),

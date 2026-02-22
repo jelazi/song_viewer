@@ -39,14 +39,14 @@ class _EditSettingsBodyState extends State<EditSettingsBody> {
                                 },
                                 child: Container(
                                     height: 30,
-                                    width: 150,
+                                    width: 30,
                                     margin: const EdgeInsets.only(left: 5, right: 5),
                                     decoration: BoxDecoration(
                                       color: context.read<EditSongBloc>().checkModifiedSong() ? AppColor.primaryColor : AppColor.defaultBackgroundColor,
                                       border: Border.all(color: AppColor.grey1Color),
                                       borderRadius: BorderRadius.circular(5),
                                     ),
-                                    child: Center(child: Text('save'.tr())))),
+                                    child: Center(child: Icon(Icons.save, size: 16, color: Colors.black)))),
                           )
                         ],
                       ),
