@@ -1,7 +1,6 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 import 'dart:io';
-import 'dart:ui' as ui;
 
 import 'package:bot_toast/bot_toast.dart';
 import 'package:default_project/model/update_songlist_data.dart';
@@ -205,144 +204,140 @@ class _PresentationAppState extends State<PresentationApp> {
     }
   }
 
-  void _setupMessageHandler() async {
-    try {
-      final controller = await WindowController.fromCurrentEngine();
-      debugPrint('Sub-window controller obtained: ${controller.windowId}');
-      await controller.setWindowMethodHandler((call) async {
-        debugPrint('PresentationApp received method: ${call.method}');
+  void _setupMessageHandler() {
+    // Use native bridge MethodChannel (bypasses desktop_multi_window channel system)
+    const pageDataChannel = MethodChannel('com.songviewer/page_data');
+    pageDataChannel.setMethodCallHandler((call) async {
+      debugPrint('PresentationApp received method: ${call.method}');
 
-        switch (call.method) {
-          case 'close_window_with_exit':
-            debugPrint('Received close window with exit command');
-            if (Platform.isMacOS) {
-              try {
-                final platform = const MethodChannel('com.songviewer/window');
-                await platform.invokeMethod('closeWindowWithExit');
-              } catch (e) {
-                debugPrint('Error closing window: $e');
-              }
-            }
-            return 'ok';
-
-          case 'close_window_native':
-            debugPrint('Received close window native command');
-            if (Platform.isMacOS) {
-              try {
-                final platform = const MethodChannel('com.songviewer/window');
-                await platform.invokeMethod('exitFullscreen');
-                await Future.delayed(const Duration(milliseconds: 300));
-                await platform.invokeMethod('closeWindow');
-              } catch (e) {
-                debugPrint('Error closing window: $e');
-              }
-            }
-            return 'ok';
-
-          case 'enter_fullscreen':
-            debugPrint('Received enter fullscreen command');
-            if (Platform.isMacOS) {
-              try {
-                final platform = const MethodChannel('com.songviewer/window');
-                await platform.invokeMethod('enterFullscreen');
-              } catch (e) {
-                debugPrint('Error entering fullscreen: $e');
-              }
-            }
-            return 'ok';
-
-          case 'exit_fullscreen':
-            debugPrint('Received exit fullscreen command');
-            if (Platform.isMacOS) {
-              try {
-                final platform = const MethodChannel('com.songviewer/window');
-                await platform.invokeMethod('exitFullscreen');
-              } catch (e) {
-                debugPrint('Error exiting fullscreen: $e');
-              }
-            }
-            return 'ok';
-
-          case 'close_window':
-            debugPrint('Received close command');
-            if (Platform.isMacOS) {
-              try {
-                final platform = const MethodChannel('com.songviewer/window');
-                await platform.invokeMethod('closeWindow');
-              } catch (e) {
-                debugPrint('Error closing window: $e');
-              }
-            }
-            return 'ok';
-
-          case 'update_page':
+      switch (call.method) {
+        case 'close_window_with_exit':
+          debugPrint('Received close window with exit command');
+          if (Platform.isMacOS) {
             try {
-              debugPrint('Received page update');
-              final rawMap = call.arguments as Map;
-              final data = Map<String, dynamic>.from(rawMap);
-              if (mounted) {
-                setState(() {
-                  _title = data['title'] ?? _title;
-                  _pageContent = data['pageContent'] ?? '';
-                  _fontSize = (data['fontSize'] ?? _fontSize).toDouble();
-                  _textColor = Color.fromARGB(
-                    ((data['textColor'] ?? _textColor.toARGB32()) >> 24) & 0xFF,
-                    ((data['textColor'] ?? _textColor.toARGB32()) >> 16) & 0xFF,
-                    ((data['textColor'] ?? _textColor.toARGB32()) >> 8) & 0xFF,
-                    (data['textColor'] ?? _textColor.toARGB32()) & 0xFF,
-                  );
-                  _showChords = data['showChords'] ?? _showChords;
-                  _currentPage = data['currentPage'] ?? _currentPage;
-                  _totalPages = data['totalPages'] ?? _totalPages;
-                  _showTitle = data['showTitle'] ?? _showTitle;
-                  _showPageNumber = data['showPageNumber'] ?? _showPageNumber;
-                  _linesPerPage = data['linesPerPage'] ?? _linesPerPage;
-                });
-              }
-              return 'ok';
-            } catch (e, stackTrace) {
-              debugPrint('Error processing page data: $e');
-              debugPrint('Stack trace: $stackTrace');
-              return 'error: $e';
+              final platform = const MethodChannel('com.songviewer/window');
+              await platform.invokeMethod('closeWindowWithExit');
+            } catch (e) {
+              debugPrint('Error closing window: $e');
             }
+          }
+          return 'ok';
 
-          case 'update_song':
+        case 'close_window_native':
+          debugPrint('Received close window native command');
+          if (Platform.isMacOS) {
             try {
-              debugPrint('Received arguments type: ${call.arguments.runtimeType}');
-              final rawMap = call.arguments as Map;
-              final songJson = Map<String, dynamic>.from(rawMap);
-              debugPrint('Converted to Map<String, dynamic>, parsing Song...');
-              final song = Song.fromJson(songJson);
-              debugPrint('Song parsed successfully: ${song.title}');
-              if (mounted) {
-                setState(() {
-                  _title = song.title;
-                  _pageContent = _extractLyrics(song);
-                });
-              }
-              return 'ok';
-            } catch (e, stackTrace) {
-              debugPrint('Error processing song data: $e');
-              debugPrint('Stack trace: $stackTrace');
-              return 'error: $e';
+              final platform = const MethodChannel('com.songviewer/window');
+              await platform.invokeMethod('exitFullscreen');
+              await Future.delayed(const Duration(milliseconds: 300));
+              await platform.invokeMethod('closeWindow');
+            } catch (e) {
+              debugPrint('Error closing window: $e');
             }
-          case 'show_text':
-            final text = call.arguments as String;
+          }
+          return 'ok';
+
+        case 'enter_fullscreen':
+          debugPrint('Received enter fullscreen command');
+          if (Platform.isMacOS) {
+            try {
+              final platform = const MethodChannel('com.songviewer/window');
+              await platform.invokeMethod('enterFullscreen');
+            } catch (e) {
+              debugPrint('Error entering fullscreen: $e');
+            }
+          }
+          return 'ok';
+
+        case 'exit_fullscreen':
+          debugPrint('Received exit fullscreen command');
+          if (Platform.isMacOS) {
+            try {
+              final platform = const MethodChannel('com.songviewer/window');
+              await platform.invokeMethod('exitFullscreen');
+            } catch (e) {
+              debugPrint('Error exiting fullscreen: $e');
+            }
+          }
+          return 'ok';
+
+        case 'close_window':
+          debugPrint('Received close command');
+          if (Platform.isMacOS) {
+            try {
+              final platform = const MethodChannel('com.songviewer/window');
+              await platform.invokeMethod('closeWindow');
+            } catch (e) {
+              debugPrint('Error closing window: $e');
+            }
+          }
+          return 'ok';
+
+        case 'update_page':
+          try {
+            debugPrint('Received page update');
+            final rawMap = call.arguments as Map;
+            final data = Map<String, dynamic>.from(rawMap);
             if (mounted) {
               setState(() {
-                _pageContent = text;
+                _title = data['title'] ?? _title;
+                _pageContent = data['pageContent'] ?? '';
+                _fontSize = (data['fontSize'] ?? _fontSize).toDouble();
+                _textColor = Color.fromARGB(
+                  ((data['textColor'] ?? _textColor.toARGB32()) >> 24) & 0xFF,
+                  ((data['textColor'] ?? _textColor.toARGB32()) >> 16) & 0xFF,
+                  ((data['textColor'] ?? _textColor.toARGB32()) >> 8) & 0xFF,
+                  (data['textColor'] ?? _textColor.toARGB32()) & 0xFF,
+                );
+                _showChords = data['showChords'] ?? _showChords;
+                _currentPage = data['currentPage'] ?? _currentPage;
+                _totalPages = data['totalPages'] ?? _totalPages;
+                _showTitle = data['showTitle'] ?? _showTitle;
+                _showPageNumber = data['showPageNumber'] ?? _showPageNumber;
+                _linesPerPage = data['linesPerPage'] ?? _linesPerPage;
               });
             }
             return 'ok';
-          default:
-            debugPrint('Unknown method: ${call.method}');
-            return null;
-        }
-      });
-      debugPrint('Message handler setup complete and ready to receive messages');
-    } catch (e) {
-      debugPrint('Error setting up message handler: $e');
-    }
+          } catch (e, stackTrace) {
+            debugPrint('Error processing page data: $e');
+            debugPrint('Stack trace: $stackTrace');
+            return 'error: $e';
+          }
+
+        case 'update_song':
+          try {
+            debugPrint('Received arguments type: ${call.arguments.runtimeType}');
+            final rawMap = call.arguments as Map;
+            final songJson = Map<String, dynamic>.from(rawMap);
+            debugPrint('Converted to Map<String, dynamic>, parsing Song...');
+            final song = Song.fromJson(songJson);
+            debugPrint('Song parsed successfully: ${song.title}');
+            if (mounted) {
+              setState(() {
+                _title = song.title;
+                _pageContent = _extractLyrics(song);
+              });
+            }
+            return 'ok';
+          } catch (e, stackTrace) {
+            debugPrint('Error processing song data: $e');
+            debugPrint('Stack trace: $stackTrace');
+            return 'error: $e';
+          }
+        case 'show_text':
+          final text = call.arguments as String;
+          if (mounted) {
+            setState(() {
+              _pageContent = text;
+            });
+          }
+          return 'ok';
+        default:
+          debugPrint('Unknown method: ${call.method}');
+          return null;
+      }
+    });
+    debugPrint('Page data handler setup complete');
   }
 
   String _extractLyrics(Song song) {
@@ -366,7 +361,7 @@ class _PresentationAppState extends State<PresentationApp> {
   }
 
   /// Forward key events from presentation window to main window
-  void _handlePresentationKeyEvent(KeyEvent event) {
+  void _handlePresentationKeyEvent(KeyEvent event) async {
     if (event is! KeyDownEvent) return;
 
     final key = event.logicalKey;
@@ -384,11 +379,9 @@ class _PresentationAppState extends State<PresentationApp> {
 
     if (command != null) {
       try {
-        const navigateChannel = WindowMethodChannel(
-          'songs_viewer/navigate',
-          mode: ChannelMode.unidirectional,
-        );
-        navigateChannel.invokeMethod('navigate', command);
+        // Use native bridge MethodChannel (bypasses desktop_multi_window channel system)
+        const navigateBridge = MethodChannel('com.songviewer/navigate_bridge');
+        await navigateBridge.invokeMethod('navigate', command);
       } catch (e) {
         debugPrint('Error forwarding key event to main window: $e');
       }
@@ -420,61 +413,19 @@ class _PresentationAppState extends State<PresentationApp> {
           backgroundColor: Colors.black,
           body: LayoutBuilder(
             builder: (context, constraints) {
-              // Auto-calculate font size based on available height and width
-              final availableWidth = constraints.maxWidth - 80; // padding (40 left + 40 right)
+              // Auto-calculate font size based on available height
               final availableHeight = constraints.maxHeight - 80; // padding (40 top + 40 bottom)
               final bottomBarHeight = (_showTitle || _showPageNumber) ? 30.0 : 0.0;
               final contentHeight = availableHeight - bottomBarHeight;
               final lineHeight = 1.4; // line height multiplier
               final verticalPadding = 4.0; // vertical padding per line (2 top + 2 bottom)
 
-              // Use _linesPerPage for consistent font sizing across all pages
-              final lines = _pageContent.isEmpty ? <String>[] : _pageContent.split('\n');
+              // Use _linesPerPage for consistent font sizing across ALL pages
               final lineCountForSizing = _linesPerPage;
 
-              // Font size based on height: N * (fontSize * lineHeight + verticalPadding) <= contentHeight
-              // => fontSize <= (contentHeight - N * verticalPadding) / (N * lineHeight)
-              final heightBasedFontSize = ((contentHeight - lineCountForSizing * verticalPadding) / (lineCountForSizing * lineHeight)).clamp(12.0, 120.0);
-
-              // Font size based on width: find the longest line and ensure it fits
-              double widthBasedFontSize = heightBasedFontSize;
-
-              if (lines.isNotEmpty) {
-                // Find the longest line
-                String longestLine = '';
-                for (final line in lines) {
-                  final displayLine = line.replaceAll(RegExp(r'[\[\]]'), '');
-                  if (displayLine.length > longestLine.length) {
-                    longestLine = displayLine;
-                  }
-                }
-
-                if (longestLine.isNotEmpty) {
-                  // Binary search for max font size that fits width
-                  double lo = 8.0;
-                  double hi = heightBasedFontSize;
-                  while (hi - lo > 0.5) {
-                    final mid = (lo + hi) / 2;
-                    final tp = TextPainter(
-                      text: TextSpan(
-                        text: longestLine,
-                        style: TextStyle(fontSize: mid, height: lineHeight),
-                      ),
-                      maxLines: 1,
-                      textDirection: ui.TextDirection.ltr,
-                    )..layout();
-                    if (tp.width <= availableWidth) {
-                      lo = mid;
-                    } else {
-                      hi = mid;
-                    }
-                  }
-                  widthBasedFontSize = lo;
-                }
-              }
-
-              // Use the SMALLER of the two to ensure no overflow in either direction
-              final autoFontSize = widthBasedFontSize.clamp(12.0, heightBasedFontSize);
+              // Font size based on height only (consistent across all pages)
+              // N * (fontSize * lineHeight + verticalPadding) <= contentHeight
+              final autoFontSize = ((contentHeight - lineCountForSizing * verticalPadding) / (lineCountForSizing * lineHeight)).clamp(12.0, 120.0);
 
               return Padding(
                 padding: const EdgeInsets.all(40),

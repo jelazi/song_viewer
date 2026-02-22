@@ -2,9 +2,14 @@ import 'dart:convert';
 
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../blocs/desktop_ribbon_menu/desktop_ribbon_menu_bloc.dart';
 import '../model/song/song.dart';
+
+/// Native bridge channel: main window Dart → native → sub-window Dart.
+/// Bypasses desktop_multi_window channel system entirely.
+const _bridgeChannel = MethodChannel('com.songviewer/presentation_bridge');
 
 /// Manager for presentation window operations
 class PresentationWindowManager {
@@ -145,7 +150,7 @@ class PresentationWindowManager {
 
     try {
       debugPrint('Sending page to presentation: $title (page ${currentPage + 1}/$totalPages)');
-      await _invokeWithRetry('update_page', {
+      await _bridgeChannel.invokeMethod('update_page', {
         'title': title,
         'pageContent': pageContent,
         'fontSize': fontSize,
@@ -172,7 +177,7 @@ class PresentationWindowManager {
 
     try {
       debugPrint('Sending song to presentation: ${song.title}');
-      await _invokeWithRetry('update_song', song.toJson());
+      await _bridgeChannel.invokeMethod('update_song', song.toJson());
       debugPrint('Song sent successfully');
 
       if (context.mounted) {
@@ -189,27 +194,6 @@ class PresentationWindowManager {
     }
   }
 
-  /// Invoke a method on the presentation window with retry logic.
-  /// The sub-window needs time to boot its engine and register its handler.
-  Future<dynamic> _invokeWithRetry(String method, [dynamic arguments]) async {
-    if (_presentationWindowController == null) return;
-    const maxRetries = 10;
-    const retryDelay = Duration(milliseconds: 500);
-
-    for (var attempt = 0; attempt < maxRetries; attempt++) {
-      try {
-        return await _presentationWindowController!.invokeMethod(method, arguments);
-      } on WindowChannelException catch (e) {
-        if (e.code == 'CHANNEL_UNREGISTERED' && attempt < maxRetries - 1) {
-          debugPrint('Channel not ready yet, retrying in ${retryDelay.inMilliseconds}ms... (attempt ${attempt + 1}/$maxRetries)');
-          await Future.delayed(retryDelay);
-        } else {
-          rethrow;
-        }
-      }
-    }
-  }
-
   /// Mark the presentation window as closed (called when the sub-window closed itself).
   /// Only updates internal state without sending any commands to the sub-window.
   void markWindowClosed() {
@@ -217,21 +201,28 @@ class PresentationWindowManager {
     _ribbonMenuBloc?.add(const ChangePresentationWindowState(isOpen: false));
   }
 
-  /// Close presentation window
+  /// Close presentation window via native bridge
+  /// The bridge handles close_window_with_exit directly in Swift (no round-trip through sub-window Dart)
   Future<void> closePresentationWindow() async {
     if (_presentationWindowController != null) {
       try {
-        debugPrint('Closing presentation window...');
-        await _invokeWithRetry('close_window_with_exit');
-        debugPrint('Close command sent');
+        debugPrint('Closing presentation window via bridge...');
+        await _bridgeChannel.invokeMethod('close_window_with_exit');
+        debugPrint('Close command sent — window closed by native');
       } catch (e) {
-        debugPrint('Error sending close via channel: $e');
-        // Fallback: hide the window using the plugin API
+        debugPrint('Error sending close via bridge: $e');
+        // Fallback: try to close via plugin API
         try {
           await _presentationWindowController!.hide();
-          debugPrint('Window hidden via fallback');
+          debugPrint('Window closed via plugin fallback');
         } catch (e2) {
-          debugPrint('Error hiding window: $e2');
+          debugPrint('Error closing via plugin: $e2');
+          try {
+            await _presentationWindowController!.hide();
+            debugPrint('Window hidden via fallback');
+          } catch (e3) {
+            debugPrint('Error hiding window: $e3');
+          }
         }
       }
 

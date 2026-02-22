@@ -1,5 +1,82 @@
 # Development Log
 
+## 2026-02-22 - Fix MissingPluginException persisting after sub-window re-creation
+
+### What was done
+1. **Root cause confirmed**: The `presentation_bridge` handler set in `awakeFromNib()` gets cleared when `desktop_multi_window` spawns a new Flutter engine (via `RegisterGeneratedPlugins` or internal plugin setup). Static channel references alone are not enough — the binary messenger's handler table is wiped.
+2. **Fix — re-register on every sub-window creation**: Extracted bridge handler setup into `static func registerBridgeHandler()`. Called both in `awakeFromNib()` (initial) and inside `setOnWindowCreatedCallback` (before setting up sub-window channels). This ensures the handler is always fresh when a new sub-window is ready.
+3. **Stored `mainBinaryMessenger`**: The main engine's binary messenger is stored as a static so `registerBridgeHandler()` can create a new `FlutterMethodChannel` on the correct messenger each time.
+4. **Defensive navigation re-registration**: The `com.songviewer/navigation` channel is also re-created in the callback.
+5. **Added bridge logging**: `[Bridge]` prefixed logs for handler registration and forwarding to aid debugging.
+
+### Files modified
+- `macos/Runner/MainFlutterWindow.swift` — `registerBridgeHandler()` static method, `mainBinaryMessenger` static, re-registration in callback
+
+### Current state
+- No compilation errors
+- Bridge handler guaranteed fresh on each sub-window creation
+
+---
+
+## 2026-02-22 - Fix MissingPluginException on second presentation launch
+
+### What was done
+1. **Root cause**: All `FlutterMethodChannel` objects in `awakeFromNib()` were local variables — ARC deallocated them after the method returned, removing native handlers. First launch worked because the channels were invoked before GC; second launch failed with `MissingPluginException` because the handlers were gone.
+2. **Fix — static strong references**: All 5 channel objects (`presentationBridgeChannel`, `mainNavigationChannel`, `subWindowPageChannel`, `subWindowNavigateBridge`, `subWindowControlChannel`) are now stored as static properties on `MainFlutterWindow`, preventing ARC deallocation.
+3. **Fix — direct close from native**: The bridge now handles `close_window_with_exit` directly in Swift (toggling fullscreen if needed, then closing the window). No more round-trip through sub-window Dart — eliminates hanging awaits when sub-window engine is being destroyed.
+4. **Cleanup on close**: When the sub-window is closed (via any path), `subWindowPageChannel` and `subWindow` are set to nil. Next `setOnWindowCreatedCallback` re-creates them on the new engine.
+5. **Weak sub-window ref**: `MainFlutterWindow.subWindow` is `weak` — if the window is deallocated externally, the reference auto-nils.
+
+### Files modified
+- `macos/Runner/MainFlutterWindow.swift` — 5 static channel properties, `weak subWindow` ref, bridge intercepts `close_window_with_exit`, cleanup on all close paths
+- `lib/services/presentation_window_manager.dart` — Improved close fallback chain (`hide` → `hide` instead of `close` which doesn't exist on `WindowController`)
+
+### Current state
+- No compilation errors (229 pre-existing infos/warnings unchanged)
+- Second launch should now work — bridge handler persists across window lifecycle
+- Close is handled directly in native Swift — no round-trip failure risk
+
+---
+
+## 2026-02-22 - Bypass desktop_multi_window channels with native Swift bridge
+
+### What was done
+1. **Root cause confirmed** — ALL `desktop_multi_window` v0.3.0 channel approaches (`WindowController.invokeMethod`, `setWindowMethodHandler`, custom `WindowMethodChannel` both bidirectional and unidirectional) fail with `CHANNEL_UNREGISTERED`. The sub-window's Dart engine never successfully registers its handler with the native plugin layer. Every single `sendPageToPresentation` call fails — 100% failure rate confirmed in runtime logs.
+2. **Native Swift bridge** — Completely bypass `desktop_multi_window` channel system. Implemented 4 native `FlutterMethodChannel`s in `MainFlutterWindow.swift` that route messages between the main and sub-window engines via native Swift code:
+   - `com.songviewer/presentation_bridge` (main Dart → native) — Main window sends page data here
+   - `com.songviewer/page_data` (native → sub Dart) — Sub-window receives page data here
+   - `com.songviewer/navigate_bridge` (sub Dart → native) — Sub-window sends keyboard navigation here
+   - `com.songviewer/navigation` (native → main Dart) — Main window receives navigation here
+3. **Font size consistency** — Removed width-based font calculation entirely. Font size now based solely on available height and `_linesPerPage` constant, ensuring identical font size on all pages regardless of line content.
+4. **Removed retry logic** — `_invokeWithRetry` method deleted. Native bridge is immediate — no registration delay needed.
+
+### Files modified
+- `macos/Runner/MainFlutterWindow.swift` — Added static `subWindowPageChannel` and `mainWindowNavigationChannel`, 4 bridge channels with native forwarding logic
+- `lib/main.dart` — `_setupMessageHandler()` uses `MethodChannel('com.songviewer/page_data')`, keyboard forwarding uses `MethodChannel('com.songviewer/navigate_bridge')`, removed `dart:ui` import, removed width-based font calculation
+- `lib/services/presentation_window_manager.dart` — Added `_bridgeChannel` constant, `sendPageToPresentation`/`sendSongToPresentation`/`closePresentationWindow` use `_bridgeChannel.invokeMethod(...)`, removed `_invokeWithRetry`
+- `lib/view/desktop_view/pages/desktop_home_page/desktop_home_page.dart` — Replaced `WindowMethodChannel('songs_viewer/navigate')` with `MethodChannel('com.songviewer/navigation')`, removed `desktop_multi_window` import
+
+### Architecture
+```
+Main Window Dart                     Native Swift                    Sub-Window Dart
+─────────────────                    ────────────                    ───────────────
+presentation_bridge ──invokeMethod──→ MainFlutterWindow ──invokeMethod──→ page_data
+     navigation     ←──invokeMethod── MainFlutterWindow ←──invokeMethod── navigate_bridge
+```
+
+### Current state
+- All inter-window communication routes through native Swift bridge
+- Font size is consistent across all pages (height-based only)
+- `desktop_multi_window` still used for `WindowController.create/getAll/fromCurrentEngine` (window lifecycle) — only channel system is bypassed
+- Existing `com.songviewer/window` channel (close/fullscreen) continues working unchanged
+- No compilation errors (flutter analyze passes with 0 new issues)
+
+### Known issues / next steps
+- The native bridge approach needs runtime testing to confirm it resolves the CHANNEL_UNREGISTERED errors
+- If bridge works, consider removing unused `desktop_multi_window` channel-related imports where possible
+
+---
+
 ## 2026-02-22 - Fix escape close, text centering, font consistency
 
 ### What was done

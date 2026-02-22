@@ -1,4 +1,3 @@
-import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -23,16 +22,13 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
   final FocusNode _focusNode = FocusNode();
   bool _isBlackScreen = false; // tracks if we're showing a black transition screen
 
-  static const _navigateChannel = WindowMethodChannel(
-    'songs_viewer/navigate',
-    mode: ChannelMode.unidirectional,
-  );
+  static const _navigationChannel = MethodChannel('com.songviewer/navigation');
 
   @override
   void initState() {
     super.initState();
-    // Listen for navigation commands forwarded from the presentation window
-    _navigateChannel.setMethodCallHandler((call) async {
+    // Listen for navigation commands forwarded from the presentation window via native bridge
+    _navigationChannel.setMethodCallHandler((call) async {
       if (call.method == 'navigate') {
         final command = call.arguments as String;
         _handleRemoteNavigation(command);
@@ -68,7 +64,7 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
 
   @override
   void dispose() {
-    _navigateChannel.setMethodCallHandler(null);
+    _navigationChannel.setMethodCallHandler(null);
     _focusNode.dispose();
     super.dispose();
   }
