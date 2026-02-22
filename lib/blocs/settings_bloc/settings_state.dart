@@ -19,6 +19,10 @@ class SettingsState extends Equatable {
   final double presentationFontSize;
   final Color presentationFontColor;
   final bool presentationShowChords;
+  final bool presentationBlackFirstPage;
+  final bool presentationBlackLastPage;
+  final bool presentationShowPageNumber;
+  final bool presentationShowTitle;
   const SettingsState({
     required this.previewFontTextSize,
     required this.previewFontChordSize,
@@ -36,6 +40,10 @@ class SettingsState extends Equatable {
     required this.presentationFontSize,
     required this.presentationFontColor,
     required this.presentationShowChords,
+    required this.presentationBlackFirstPage,
+    required this.presentationBlackLastPage,
+    required this.presentationShowPageNumber,
+    required this.presentationShowTitle,
   });
 
   @override
@@ -56,6 +64,10 @@ class SettingsState extends Equatable {
         presentationFontSize,
         presentationFontColor,
         presentationShowChords,
+        presentationBlackFirstPage,
+        presentationBlackLastPage,
+        presentationShowPageNumber,
+        presentationShowTitle,
       ];
 
   SettingsState copyWith({
@@ -75,6 +87,10 @@ class SettingsState extends Equatable {
     double? presentationFontSize,
     Color? presentationFontColor,
     bool? presentationShowChords,
+    bool? presentationBlackFirstPage,
+    bool? presentationBlackLastPage,
+    bool? presentationShowPageNumber,
+    bool? presentationShowTitle,
   }) {
     return SettingsState(
       previewFontTextSize: previewFontTextSize ?? this.previewFontTextSize,
@@ -93,6 +109,10 @@ class SettingsState extends Equatable {
       presentationFontSize: presentationFontSize ?? this.presentationFontSize,
       presentationFontColor: presentationFontColor ?? this.presentationFontColor,
       presentationShowChords: presentationShowChords ?? this.presentationShowChords,
+      presentationBlackFirstPage: presentationBlackFirstPage ?? this.presentationBlackFirstPage,
+      presentationBlackLastPage: presentationBlackLastPage ?? this.presentationBlackLastPage,
+      presentationShowPageNumber: presentationShowPageNumber ?? this.presentationShowPageNumber,
+      presentationShowTitle: presentationShowTitle ?? this.presentationShowTitle,
     );
   }
 }
@@ -115,5 +135,9 @@ class SettingsInitial extends SettingsState {
     required super.presentationFontSize,
     required super.presentationFontColor,
     required super.presentationShowChords,
+    required super.presentationBlackFirstPage,
+    required super.presentationBlackLastPage,
+    required super.presentationShowPageNumber,
+    required super.presentationShowTitle,
   });
 }

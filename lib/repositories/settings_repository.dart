@@ -31,6 +31,10 @@ class SettingsRepository {
   double _presentationFontSize = 36.0;
   Color _presentationFontColor = const Color(0xFFFFFFFF);
   bool _presentationShowChords = false;
+  bool _presentationBlackFirstPage = true;
+  bool _presentationBlackLastPage = true;
+  bool _presentationShowPageNumber = true;
+  bool _presentationShowTitle = true;
 
   SettingsRepository({
     required this.hiveProvider,
@@ -99,6 +103,10 @@ class SettingsRepository {
   double get presentationFontSize => _presentationFontSize;
   Color get presentationFontColor => _presentationFontColor;
   bool get presentationShowChords => _presentationShowChords;
+  bool get presentationBlackFirstPage => _presentationBlackFirstPage;
+  bool get presentationBlackLastPage => _presentationBlackLastPage;
+  bool get presentationShowPageNumber => _presentationShowPageNumber;
+  bool get presentationShowTitle => _presentationShowTitle;
 
   Future<void> loadLocalSettings() async {
     _previewFontTextSize = await hiveProvider.getSettingsValue('previewFontTextSize') ?? 20;
@@ -122,6 +130,10 @@ class SettingsRepository {
     final fontColorValue = await hiveProvider.getSettingsValue('presentationFontColor');
     _presentationFontColor = fontColorValue != null ? Color(fontColorValue) : const Color(0xFFFFFFFF);
     _presentationShowChords = await hiveProvider.getSettingsValue('presentationShowChords') ?? false;
+    _presentationBlackFirstPage = await hiveProvider.getSettingsValue('presentationBlackFirstPage') ?? true;
+    _presentationBlackLastPage = await hiveProvider.getSettingsValue('presentationBlackLastPage') ?? true;
+    _presentationShowPageNumber = await hiveProvider.getSettingsValue('presentationShowPageNumber') ?? true;
+    _presentationShowTitle = await hiveProvider.getSettingsValue('presentationShowTitle') ?? true;
   }
 
   void setCurrentUser(User user) {
@@ -244,6 +256,30 @@ class SettingsRepository {
         {
           _presentationShowChords = value;
           hiveProvider.setSettingsValue('presentationShowChords', value);
+          break;
+        }
+      case 'presentationBlackFirstPage':
+        {
+          _presentationBlackFirstPage = value;
+          hiveProvider.setSettingsValue('presentationBlackFirstPage', value);
+          break;
+        }
+      case 'presentationBlackLastPage':
+        {
+          _presentationBlackLastPage = value;
+          hiveProvider.setSettingsValue('presentationBlackLastPage', value);
+          break;
+        }
+      case 'presentationShowPageNumber':
+        {
+          _presentationShowPageNumber = value;
+          hiveProvider.setSettingsValue('presentationShowPageNumber', value);
+          break;
+        }
+      case 'presentationShowTitle':
+        {
+          _presentationShowTitle = value;
+          hiveProvider.setSettingsValue('presentationShowTitle', value);
           break;
         }
     }

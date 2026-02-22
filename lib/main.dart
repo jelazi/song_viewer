@@ -127,6 +127,8 @@ class _PresentationAppState extends State<PresentationApp> {
   bool _showChords = false;
   int _currentPage = 0;
   int _totalPages = 1;
+  bool _showTitle = true;
+  bool _showPageNumber = true;
 
   @override
   void initState() {
@@ -175,6 +177,8 @@ class _PresentationAppState extends State<PresentationApp> {
                 _showChords = data['showChords'] ?? false;
                 _currentPage = data['currentPage'] ?? 0;
                 _totalPages = data['totalPages'] ?? 1;
+                _showTitle = data['showTitle'] ?? true;
+                _showPageNumber = data['showPageNumber'] ?? true;
               });
             }
           } else {
@@ -285,6 +289,8 @@ class _PresentationAppState extends State<PresentationApp> {
                   _showChords = data['showChords'] ?? _showChords;
                   _currentPage = data['currentPage'] ?? _currentPage;
                   _totalPages = data['totalPages'] ?? _totalPages;
+                  _showTitle = data['showTitle'] ?? _showTitle;
+                  _showPageNumber = data['showPageNumber'] ?? _showPageNumber;
                 });
               }
               return 'ok';
@@ -359,54 +365,67 @@ class _PresentationAppState extends State<PresentationApp> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Title
-              Text(
-                _title,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: _textColor,
-                  fontSize: _fontSize * 1.3,
-                  fontWeight: FontWeight.bold,
-                ),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 2,
-              ),
-              const SizedBox(height: 30),
               // Page content - no scrolling, fixed lines
               Expanded(
                 child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: _pageContent.split('\n').map((line) {
-                      // Check if line looks like a chord line (contains common chord patterns)
-                      final isChordLine = _showChords && RegExp(r'\[.*?\]').hasMatch(line);
-                      final displayLine = line.replaceAll(RegExp(r'[\[\]]'), '');
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: _pageContent.isEmpty
+                      ? const SizedBox.shrink()
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: _pageContent.split('\n').map((line) {
+                            // Check if line looks like a chord line (contains common chord patterns)
+                            final isChordLine = _showChords && RegExp(r'\[.*?\]').hasMatch(line);
+                            final displayLine = line.replaceAll(RegExp(r'[\[\]]'), '');
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 2),
+                              child: Text(
+                                displayLine,
+                                style: TextStyle(
+                                  color: isChordLine ? _textColor.withValues(alpha: 0.7) : _textColor,
+                                  fontSize: _fontSize,
+                                  height: 1.4,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                ),
+              ),
+              // Bottom bar: title (left) + page number (right)
+              if (_showTitle || _showPageNumber)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    if (_showTitle)
+                      Flexible(
                         child: Text(
-                          displayLine,
+                          _title,
                           style: TextStyle(
-                            color: isChordLine ? _textColor.withValues(alpha: 0.7) : _textColor,
-                            fontSize: _fontSize,
-                            height: 1.4,
+                            color: _textColor.withValues(alpha: 0.4),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
                           ),
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
                         ),
-                      );
-                    }).toList(),
-                  ),
+                      )
+                    else
+                      const SizedBox.shrink(),
+                    if (_showPageNumber)
+                      Text(
+                        '${_currentPage + 1} / $_totalPages',
+                        style: TextStyle(
+                          color: _textColor.withValues(alpha: 0.4),
+                          fontSize: 14,
+                        ),
+                      )
+                    else
+                      const SizedBox.shrink(),
+                  ],
                 ),
-              ),
-              // Page indicator
-              Text(
-                '${_currentPage + 1} / $_totalPages',
-                style: TextStyle(
-                  color: _textColor.withValues(alpha: 0.4),
-                  fontSize: 14,
-                ),
-              ),
             ],
           ),
         ),
@@ -525,7 +544,10 @@ class _MyAppState extends State<MyApp> with WindowListener {
             create: (context) => PresentationBloc(),
           ),
           BlocProvider(
-            create: (context) => PresentationPlaylistBloc(),
+            create: (context) => PresentationPlaylistBloc(
+              playlistRepository: widget.repositories.playlistRepository,
+              songsRepository: widget.repositories.songsRepository,
+            ),
           ),
         ],
         child: MaterialApp(

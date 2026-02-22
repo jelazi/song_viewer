@@ -34,6 +34,8 @@ class PresentationWindowManager {
     required bool showChords,
     required int currentPage,
     required int totalPages,
+    bool showTitle = true,
+    bool showPageNumber = true,
   }) async {
     if (!context.mounted) return;
 
@@ -55,6 +57,8 @@ class PresentationWindowManager {
               showChords: showChords,
               currentPage: currentPage,
               totalPages: totalPages,
+              showTitle: showTitle,
+              showPageNumber: showPageNumber,
             );
             _ribbonMenuBloc?.add(const ChangePresentationWindowState(isOpen: true));
             return;
@@ -127,6 +131,8 @@ class PresentationWindowManager {
     required bool showChords,
     required int currentPage,
     required int totalPages,
+    bool showTitle = true,
+    bool showPageNumber = true,
   }) async {
     if (_presentationWindowController == null) {
       debugPrint('No presentation window available');
@@ -143,6 +149,8 @@ class PresentationWindowManager {
         'showChords': showChords,
         'currentPage': currentPage,
         'totalPages': totalPages,
+        'showTitle': showTitle,
+        'showPageNumber': showPageNumber,
       });
       debugPrint('Page sent successfully');
     } catch (e) {

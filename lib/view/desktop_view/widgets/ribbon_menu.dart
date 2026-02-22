@@ -50,6 +50,8 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
           _tabController = TabController(length: 1, vsync: this);
         } else if (state.bodyName == 'users') {
           _tabController = TabController(length: 1, vsync: this);
+        } else if (state.bodyName == 'presentation_settings') {
+          _tabController = TabController(length: 1, vsync: this);
         } else {
           _tabController = TabController(length: 1, vsync: this);
         }
@@ -115,14 +117,23 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
                                                 Tab(text: 'settings'.tr()),
                                               ],
                                             )
-                                          : TabBar(
-                                              isScrollable: true,
-                                              tabAlignment: TabAlignment.start,
-                                              controller: _tabController,
-                                              tabs: [
-                                                Tab(text: 'home'.tr()),
-                                              ],
-                                            ),
+                                          : state.bodyName == 'presentation_settings'
+                                              ? TabBar(
+                                                  isScrollable: true,
+                                                  tabAlignment: TabAlignment.start,
+                                                  controller: _tabController,
+                                                  tabs: [
+                                                    Tab(text: 'settings'.tr()),
+                                                  ],
+                                                )
+                                              : TabBar(
+                                                  isScrollable: true,
+                                                  tabAlignment: TabAlignment.start,
+                                                  controller: _tabController,
+                                                  tabs: [
+                                                    Tab(text: 'home'.tr()),
+                                                  ],
+                                                ),
                     ),
                     SizedBox(
                       height: 60,
@@ -163,12 +174,19 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
                                                 SettingsTabbar(),
                                               ],
                                             )
-                                          : TabBarView(
-                                              controller: _tabController,
-                                              children: const [
-                                                HomeTabbar(),
-                                              ],
-                                            ),
+                                          : state.bodyName == 'presentation_settings'
+                                              ? TabBarView(
+                                                  controller: _tabController,
+                                                  children: const [
+                                                    SettingsTabbar(),
+                                                  ],
+                                                )
+                                              : TabBarView(
+                                                  controller: _tabController,
+                                                  children: const [
+                                                    HomeTabbar(),
+                                                  ],
+                                                ),
                     ),
                   ],
                 ),
@@ -729,6 +747,34 @@ class HomeTabbar extends StatelessWidget {
                     onPressed: () {
                       _showAddSongsDialog(context);
                     }),
+                // Save playlist button
+                RibbonButton(
+                    text: 'Uložit playlist',
+                    isEnabled: playlistState.isNotEmpty,
+                    icon: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.save, size: 18, color: playlistState.isNotEmpty ? Colors.black : Colors.grey),
+                      ],
+                    ),
+                    onPressed: () {
+                      if (playlistState.isNotEmpty) {
+                        _showSavePlaylistDialog(context);
+                      }
+                    }),
+                // Load playlist button
+                RibbonButton(
+                    text: 'Načíst playlist',
+                    isEnabled: true,
+                    icon: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.folder_open, size: 18, color: Colors.black),
+                      ],
+                    ),
+                    onPressed: () {
+                      _showLoadPlaylistDialog(context);
+                    }),
               ],
             );
           },
@@ -789,6 +835,151 @@ class HomeTabbar extends StatelessWidget {
       showChords: settingsState.presentationShowChords,
       currentPage: result.currentPage,
       totalPages: result.totalPages,
+      showTitle: settingsState.presentationShowTitle,
+      showPageNumber: settingsState.presentationShowPageNumber,
+    );
+  }
+
+  void _showSavePlaylistDialog(BuildContext context) {
+    final TextEditingController nameController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Uložit prezentační playlist'),
+          content: SizedBox(
+            width: 350,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  autofocus: true,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Název playlistu',
+                    hintText: 'Zadejte název...',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                BlocBuilder<PresentationPlaylistBloc, PresentationPlaylistState>(
+                  builder: (context, state) {
+                    return Text(
+                      'Počet písní: ${state.songCount}',
+                      style: const TextStyle(fontSize: 13, color: Colors.grey),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Zrušit'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final name = nameController.text.trim();
+                if (name.isNotEmpty) {
+                  context.read<PresentationPlaylistBloc>().add(
+                        SavePresentationPlaylist(name: name),
+                      );
+                  Navigator.pop(dialogContext);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Playlist "$name" uložen'),
+                      backgroundColor: Colors.green,
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                }
+              },
+              child: const Text('Uložit'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showLoadPlaylistDialog(BuildContext context) {
+    final playlistsBloc = context.read<PlaylistsBloc>();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return BlocBuilder<PlaylistsBloc, PlaylistsState>(
+          builder: (context, playlistsState) {
+            final playlists = playlistsState.playlists;
+
+            return AlertDialog(
+              title: const Text('Načíst playlist'),
+              content: SizedBox(
+                width: 400,
+                height: 400,
+                child: playlists.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'Žádné uložené playlisty',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: playlists.length,
+                        itemBuilder: (context, index) {
+                          final playlist = playlists[index];
+                          return ListTile(
+                            leading: const Icon(Icons.playlist_play),
+                            title: Text(playlist.name, style: const TextStyle(fontSize: 14)),
+                            subtitle: Text(
+                              '${playlist.listSongIds.length} písní',
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.download, size: 20),
+                                  tooltip: 'Načíst do prezentace',
+                                  onPressed: () {
+                                    context.read<PresentationPlaylistBloc>().add(
+                                          LoadPresentationPlaylist(playlist: playlist),
+                                        );
+                                    Navigator.pop(dialogContext);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Playlist "${playlist.name}" načten'),
+                                        backgroundColor: Colors.green,
+                                        duration: const Duration(seconds: 2),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete, size: 20, color: Colors.red),
+                                  tooltip: 'Smazat playlist',
+                                  onPressed: () {
+                                    playlistsBloc.add(DeletePlaylist(playlist: playlist));
+                                  },
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text('Zavřít'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 

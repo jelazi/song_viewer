@@ -20,11 +20,31 @@ class DesktopHomePage extends StatefulWidget {
 
 class _DesktopHomePageState extends State<DesktopHomePage> {
   final FocusNode _focusNode = FocusNode();
+  bool _isBlackScreen = false; // tracks if we're showing a black transition screen
 
   @override
   void dispose() {
     _focusNode.dispose();
     super.dispose();
+  }
+
+  /// Send a black (empty) screen to the presentation window
+  void _sendBlackScreen(BuildContext context) {
+    final settingsState = context.read<SettingsBloc>().state;
+    final manager = PresentationWindowManager();
+    _isBlackScreen = true;
+    manager.sendPageToPresentation(
+      context,
+      title: '',
+      pageContent: '',
+      fontSize: settingsState.presentationFontSize,
+      textColor: settingsState.presentationFontColor,
+      showChords: false,
+      currentPage: 0,
+      totalPages: 1,
+      showTitle: false,
+      showPageNumber: false,
+    );
   }
 
   void _handleKeyEvent(KeyEvent event) {
@@ -50,6 +70,34 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
     // Right arrow or Space - Next page
     if (key == LogicalKeyboardKey.arrowRight || key == LogicalKeyboardKey.space) {
       final presState = presentationBloc.state;
+
+      // If currently showing black screen, advance to next song's first page
+      if (_isBlackScreen) {
+        _isBlackScreen = false;
+        if (playlistBloc.state.hasNext) {
+          playlistBloc.add(const NextPresentationSong());
+          Future.delayed(const Duration(milliseconds: 50), () {
+            final nextSong = playlistBloc.state.currentSong;
+            if (nextSong != null) {
+              presentationBloc.add(UpdatePresentationSong(song: nextSong));
+              if (settingsState.presentationBlackFirstPage) {
+                // Show black first page, next press will show content
+                _sendBlackScreen(context);
+              } else {
+                final result = PresentationBloc.computePageContent(
+                  song: nextSong,
+                  linesPerPage: settingsState.presentationLinesPerPage,
+                  showChords: settingsState.presentationShowChords,
+                  page: 0,
+                );
+                _sendPageToWindow(context, nextSong.title, result);
+              }
+            }
+          });
+        }
+        return;
+      }
+
       if (presState.hasNextPage) {
         // Next page within same song
         presentationBloc.add(const NextPresentationPage());
@@ -65,21 +113,27 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
           _sendPageToWindow(context, song.title, result);
         }
       } else {
-        // Next song in playlist
-        if (playlistBloc.state.hasNext) {
+        // Last page of current song - check for black last page
+        if (settingsState.presentationBlackLastPage && playlistBloc.state.hasNext) {
+          _sendBlackScreen(context);
+        } else if (playlistBloc.state.hasNext) {
+          // No black page, go directly to next song
           playlistBloc.add(const NextPresentationSong());
           Future.delayed(const Duration(milliseconds: 50), () {
             final nextSong = playlistBloc.state.currentSong;
             if (nextSong != null) {
               presentationBloc.add(UpdatePresentationSong(song: nextSong));
-              // Compute content directly for page 0 of new song
-              final result = PresentationBloc.computePageContent(
-                song: nextSong,
-                linesPerPage: settingsState.presentationLinesPerPage,
-                showChords: settingsState.presentationShowChords,
-                page: 0,
-              );
-              _sendPageToWindow(context, nextSong.title, result);
+              if (settingsState.presentationBlackFirstPage) {
+                _sendBlackScreen(context);
+              } else {
+                final result = PresentationBloc.computePageContent(
+                  song: nextSong,
+                  linesPerPage: settingsState.presentationLinesPerPage,
+                  showChords: settingsState.presentationShowChords,
+                  page: 0,
+                );
+                _sendPageToWindow(context, nextSong.title, result);
+              }
             }
           });
         }
@@ -90,6 +144,28 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
     // Left arrow or Backspace - Previous page
     if (key == LogicalKeyboardKey.arrowLeft || key == LogicalKeyboardKey.backspace) {
       final presState = presentationBloc.state;
+
+      // If currently showing black screen, go back to the last page of current/previous song
+      if (_isBlackScreen) {
+        _isBlackScreen = false;
+        final song = presState.currentSong;
+        if (song != null) {
+          // Go back to the last page of current song
+          final allLines = PresentationBloc.getLyricsLines(song, presState.showChords);
+          final linesPerPage = presState.linesPerPage;
+          final totalPages = (allLines.length / linesPerPage).ceil().clamp(1, 999);
+          final result = PresentationBloc.computePageContent(
+            song: song,
+            linesPerPage: linesPerPage,
+            showChords: presState.showChords,
+            page: totalPages - 1,
+          );
+          _sendPageToWindow(context, song.title, result);
+          presentationBloc.add(UpdatePresentationSettings(linesPerPage: linesPerPage));
+        }
+        return;
+      }
+
       if (presState.hasPreviousPage) {
         // Previous page within same song
         presentationBloc.add(const PreviousPresentationPage());
@@ -105,26 +181,31 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
           _sendPageToWindow(context, song.title, result);
         }
       } else {
-        // Previous song in playlist
+        // First page of current song - go to previous song
         if (playlistBloc.state.hasPrevious) {
-          playlistBloc.add(const PreviousPresentationSong());
-          Future.delayed(const Duration(milliseconds: 50), () {
-            final prevSong = playlistBloc.state.currentSong;
-            if (prevSong != null) {
-              presentationBloc.add(UpdatePresentationSong(song: prevSong));
-              // Compute content for last page of previous song
-              final allLines = PresentationBloc.getLyricsLines(prevSong, settingsState.presentationShowChords);
-              final linesPerPage = settingsState.presentationLinesPerPage;
-              final totalPages = (allLines.length / linesPerPage).ceil().clamp(1, 999);
-              final result = PresentationBloc.computePageContent(
-                song: prevSong,
-                linesPerPage: linesPerPage,
-                showChords: settingsState.presentationShowChords,
-                page: totalPages - 1,
-              );
-              _sendPageToWindow(context, prevSong.title, result);
-            }
-          });
+          if (settingsState.presentationBlackFirstPage) {
+            // Show black screen before going back
+            _sendBlackScreen(context);
+          } else {
+            playlistBloc.add(const PreviousPresentationSong());
+            Future.delayed(const Duration(milliseconds: 50), () {
+              final prevSong = playlistBloc.state.currentSong;
+              if (prevSong != null) {
+                presentationBloc.add(UpdatePresentationSong(song: prevSong));
+                // Compute content for last page of previous song
+                final allLines = PresentationBloc.getLyricsLines(prevSong, settingsState.presentationShowChords);
+                final linesPerPage = settingsState.presentationLinesPerPage;
+                final totalPages = (allLines.length / linesPerPage).ceil().clamp(1, 999);
+                final result = PresentationBloc.computePageContent(
+                  song: prevSong,
+                  linesPerPage: linesPerPage,
+                  showChords: settingsState.presentationShowChords,
+                  page: totalPages - 1,
+                );
+                _sendPageToWindow(context, prevSong.title, result);
+              }
+            });
+          }
         }
       }
       return;
@@ -151,6 +232,8 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
       showChords: settingsState.presentationShowChords,
       currentPage: result.currentPage,
       totalPages: result.totalPages,
+      showTitle: settingsState.presentationShowTitle,
+      showPageNumber: settingsState.presentationShowPageNumber,
     );
   }
 
@@ -240,16 +323,35 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
         'pageContent length: ${result.pageContent.length}, '
         'totalPages: ${result.totalPages}');
 
-    // Open window immediately with computed content
-    manager.openPresentationWindow(
-      context,
-      title: currentSong.title,
-      pageContent: result.pageContent,
-      fontSize: settingsState.presentationFontSize,
-      textColor: settingsState.presentationFontColor,
-      showChords: settingsState.presentationShowChords,
-      currentPage: result.currentPage,
-      totalPages: result.totalPages,
-    );
+    // If black first page is enabled, start with black screen
+    if (settingsState.presentationBlackFirstPage) {
+      manager.openPresentationWindow(
+        context,
+        title: '',
+        pageContent: '',
+        fontSize: settingsState.presentationFontSize,
+        textColor: settingsState.presentationFontColor,
+        showChords: false,
+        currentPage: 0,
+        totalPages: 1,
+        showTitle: false,
+        showPageNumber: false,
+      );
+      _isBlackScreen = true;
+    } else {
+      // Open window immediately with computed content
+      manager.openPresentationWindow(
+        context,
+        title: currentSong.title,
+        pageContent: result.pageContent,
+        fontSize: settingsState.presentationFontSize,
+        textColor: settingsState.presentationFontColor,
+        showChords: settingsState.presentationShowChords,
+        currentPage: result.currentPage,
+        totalPages: result.totalPages,
+        showTitle: settingsState.presentationShowTitle,
+        showPageNumber: settingsState.presentationShowPageNumber,
+      );
+    }
   }
 }

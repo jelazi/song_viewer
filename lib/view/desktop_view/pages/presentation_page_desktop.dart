@@ -87,6 +87,9 @@ class _PresentationPageDesktopState extends State<PresentationPageDesktop> {
   Widget _buildPresentationView(PresentationState state) {
     final song = state.currentSong!;
     final pageContent = state.currentPageContent;
+    final settingsState = context.read<SettingsBloc>().state;
+    final showTitle = settingsState.presentationShowTitle;
+    final showPageNumber = settingsState.presentationShowPageNumber;
 
     return Stack(
       children: [
@@ -110,72 +113,65 @@ class _PresentationPageDesktopState extends State<PresentationPageDesktop> {
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Song title
-                if (song.title.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: Text(
-                      song.title,
-                      style: TextStyle(
-                        color: state.textColor,
-                        fontSize: state.fontSize * 1.2,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                  ),
-
-                // Interpret
-                if (song.interpret != null && song.interpret!.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 24),
-                    child: Text(
-                      song.interpret!,
-                      style: TextStyle(
-                        color: state.textColor.withValues(alpha: 0.7),
-                        fontSize: state.fontSize * 0.7,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                  ),
-
                 // Page content (no scrolling — fits in page)
                 Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: pageContent.split('\n').map((line) {
-                      final isChordLine = state.showChords && RegExp(r'\[.*?\]').hasMatch(line);
-                      final displayLine = line.replaceAll(RegExp(r'[\[\]]'), '');
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 2),
-                        child: Text(
-                          displayLine,
-                          style: TextStyle(
-                            color: isChordLine ? state.textColor.withValues(alpha: 0.7) : state.textColor,
-                            fontSize: state.fontSize,
-                            height: 1.4,
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: pageContent.split('\n').map((line) {
+                        final isChordLine = state.showChords && RegExp(r'\[.*?\]').hasMatch(line);
+                        final displayLine = line.replaceAll(RegExp(r'[\[\]]'), '');
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 2),
+                          child: Text(
+                            displayLine,
+                            style: TextStyle(
+                              color: isChordLine ? state.textColor.withValues(alpha: 0.7) : state.textColor,
+                              fontSize: state.fontSize,
+                              height: 1.4,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
                           ),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-
-                // Page indicator
-                Center(
-                  child: Text(
-                    '${state.currentPage + 1} / ${state.totalPages}',
-                    style: TextStyle(
-                      color: state.textColor.withValues(alpha: 0.4),
-                      fontSize: 14,
+                        );
+                      }).toList(),
                     ),
                   ),
                 ),
+
+                // Bottom bar: title (left) + page number (right)
+                if (showTitle || showPageNumber)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      if (showTitle)
+                        Flexible(
+                          child: Text(
+                            song.title,
+                            style: TextStyle(
+                              color: state.textColor.withValues(alpha: 0.4),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        )
+                      else
+                        const SizedBox.shrink(),
+                      if (showPageNumber)
+                        Text(
+                          '${state.currentPage + 1} / ${state.totalPages}',
+                          style: TextStyle(
+                            color: state.textColor.withValues(alpha: 0.4),
+                            fontSize: 14,
+                          ),
+                        )
+                      else
+                        const SizedBox.shrink(),
+                    ],
+                  ),
               ],
             ),
           ),

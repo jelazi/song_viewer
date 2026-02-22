@@ -47,3 +47,18 @@
 - Use `mapEventToState` or `on<Event>` methods for event handling
 - When creating an event in BLoC, separate the event from the on event handler - example: on<SearchData>(_filterData); void _filterData(SearchData event, Emitter<ArchiveState> emit) {}
 - Keep BLoCs focused on a single responsibility; split large BLoCs if needed
+
+
+## Development Context Log
+- A file `DEVLOG.md` in the project root serves as a persistent development context log
+- **Before starting any task**, ALWAYS read `DEVLOG.md` first to understand the current state of the project — what has been done, what is in progress, what issues exist, and how things were implemented
+- **After completing any task**, ALWAYS update `DEVLOG.md` with:
+  - What was done (brief summary of changes)
+  - What was fixed (any bugs or errors resolved, and how)
+  - What is the current state (what works, what doesn't)
+  - What is pending / next steps
+  - Any known issues or technical debt
+- Keep the log structured with dated entries (newest first) so it's easy to scan
+- This ensures continuity between sessions — even if context is lost, the log provides full awareness of project state
+- Never delete old entries; append new ones at the top
+- Write the log in English for consistency

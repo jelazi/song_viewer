@@ -33,6 +33,10 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
           presentationFontSize: 36.0,
           presentationFontColor: Colors.white,
           presentationShowChords: false,
+          presentationBlackFirstPage: true,
+          presentationBlackLastPage: true,
+          presentationShowPageNumber: true,
+          presentationShowTitle: true,
         )) {
     on<_SettingsInitial>(_settingsInitial);
     on<ChangeSettingsValue>(_changeSettingsValue);
@@ -72,6 +76,10 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       presentationFontSize: settingsRepository.presentationFontSize,
       presentationFontColor: settingsRepository.presentationFontColor,
       presentationShowChords: settingsRepository.presentationShowChords,
+      presentationBlackFirstPage: settingsRepository.presentationBlackFirstPage,
+      presentationBlackLastPage: settingsRepository.presentationBlackLastPage,
+      presentationShowPageNumber: settingsRepository.presentationShowPageNumber,
+      presentationShowTitle: settingsRepository.presentationShowTitle,
     ));
   }
 }

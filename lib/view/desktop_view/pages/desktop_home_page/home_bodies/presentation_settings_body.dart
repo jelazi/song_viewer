@@ -72,6 +72,16 @@ class _PresentationSettingsBodyState extends State<PresentationSettingsBody> {
               const SizedBox(height: 8),
               _buildShowChordsToggle(state),
               const SizedBox(height: 20),
+              // Black screen settings
+              _buildSectionTitle('Černá obrazovka'),
+              const SizedBox(height: 8),
+              _buildBlackScreenSettings(state),
+              const SizedBox(height: 20),
+              // Display options
+              _buildSectionTitle('Zobrazení informací'),
+              const SizedBox(height: 8),
+              _buildDisplayOptions(state),
+              const SizedBox(height: 20),
               // Preview
               _buildSectionTitle('Náhled'),
               const SizedBox(height: 8),
@@ -425,6 +435,128 @@ class _PresentationSettingsBodyState extends State<PresentationSettingsBody> {
                     ChangeSettingsValue('presentationShowChords', value),
                   );
             },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBlackScreenSettings(SettingsState state) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        border: Border.all(color: AppColor.grey3Color),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.brightness_1, size: 20),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'Černá stránka na začátku písně',
+                  style: TextStyle(fontSize: 13),
+                ),
+              ),
+              Switch(
+                value: state.presentationBlackFirstPage,
+                onChanged: (value) {
+                  context.read<SettingsBloc>().add(
+                        ChangeSettingsValue('presentationBlackFirstPage', value),
+                      );
+                },
+              ),
+            ],
+          ),
+          const Divider(height: 1),
+          Row(
+            children: [
+              const Icon(Icons.brightness_1, size: 20),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'Černá stránka na konci písně / mezi písněmi',
+                  style: TextStyle(fontSize: 13),
+                ),
+              ),
+              Switch(
+                value: state.presentationBlackLastPage,
+                onChanged: (value) {
+                  context.read<SettingsBloc>().add(
+                        ChangeSettingsValue('presentationBlackLastPage', value),
+                      );
+                },
+              ),
+            ],
+          ),
+          if (state.presentationBlackLastPage)
+            Padding(
+              padding: const EdgeInsets.only(left: 28, top: 4),
+              child: Text(
+                'Mezi písněmi se zobrazí pouze jedna černá stránka',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey[600],
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDisplayOptions(SettingsState state) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        border: Border.all(color: AppColor.grey3Color),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.title, size: 20),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'Zobrazit název písně',
+                  style: TextStyle(fontSize: 13),
+                ),
+              ),
+              Switch(
+                value: state.presentationShowTitle,
+                onChanged: (value) {
+                  context.read<SettingsBloc>().add(
+                        ChangeSettingsValue('presentationShowTitle', value),
+                      );
+                },
+              ),
+            ],
+          ),
+          const Divider(height: 1),
+          Row(
+            children: [
+              const Icon(Icons.numbers, size: 20),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'Zobrazit číslo stránky',
+                  style: TextStyle(fontSize: 13),
+                ),
+              ),
+              Switch(
+                value: state.presentationShowPageNumber,
+                onChanged: (value) {
+                  context.read<SettingsBloc>().add(
+                        ChangeSettingsValue('presentationShowPageNumber', value),
+                      );
+                },
+              ),
+            ],
           ),
         ],
       ),
