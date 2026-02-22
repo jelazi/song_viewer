@@ -6,13 +6,6 @@ import 'package:flutter/material.dart';
 import '../blocs/desktop_ribbon_menu/desktop_ribbon_menu_bloc.dart';
 import '../model/song/song.dart';
 
-/// Unidirectional channel for main → presentation window communication.
-/// The sub-window registers as the sole handler; any engine can invoke.
-const _presentationChannel = WindowMethodChannel(
-  'songs_viewer/presentation',
-  mode: ChannelMode.unidirectional,
-);
-
 /// Manager for presentation window operations
 class PresentationWindowManager {
   // Singleton instance
@@ -196,15 +189,16 @@ class PresentationWindowManager {
     }
   }
 
-  /// Invoke a method on the presentation channel with retry logic.
-  /// The sub-window needs a moment to register its handler after creation.
+  /// Invoke a method on the presentation window with retry logic.
+  /// The sub-window needs time to boot its engine and register its handler.
   Future<dynamic> _invokeWithRetry(String method, [dynamic arguments]) async {
-    const maxRetries = 5;
+    if (_presentationWindowController == null) return;
+    const maxRetries = 10;
     const retryDelay = Duration(milliseconds: 500);
 
     for (var attempt = 0; attempt < maxRetries; attempt++) {
       try {
-        return await _presentationChannel.invokeMethod(method, arguments);
+        return await _presentationWindowController!.invokeMethod(method, arguments);
       } on WindowChannelException catch (e) {
         if (e.code == 'CHANNEL_UNREGISTERED' && attempt < maxRetries - 1) {
           debugPrint('Channel not ready yet, retrying in ${retryDelay.inMilliseconds}ms... (attempt ${attempt + 1}/$maxRetries)');
@@ -216,20 +210,32 @@ class PresentationWindowManager {
     }
   }
 
+  /// Mark the presentation window as closed (called when the sub-window closed itself).
+  /// Only updates internal state without sending any commands to the sub-window.
+  void markWindowClosed() {
+    _presentationWindowController = null;
+    _ribbonMenuBloc?.add(const ChangePresentationWindowState(isOpen: false));
+  }
+
   /// Close presentation window
   Future<void> closePresentationWindow() async {
     if (_presentationWindowController != null) {
       try {
         debugPrint('Closing presentation window...');
-
         await _invokeWithRetry('close_window_with_exit');
         debugPrint('Close command sent');
       } catch (e) {
-        debugPrint('Error closing presentation window: $e');
+        debugPrint('Error sending close via channel: $e');
+        // Fallback: hide the window using the plugin API
+        try {
+          await _presentationWindowController!.hide();
+          debugPrint('Window hidden via fallback');
+        } catch (e2) {
+          debugPrint('Error hiding window: $e2');
+        }
       }
 
       _presentationWindowController = null;
-
       _ribbonMenuBloc?.add(const ChangePresentationWindowState(isOpen: false));
     }
   }

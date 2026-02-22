@@ -207,12 +207,9 @@ class _PresentationAppState extends State<PresentationApp> {
 
   void _setupMessageHandler() async {
     try {
-      // Use unidirectional channel so the main window can invoke without registering
-      const presentationChannel = WindowMethodChannel(
-        'songs_viewer/presentation',
-        mode: ChannelMode.unidirectional,
-      );
-      await presentationChannel.setMethodCallHandler((call) async {
+      final controller = await WindowController.fromCurrentEngine();
+      debugPrint('Sub-window controller obtained: ${controller.windowId}');
+      await controller.setWindowMethodHandler((call) async {
         debugPrint('PresentationApp received method: ${call.method}');
 
         switch (call.method) {
@@ -380,7 +377,9 @@ class _PresentationAppState extends State<PresentationApp> {
     } else if (key == LogicalKeyboardKey.arrowLeft || key == LogicalKeyboardKey.backspace) {
       command = 'backward';
     } else if (key == LogicalKeyboardKey.escape) {
-      command = 'escape';
+      // Close presentation window directly from the sub-window
+      _closePresentation();
+      command = 'escape'; // Also notify main window to update state
     }
 
     if (command != null) {
@@ -392,6 +391,18 @@ class _PresentationAppState extends State<PresentationApp> {
         navigateChannel.invokeMethod('navigate', command);
       } catch (e) {
         debugPrint('Error forwarding key event to main window: $e');
+      }
+    }
+  }
+
+  /// Close the presentation window directly using native channel
+  void _closePresentation() async {
+    if (Platform.isMacOS) {
+      try {
+        final platform = const MethodChannel('com.songviewer/window');
+        await platform.invokeMethod('closeWindowWithExit');
+      } catch (e) {
+        debugPrint('Error closing presentation window: $e');
       }
     }
   }
@@ -417,13 +428,13 @@ class _PresentationAppState extends State<PresentationApp> {
               final lineHeight = 1.4; // line height multiplier
               final verticalPadding = 4.0; // vertical padding per line (2 top + 2 bottom)
 
-              // Count actual lines in content
+              // Use _linesPerPage for consistent font sizing across all pages
               final lines = _pageContent.isEmpty ? <String>[] : _pageContent.split('\n');
-              final actualLineCount = lines.isNotEmpty ? lines.length : _linesPerPage;
+              final lineCountForSizing = _linesPerPage;
 
               // Font size based on height: N * (fontSize * lineHeight + verticalPadding) <= contentHeight
               // => fontSize <= (contentHeight - N * verticalPadding) / (N * lineHeight)
-              final heightBasedFontSize = ((contentHeight - actualLineCount * verticalPadding) / (actualLineCount * lineHeight)).clamp(12.0, 120.0);
+              final heightBasedFontSize = ((contentHeight - lineCountForSizing * verticalPadding) / (lineCountForSizing * lineHeight)).clamp(12.0, 120.0);
 
               // Font size based on width: find the longest line and ensure it fits
               double widthBasedFontSize = heightBasedFontSize;
@@ -477,7 +488,7 @@ class _PresentationAppState extends State<PresentationApp> {
                             ? const SizedBox.shrink()
                             : Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: _pageContent.split('\n').map((line) {
                                   // Check if line looks like a chord line (contains common chord patterns)
                                   final isChordLine = _showChords && RegExp(r'\[.*?\]').hasMatch(line);

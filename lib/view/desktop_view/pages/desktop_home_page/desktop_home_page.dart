@@ -59,7 +59,9 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
         _navigateBackward(presentationBloc, playlistBloc, settingsState);
         break;
       case 'escape':
-        PresentationWindowManager().closePresentationWindow();
+        // Sub-window already closed itself natively; just update our state
+        final manager = PresentationWindowManager();
+        manager.markWindowClosed();
         break;
     }
   }

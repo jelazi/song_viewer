@@ -1,5 +1,26 @@
 # Development Log
 
+## 2026-02-22 - Fix escape close, text centering, font consistency
+
+### What was done
+1. **Fix escape to close presentation** — Sub-window escape key now calls native `closeWindowWithExit` directly (bypasses round-trip through channels). Also sends `'escape'` to main window so it can update `isPresentationWindowOpen` state via `markWindowClosed()`. Main window escape still works as fallback via `closePresentationWindow()` with `hide()` fallback.
+2. **Fix text centering** — Inner Column in presentation changed from `CrossAxisAlignment.start` to `CrossAxisAlignment.center` so text lines are horizontally centered.
+3. **Fix font size consistency** — Font size calculation now always uses `_linesPerPage` (not actual line count) so all pages have the same font size regardless of how many lines each page has.
+4. **Reverted custom channel approach** — `_setupMessageHandler` reverted to use `controller.setWindowMethodHandler()` (built-in per-window unidirectional channel). Added retry logic (10 attempts × 500ms) for `CHANNEL_UNREGISTERED` errors during sub-window startup.
+
+### Files modified
+- `lib/main.dart` — `_handlePresentationKeyEvent` escape calls `_closePresentation()` directly, added `_closePresentation()`, font sizing uses `_linesPerPage`, text centered
+- `lib/view/desktop_view/pages/desktop_home_page/desktop_home_page.dart` — `_handleRemoteNavigation('escape')` calls `markWindowClosed()` instead of `closePresentationWindow()`
+- `lib/services/presentation_window_manager.dart` — Reverted to `WindowController.invokeMethod`, added `markWindowClosed()`, `closePresentationWindow()` has `hide()` fallback, retry logic with 10 attempts
+
+### Current state
+- Escape closes presentation from either window
+- Text is horizontally centered in presentation
+- Font size is consistent across all pages
+- No compilation errors
+
+---
+
 ## 2026-02-22 - Fix CHANNEL_UNREGISTERED errors with desktop_multi_window v0.3.0
 
 ### What was done
