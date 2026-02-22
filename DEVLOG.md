@@ -1,5 +1,29 @@
 # Development Log
 
+## 2026-02-22 - Screen selection, font size control, live settings reload
+
+### What was done
+1. **Screen selection now works** — The `presentationScreenIndex` from settings is passed via `WindowConfiguration` arguments JSON to the native Swift layer. Swift reads `screenIndex` from the JSON and positions the window on the correct `NSScreen`. Previously hardcoded to "find any non-main screen".
+2. **Font size slider in settings** — Added `_buildFontSizeSelector()` widget to `PresentationSettingsBody` with a slider (12–120 px), increment/decrement buttons. Replaced the "auto-calculated" note with "max font size" explanation.
+3. **Font size is exact from settings** — The sub-window presentation (`PresentationApp` in main.dart) now uses `_fontSize` directly from settings. Removed all auto-calculation logic (lines-per-page based height formula). Long lines wrap (`softWrap: true`, `textAlign: TextAlign.center`). Content is scrollable if it overflows.
+4. **Live reload on settings change** — Added `BlocListener<SettingsBloc, SettingsState>` in `DesktopHomePage.build()`. When any setting changes while the presentation window is open, `_onSettingsChanged()` immediately re-computes the page content with new settings (linesPerPage, showChords, fontSize, fontColor, showTitle, showPageNumber) and sends it to the sub-window via the bridge.
+
+### Files modified
+- `macos/Runner/MainFlutterWindow.swift` — Reads `screenIndex` from window arguments JSON, positions on `NSScreen[screenIdx]`
+- `lib/services/presentation_window_manager.dart` — Added `screenIndex` parameter to `openPresentationWindow()`, passed in initData JSON
+- `lib/view/desktop_view/pages/desktop_home_page/desktop_home_page.dart` — Passes `screenIndex` to `openPresentationWindow()`, added `BlocListener<SettingsBloc>` for live reload, added `_onSettingsChanged()` method
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/presentation_settings_body.dart` — Added `_buildFontSizeSelector()` widget, updated preview info text
+- `lib/main.dart` — Removed auto font size calculation, uses `_fontSize` directly, `softWrap: true`, `SingleChildScrollView` for overflow
+
+### Current state
+- Screen selection works — presentation opens on the selected screen
+- Font size controlled by settings slider (12–120 px)
+- Long lines wrap instead of overflowing
+- Settings changes immediately reflect in open presentation
+- No compilation errors
+
+---
+
 ## 2026-02-22 - Fix MissingPluginException persisting after sub-window re-creation
 
 ### What was done

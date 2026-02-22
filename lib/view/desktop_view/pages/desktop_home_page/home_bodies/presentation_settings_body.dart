@@ -56,9 +56,14 @@ class _PresentationSettingsBodyState extends State<PresentationSettingsBody> {
               _buildSectionTitle('Počet řádků na stránku'),
               const SizedBox(height: 8),
               _buildLinesPerPageSelector(state),
+              const SizedBox(height: 20),
+              // Font size
+              _buildSectionTitle('Velikost písma'),
+              const SizedBox(height: 8),
+              _buildFontSizeSelector(state),
               const SizedBox(height: 8),
               Text(
-                'Velikost písma se automaticky vypočítá podle počtu řádků na stránku a velikosti obrazovky.',
+                'Maximální velikost písma v prezentaci. Pokud se řádek nevejde na obrazovku, bude zalomen.',
                 style: TextStyle(
                   fontSize: 11,
                   color: Colors.grey[600],
@@ -147,6 +152,7 @@ class _PresentationSettingsBodyState extends State<PresentationSettingsBody> {
               final isSelected = state.presentationScreenIndex == index;
               return InkWell(
                 onTap: () {
+                  debugPrint('[ScreenSelector] User tapped screen index=$index (${display.size.width.toInt()}x${display.size.height.toInt()})');
                   context.read<SettingsBloc>().add(
                         ChangeSettingsValue('presentationScreenIndex', index),
                       );
@@ -255,6 +261,62 @@ class _PresentationSettingsBodyState extends State<PresentationSettingsBody> {
                 ? () {
                     context.read<SettingsBloc>().add(
                           ChangeSettingsValue('presentationLinesPerPage', state.presentationLinesPerPage + 1),
+                        );
+                  }
+                : null,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFontSizeSelector(SettingsState state) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        border: Border.all(color: AppColor.grey3Color),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.format_size, size: 20),
+          const SizedBox(width: 8),
+          Text(
+            'Velikost: ${state.presentationFontSize.toInt()} px',
+            style: const TextStyle(fontSize: 13),
+          ),
+          const Spacer(),
+          IconButton(
+            icon: const Icon(Icons.remove, size: 18),
+            onPressed: state.presentationFontSize > 12
+                ? () {
+                    context.read<SettingsBloc>().add(
+                          ChangeSettingsValue('presentationFontSize', state.presentationFontSize - 2.0),
+                        );
+                  }
+                : null,
+          ),
+          SizedBox(
+            width: 120,
+            child: Slider(
+              value: state.presentationFontSize,
+              min: 12,
+              max: 120,
+              divisions: 54,
+              label: '${state.presentationFontSize.toInt()}',
+              onChanged: (value) {
+                context.read<SettingsBloc>().add(
+                      ChangeSettingsValue('presentationFontSize', value.roundToDouble()),
+                    );
+              },
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.add, size: 18),
+            onPressed: state.presentationFontSize < 120
+                ? () {
+                    context.read<SettingsBloc>().add(
+                          ChangeSettingsValue('presentationFontSize', state.presentationFontSize + 2.0),
                         );
                   }
                 : null,
@@ -575,7 +637,7 @@ class _PresentationSettingsBodyState extends State<PresentationSettingsBody> {
           ),
           const Spacer(),
           Text(
-            'Řádků na stránku: ${state.presentationLinesPerPage} | Velikost: automatická',
+            'Řádků na stránku: ${state.presentationLinesPerPage} | Velikost písma: ${state.presentationFontSize.toInt()} px',
             style: TextStyle(
               color: state.presentationFontColor.withValues(alpha: 0.5),
               fontSize: 10,

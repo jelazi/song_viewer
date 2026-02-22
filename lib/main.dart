@@ -148,6 +148,13 @@ class _PresentationAppState extends State<PresentationApp> {
       } catch (e) {
         debugPrint('Error showing window after frame: $e');
       }
+      // Re-request focus after fullscreen animation completes
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        if (mounted) {
+          _presentationFocusNode.requestFocus();
+          debugPrint('Focus re-requested after fullscreen delay');
+        }
+      });
     });
   }
 
@@ -405,97 +412,96 @@ class _PresentationAppState extends State<PresentationApp> {
     debugPrint('PresentationApp building...');
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: KeyboardListener(
-        focusNode: _presentationFocusNode,
-        autofocus: true,
-        onKeyEvent: _handlePresentationKeyEvent,
-        child: Scaffold(
-          backgroundColor: Colors.black,
-          body: LayoutBuilder(
-            builder: (context, constraints) {
-              // Auto-calculate font size based on available height
-              final availableHeight = constraints.maxHeight - 80; // padding (40 top + 40 bottom)
-              final bottomBarHeight = (_showTitle || _showPageNumber) ? 30.0 : 0.0;
-              final contentHeight = availableHeight - bottomBarHeight;
-              final lineHeight = 1.4; // line height multiplier
-              final verticalPadding = 4.0; // vertical padding per line (2 top + 2 bottom)
+      home: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          // Re-request focus when user taps anywhere on the presentation window
+          _presentationFocusNode.requestFocus();
+        },
+        child: KeyboardListener(
+          focusNode: _presentationFocusNode,
+          autofocus: true,
+          onKeyEvent: _handlePresentationKeyEvent,
+          child: Scaffold(
+            backgroundColor: Colors.black,
+            body: LayoutBuilder(
+              builder: (context, constraints) {
+                // Use the font size from settings directly — no auto-scaling
+                final fontSize = _fontSize;
+                final lineHeight = 1.4;
 
-              // Use _linesPerPage for consistent font sizing across ALL pages
-              final lineCountForSizing = _linesPerPage;
-
-              // Font size based on height only (consistent across all pages)
-              // N * (fontSize * lineHeight + verticalPadding) <= contentHeight
-              final autoFontSize = ((contentHeight - lineCountForSizing * verticalPadding) / (lineCountForSizing * lineHeight)).clamp(12.0, 120.0);
-
-              return Padding(
-                padding: const EdgeInsets.all(40),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // Page content - no scrolling, fixed lines
-                    Expanded(
-                      child: Center(
-                        child: _pageContent.isEmpty
-                            ? const SizedBox.shrink()
-                            : Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: _pageContent.split('\n').map((line) {
-                                  // Check if line looks like a chord line (contains common chord patterns)
-                                  final isChordLine = _showChords && RegExp(r'\[.*?\]').hasMatch(line);
-                                  final displayLine = line.replaceAll(RegExp(r'[\[\]]'), '');
-                                  return Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 2),
-                                    child: Text(
-                                      displayLine,
-                                      style: TextStyle(
-                                        color: isChordLine ? _textColor.withValues(alpha: 0.7) : _textColor,
-                                        fontSize: autoFontSize,
-                                        height: lineHeight,
-                                      ),
-                                      softWrap: false,
-                                    ),
-                                  );
-                                }).toList(),
-                              ),
+                return Padding(
+                  padding: const EdgeInsets.all(40),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Page content — wraps long lines, no horizontal overflow
+                      Expanded(
+                        child: Center(
+                          child: _pageContent.isEmpty
+                              ? const SizedBox.shrink()
+                              : SingleChildScrollView(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: _pageContent.split('\n').map((line) {
+                                      final isChordLine = _showChords && RegExp(r'\[.*?\]').hasMatch(line);
+                                      final displayLine = line.replaceAll(RegExp(r'[\[\]]'), '');
+                                      return Padding(
+                                        padding: const EdgeInsets.symmetric(vertical: 2),
+                                        child: Text(
+                                          displayLine,
+                                          style: TextStyle(
+                                            color: isChordLine ? _textColor.withValues(alpha: 0.7) : _textColor,
+                                            fontSize: fontSize,
+                                            height: lineHeight,
+                                          ),
+                                          softWrap: true,
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ),
+                        ),
                       ),
-                    ),
-                    // Bottom bar: title (left) + page number (right)
-                    if (_showTitle || _showPageNumber)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          if (_showTitle)
-                            Flexible(
-                              child: Text(
-                                _title,
+                      // Bottom bar: title (left) + page number (right)
+                      if (_showTitle || _showPageNumber)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            if (_showTitle)
+                              Flexible(
+                                child: Text(
+                                  _title,
+                                  style: TextStyle(
+                                    color: _textColor.withValues(alpha: 0.4),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              )
+                            else
+                              const SizedBox.shrink(),
+                            if (_showPageNumber)
+                              Text(
+                                '${_currentPage + 1} / $_totalPages',
                                 style: TextStyle(
                                   color: _textColor.withValues(alpha: 0.4),
                                   fontSize: 14,
-                                  fontWeight: FontWeight.w500,
                                 ),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                              ),
-                            )
-                          else
-                            const SizedBox.shrink(),
-                          if (_showPageNumber)
-                            Text(
-                              '${_currentPage + 1} / $_totalPages',
-                              style: TextStyle(
-                                color: _textColor.withValues(alpha: 0.4),
-                                fontSize: 14,
-                              ),
-                            )
-                          else
-                            const SizedBox.shrink(),
-                        ],
-                      ),
-                  ],
-                ),
-              );
-            },
+                              )
+                            else
+                              const SizedBox.shrink(),
+                          ],
+                        ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ),

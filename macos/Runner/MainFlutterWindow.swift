@@ -15,6 +15,12 @@ class MainFlutterWindow: NSWindow {
   
   // Reference to the sub-window so we can close it directly from the bridge
   private static weak var subWindow: NSWindow?
+  
+  // Pending screen index — set by Dart via bridge before window creation
+  private static var pendingScreenIndex: Int = 0
+  
+  // Observer for sub-window close notification (X button)
+  private static var closeObserver: NSObjectProtocol?
 
   /// Register (or re-register) the presentation_bridge handler on the main engine.
   /// Called both at startup AND every time a new sub-window is created,
@@ -34,18 +40,23 @@ class MainFlutterWindow: NSWindow {
     presentationBridge.setMethodCallHandler { (call, result) in
       print("[Bridge] presentation_bridge received: \(call.method)")
       
+      // Store screenIndex before window creation
+      if call.method == "setScreenIndex" {
+        if let idx = (call.arguments as? NSNumber)?.intValue {
+          MainFlutterWindow.pendingScreenIndex = idx
+          print("[Bridge] pendingScreenIndex set to \(idx)")
+        } else {
+          print("[Bridge] WARNING: setScreenIndex received non-numeric argument: \(String(describing: call.arguments))")
+        }
+        result(nil)
+        return
+      }
+      
       // Handle close directly from native — no round-trip through sub-window Dart
       if call.method == "close_window_with_exit" {
         if let window = MainFlutterWindow.subWindow {
           print("[Bridge] Closing sub-window directly from native")
-          if window.styleMask.contains(.fullScreen) {
-            window.toggleFullScreen(nil)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-              window.close()
-            }
-          } else {
-            window.close()
-          }
+          window.close()
           MainFlutterWindow.subWindowPageChannel = nil
           MainFlutterWindow.subWindow = nil
           result(nil)
@@ -111,23 +122,34 @@ class MainFlutterWindow: NSWindow {
         // Keep a strong reference to the sub-window
         MainFlutterWindow.subWindow = window
         
+        // Remove previous close observer if any
+        if let prev = MainFlutterWindow.closeObserver {
+          NotificationCenter.default.removeObserver(prev)
+        }
+        // Observe willCloseNotification to detect X button close
+        MainFlutterWindow.closeObserver = NotificationCenter.default.addObserver(
+          forName: NSWindow.willCloseNotification,
+          object: window,
+          queue: .main
+        ) { _ in
+          print("[Bridge] Sub-window willCloseNotification fired (X button or native close)")
+          // Clean up references
+          MainFlutterWindow.subWindowPageChannel = nil
+          MainFlutterWindow.subWindow = nil
+          // Notify main window Dart that the presentation was closed
+          if let mainNav = MainFlutterWindow.mainNavigationChannel {
+            mainNav.invokeMethod("navigate", arguments: "window_closed")
+          }
+        }
+        
         let windowChannel = FlutterMethodChannel(name: "com.songviewer/window",
                                                  binaryMessenger: controller.engine.binaryMessenger)
         MainFlutterWindow.subWindowControlChannel = windowChannel
         
         windowChannel.setMethodCallHandler { (call, result) in
           if call.method == "closeWindowWithExit" {
-            // Exit fullscreen if needed, then close
-            if window.styleMask.contains(.fullScreen) {
-              window.toggleFullScreen(nil)
-              // Wait for fullscreen animation, then close
-              DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-                window.close()
-              }
-            } else {
-              // Not in fullscreen, close immediately
-              window.close()
-            }
+            // Presentation mode: just close the window (no fullscreen animation needed)
+            window.close()
             MainFlutterWindow.subWindowPageChannel = nil
             MainFlutterWindow.subWindow = nil
             result(nil)
@@ -137,14 +159,10 @@ class MainFlutterWindow: NSWindow {
             MainFlutterWindow.subWindow = nil
             result(nil)
           } else if call.method == "enterFullscreen" {
-            if !window.styleMask.contains(.fullScreen) {
-              window.toggleFullScreen(nil)
-            }
+            // Already in presentation fullscreen — no-op
             result(nil)
           } else if call.method == "exitFullscreen" {
-            if window.styleMask.contains(.fullScreen) {
-              window.toggleFullScreen(nil)
-            }
+            // Already in presentation fullscreen — no-op
             result(nil)
           } else {
             result(FlutterMethodNotImplemented)
@@ -176,50 +194,39 @@ class MainFlutterWindow: NSWindow {
         print("[Bridge] All channels registered on sub-window engine")
       }
       
-      // Move new window to secondary screen if available and enter fullscreen
+      // Move new window to the correct screen based on screenIndex from Dart settings
       if let window = controller.view.window {
         let screens = NSScreen.screens
-        print("Available screens: \(screens.count)")
-        
-        if screens.count > 1 {
-          // Find a screen that is NOT the main screen
-          if let secondaryScreen = screens.first(where: { $0 != NSScreen.main }) {
-            // Get the visible frame of the secondary screen
-            let screenFrame = secondaryScreen.visibleFrame
-            
-            // Create a window frame on the secondary screen
-            let windowWidth: CGFloat = screenFrame.width
-            let windowHeight: CGFloat = screenFrame.height
-            let windowX = screenFrame.origin.x
-            let windowY = screenFrame.origin.y
-            
-            let newFrame = NSRect(x: windowX, y: windowY, width: windowWidth, height: windowHeight)
-            
-            // Set the window frame
-            window.setFrame(newFrame, display: true)
-            print("Window frame set to: \(newFrame)")
-            
-            // Make window visible first
-            window.makeKeyAndOrderFront(nil)
-            
-            // Enter fullscreen mode with longer delay
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-              print("Attempting to enter fullscreen...")
-              window.toggleFullScreen(nil)
-              print("Fullscreen toggled")
-            }
-            
-            print("Window moved to secondary screen: \(secondaryScreen.localizedName)")
-          }
-        } else {
-          // Only one screen - enter fullscreen on main screen
-          window.makeKeyAndOrderFront(nil)
-          DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            print("Attempting to enter fullscreen on main screen...")
-            window.toggleFullScreen(nil)
-          }
-          print("Only one screen available, entering fullscreen on main screen")
+        print("[Bridge] Available screens: \(screens.count)")
+        for (i, scr) in screens.enumerated() {
+          print("[Bridge]   Screen \(i): \(scr.localizedName), frame=\(scr.frame), visibleFrame=\(scr.visibleFrame)")
         }
+        
+        // Use screenIndex that was set via bridge before window creation
+        let targetScreenIndex = MainFlutterWindow.pendingScreenIndex
+        print("[Bridge] screenIndex from pendingScreenIndex: \(targetScreenIndex)")
+        
+        // Clamp to valid range
+        let screenIdx = min(max(targetScreenIndex, 0), screens.count - 1)
+        let targetScreen = screens[screenIdx]
+        // Use full screen frame (not visibleFrame) for true fullscreen
+        let screenFrame = targetScreen.frame
+        
+        print("[Bridge] Target screen \(screenIdx): \(targetScreen.localizedName), frame: \(screenFrame)")
+        
+        // "Presentation fullscreen": borderless window filling the target screen
+        // This is more reliable than toggleFullScreen which can snap to wrong screen
+        window.styleMask = [.borderless]
+        window.setFrame(screenFrame, display: true, animate: false)
+        window.level = .statusBar  // Float above normal windows and menu bar
+        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        window.isOpaque = true
+        window.backgroundColor = .black
+        window.hasShadow = false
+        
+        window.makeKeyAndOrderFront(nil)
+        
+        print("[Bridge] Window placed in presentation fullscreen on screen \(screenIdx), frame: \(window.frame)")
       }
     }
 

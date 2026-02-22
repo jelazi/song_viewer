@@ -42,6 +42,7 @@ class PresentationWindowManager {
     int linesPerPage = 8,
     bool showTitle = true,
     bool showPageNumber = true,
+    int screenIndex = 0,
   }) async {
     if (!context.mounted) return;
 
@@ -79,9 +80,13 @@ class PresentationWindowManager {
         }
       }
 
-      debugPrint('Creating new presentation window...');
+      debugPrint('Creating new presentation window... (screenIndex=$screenIndex)');
 
-      // Create new window with initial data
+      // Send screenIndex to native BEFORE creating the window so Swift can position it
+      debugPrint('Sending setScreenIndex=$screenIndex to native bridge');
+      await _bridgeChannel.invokeMethod('setScreenIndex', screenIndex);
+
+      // Create new window with initial data (including screenIndex for Swift positioning)
       final initData = jsonEncode({
         'title': title,
         'pageContent': pageContent,
@@ -91,6 +96,7 @@ class PresentationWindowManager {
         'currentPage': currentPage,
         'totalPages': totalPages,
         'linesPerPage': linesPerPage,
+        'screenIndex': screenIndex,
       });
 
       final window = await WindowController.create(WindowConfiguration(

@@ -59,6 +59,12 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
         final manager = PresentationWindowManager();
         manager.markWindowClosed();
         break;
+      case 'window_closed':
+        // Native willCloseNotification: user clicked X button on the presentation window
+        debugPrint('Received window_closed from native — updating state');
+        final manager = PresentationWindowManager();
+        manager.markWindowClosed();
+        break;
     }
   }
 
@@ -342,6 +348,42 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
     );
   }
 
+  /// Called whenever SettingsBloc emits a new state.
+  /// If the presentation window is open, resend the current page with the updated settings.
+  void _onSettingsChanged(SettingsState settingsState) {
+    final ribbonState = context.read<DesktopRibbonMenuBloc>().state;
+    if (!ribbonState.isPresentationWindowOpen) return;
+
+    // If showing black screen, just resend black with new colors
+    if (_isBlackScreen) {
+      _sendBlackScreen(context);
+      return;
+    }
+
+    // Update presentation bloc with new settings
+    final presentationBloc = context.read<PresentationBloc>();
+    presentationBloc.add(UpdatePresentationSettings(
+      linesPerPage: settingsState.presentationLinesPerPage,
+      fontSize: settingsState.presentationFontSize,
+      textColor: settingsState.presentationFontColor,
+      showChords: settingsState.presentationShowChords,
+      screenIndex: settingsState.presentationScreenIndex,
+    ));
+
+    // Resend the current page with new settings
+    final presState = presentationBloc.state;
+    final song = presState.currentSong;
+    if (song != null) {
+      final result = PresentationBloc.computePageContent(
+        song: song,
+        linesPerPage: settingsState.presentationLinesPerPage,
+        showChords: settingsState.presentationShowChords,
+        page: presState.currentPage,
+      );
+      _sendPageToWindow(context, song.title, result);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -354,39 +396,46 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
         focusNode: _focusNode,
         autofocus: true,
         onKeyEvent: _handleKeyEvent,
-        child: Scaffold(
-          body: BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
-            builder: (context, state) {
-              Widget homeBody = Container();
-              switch (state.bodyName) {
-                case 'preview':
-                  homeBody = PreviewBody(onRequestFocus: () => _focusNode.requestFocus());
-                  break;
-                case 'edit':
-                  homeBody = const EditBody();
-                  break;
-                case 'web':
-                  homeBody = const WebBody();
-                  break;
-                case 'groups':
-                  homeBody = const GroupsBody();
-                  break;
-                case 'users':
-                  homeBody = const UsersBody();
-                  break;
-                case 'presentation_settings':
-                  homeBody = const PresentationSettingsBody();
-                  break;
-                default:
-                  return PreviewBody(onRequestFocus: () => _focusNode.requestFocus());
-              }
-              return Column(
-                children: [
-                  const RibbonMenu(),
-                  Expanded(child: homeBody),
-                ],
-              );
-            },
+        child: BlocListener<SettingsBloc, SettingsState>(
+          listener: (context, settingsState) {
+            // Live reload: when any presentation setting changes while the window is open,
+            // immediately resend the current page with the new settings
+            _onSettingsChanged(settingsState);
+          },
+          child: Scaffold(
+            body: BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
+              builder: (context, state) {
+                Widget homeBody = Container();
+                switch (state.bodyName) {
+                  case 'preview':
+                    homeBody = PreviewBody(onRequestFocus: () => _focusNode.requestFocus());
+                    break;
+                  case 'edit':
+                    homeBody = const EditBody();
+                    break;
+                  case 'web':
+                    homeBody = const WebBody();
+                    break;
+                  case 'groups':
+                    homeBody = const GroupsBody();
+                    break;
+                  case 'users':
+                    homeBody = const UsersBody();
+                    break;
+                  case 'presentation_settings':
+                    homeBody = const PresentationSettingsBody();
+                    break;
+                  default:
+                    return PreviewBody(onRequestFocus: () => _focusNode.requestFocus());
+                }
+                return Column(
+                  children: [
+                    const RibbonMenu(),
+                    Expanded(child: homeBody),
+                  ],
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -398,6 +447,8 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
     final presentationBloc = context.read<PresentationBloc>();
     final settingsState = context.read<SettingsBloc>().state;
     final manager = PresentationWindowManager();
+
+    debugPrint('[StartPresentation] settingsState.presentationScreenIndex = ${settingsState.presentationScreenIndex}');
 
     if (playlistBloc.state.isEmpty) return;
 
@@ -449,6 +500,7 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
         linesPerPage: settingsState.presentationLinesPerPage,
         showTitle: false,
         showPageNumber: false,
+        screenIndex: settingsState.presentationScreenIndex,
       );
       _isBlackScreen = true;
     } else {
@@ -465,6 +517,7 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
         linesPerPage: settingsState.presentationLinesPerPage,
         showTitle: settingsState.presentationShowTitle,
         showPageNumber: settingsState.presentationShowPageNumber,
+        screenIndex: settingsState.presentationScreenIndex,
       );
     }
 

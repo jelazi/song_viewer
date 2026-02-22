@@ -266,6 +266,7 @@ class _ListSongState extends State<ListSong> {
                                   linesPerPage: settingsState.presentationLinesPerPage,
                                   showTitle: settingsState.presentationShowTitle,
                                   showPageNumber: settingsState.presentationShowPageNumber,
+                                  screenIndex: settingsState.presentationScreenIndex,
                                 );
                               }
 

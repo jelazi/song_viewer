@@ -847,7 +847,8 @@ class HomeTabbar extends StatelessWidget {
 
     debugPrint('Opening presentation from playlist: ${currentSong.title}, '
         'pageContent length: ${result.pageContent.length}, '
-        'totalPages: ${result.totalPages}');
+        'totalPages: ${result.totalPages}, '
+        'screenIndex: ${settingsState.presentationScreenIndex}');
 
     // Open window immediately with computed content
     manager.openPresentationWindow(
@@ -862,6 +863,7 @@ class HomeTabbar extends StatelessWidget {
       linesPerPage: settingsState.presentationLinesPerPage,
       showTitle: settingsState.presentationShowTitle,
       showPageNumber: settingsState.presentationShowPageNumber,
+      screenIndex: settingsState.presentationScreenIndex,
     );
   }
 

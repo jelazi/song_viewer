@@ -50,8 +50,10 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   }
 
   void _changeSettingsValue(ChangeSettingsValue event, Emitter<SettingsState> emit) {
+    debugPrint('[SettingsBloc] changeSettingsValue: ${event.typeValue} = ${event.value}');
     final state = this.state;
     settingsRepository.changeSettingsValue(event.typeValue, event.value);
+    debugPrint('[SettingsBloc] repo.presentationScreenIndex after change: ${settingsRepository.presentationScreenIndex}');
     _emitAllValues(state, emit);
   }
 
