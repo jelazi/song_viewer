@@ -24,7 +24,7 @@ class MainFlutterWindow: NSWindow {
   
   // Ready-handshake: buffer messages until sub-window Dart handler is registered
   private static var subWindowReady: Bool = false
-  private static var pendingPageMessages: [(method: String, arguments: Any?, result: FlutterResult)] = []
+  private static var pendingPageMessages: [(method: String, arguments: Any?)] = []
 
   /// Register (or re-register) the presentation_bridge handler on the main engine.
   /// Called both at startup AND every time a new sub-window is created,
@@ -56,7 +56,40 @@ class MainFlutterWindow: NSWindow {
         return
       }
       
-      // Handle close directly from native — no round-trip through sub-window Dart
+      // Hide the sub-window (keep engine alive for reuse)
+      if call.method == "hide_window" {
+        if let window = MainFlutterWindow.subWindow {
+          print("[Bridge] Hiding sub-window (keeping engine alive)")
+          window.orderOut(nil)
+          result(nil)
+        } else {
+          result(FlutterError(code: "NO_WINDOW", message: "No presentation window available", details: nil))
+        }
+        return
+      }
+      
+      // Show hidden sub-window and reposition on specified screen
+      if call.method == "show_reposition_window" {
+        if let window = MainFlutterWindow.subWindow {
+          let screenIndex = (call.arguments as? NSNumber)?.intValue ?? 0
+          let screens = NSScreen.screens
+          let screenIdx = min(max(screenIndex, 0), screens.count - 1)
+          let targetScreen = screens[screenIdx]
+          let screenFrame = targetScreen.frame
+          
+          print("[Bridge] Showing and repositioning sub-window on screen \(screenIdx): \(targetScreen.localizedName)")
+          window.styleMask = [.borderless]
+          window.setFrame(screenFrame, display: true, animate: false)
+          window.level = .statusBar
+          window.makeKeyAndOrderFront(nil)
+          result(nil)
+        } else {
+          result(FlutterError(code: "NO_WINDOW", message: "No presentation window available", details: nil))
+        }
+        return
+      }
+      
+      // Handle close (actual destroy) directly from native — no round-trip through sub-window Dart
       if call.method == "close_window_with_exit" {
         if let window = MainFlutterWindow.subWindow {
           print("[Bridge] Closing sub-window directly from native")
@@ -78,9 +111,12 @@ class MainFlutterWindow: NSWindow {
           print("[Bridge] Forwarding \(call.method) to sub-window page_data channel")
           subChannel.invokeMethod(call.method, arguments: call.arguments, result: result)
         } else {
-          // Sub-window Dart handler not ready yet — buffer the message
+          // Sub-window Dart handler not ready yet — buffer the message.
+          // Call result(nil) immediately so the Dart caller isn't blocked forever
+          // if the sub-window engine fails to start.
           print("[Bridge] Sub-window not ready, buffering \(call.method) (\(MainFlutterWindow.pendingPageMessages.count + 1) pending)")
-          MainFlutterWindow.pendingPageMessages.append((method: call.method, arguments: call.arguments, result: result))
+          MainFlutterWindow.pendingPageMessages.append((method: call.method, arguments: call.arguments))
+          result(nil)
         }
       } else {
         print("[Bridge] ERROR: subWindowPageChannel is nil, cannot forward \(call.method)")
@@ -89,6 +125,20 @@ class MainFlutterWindow: NSWindow {
     }
     
     print("[Bridge] presentation_bridge handler registered on main engine")
+  }
+
+  /// Flush all buffered messages to the sub-window's page_data channel.
+  private static func flushPendingMessages() {
+    guard let subChannel = subWindowPageChannel else {
+      print("[Bridge] Cannot flush: subWindowPageChannel is nil")
+      pendingPageMessages.removeAll()
+      return
+    }
+    for pending in pendingPageMessages {
+      print("[Bridge] Flushing buffered \(pending.method)")
+      subChannel.invokeMethod(pending.method, arguments: pending.arguments)
+    }
+    pendingPageMessages.removeAll()
   }
 
   override func awakeFromNib() {
@@ -210,14 +260,7 @@ class MainFlutterWindow: NSWindow {
           if call.method == "sub_window_ready" {
             MainFlutterWindow.subWindowReady = true
             print("[Bridge] Sub-window Dart handler is ready, flushing \(MainFlutterWindow.pendingPageMessages.count) buffered messages")
-            // Flush all buffered messages to the now-ready sub-window
-            if let subChannel = MainFlutterWindow.subWindowPageChannel {
-              for pending in MainFlutterWindow.pendingPageMessages {
-                print("[Bridge] Flushing buffered \(pending.method)")
-                subChannel.invokeMethod(pending.method, arguments: pending.arguments, result: pending.result)
-              }
-            }
-            MainFlutterWindow.pendingPageMessages.removeAll()
+            MainFlutterWindow.flushPendingMessages()
             result(nil)
             return
           }
@@ -230,6 +273,16 @@ class MainFlutterWindow: NSWindow {
         }
         
         print("[Bridge] All channels registered on sub-window engine")
+        
+        // Safety timeout: if sub_window_ready is never received (e.g. engine failed to
+        // start), flush buffered messages after 3 seconds so they aren't lost forever.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+          if !MainFlutterWindow.subWindowReady && !MainFlutterWindow.pendingPageMessages.isEmpty {
+            print("[Bridge] Timeout: sub_window_ready not received after 3s, flushing \(MainFlutterWindow.pendingPageMessages.count) buffered messages")
+            MainFlutterWindow.subWindowReady = true
+            MainFlutterWindow.flushPendingMessages()
+          }
+        }
       }
       
       // Move new window to the correct screen based on screenIndex from Dart settings

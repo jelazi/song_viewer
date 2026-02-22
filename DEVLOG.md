@@ -1,5 +1,94 @@
 # Development Log
 
+## 2026-02-22 - Rewrite presentation to hide/show instead of destroy/recreate
+
+### What was done
+1. **Root cause confirmed**: `desktop_multi_window` unreliably boots new Dart engines after repeated create/destroy cycles. Even with 10+ second gaps, the sub-window Dart engine sometimes fails to start (`main()` never runs). Dead engines accumulate as zombies (`Error showing window after frame: PlatformException(-1, failed to find target window...)`).
+2. **Fundamental redesign — hide/show instead of destroy/recreate**:
+   - The Flutter engine is created ONCE on first presentation open
+   - "Closing" the presentation now **hides** the window (keeps engine alive)
+   - "Opening" again **shows** the hidden window and sends new data via the bridge
+   - Engine is always warm and ready — no boot delay, no race condition
+3. **Swift bridge additions**:
+   - `hide_window`: calls `window.orderOut(nil)` — hides without closing/destroying
+   - `show_reposition_window`: shows window and repositions on specified screen with full borderless setup
+   - `close_window_with_exit` kept for actual destroy (app quit only)
+4. **Dart PresentationWindowManager rewrite**:
+   - Added `_isPresenting` flag (separate from window existence)
+   - `closePresentationWindow()` — sends `hide_window` via bridge, keeps `_presentationWindowController`
+   - `openPresentationWindow()` — if hidden window exists, sends `show_reposition_window` + `update_page`. Only creates new window on first call.
+   - `destroyPresentationWindow()` — actual destroy for app shutdown
+   - `markWindowClosed()` — actual close cleanup (only for `willCloseNotification`)
+   - `isPresentationWindowOpen` now checks `_isPresenting` flag
+5. **Sub-window escape handler changed**:
+   - Pressing Escape in sub-window no longer calls `closeWindowWithExit` natively
+   - Instead, just sends 'escape' command to main window via `navigate_bridge`
+   - Main window handles 'escape' by calling `closePresentationWindow()` (which hides)
+6. **Main window `onWindowClose`**: calls `destroyPresentationWindow()` (actual destroy) instead of `closePresentationWindow()` (hide)
+
+### Files modified
+- `macos/Runner/MainFlutterWindow.swift` — `hide_window` and `show_reposition_window` bridge handlers
+- `lib/services/presentation_window_manager.dart` — Complete rewrite: hide/show pattern, `_isPresenting` flag, `destroyPresentationWindow()`
+- `lib/main.dart` — Removed `_closePresentation()` from escape handler, `onWindowClose` uses `destroyPresentationWindow()`
+- `lib/view/desktop_view/pages/desktop_home_page/desktop_home_page.dart` — 'escape' calls `closePresentationWindow()` (hide), 'window_closed' calls `markWindowClosed()` (destroy)
+
+### Current state
+- First open: creates window + Dart engine (one-time cost)
+- Subsequent opens: instant — just shows hidden window and sends data
+- No more engine boot failures
+- No more zombie engines accumulating
+- No compilation errors
+
+---
+
+## 2026-02-22 - Fix presentation window blank on second open (engine boot failure)
+
+### What was done
+1. **Root cause identified**: When the presentation window is closed and re-opened quickly (~1 second), `desktop_multi_window` fails to boot the new Dart engine — `main()` never runs in the sub-window. The window appears black because there's no Flutter widget tree rendering. Additionally, the backup `update_page` sent via the bridge hangs forever because Swift stores the `result` callback in the buffer but `sub_window_ready` never arrives (engine never started), blocking the Dart `await`.
+2. **Fix — minimum delay between close and reopen** (Dart):
+   - Added `_lastCloseTime` tracking in `PresentationWindowManager`
+   - `openPresentationWindow` checks elapsed time since last close; if <1500ms, waits for the remainder before creating a new window
+   - This gives the previous Flutter engine time to fully shut down
+3. **Fix — non-blocking bridge buffering** (Swift):
+   - When buffering messages (sub-window not ready), immediately call `result(nil)` instead of storing the result callback. This prevents the Dart caller from blocking forever if the engine fails.
+   - Changed `pendingPageMessages` type from `(method, arguments, result)` to `(method, arguments)`
+   - Extracted `flushPendingMessages()` static helper method
+4. **Fix — bridge backup fire-and-forget** (Dart):
+   - The backup `update_page` call in `openPresentationWindow` now uses `.then()/.catchError()` instead of `await`, so `openPresentationWindow` completes immediately
+5. **Fix — safety timeout** (Swift):
+   - After setting up sub-window channels, a 3-second `DispatchQueue.main.asyncAfter` timer fires. If `sub_window_ready` hasn't been received by then, buffered messages are flushed anyway (the handler might be registered even if the ready signal failed).
+
+### Files modified
+- `lib/services/presentation_window_manager.dart` — `_lastCloseTime`, delay guard, fire-and-forget backup
+- `macos/Runner/MainFlutterWindow.swift` — Non-blocking `result(nil)` on buffer, `flushPendingMessages()` helper, 3s timeout
+
+### Current state
+- Second presentation open should work reliably (1.5s delay ensures clean engine lifecycle)
+- Bridge never blocks Dart caller when buffering
+- Buffered messages flushed even if sub-window engine partially fails
+- No compilation errors
+
+---
+
+## 2026-02-22 - Fix intermittent blank presentation window
+
+### What was done
+1. **Root cause identified**: When creating a new presentation window, initial data was delivered ONLY via `WindowConfiguration(arguments: initData)`. The sub-window's `_loadInitialData()` then called `WindowController.fromCurrentEngine()` a second time to read those arguments — this platform channel call could fail intermittently, leaving the window blank. Additionally, `openPresentationWindow` did NOT send `update_page` via the native bridge for new windows, so there were zero buffered messages to flush when `sub_window_ready` fired.
+2. **Fix — cached arguments + bridge backup**:
+   - `main()` now caches `windowController.arguments` into `PresentationApp.cachedArguments` static field
+   - `_loadInitialData()` is now synchronous — reads from cached arguments instead of making a second platform channel call
+   - `openPresentationWindow()` now sends `update_page` via the native bridge after window creation as a backup. This message gets buffered by Swift until `sub_window_ready`, then flushed — ensuring data arrives even if the arguments cache was empty
+
+### Files modified
+- `lib/main.dart` — Added `PresentationApp.cachedArguments` static field, cache in `main()`, synchronous `_loadInitialData()`
+- `lib/services/presentation_window_manager.dart` — Added `update_page` bridge call after new window creation as backup data path
+
+### Current state
+- Two independent data delivery paths: arguments cache (synchronous) + bridge backup (buffered)
+- No compilation errors
+
+---
+
 ## 2026-02-22 - Fix MissingPluginException race condition with ready-handshake
 
 ### What was done

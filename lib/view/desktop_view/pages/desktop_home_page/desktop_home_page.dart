@@ -55,15 +55,13 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
         _navigateBackward(presentationBloc, playlistBloc, settingsState);
         break;
       case 'escape':
-        // Sub-window already closed itself natively; just update our state
-        final manager = PresentationWindowManager();
-        manager.markWindowClosed();
+        // Hide the presentation window (keep engine alive for reuse)
+        PresentationWindowManager().closePresentationWindow();
         break;
       case 'window_closed':
-        // Native willCloseNotification: user clicked X button on the presentation window
-        debugPrint('Received window_closed from native — updating state');
-        final manager = PresentationWindowManager();
-        manager.markWindowClosed();
+        // Native willCloseNotification: window was actually destroyed
+        debugPrint('Received window_closed from native — window destroyed');
+        PresentationWindowManager().markWindowClosed();
         break;
     }
   }

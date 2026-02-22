@@ -69,6 +69,9 @@ void main(List<String> args) async {
       final windowController = await WindowController.fromCurrentEngine();
       debugPrint('WindowController arguments: ${windowController.arguments}');
 
+      // Cache arguments so _loadInitialData() doesn't need a second platform call
+      PresentationApp.cachedArguments = windowController.arguments;
+
       // Sub-window - start presentation app
       debugPrint('Starting presentation window...');
       runApp(const PresentationApp());
@@ -115,6 +118,9 @@ void main(List<String> args) async {
 class PresentationApp extends StatefulWidget {
   const PresentationApp({super.key});
 
+  /// Cached window arguments from main() — avoids second platform channel call
+  static String? cachedArguments;
+
   @override
   State<PresentationApp> createState() => _PresentationAppState();
 }
@@ -157,55 +163,51 @@ class _PresentationAppState extends State<PresentationApp> {
     });
   }
 
-  void _loadInitialData() async {
-    try {
-      final controller = await WindowController.fromCurrentEngine();
-      final arguments = controller.arguments;
+  void _loadInitialData() {
+    // Use cached arguments from main() — avoids second platform channel call
+    // which can fail intermittently and cause blank window
+    final arguments = PresentationApp.cachedArguments ?? '';
 
-      debugPrint('Window arguments type: ${arguments.runtimeType}');
-      debugPrint('Window arguments: $arguments');
+    debugPrint('_loadInitialData using cached arguments: ${arguments.length} chars');
 
-      if (arguments.isNotEmpty) {
-        try {
-          final data = jsonDecode(arguments) as Map<String, dynamic>;
+    if (arguments.isNotEmpty) {
+      try {
+        final data = jsonDecode(arguments) as Map<String, dynamic>;
 
-          // Check if it's new page-based format or legacy song format
-          if (data.containsKey('pageContent')) {
-            if (mounted) {
-              setState(() {
-                _title = data['title'] ?? 'Presentation';
-                _pageContent = data['pageContent'] ?? '';
-                _fontSize = (data['fontSize'] ?? 36.0).toDouble();
-                _textColor = Color.fromARGB(
-                  (data['textColor'] ?? 0xFFFFFFFF) >> 24 & 0xFF,
-                  (data['textColor'] ?? 0xFFFFFFFF) >> 16 & 0xFF,
-                  (data['textColor'] ?? 0xFFFFFFFF) >> 8 & 0xFF,
-                  (data['textColor'] ?? 0xFFFFFFFF) & 0xFF,
-                );
-                _showChords = data['showChords'] ?? false;
-                _currentPage = data['currentPage'] ?? 0;
-                _totalPages = data['totalPages'] ?? 1;
-                _showTitle = data['showTitle'] ?? true;
-                _showPageNumber = data['showPageNumber'] ?? true;
-              });
-            }
-          } else {
-            // Legacy format: full song JSON
-            final song = Song.fromJson(data);
-            debugPrint('Loaded song from arguments: ${song.title}');
-            if (mounted) {
-              setState(() {
-                _title = song.title;
-                _pageContent = _extractLyrics(song);
-              });
-            }
+        // Check if it's new page-based format or legacy song format
+        if (data.containsKey('pageContent')) {
+          if (mounted) {
+            setState(() {
+              _title = data['title'] ?? 'Presentation';
+              _pageContent = data['pageContent'] ?? '';
+              _fontSize = (data['fontSize'] ?? 36.0).toDouble();
+              _textColor = Color.fromARGB(
+                (data['textColor'] ?? 0xFFFFFFFF) >> 24 & 0xFF,
+                (data['textColor'] ?? 0xFFFFFFFF) >> 16 & 0xFF,
+                (data['textColor'] ?? 0xFFFFFFFF) >> 8 & 0xFF,
+                (data['textColor'] ?? 0xFFFFFFFF) & 0xFF,
+              );
+              _showChords = data['showChords'] ?? false;
+              _currentPage = data['currentPage'] ?? 0;
+              _totalPages = data['totalPages'] ?? 1;
+              _showTitle = data['showTitle'] ?? true;
+              _showPageNumber = data['showPageNumber'] ?? true;
+            });
           }
-        } catch (e) {
-          debugPrint('Error parsing initial data: $e');
+        } else {
+          // Legacy format: full song JSON
+          final song = Song.fromJson(data);
+          debugPrint('Loaded song from arguments: ${song.title}');
+          if (mounted) {
+            setState(() {
+              _title = song.title;
+              _pageContent = _extractLyrics(song);
+            });
+          }
         }
+      } catch (e) {
+        debugPrint('Error parsing initial data: $e');
       }
-    } catch (e) {
-      debugPrint('Error loading initial data: $e');
     }
   }
 
@@ -385,9 +387,9 @@ class _PresentationAppState extends State<PresentationApp> {
     } else if (key == LogicalKeyboardKey.arrowLeft || key == LogicalKeyboardKey.backspace) {
       command = 'backward';
     } else if (key == LogicalKeyboardKey.escape) {
-      // Close presentation window directly from the sub-window
-      _closePresentation();
-      command = 'escape'; // Also notify main window to update state
+      // Don't close the window natively — just tell the main window to hide it.
+      // The window stays alive for instant reuse.
+      command = 'escape';
     }
 
     if (command != null) {
@@ -397,18 +399,6 @@ class _PresentationAppState extends State<PresentationApp> {
         await navigateBridge.invokeMethod('navigate', command);
       } catch (e) {
         debugPrint('Error forwarding key event to main window: $e');
-      }
-    }
-  }
-
-  /// Close the presentation window directly using native channel
-  void _closePresentation() async {
-    if (Platform.isMacOS) {
-      try {
-        final platform = const MethodChannel('com.songviewer/window');
-        await platform.invokeMethod('closeWindowWithExit');
-      } catch (e) {
-        debugPrint('Error closing presentation window: $e');
       }
     }
   }
@@ -547,11 +537,11 @@ class _MyAppState extends State<MyApp> with WindowListener {
   Future<void> onWindowClose() async {
     debugPrint('Main window closing, closing all child windows...');
 
-    // Close presentation window using manager
+    // Destroy presentation window (not just hide — app is quitting)
     try {
-      await PresentationWindowManager().closePresentationWindow();
+      await PresentationWindowManager().destroyPresentationWindow();
     } catch (e) {
-      debugPrint('Error closing presentation window: $e');
+      debugPrint('Error destroying presentation window: $e');
     }
 
     // Now destroy the main window
