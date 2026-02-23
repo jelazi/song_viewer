@@ -88,6 +88,15 @@ class MockWebProvider extends _i1.Mock implements _i3.WebProvider {
       ) as String);
 
   @override
+  String get worshipLeaderUrl => (super.noSuchMethod(
+        Invocation.getter(#worshipLeaderUrl),
+        returnValue: _i4.dummyValue<String>(
+          this,
+          Invocation.getter(#worshipLeaderUrl),
+        ),
+      ) as String);
+
+  @override
   String get tokenPisnickyAkordy => (super.noSuchMethod(
         Invocation.getter(#tokenPisnickyAkordy),
         returnValue: _i4.dummyValue<String>(
@@ -145,6 +154,136 @@ class MockWebProvider extends _i1.Mock implements _i3.WebProvider {
         ),
         returnValue: _i5.Future<dynamic>.value(),
       ) as _i5.Future<dynamic>);
+
+  @override
+  _i5.Future<_i2.Response<dynamic>> searchSongsProScholy(
+          String? searchString) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #searchSongsProScholy,
+          [searchString],
+        ),
+        returnValue:
+            _i5.Future<_i2.Response<dynamic>>.value(_FakeResponse_1<dynamic>(
+          this,
+          Invocation.method(
+            #searchSongsProScholy,
+            [searchString],
+          ),
+        )),
+      ) as _i5.Future<_i2.Response<dynamic>>);
+
+  @override
+  _i5.Future<_i2.Response<dynamic>> searchSongsProScholyElastic({
+    required String? searchString,
+    int? page = 1,
+    int? perPage = 50,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #searchSongsProScholyElastic,
+          [],
+          {
+            #searchString: searchString,
+            #page: page,
+            #perPage: perPage,
+          },
+        ),
+        returnValue:
+            _i5.Future<_i2.Response<dynamic>>.value(_FakeResponse_1<dynamic>(
+          this,
+          Invocation.method(
+            #searchSongsProScholyElastic,
+            [],
+            {
+              #searchString: searchString,
+              #page: page,
+              #perPage: perPage,
+            },
+          ),
+        )),
+      ) as _i5.Future<_i2.Response<dynamic>>);
+
+  @override
+  _i5.Future<_i2.Response<dynamic>> getSongsProScholyPaginated({
+    required int? page,
+    int? perPage = 500,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getSongsProScholyPaginated,
+          [],
+          {
+            #page: page,
+            #perPage: perPage,
+          },
+        ),
+        returnValue:
+            _i5.Future<_i2.Response<dynamic>>.value(_FakeResponse_1<dynamic>(
+          this,
+          Invocation.method(
+            #getSongsProScholyPaginated,
+            [],
+            {
+              #page: page,
+              #perPage: perPage,
+            },
+          ),
+        )),
+      ) as _i5.Future<_i2.Response<dynamic>>);
+
+  @override
+  _i5.Future<_i2.Response<dynamic>> searchAuthorsProScholy(
+          String? searchString) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #searchAuthorsProScholy,
+          [searchString],
+        ),
+        returnValue:
+            _i5.Future<_i2.Response<dynamic>>.value(_FakeResponse_1<dynamic>(
+          this,
+          Invocation.method(
+            #searchAuthorsProScholy,
+            [searchString],
+          ),
+        )),
+      ) as _i5.Future<_i2.Response<dynamic>>);
+
+  @override
+  _i5.Future<_i2.Response<dynamic>> getSongsByAuthorProScholy(
+          String? authorId) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getSongsByAuthorProScholy,
+          [authorId],
+        ),
+        returnValue:
+            _i5.Future<_i2.Response<dynamic>>.value(_FakeResponse_1<dynamic>(
+          this,
+          Invocation.method(
+            #getSongsByAuthorProScholy,
+            [authorId],
+          ),
+        )),
+      ) as _i5.Future<_i2.Response<dynamic>>);
+
+  @override
+  _i5.Future<_i2.Response<dynamic>> getSongLyricsProScholy(String? songId) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getSongLyricsProScholy,
+          [songId],
+        ),
+        returnValue:
+            _i5.Future<_i2.Response<dynamic>>.value(_FakeResponse_1<dynamic>(
+          this,
+          Invocation.method(
+            #getSongLyricsProScholy,
+            [songId],
+          ),
+        )),
+      ) as _i5.Future<_i2.Response<dynamic>>);
 
   @override
   _i5.Future<_i2.Response<dynamic>> getDataFromPisnickyAkordy(String? requir) =>
@@ -230,6 +369,54 @@ class MockWebProvider extends _i1.Mock implements _i3.WebProvider {
           Invocation.method(
             #searchPisnickyAkordy,
             [searchString],
+          ),
+        )),
+      ) as _i5.Future<_i2.Response<dynamic>>);
+
+  @override
+  _i5.Future<_i2.Response<dynamic>> searchWorshipLeader({
+    required String? query,
+    int? start = 0,
+    int? limit = 50,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #searchWorshipLeader,
+          [],
+          {
+            #query: query,
+            #start: start,
+            #limit: limit,
+          },
+        ),
+        returnValue:
+            _i5.Future<_i2.Response<dynamic>>.value(_FakeResponse_1<dynamic>(
+          this,
+          Invocation.method(
+            #searchWorshipLeader,
+            [],
+            {
+              #query: query,
+              #start: start,
+              #limit: limit,
+            },
+          ),
+        )),
+      ) as _i5.Future<_i2.Response<dynamic>>);
+
+  @override
+  _i5.Future<_i2.Response<dynamic>> getSongWorshipLeader(int? songId) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getSongWorshipLeader,
+          [songId],
+        ),
+        returnValue:
+            _i5.Future<_i2.Response<dynamic>>.value(_FakeResponse_1<dynamic>(
+          this,
+          Invocation.method(
+            #getSongWorshipLeader,
+            [songId],
           ),
         )),
       ) as _i5.Future<_i2.Response<dynamic>>);

@@ -1,7 +1,9 @@
+import 'dart:io';
+
 import 'package:default_project/services/constants.dart';
 import 'package:flutter/material.dart';
 
-class FilterFieldTablet extends StatelessWidget {
+class FilterFieldTablet extends StatefulWidget {
   final TextEditingController filter;
   final Function clearFilter;
   final Function onSearch;
@@ -16,6 +18,14 @@ class FilterFieldTablet extends StatelessWidget {
   });
 
   @override
+  State<FilterFieldTablet> createState() => _FilterFieldTabletState();
+}
+
+class _FilterFieldTabletState extends State<FilterFieldTablet> {
+  bool _isFilterActive = false;
+  bool get _isDesktop => Platform.isLinux || Platform.isWindows || Platform.isMacOS;
+
+  @override
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 10),
@@ -28,26 +38,28 @@ class FilterFieldTablet extends StatelessWidget {
       ),
       child: Center(
         child: ValueListenableBuilder<TextEditingValue>(
-          valueListenable: filter,
+          valueListenable: widget.filter,
           builder: (context, value, child) {
             return TextField(
-              controller: filter,
+              controller: widget.filter,
               decoration: InputDecoration(
-                hintText: hintText,
+                hintText: widget.hintText,
                 suffixIcon: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
                       onPressed: () {
-                        onSearch(filter.text);
+                        widget.onSearch(widget.filter.text);
+                        _isFilterActive = widget.filter.text.isNotEmpty;
                       },
                       icon: const Icon(Icons.search),
                     ),
                     if (value.text.isNotEmpty)
                       IconButton(
                         onPressed: () {
-                          filter.clear();
-                          clearFilter();
+                          widget.filter.clear();
+                          widget.clearFilter();
+                          _isFilterActive = false;
                         },
                         icon: const Icon(Icons.clear),
                       ),
@@ -55,7 +67,16 @@ class FilterFieldTablet extends StatelessWidget {
                 ),
               ),
               onSubmitted: (value) {
-                onSearch(value);
+                widget.onSearch(value);
+                _isFilterActive = value.isNotEmpty;
+              },
+              onChanged: (value) {
+                if (_isDesktop) {
+                  widget.onSearch(value);
+                } else if (_isFilterActive) {
+                  widget.clearFilter();
+                  _isFilterActive = false;
+                }
               },
             );
           },

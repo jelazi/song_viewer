@@ -68,6 +68,9 @@ class _ListSongState extends State<ListSong> {
                           ],
                         ),
                       ),
+                      onChanged: (value) {
+                        context.read<HomePageBloc>().add(FilterSong(filter: value));
+                      },
                       onSubmitted: (value) {
                         context.read<HomePageBloc>().add(FilterSong(filter: value));
                       },

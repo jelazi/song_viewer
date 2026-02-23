@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -29,6 +31,19 @@ class _ListWebSongState extends State<ListWebSong> {
   final TextEditingController _filterInterpretProScholy = TextEditingController();
   final TextEditingController _filterSongProScholy = TextEditingController();
   final TextEditingController _filterWorshipLeader = TextEditingController();
+  Timer? _debounceTimer;
+
+  @override
+  void dispose() {
+    _debounceTimer?.cancel();
+    super.dispose();
+  }
+
+  void _debouncedSearch(VoidCallback action) {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 500), action);
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<WebBloc, WebState>(
@@ -121,7 +136,13 @@ class _ListWebSongState extends State<ListWebSong> {
                     ],
                   ),
                 ),
+                onChanged: (value) {
+                  _debouncedSearch(() {
+                    context.read<WebBloc>().add(FilterInterprets(filter: value));
+                  });
+                },
                 onSubmitted: (value) {
+                  _debounceTimer?.cancel();
                   context.read<WebBloc>().add(FilterInterprets(filter: value));
                 },
               );
@@ -239,6 +260,9 @@ class _ListWebSongState extends State<ListWebSong> {
                     ],
                   ),
                 ),
+                onChanged: (value) {
+                  context.read<WebBloc>().add(FilterSongs(filter: value));
+                },
                 onSubmitted: (value) {
                   context.read<WebBloc>().add(FilterSongs(filter: value));
                 },
@@ -334,7 +358,13 @@ class _ListWebSongState extends State<ListWebSong> {
                     ],
                   ),
                 ),
+                onChanged: (value) {
+                  _debouncedSearch(() {
+                    context.read<WebBloc>().add(FilterInterprets(filter: value));
+                  });
+                },
                 onSubmitted: (value) {
+                  _debounceTimer?.cancel();
                   context.read<WebBloc>().add(FilterInterprets(filter: value));
                 },
               );
@@ -452,6 +482,9 @@ class _ListWebSongState extends State<ListWebSong> {
                     ],
                   ),
                 ),
+                onChanged: (value) {
+                  context.read<WebBloc>().add(FilterSongs(filter: value));
+                },
                 onSubmitted: (value) {
                   context.read<WebBloc>().add(FilterSongs(filter: value));
                 },
@@ -544,7 +577,13 @@ class _ListWebSongState extends State<ListWebSong> {
                   ],
                 ),
               ),
+              onChanged: (value) {
+                _debouncedSearch(() {
+                  context.read<WebBloc>().add(FilterInterprets(filter: value));
+                });
+              },
               onSubmitted: (value) {
+                _debounceTimer?.cancel();
                 context.read<WebBloc>().add(FilterInterprets(filter: value));
               },
             );
@@ -691,6 +730,9 @@ class _ListWebSongState extends State<ListWebSong> {
                     ],
                   ),
                 ),
+                onChanged: (value) {
+                  context.read<WebBloc>().add(FilterSongs(filter: value));
+                },
                 onSubmitted: (value) {
                   context.read<WebBloc>().add(FilterSongs(filter: value));
                 },
@@ -783,7 +825,13 @@ class _ListWebSongState extends State<ListWebSong> {
                   ],
                 ),
               ),
+              onChanged: (value) {
+                _debouncedSearch(() {
+                  context.read<WebBloc>().add(FilterInterprets(filter: value));
+                });
+              },
               onSubmitted: (value) {
+                _debounceTimer?.cancel();
                 context.read<WebBloc>().add(FilterInterprets(filter: value));
               },
             );

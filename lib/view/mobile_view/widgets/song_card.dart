@@ -1,6 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:default_project/blocs/export_blocs.dart';
 import 'package:default_project/services/enums.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
@@ -21,51 +22,34 @@ class SongCard extends StatefulWidget {
   State<SongCard> createState() => _SongCardState();
 }
 
-class _SongCardState extends State<SongCard> with TickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    _animation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.fastLinearToSlowEaseIn,
-    );
+class _SongCardState extends State<SongCard> {
+  void _openPreview() {
+    context.read<PreviewChordBloc>().add(ChangeCurrentSong(song: widget.song));
+    Navigator.pushNamed(context, '/previewPage');
   }
 
   @override
   Widget build(BuildContext context) {
-    if (widget.isExpanded) {
-      _controller.forward();
-    } else {
-      _controller.reverse();
-    }
     return GestureDetector(
       onTap: () {
         final settingsState = context.read<SettingsBloc>().state;
         TypeClickCard typeClickCard = settingsState.typeClickCard;
         switch (typeClickCard) {
           case TypeClickCard.none:
-            context.read<HomePageBloc>().add(ChangeExpandedCard(songId: widget.song.id));
-            break;
           case TypeClickCard.preview:
-            context.read<PreviewChordBloc>().add(ChangeCurrentSong(song: widget.song));
-            Navigator.pushNamed(context, '/previewPage');
+            _openPreview();
             break;
-
           case TypeClickCard.presentation:
-            // TODO: Handle this case.
+            context.read<PreviewChordBloc>().add(ChangeCurrentSong(song: widget.song));
+            Navigator.pushNamed(context, '/presentationPage');
             break;
           case TypeClickCard.sheet:
-            // TODO: Handle this case.
+            context.read<PreviewChordBloc>().add(ChangeCurrentSong(song: widget.song));
+            Navigator.pushNamed(context, '/sheetViewPage');
             break;
           case TypeClickCard.youtube:
-            // TODO: Handle this case.
+            context.read<PreviewChordBloc>().add(ChangeCurrentSong(song: widget.song));
+            Navigator.pushNamed(context, '/youtubeVideoPage');
             break;
         }
       },
@@ -79,115 +63,136 @@ class _SongCardState extends State<SongCard> with TickerProviderStateMixin {
           padding: const EdgeInsets.only(top: 8),
           width: MediaQuery.of(context).size.width,
           child: Padding(
-            padding: const EdgeInsets.only(left: 12.0, right: 12.0, bottom: 15.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding: const EdgeInsets.only(left: 12.0, right: 4.0, bottom: 8.0),
+            child: Row(
               children: [
-                Text(
-                  widget.song.title,
-                  style: h5TextStyle,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Row(
-                  children: [
-                    Text(
-                      widget.song.indexSongBook != null ? '(${widget.song.indexSongBook})' : '',
-                      style: labelTextStyle.copyWith(color: AppColor.primaryColor),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    SizedBox(
-                      width: widget.song.indexSongBook != null ? 10 : 0,
-                    ),
-                    SizedBox(
-                      width: MediaQuery.of(context).size.width * 0.5,
-                      child: Text(
-                        widget.song.interpret ?? '',
-                        style: labelTextStyle,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.song.title,
+                        style: h5TextStyle,
                         overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ],
-                ),
-                SizeTransition(
-                  sizeFactor: _animation,
-                  axis: Axis.vertical,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          IconButton(
-                              icon: Icon(
-                                MdiIcons.bookMusicOutline,
-                                color: AppColor.primaryDarkColor,
-                              ),
-                              onPressed: () {
-                                context.read<PreviewChordBloc>().add(ChangeCurrentSong(song: widget.song));
-                                Navigator.pushNamed(context, '/previewPage');
-                              }),
-                          IconButton(
-                              icon: Icon(
-                                MdiIcons.presentation,
-                                color: AppColor.primaryDarkestColor,
-                              ),
-                              onPressed: () {
-                                Navigator.pushNamed(context, '/presentationPage');
-                              }),
-                          Visibility(
-                            visible: widget.song.sheets != null && widget.song.sheets!.isNotEmpty,
-                            child: IconButton(
-                                icon: Icon(
-                                  MdiIcons.imageFrame,
-                                  color: AppColor.primaryColor,
-                                ),
-                                onPressed: () {
-                                  Navigator.pushNamed(context, '/sheetViewPage');
-                                }),
+                          Text(
+                            widget.song.indexSongBook != null ? '(${widget.song.indexSongBook})' : '',
+                            style: labelTextStyle.copyWith(color: AppColor.primaryColor),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          Visibility(
-                            visible: widget.song.youtubeVideos != null,
-                            child: IconButton(
-                                icon: Icon(
-                                  MdiIcons.videoOutline,
-                                  color: AppColor.primaryLightColor,
-                                ),
-                                onPressed: () {
-                                  Navigator.pushNamed(context, '/youtubeVideoPage');
-                                }),
+                          SizedBox(
+                            width: widget.song.indexSongBook != null ? 10 : 0,
                           ),
-                          BlocBuilder<UsersBloc, UsersState>(
-                            builder: (context, state) {
-                              return Visibility(
-                                visible: state.currentUser?.typeUser == TypeUser.admin || state.currentUser?.typeUser == TypeUser.superuser,
-                                child: IconButton(
-                                    icon: Icon(
-                                      MdiIcons.pencil,
-                                      color: AppColor.primaryLightestColor,
-                                    ),
-                                    onPressed: () {
-                                      context.read<EditSongBloc>().add(ChangeEditSong(song: widget.song.copyWith(), isOriginalLyrics: false));
-                                      Navigator.pushNamed(context, '/editPage');
-                                    }),
-                              );
-                            },
+                          Expanded(
+                            child: Text(
+                              widget.song.interpret ?? '',
+                              style: labelTextStyle,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         ],
                       ),
-                      IconButton(
-                          icon: Icon(
-                            MdiIcons.radioboxMarked,
-                            color: widget.isSelectedSong ? Colors.green : AppColor.primaryDarkColor,
-                          ),
-                          onPressed: () {
-                            context.read<HomePageBloc>().add(SelectSong(
-                                selectedSongId: widget.song.id,
-                                title: widget.song.title,
-                                interpret: widget.song.interpret ?? '',
-                                lyricsWithoutChords: widget.song.lyricsWithoutChords));
-                          }),
                     ],
                   ),
+                ),
+                // Select button
+                IconButton(
+                    icon: Icon(
+                      MdiIcons.radioboxMarked,
+                      color: widget.isSelectedSong ? Colors.green : AppColor.grey3Color,
+                      size: 20,
+                    ),
+                    onPressed: () {
+                      context.read<HomePageBloc>().add(SelectSong(
+                          selectedSongId: widget.song.id, title: widget.song.title, interpret: widget.song.interpret ?? '', lyricsWithoutChords: widget.song.lyricsWithoutChords));
+                    }),
+                // 3-dot menu
+                BlocBuilder<UsersBloc, UsersState>(
+                  builder: (context, userState) {
+                    final isAdmin = userState.currentUser?.typeUser == TypeUser.admin || userState.currentUser?.typeUser == TypeUser.superuser;
+                    return PopupMenuButton(
+                      icon: const Icon(
+                        Icons.more_vert,
+                        color: AppColor.grey3Color,
+                      ),
+                      itemBuilder: (context) {
+                        return [
+                          PopupMenuItem(
+                            value: 'preview',
+                            child: Row(
+                              children: [
+                                Icon(MdiIcons.bookMusicOutline, color: AppColor.primaryDarkColor),
+                                const SizedBox(width: 12),
+                                Text('preview'.tr()),
+                              ],
+                            ),
+                            onTap: () => _openPreview(),
+                          ),
+                          PopupMenuItem(
+                            value: 'presentation',
+                            child: Row(
+                              children: [
+                                Icon(MdiIcons.presentation, color: AppColor.primaryDarkestColor),
+                                const SizedBox(width: 12),
+                                Text('presentation'.tr()),
+                              ],
+                            ),
+                            onTap: () {
+                              context.read<PreviewChordBloc>().add(ChangeCurrentSong(song: widget.song));
+                              Navigator.pushNamed(context, '/presentationPage');
+                            },
+                          ),
+                          if (widget.song.sheets != null && widget.song.sheets!.isNotEmpty)
+                            PopupMenuItem(
+                              value: 'sheet',
+                              child: Row(
+                                children: [
+                                  Icon(MdiIcons.imageFrame, color: AppColor.primaryColor),
+                                  const SizedBox(width: 12),
+                                  Text('sheet'.tr()),
+                                ],
+                              ),
+                              onTap: () {
+                                context.read<PreviewChordBloc>().add(ChangeCurrentSong(song: widget.song));
+                                Navigator.pushNamed(context, '/sheetViewPage');
+                              },
+                            ),
+                          if (widget.song.youtubeVideos != null && widget.song.youtubeVideos!.isNotEmpty)
+                            PopupMenuItem(
+                              value: 'youtube',
+                              child: Row(
+                                children: [
+                                  Icon(MdiIcons.videoOutline, color: AppColor.primaryLightColor),
+                                  const SizedBox(width: 12),
+                                  Text('youtube'.tr()),
+                                ],
+                              ),
+                              onTap: () {
+                                context.read<PreviewChordBloc>().add(ChangeCurrentSong(song: widget.song));
+                                Navigator.pushNamed(context, '/youtubeVideoPage');
+                              },
+                            ),
+                          if (isAdmin)
+                            PopupMenuItem(
+                              value: 'edit',
+                              child: Row(
+                                children: [
+                                  Icon(MdiIcons.pencil, color: AppColor.primaryLightestColor),
+                                  const SizedBox(width: 12),
+                                  Text('edit'.tr()),
+                                ],
+                              ),
+                              onTap: () {
+                                context.read<EditSongBloc>().add(ChangeEditSong(song: widget.song.copyWith(), isOriginalLyrics: false));
+                                Navigator.pushNamed(context, '/editPage');
+                              },
+                            ),
+                        ];
+                      },
+                    );
+                  },
                 ),
               ],
             ),

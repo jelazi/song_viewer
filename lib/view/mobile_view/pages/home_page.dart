@@ -21,6 +21,7 @@ class HomePageMobile extends StatefulWidget {
 
 class _HomePageMobileState extends State<HomePageMobile> {
   final TextEditingController _filter = TextEditingController();
+  bool _isFilterActive = false;
 
   bool selectLargeScreen(Size size) {
     bool isLargeScreen = false;
@@ -97,6 +98,7 @@ class _HomePageMobileState extends State<HomePageMobile> {
                                         IconButton(
                                           onPressed: () {
                                             context.read<HomePageBloc>().add(FilterSong(filter: _filter.text));
+                                            _isFilterActive = _filter.text.isNotEmpty;
                                           },
                                           icon: const Icon(Icons.search),
                                         ),
@@ -105,6 +107,7 @@ class _HomePageMobileState extends State<HomePageMobile> {
                                             onPressed: () {
                                               _filter.clear();
                                               context.read<HomePageBloc>().add(const FilterSong(filter: ''));
+                                              _isFilterActive = false;
                                             },
                                             icon: const Icon(Icons.clear),
                                           ),
@@ -113,6 +116,13 @@ class _HomePageMobileState extends State<HomePageMobile> {
                                   ),
                                   onSubmitted: (value) {
                                     context.read<HomePageBloc>().add(FilterSong(filter: value));
+                                    _isFilterActive = value.isNotEmpty;
+                                  },
+                                  onChanged: (value) {
+                                    if (_isFilterActive) {
+                                      context.read<HomePageBloc>().add(const FilterSong(filter: ''));
+                                      _isFilterActive = false;
+                                    }
                                   },
                                 );
                               },

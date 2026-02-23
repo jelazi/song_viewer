@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -18,6 +20,9 @@ class _EditPlaylistTabletState extends State<EditPlaylistTablet> {
   final _scrollController = ScrollController();
   var draggedItem;
   var dragIndex;
+  bool _isFilterActive = false;
+
+  bool get _isDesktop => Platform.isLinux || Platform.isWindows || Platform.isMacOS;
 
   @override
   void initState() {
@@ -117,6 +122,7 @@ class _EditPlaylistTabletState extends State<EditPlaylistTablet> {
                                   IconButton(
                                     onPressed: () {
                                       context.read<PlaylistsBloc>().add(FilterSongPlaylist(filter: _filter.text));
+                                      _isFilterActive = _filter.text.isNotEmpty;
                                     },
                                     icon: const Icon(Icons.search),
                                   ),
@@ -125,6 +131,7 @@ class _EditPlaylistTabletState extends State<EditPlaylistTablet> {
                                       onPressed: () {
                                         _filter.clear();
                                         context.read<PlaylistsBloc>().add(const FilterSongPlaylist(filter: ''));
+                                        _isFilterActive = false;
                                       },
                                       icon: const Icon(Icons.clear),
                                     ),
@@ -133,6 +140,15 @@ class _EditPlaylistTabletState extends State<EditPlaylistTablet> {
                             ),
                             onSubmitted: (value) {
                               context.read<PlaylistsBloc>().add(FilterSongPlaylist(filter: value));
+                              _isFilterActive = value.isNotEmpty;
+                            },
+                            onChanged: (value) {
+                              if (_isDesktop) {
+                                context.read<PlaylistsBloc>().add(FilterSongPlaylist(filter: value));
+                              } else if (_isFilterActive) {
+                                context.read<PlaylistsBloc>().add(const FilterSongPlaylist(filter: ''));
+                                _isFilterActive = false;
+                              }
                             },
                           );
                         },

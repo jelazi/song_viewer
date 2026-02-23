@@ -1,5 +1,97 @@
 # Development Log
 
+## 2026-02-23 - Sheet music, YouTube videos, mobile 3-dot menu
+
+### What was done
+
+1. **Task 2: Sheet music (noty) support — completed**
+   - Sheet view pages (`SheetViewPageMobile`, `SheetViewPageTablet`) fully implemented with:
+     - `PageView` for swiping between multiple sheets
+     - `InteractiveViewer` for pinch-to-zoom
+     - `CachedNetworkImage` for network URL images with loading/error states
+     - Page counter in app bar
+     - Empty state with localized messages
+   - Song cards now dispatch `ChangeCurrentSong` to `PreviewChordBloc` before navigating to sheet/youtube pages
+   - Tablet song card popup menu now includes: preview, presentation, sheet (conditional), youtube (conditional), edit, delete
+   - `TypeClickCard.sheet` / `.youtube` / `.presentation` cases handled in both mobile and tablet song cards (were TODO)
+
+2. **Task 3: YouTube video player — completed**
+   - Created `lib/core/youtube_helper.dart` — utility to extract YouTube video ID from various URL formats
+   - YouTube video pages (`YoutubeVideoPageMobile`, `YoutubeVideoPageTablet`) implemented with:
+     - `youtube_player_iframe` for embedded playback on iOS/Android
+     - Desktop fallback: opens in external browser via `url_launcher`
+     - Video list with play/open-in-browser options
+     - Tablet layout: side-by-side player + video list
+     - Mobile layout: stacked player + video list
+     - Empty state with localized messages
+   - Packages added to pubspec.yaml: `cached_network_image ^3.3.1`, `url_launcher ^6.2.5`, `youtube_player_iframe ^5.1.2`
+
+3. **Task 4: Mobile song card 3-dot menu — completed**
+   - Removed expand animation (`SizeTransition`, `AnimationController`)
+   - Tap on card now opens preview directly (for `TypeClickCard.none` and `.preview`)
+   - Added `PopupMenuButton` (3-dot menu) with options: preview, presentation, sheet (if available), youtube (if available), edit (if admin)
+   - Added select button inline on the card
+   - Admin-only edit option uses `BlocBuilder<UsersBloc>` check
+
+### Files modified
+- `lib/core/youtube_helper.dart` — NEW: YouTube video ID extraction utility
+- `lib/view/mobile_view/widgets/song_card.dart` — Rewritten: removed expand animation, added 3-dot popup menu
+- `lib/view/tablet_view/widgets/song_card_tablet.dart` — Added preview/presentation/sheet/youtube to popup menu, handled TypeClickCard TODOs
+- `lib/view/mobile_view/pages/sheet_view_page.dart` — Full implementation with PageView + InteractiveViewer + CachedNetworkImage
+- `lib/view/tablet_view/pages/sheet_view_page_tablet.dart` — Full implementation (same as mobile)
+- `lib/view/mobile_view/pages/youtube_video_page.dart` — Full implementation with youtube_player_iframe + url_launcher fallback
+- `lib/view/tablet_view/pages/youtube_video_page_tablet.dart` — Full implementation with side-by-side layout
+- `lib/view/router/app_router.dart` — Routes already existed, no changes needed
+- `pubspec.yaml` — Added cached_network_image, url_launcher, youtube_player_iframe
+
+### Current state
+- All 4 tasks completed: search field behavior, sheet music, YouTube videos, mobile 3-dot menu
+- `flutter analyze` passes with 0 errors (only pre-existing info-level warnings)
+- Sheet pages show images from URLs stored in Firestore `sheets` field
+- YouTube player works on mobile/tablet (embedded) and desktop (opens in browser)
+- Mobile song card: tap → preview, 3-dot menu → all actions
+- Tablet song card: tap → preview, 3-dot menu → all actions including sheet/youtube
+
+### Known issues / pending
+- Desktop sheet/youtube pages route to `Container()` — only mobile/tablet have full implementations
+- `youtube_player_iframe` may not work on macOS desktop (falls back to browser)
+- No sheet upload/management UI — sheets are read-only from Firestore
+- No YouTube video add/remove UI on the view pages — managed through edit page
+
+---
+
+## 2026-02-23 - Platform-aware search field behavior
+
+### What was done
+1. **Desktop (macOS/Windows/Linux) — live filtering on every keystroke:**
+   - `list_song.dart`: Added `onChanged` to song filter — dispatches `FilterSong` on every keystroke
+   - `list_web_song.dart`: Added `onChanged` to all 7 search fields:
+     - `FilterSongs` (local) fields: immediate `onChanged`
+     - `FilterInterprets` (network) fields: debounced `onChanged` with 500ms `Timer` to avoid spamming API
+   - `edit_playlist_tablet.dart`: Added platform detection — on desktop, `onChanged` triggers `FilterSongPlaylist` live
+   - `filter_field_tablet.dart`: Added platform detection — on desktop, `onChanged` calls `onSearch` live
+
+2. **Mobile/Tablet (iOS/Android) — reset filter on new typing:**
+   - After user applies a filter (via Enter or search button), the next keystroke in the field resets the filter (shows all songs again)
+   - Tracked via `_isFilterActive` flag in each widget
+   - `home_page.dart` (mobile): Added `_isFilterActive` tracking + `onChanged` reset
+   - `filter_field_tablet.dart`: Converted from `StatelessWidget` to `StatefulWidget`, added `_isFilterActive` tracking
+   - `edit_playlist_tablet.dart`: Added `_isFilterActive` + `_isDesktop` + conditional `onChanged`
+
+### Files modified
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/list_song.dart` — Added `onChanged`
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/list_web_song.dart` — Added `dart:async`, debounce timer, `onChanged` to all 7 fields
+- `lib/view/mobile_view/pages/home_page.dart` — Added `_isFilterActive`, reset-on-type `onChanged`
+- `lib/view/tablet_view/widgets/filter_field_tablet.dart` — Converted to StatefulWidget, added platform-aware `onChanged`
+- `lib/view/tablet_view/pages/tablet_edit_pages/edit_playlist_tablet.dart` — Added `dart:io`, `_isFilterActive`, `_isDesktop`, platform-aware `onChanged`
+
+### Current state
+- Desktop: all search fields filter live on every keystroke (network fields debounced 500ms)
+- Mobile/Tablet: filter on Enter/button press; after filtering, first keystroke resets filter
+- No compile errors
+
+---
+
 ## 2026-02-23 - Auto-fill new playlist name with today's date
 
 ### What was done

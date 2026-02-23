@@ -51,13 +51,16 @@ class _SongCardTabletState extends State<SongCardTablet> with TickerProviderStat
             break;
 
           case TypeClickCard.presentation:
-            // TODO: Handle this case.
+            context.read<PreviewChordBloc>().add(ChangeCurrentSong(song: widget.song));
+            Navigator.pushNamed(context, '/presentationPage');
             break;
           case TypeClickCard.sheet:
-            // TODO: Handle this case.
+            context.read<PreviewChordBloc>().add(ChangeCurrentSong(song: widget.song));
+            Navigator.pushNamed(context, '/sheetViewPage');
             break;
           case TypeClickCard.youtube:
-            // TODO: Handle this case.
+            context.read<PreviewChordBloc>().add(ChangeCurrentSong(song: widget.song));
+            Navigator.pushNamed(context, '/youtubeVideoPage');
             break;
         }
       },
@@ -134,7 +137,77 @@ class _SongCardTabletState extends State<SongCardTablet> with TickerProviderStat
                       itemBuilder: (context) {
                         return [
                           PopupMenuItem(
-                            value: 1,
+                            value: 'preview',
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Icon(
+                                  MdiIcons.bookMusicOutline,
+                                  color: AppColor.grey1Color,
+                                ),
+                                Text('preview'.tr()),
+                              ],
+                            ),
+                            onTap: () {
+                              context.read<PreviewChordBloc>().add(ChangeCurrentSong(song: widget.song));
+                              Navigator.pushNamed(context, '/previewPage');
+                            },
+                          ),
+                          PopupMenuItem(
+                            value: 'presentation',
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Icon(
+                                  MdiIcons.presentation,
+                                  color: AppColor.grey1Color,
+                                ),
+                                Text('presentation'.tr()),
+                              ],
+                            ),
+                            onTap: () {
+                              context.read<PreviewChordBloc>().add(ChangeCurrentSong(song: widget.song));
+                              Navigator.pushNamed(context, '/presentationPage');
+                            },
+                          ),
+                          if (widget.song.sheets != null && widget.song.sheets!.isNotEmpty)
+                            PopupMenuItem(
+                              value: 'sheet',
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Icon(
+                                    MdiIcons.imageFrame,
+                                    color: AppColor.grey1Color,
+                                  ),
+                                  Text('sheet'.tr()),
+                                ],
+                              ),
+                              onTap: () {
+                                context.read<PreviewChordBloc>().add(ChangeCurrentSong(song: widget.song));
+                                Navigator.pushNamed(context, '/sheetViewPage');
+                              },
+                            ),
+                          if (widget.song.youtubeVideos != null && widget.song.youtubeVideos!.isNotEmpty)
+                            PopupMenuItem(
+                              value: 'youtube',
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Icon(
+                                    MdiIcons.videoOutline,
+                                    color: AppColor.grey1Color,
+                                  ),
+                                  Text('youtube'.tr()),
+                                ],
+                              ),
+                              onTap: () {
+                                context.read<PreviewChordBloc>().add(ChangeCurrentSong(song: widget.song));
+                                Navigator.pushNamed(context, '/youtubeVideoPage');
+                              },
+                            ),
+                          PopupMenuItem(
+                            value: 'edit',
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -151,7 +224,7 @@ class _SongCardTabletState extends State<SongCardTablet> with TickerProviderStat
                             },
                           ),
                           PopupMenuItem(
-                            value: 2,
+                            value: 'delete',
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -175,14 +248,6 @@ class _SongCardTabletState extends State<SongCardTablet> with TickerProviderStat
                             },
                           ),
                         ];
-                      },
-                      onSelected: (value) {
-                        switch (value) {
-                          case 1:
-                            break;
-                          case 2:
-                            break;
-                        }
                       }),
                 ),
               ],

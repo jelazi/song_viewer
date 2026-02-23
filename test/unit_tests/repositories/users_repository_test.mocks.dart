@@ -927,6 +927,63 @@ class MockSettingsRepository extends _i1.Mock
       ) as _i17.TypeClickCard);
 
   @override
+  int get presentationScreenIndex => (super.noSuchMethod(
+        Invocation.getter(#presentationScreenIndex),
+        returnValue: 0,
+      ) as int);
+
+  @override
+  int get presentationLinesPerPage => (super.noSuchMethod(
+        Invocation.getter(#presentationLinesPerPage),
+        returnValue: 0,
+      ) as int);
+
+  @override
+  double get presentationFontSize => (super.noSuchMethod(
+        Invocation.getter(#presentationFontSize),
+        returnValue: 0.0,
+      ) as double);
+
+  @override
+  _i6.Color get presentationFontColor => (super.noSuchMethod(
+        Invocation.getter(#presentationFontColor),
+        returnValue: _FakeColor_5(
+          this,
+          Invocation.getter(#presentationFontColor),
+        ),
+      ) as _i6.Color);
+
+  @override
+  bool get presentationShowChords => (super.noSuchMethod(
+        Invocation.getter(#presentationShowChords),
+        returnValue: false,
+      ) as bool);
+
+  @override
+  bool get presentationBlackFirstPage => (super.noSuchMethod(
+        Invocation.getter(#presentationBlackFirstPage),
+        returnValue: false,
+      ) as bool);
+
+  @override
+  bool get presentationBlackLastPage => (super.noSuchMethod(
+        Invocation.getter(#presentationBlackLastPage),
+        returnValue: false,
+      ) as bool);
+
+  @override
+  bool get presentationShowPageNumber => (super.noSuchMethod(
+        Invocation.getter(#presentationShowPageNumber),
+        returnValue: false,
+      ) as bool);
+
+  @override
+  bool get presentationShowTitle => (super.noSuchMethod(
+        Invocation.getter(#presentationShowTitle),
+        returnValue: false,
+      ) as bool);
+
+  @override
   void getInfoApp() => super.noSuchMethod(
         Invocation.method(
           #getInfoApp,
