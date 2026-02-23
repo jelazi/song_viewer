@@ -1,5 +1,25 @@
 # Development Log
 
+## 2026-02-23 - Auto-fill new playlist name with today's date
+
+### What was done
+- When creating a new playlist (tablet edit page), the name field is now automatically filled with today's date in DD.MM.YYYY format
+- Modified `_openPlaylist` in `PlaylistsBloc` to set `defaultName` using `DateFormat('dd.MM.yyyy')` when `playlist == null`
+- Both `currentPlaylist.name` and `namePlaylist` state fields are set to the date string
+- Added same default date name to desktop save playlist dialog (`_showSavePlaylistDialog` in `ribbon_menu.dart`)
+- Fixed `TextDirection.ltr` compile error caused by `intl` import conflicting with Flutter's `TextDirection` — added `hide TextDirection` to import
+
+### Files modified
+- `lib/blocs/playlist_bloc/playlists_bloc.dart` — Added `intl` import (with `hide TextDirection`), set default playlist name to today's date for new playlists
+- `lib/view/desktop_view/widgets/ribbon_menu.dart` — Pre-filled save playlist dialog name with today's date
+
+### Current state
+- New playlists get today's date as default name (e.g. "23.02.2026")
+- Editing existing playlists is unchanged
+- No new compilation errors
+
+---
+
 ## 2026-02-22 - Rewrite presentation to hide/show instead of destroy/recreate
 
 ### What was done

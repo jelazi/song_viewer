@@ -5,6 +5,7 @@ import 'package:default_project/repositories/songs_repository.dart';
 import 'package:default_project/view/desktop_view/widgets/my_toast.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart' hide TextDirection;
 
 import '../../model/playlist.dart';
 import '../../model/song/song.dart';
@@ -96,9 +97,11 @@ class PlaylistsBloc extends Bloc<PlaylistsEvent, PlaylistsState> {
     if (event.forEdit) {
       var playlist = event.playlist;
       if (playlist == null) {
+        final defaultName = DateFormat('dd.MM.yyyy').format(DateTime.now());
         emit(state.copyWith(
-          currentPlaylist: Playlist(id: null, name: ''),
+          currentPlaylist: Playlist(id: null, name: defaultName),
           currentSongs: [],
+          namePlaylist: defaultName,
         ));
         return;
       }

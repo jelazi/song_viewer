@@ -868,7 +868,9 @@ class HomeTabbar extends StatelessWidget {
   }
 
   void _showSavePlaylistDialog(BuildContext context) {
-    final TextEditingController nameController = TextEditingController();
+    final TextEditingController nameController = TextEditingController(
+      text: DateFormat('dd.MM.yyyy').format(DateTime.now()),
+    );
 
     showDialog(
       context: context,
