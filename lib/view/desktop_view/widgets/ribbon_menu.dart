@@ -299,7 +299,7 @@ class SettingsTabbar extends StatelessWidget {
                 text: 'exportAllSongs'.tr(),
                 icon: const Icon(
                   Icons.exit_to_app,
-                  color: Colors.black,
+                  color: Colors.blue,
                 ),
                 isEnabled: true,
                 onPressed: () async {
@@ -367,7 +367,7 @@ class SettingsTabbar extends StatelessWidget {
                 text: 'groups'.tr(),
                 icon: const Icon(
                   Icons.group,
-                  color: Colors.black,
+                  color: Colors.teal,
                 ),
                 isEnabled: true,
                 onPressed: () {
@@ -377,7 +377,7 @@ class SettingsTabbar extends StatelessWidget {
                 text: 'users'.tr(),
                 icon: const Icon(
                   Icons.person,
-                  color: Colors.black,
+                  color: Colors.indigo,
                 ),
                 isEnabled: true,
                 onPressed: () {
@@ -387,7 +387,7 @@ class SettingsTabbar extends StatelessWidget {
                 text: 'Nastavení prezentace',
                 icon: const Icon(
                   Icons.present_to_all,
-                  color: Colors.black,
+                  color: Colors.deepPurple,
                 ),
                 isEnabled: true,
                 onPressed: () {
@@ -414,7 +414,7 @@ class PreviewTabbar extends StatelessWidget {
                 text: 'zoomIn'.tr(),
                 icon: const Icon(
                   Icons.zoom_in,
-                  color: Colors.black,
+                  color: Colors.blue,
                 ),
                 isEnabled: state.data.song != null,
                 onPressed: () {
@@ -429,7 +429,7 @@ class PreviewTabbar extends StatelessWidget {
                 isEnabled: state.data.song != null,
                 icon: const Icon(
                   Icons.zoom_out,
-                  color: Colors.black,
+                  color: Colors.blue,
                 ),
                 onPressed: () {
                   context.read<PreviewChordBloc>().add(const ChangeFontSize(isIncrease: false));
@@ -447,12 +447,12 @@ class PreviewTabbar extends StatelessWidget {
                     Icon(
                       Icons.add,
                       size: 18,
-                      color: Colors.black,
+                      color: Colors.orange,
                     ),
                     Icon(
                       Icons.music_note,
                       size: 18,
-                      color: Colors.black,
+                      color: Colors.orange,
                     ),
                   ],
                 ),
@@ -472,12 +472,12 @@ class PreviewTabbar extends StatelessWidget {
                     Icon(
                       Icons.remove,
                       size: 18,
-                      color: Colors.black,
+                      color: Colors.orange,
                     ),
                     Icon(
                       Icons.music_note,
                       size: 18,
-                      color: Colors.black,
+                      color: Colors.orange,
                     ),
                   ],
                 ),
@@ -512,7 +512,7 @@ class HomeTabbar extends StatelessWidget {
                                   text: 'zoomIn'.tr(),
                                   icon: const Icon(
                                     Icons.zoom_in,
-                                    color: Colors.black,
+                                    color: Colors.blue,
                                   ),
                                   isEnabled: state.data.song != null,
                                   onPressed: () {
@@ -527,7 +527,7 @@ class HomeTabbar extends StatelessWidget {
                                   isEnabled: state.data.song != null,
                                   icon: const Icon(
                                     Icons.zoom_out,
-                                    color: Colors.black,
+                                    color: Colors.blue,
                                   ),
                                   onPressed: () {
                                     context.read<PreviewChordBloc>().add(const ChangeFontSize(isIncrease: false));
@@ -545,12 +545,12 @@ class HomeTabbar extends StatelessWidget {
                                       Icon(
                                         Icons.add,
                                         size: 18,
-                                        color: Colors.black,
+                                        color: Colors.orange,
                                       ),
                                       Icon(
                                         Icons.music_note,
                                         size: 18,
-                                        color: Colors.black,
+                                        color: Colors.orange,
                                       ),
                                     ],
                                   ),
@@ -570,12 +570,12 @@ class HomeTabbar extends StatelessWidget {
                                       Icon(
                                         Icons.remove,
                                         size: 18,
-                                        color: Colors.black,
+                                        color: Colors.orange,
                                       ),
                                       Icon(
                                         Icons.music_note,
                                         size: 18,
-                                        color: Colors.black,
+                                        color: Colors.orange,
                                       ),
                                     ],
                                   ),
@@ -614,9 +614,9 @@ class HomeTabbar extends StatelessWidget {
                                   text: 'openSheet'.tr(),
                                   isEnabled: true,
                                   isSelected: isActive,
-                                  icon: const Icon(
+                                  icon: Icon(
                                     Icons.music_note,
-                                    color: Colors.black,
+                                    color: Colors.green.shade700,
                                   ),
                                   onPressed: () {
                                     context.read<DesktopRibbonMenuBloc>().add(
@@ -644,7 +644,7 @@ class HomeTabbar extends StatelessWidget {
                                   text: 'lyrics'.tr(),
                                   icon: const Icon(
                                     Icons.edit,
-                                    color: Colors.black,
+                                    color: Colors.blue,
                                   ),
                                   onPressed: () {
                                     context.read<DesktopRibbonMenuBloc>().add(const ChangeEditBody(bodyName: 'lyrics'));
@@ -655,7 +655,7 @@ class HomeTabbar extends StatelessWidget {
                                   text: 'chord'.tr(),
                                   icon: const Icon(
                                     Icons.piano,
-                                    color: Colors.black,
+                                    color: Colors.orange,
                                   ),
                                   onPressed: () {
                                     context.read<DesktopRibbonMenuBloc>().add(const ChangeEditBody(bodyName: 'chords'));
@@ -666,7 +666,7 @@ class HomeTabbar extends StatelessWidget {
                                   text: 'youtube'.tr(),
                                   icon: const Icon(
                                     Icons.videocam,
-                                    color: Colors.black,
+                                    color: Colors.red,
                                   ),
                                   onPressed: () {
                                     context.read<DesktopRibbonMenuBloc>().add(const ChangeEditBody(bodyName: 'youtube'));
@@ -675,9 +675,9 @@ class HomeTabbar extends StatelessWidget {
                                   isSelected: state.bodyEditName == 'youtube'),
                               RibbonButton(
                                   text: 'sheets'.tr(),
-                                  icon: const Icon(
+                                  icon: Icon(
                                     Icons.music_note,
-                                    color: Colors.black,
+                                    color: Colors.green.shade700,
                                   ),
                                   onPressed: () {
                                     context.read<DesktopRibbonMenuBloc>().add(const ChangeEditBody(bodyName: 'sheets'));
@@ -686,9 +686,9 @@ class HomeTabbar extends StatelessWidget {
                                   isSelected: state.bodyEditName == 'sheets'),
                               RibbonButton(
                                   text: 'otherSettings'.tr(),
-                                  icon: const Icon(
+                                  icon: Icon(
                                     Icons.settings,
-                                    color: Colors.black,
+                                    color: Colors.grey.shade700,
                                   ),
                                   onPressed: () {
                                     context.read<DesktopRibbonMenuBloc>().add(const ChangeEditBody(bodyName: 'settings'));
@@ -699,7 +699,7 @@ class HomeTabbar extends StatelessWidget {
                                   text: 'delete'.tr(),
                                   icon: const Icon(
                                     Icons.delete,
-                                    color: Colors.black,
+                                    color: Colors.red,
                                   ),
                                   onPressed: () {
                                     showDialog(
@@ -736,7 +736,7 @@ class HomeTabbar extends StatelessWidget {
       text: 'newSong'.tr(),
       icon: const Icon(
         Icons.new_label,
-        color: Colors.black,
+        color: Colors.green,
       ),
       onPressed: () {
         TextEditingController nameController = TextEditingController();
@@ -809,7 +809,7 @@ class HomeTabbar extends StatelessWidget {
                         Icon(
                           isOpen ? Icons.close_fullscreen : Icons.present_to_all,
                           size: 18,
-                          color: (isOpen || playlistState.isNotEmpty) ? Colors.black : Colors.grey,
+                          color: (isOpen || playlistState.isNotEmpty) ? Colors.deepPurple : Colors.grey,
                         ),
                       ],
                     ),
@@ -828,7 +828,7 @@ class HomeTabbar extends StatelessWidget {
                     icon: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.playlist_add, size: 18, color: Colors.black),
+                        Icon(Icons.playlist_add, size: 18, color: Colors.teal),
                       ],
                     ),
                     onPressed: () {
@@ -841,7 +841,7 @@ class HomeTabbar extends StatelessWidget {
                     icon: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.save, size: 18, color: playlistState.isNotEmpty ? Colors.black : Colors.grey),
+                        Icon(Icons.save, size: 18, color: playlistState.isNotEmpty ? Colors.blue : Colors.grey),
                       ],
                     ),
                     onPressed: () {
@@ -853,10 +853,10 @@ class HomeTabbar extends StatelessWidget {
                 RibbonButton(
                     text: 'Načíst playlist',
                     isEnabled: true,
-                    icon: const Row(
+                    icon: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.folder_open, size: 18, color: Colors.black),
+                        Icon(Icons.folder_open, size: 18, color: Colors.amber.shade800),
                       ],
                     ),
                     onPressed: () {
