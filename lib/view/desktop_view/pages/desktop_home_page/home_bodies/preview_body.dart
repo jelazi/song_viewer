@@ -15,8 +15,9 @@ import '../../../../mobile_view/widgets/my_floating_button.dart';
 
 class PreviewBody extends StatefulWidget {
   final VoidCallback? onRequestFocus;
+  final Widget? contentOverride;
 
-  const PreviewBody({super.key, this.onRequestFocus});
+  const PreviewBody({super.key, this.onRequestFocus, this.contentOverride});
 
   @override
   State<PreviewBody> createState() => _PreviewBodyState();
@@ -76,107 +77,109 @@ class _PreviewBodyState extends State<PreviewBody> {
                 ),
               ),
             ),
-            Expanded(child: BlocBuilder<PreviewChordBloc, PreviewChordState>(
-              builder: (context, state) {
-                if (state.data.song == null) {
-                  return Center(
-                    child: Text('noSongSelected'.tr()),
-                  );
-                }
-                return GestureDetector(
-                  onTap: () {
-                    disableAllOverlay();
-                  },
-                  child: Stack(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(left: 10.0),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            BlocBuilder<PreviewChordBloc, PreviewChordState>(
-                              builder: (context, state) {
-                                return Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text('cap: ${state.cap}',
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        color: AppColor.primaryColor,
-                                      )),
-                                );
-                              },
-                            ),
-                            SizedBox(
-                              height: MediaQuery.of(context).size.height - 120,
-                              child: _getLyricsRenderer(state, scrollController),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Positioned(
-                        top: 10,
-                        right: 10,
-                        child: AnimatedOpacity(
-                            opacity: state.visibleButtons && state.appBarStatus ? 1.0 : 0.0,
-                            duration: const Duration(milliseconds: 500),
-                            child: Column(
-                              children: [
-                                MyFloatingButton(
-                                    enabled: state.textStyle.fontSize! < 40,
-                                    onPressed: () {
-                                      context.read<PreviewChordBloc>().add(const ChangeFontSize(isIncrease: true));
-                                    },
-                                    icon: const Icon(Icons.zoom_in)),
-                                MyFloatingButton(
-                                    enabled: state.textStyle.fontSize! > 10,
-                                    onPressed: () {
-                                      context.read<PreviewChordBloc>().add(const ChangeFontSize(isIncrease: false));
-                                    },
-                                    icon: const Icon(Icons.zoom_out)),
-                                MyFloatingButton(
-                                    onPressed: () {
-                                      context.read<PreviewChordBloc>().add(const TransposeChord(increment: 1));
-                                    },
-                                    icon: const Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.add,
-                                          size: 18,
-                                        ),
-                                        Icon(
-                                          Icons.music_note,
-                                          size: 18,
-                                        ),
-                                      ],
+            Expanded(
+                child: widget.contentOverride ??
+                    BlocBuilder<PreviewChordBloc, PreviewChordState>(
+                      builder: (context, state) {
+                        if (state.data.song == null) {
+                          return Center(
+                            child: Text('noSongSelected'.tr()),
+                          );
+                        }
+                        return GestureDetector(
+                          onTap: () {
+                            disableAllOverlay();
+                          },
+                          child: Stack(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(left: 10.0),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    BlocBuilder<PreviewChordBloc, PreviewChordState>(
+                                      builder: (context, state) {
+                                        return Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: Text('cap: ${state.cap}',
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                color: AppColor.primaryColor,
+                                              )),
+                                        );
+                                      },
                                     ),
-                                    enabled: true),
-                                MyFloatingButton(
-                                    onPressed: () {
-                                      context.read<PreviewChordBloc>().add(const TransposeChord(increment: -1));
-                                    },
-                                    icon: const Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.remove,
-                                          size: 18,
-                                        ),
-                                        Icon(
-                                          Icons.music_note,
-                                          size: 18,
-                                        ),
-                                      ],
+                                    SizedBox(
+                                      height: MediaQuery.of(context).size.height - 120,
+                                      child: _getLyricsRenderer(state, scrollController),
                                     ),
-                                    enabled: true)
-                              ],
-                            )),
-                      )
-                    ],
-                  ),
-                );
-              },
-            ))
+                                  ],
+                                ),
+                              ),
+                              Positioned(
+                                top: 10,
+                                right: 10,
+                                child: AnimatedOpacity(
+                                    opacity: state.visibleButtons && state.appBarStatus ? 1.0 : 0.0,
+                                    duration: const Duration(milliseconds: 500),
+                                    child: Column(
+                                      children: [
+                                        MyFloatingButton(
+                                            enabled: state.textStyle.fontSize! < 40,
+                                            onPressed: () {
+                                              context.read<PreviewChordBloc>().add(const ChangeFontSize(isIncrease: true));
+                                            },
+                                            icon: const Icon(Icons.zoom_in)),
+                                        MyFloatingButton(
+                                            enabled: state.textStyle.fontSize! > 10,
+                                            onPressed: () {
+                                              context.read<PreviewChordBloc>().add(const ChangeFontSize(isIncrease: false));
+                                            },
+                                            icon: const Icon(Icons.zoom_out)),
+                                        MyFloatingButton(
+                                            onPressed: () {
+                                              context.read<PreviewChordBloc>().add(const TransposeChord(increment: 1));
+                                            },
+                                            icon: const Row(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                Icon(
+                                                  Icons.add,
+                                                  size: 18,
+                                                ),
+                                                Icon(
+                                                  Icons.music_note,
+                                                  size: 18,
+                                                ),
+                                              ],
+                                            ),
+                                            enabled: true),
+                                        MyFloatingButton(
+                                            onPressed: () {
+                                              context.read<PreviewChordBloc>().add(const TransposeChord(increment: -1));
+                                            },
+                                            icon: const Row(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                Icon(
+                                                  Icons.remove,
+                                                  size: 18,
+                                                ),
+                                                Icon(
+                                                  Icons.music_note,
+                                                  size: 18,
+                                                ),
+                                              ],
+                                            ),
+                                            enabled: true)
+                                      ],
+                                    )),
+                              )
+                            ],
+                          ),
+                        );
+                      },
+                    ))
           ],
         );
       },

@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 
 import '../../../../../blocs/export_blocs.dart';
 
-/// Desktop view-only body for browsing sheet music of the selected song.
+/// Compact right-side panel for browsing sheet music of the selected song.
+/// Designed to appear alongside the PreviewBody on desktop.
 class BrowseSheetsBody extends StatefulWidget {
   const BrowseSheetsBody({super.key});
 
@@ -22,98 +23,103 @@ class _BrowseSheetsBodyState extends State<BrowseSheetsBody> {
         final song = state.data.song;
         final sheets = song?.sheets ?? [];
 
-        if (sheets.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.music_off, size: 64, color: Colors.grey),
-                const SizedBox(height: 16),
-                Text('noSheet'.tr(), style: const TextStyle(fontSize: 18, color: Colors.grey)),
-                const SizedBox(height: 8),
-                Text('noSheetMessage'.tr(), style: const TextStyle(color: Colors.grey)),
-              ],
-            ),
-          );
-        }
-
-        return Row(
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Thumbnails sidebar
+            // Header
             Container(
-              width: 200,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                border: Border(right: BorderSide(color: Colors.grey.shade300)),
+                color: Colors.grey.shade100,
+                border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.all(12.0),
+                  const Icon(Icons.music_note, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
                     child: Text(
                       '${'sheets'.tr()} - ${song?.title ?? ''}',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const Divider(height: 1),
-                  Expanded(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.all(8),
-                      itemCount: sheets.length,
-                      itemBuilder: (context, index) {
-                        final sheetUrl = sheets[index];
-                        final isSelected = index == _currentIndex;
-                        return GestureDetector(
-                          onTap: () => setState(() => _currentIndex = index),
-                          child: Container(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: isSelected ? Colors.blue : Colors.grey.shade300,
-                                width: isSelected ? 2 : 1,
-                              ),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Column(
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(3),
-                                  child: _buildThumbnail(sheetUrl),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.all(4.0),
-                                  child: Text(
-                                    '${index + 1} / ${sheets.length}',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                      color: isSelected ? Colors.blue : Colors.grey,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
+                  if (sheets.length > 1)
+                    Text(
+                      '${_currentIndex + 1} / ${sheets.length}',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 18),
+                    tooltip: 'Zavřít',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () {
+                      context.read<DesktopRibbonMenuBloc>().add(const ChangeHomeBody(bodyName: 'preview'));
+                    },
                   ),
                 ],
               ),
             ),
-            // Main view area
-            Expanded(
-              child: _currentIndex < sheets.length
-                  ? InteractiveViewer(
-                      minScale: 0.5,
-                      maxScale: 4.0,
-                      child: Center(
-                        child: _buildFullImage(sheets[_currentIndex]),
+            // Sheet navigation (thumbnails strip at top if multiple)
+            if (sheets.length > 1)
+              Container(
+                height: 80,
+                decoration: BoxDecoration(
+                  border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+                ),
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.all(4),
+                  itemCount: sheets.length,
+                  itemBuilder: (context, index) {
+                    final isSelected = index == _currentIndex;
+                    return GestureDetector(
+                      onTap: () => setState(() => _currentIndex = index),
+                      child: Container(
+                        width: 60,
+                        margin: const EdgeInsets.symmetric(horizontal: 2),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: isSelected ? Colors.blue : Colors.grey.shade300,
+                            width: isSelected ? 2 : 1,
+                          ),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(3),
+                          child: _buildThumbnail(sheets[index]),
+                        ),
                       ),
-                    )
-                  : const SizedBox.shrink(),
-            ),
+                    );
+                  },
+                ),
+              ),
+            // Main image view
+            if (sheets.isEmpty)
+              const Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.music_off, size: 48, color: Colors.grey),
+                      SizedBox(height: 8),
+                      Text('Žádné noty', style: TextStyle(color: Colors.grey)),
+                    ],
+                  ),
+                ),
+              )
+            else
+              Expanded(
+                child: InteractiveViewer(
+                  minScale: 0.5,
+                  maxScale: 4.0,
+                  child: Center(
+                    child: _buildFullImage(sheets[_currentIndex < sheets.length ? _currentIndex : 0]),
+                  ),
+                ),
+              ),
           ],
         );
       },
@@ -124,22 +130,22 @@ class _BrowseSheetsBodyState extends State<BrowseSheetsBody> {
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return CachedNetworkImage(
         imageUrl: url,
-        height: 120,
+        height: 70,
         width: double.infinity,
         fit: BoxFit.cover,
         placeholder: (_, __) => const SizedBox(
-          height: 120,
+          height: 70,
           child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
         ),
         errorWidget: (_, __, ___) => const SizedBox(
-          height: 120,
-          child: Center(child: Icon(Icons.broken_image, color: Colors.grey)),
+          height: 70,
+          child: Center(child: Icon(Icons.broken_image, size: 20, color: Colors.grey)),
         ),
       );
     }
     return const SizedBox(
-      height: 120,
-      child: Center(child: Icon(Icons.image_not_supported, color: Colors.grey)),
+      height: 70,
+      child: Center(child: Icon(Icons.image_not_supported, size: 20, color: Colors.grey)),
     );
   }
 

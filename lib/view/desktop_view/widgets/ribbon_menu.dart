@@ -589,15 +589,19 @@ class HomeTabbar extends StatelessWidget {
                             builder: (context, previewState) {
                               final hasYoutube = previewState.data.song?.youtubeVideos?.isNotEmpty ?? false;
                               if (!hasYoutube) return const SizedBox.shrink();
+                              final isActive = state.bodyName == 'browse_youtube';
                               return RibbonButton(
                                   text: 'openVideos'.tr(),
                                   isEnabled: true,
+                                  isSelected: isActive,
                                   icon: const Icon(
                                     Icons.play_circle_fill,
                                     color: Colors.red,
                                   ),
                                   onPressed: () {
-                                    context.read<DesktopRibbonMenuBloc>().add(const ChangeHomeBody(bodyName: 'browse_youtube'));
+                                    context.read<DesktopRibbonMenuBloc>().add(
+                                          ChangeHomeBody(bodyName: isActive ? 'preview' : 'browse_youtube'),
+                                        );
                                   });
                             },
                           ),
@@ -605,15 +609,19 @@ class HomeTabbar extends StatelessWidget {
                             builder: (context, previewState) {
                               final hasSheets = previewState.data.song?.sheets?.isNotEmpty ?? false;
                               if (!hasSheets) return const SizedBox.shrink();
+                              final isActive = state.bodyName == 'browse_sheets';
                               return RibbonButton(
                                   text: 'openSheet'.tr(),
                                   isEnabled: true,
+                                  isSelected: isActive,
                                   icon: const Icon(
                                     Icons.music_note,
                                     color: Colors.black,
                                   ),
                                   onPressed: () {
-                                    context.read<DesktopRibbonMenuBloc>().add(const ChangeHomeBody(bodyName: 'browse_sheets'));
+                                    context.read<DesktopRibbonMenuBloc>().add(
+                                          ChangeHomeBody(bodyName: isActive ? 'preview' : 'browse_sheets'),
+                                        );
                                   });
                             },
                           ),

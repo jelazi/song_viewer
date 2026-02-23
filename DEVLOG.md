@@ -1,5 +1,119 @@
 # Development Log
 
+## 2025-02-23 - Fix save button not detecting YouTube/sheets changes
+
+### What was done
+
+- Fixed `checkModifiedSong()` in `EditSongBloc` — was comparing `state.currentEditSong` with itself for YouTube/sheets (always false because it's the same object)
+- Now compares against `songsRepository.getSongById(song.id)` (the original persisted song), correctly detecting added/removed YouTube videos and sheets
+- Also handles new songs (empty ID): detects if any YouTube/sheets were added
+
+### Root cause
+- `oldSong = state.currentEditSong` was the same reference as `state.currentEditSong`, so YouTube/sheets comparisons always returned false
+- Title, lyrics, groups etc. worked because they use separate `TextEditingController` / `currentText` fields in state
+
+### Files changed
+- `lib/blocs/edit_blocs/edit_song_bloc/edit_song_bloc.dart` — fixed `checkModifiedSong()`
+
+---
+
+## 2025-02-23 - Sync EditSongBloc changes to PreviewChordBloc (browse views update after edit)
+
+### What was done
+
+1. **Fix: browse YouTube/sheets views now update immediately after saving edits**
+   - Added `BlocListener<EditSongBloc, EditSongState>` in `desktop_home_page.dart`
+   - When `currentEditSong` changes and matches the currently previewed song ID, it dispatches `ChangeCurrentSong` to `PreviewChordBloc`
+   - Also dispatches `ChangeIsSelectedSong` to `DesktopRibbonMenuBloc` so ribbon buttons update (e.g. if YouTube/sheets were added/removed)
+   - Uses `listenWhen` to only fire when the song object actually changed, avoiding unnecessary updates on every keystroke
+
+### Problem that was fixed
+- Previously, after editing YouTube videos or sheets and saving, `PreviewChordBloc` held a stale `Song` object
+- The browse panels (and lyrics preview) would not reflect changes until the user re-clicked the song in the list
+- Now changes propagate automatically after save
+
+### Files changed
+- `lib/view/desktop_view/pages/desktop_home_page/desktop_home_page.dart` — added EditSongBloc BlocListener for sync
+
+### Current state
+- All browse views update in real time after saving edits
+- 0 errors in flutter analyze (179 pre-existing info warnings)
+
+---
+
+## 2025-02-23 - Browse YouTube/Sheets replaces lyrics area, auto-switch on song change
+
+### What was done
+
+1. **Browse panels replace lyrics area (not side panel)**
+   - YouTube/Sheets panels now replace the lyrics+chords content area inside PreviewBody
+   - Song list on the left stays visible at all times
+   - Added `contentOverride` parameter to `PreviewBody` — when provided, replaces the lyrics BlocBuilder
+
+2. **Auto-switch when song doesn't have YouTube/Sheets**
+   - When selecting a different song while browse_youtube or browse_sheets is open, and the new song lacks that content, automatically switches back to lyrics (preview) view
+   - When deselecting a song (clicking same song again), also switches back from browse mode
+   - Logic in `DesktopRibbonMenuBloc._changeIsSelectedSong()`
+
+3. **Ribbon buttons remain toggle-able**
+   - Click "Browse YouTube" → replaces lyrics with YouTube panel
+   - Click again → returns to lyrics
+   - Same for "Browse Sheets"
+
+4. **Cleaned up browse panels**
+   - Removed left border (redundant since PreviewBody already has a divider)
+   - Panels still have header with close button for convenience
+
+### Files changed
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/preview_body.dart` — added `contentOverride` param
+- `lib/view/desktop_view/pages/desktop_home_page/desktop_home_page.dart` — browse bodies passed as contentOverride
+- `lib/blocs/desktop_ribbon_menu/desktop_ribbon_menu_bloc.dart` — auto-switch logic in _changeIsSelectedSong
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/browse_youtube_body.dart` — removed Container/border wrapper
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/browse_sheets_body.dart` — removed Container/border wrapper
+
+### Current state
+- Browse panels replace lyrics area while keeping song list visible
+- Auto-switch works when new song lacks YouTube/Sheets data
+- 0 errors in flutter analyze (179 pre-existing info-level warnings)
+
+---
+
+## 2025-02-23 - Browse YouTube/Sheets panels as right-side panels (keep song list visible)
+
+### What was done
+
+1. **Browse panels now appear as right-side panels alongside song preview**
+   - Previously, clicking "Browse YouTube" or "Browse Sheets" replaced the entire body (including song list)
+   - Now the song list and lyrics preview remain visible on the left, and the browse panel opens on the right (400px wide)
+   - Layout: `[ListSong | Song Preview | Browse Panel]`
+
+2. **Rewritten BrowseYoutubeBody as compact right panel**
+   - Removed internal sidebar layout, replaced with vertical card list of videos
+   - Each card shows video thumbnail (mqdefault) + name, click opens in external browser
+   - Has header with title and close (X) button to dismiss the panel
+
+3. **Rewritten BrowseSheetsBody as compact right panel**
+   - Removed internal sidebar layout, replaced with horizontal thumbnail strip at top + full image viewer below
+   - InteractiveViewer for zoom (0.5x-4x)
+   - Has header with title, page counter, and close (X) button
+
+4. **Ribbon buttons now toggle**
+   - Clicking "Browse YouTube" or "Browse Sheets" again closes the panel (returns to preview)
+   - Buttons show selected state (`isSelected`) when their panel is open
+
+### Files changed
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/browse_youtube_body.dart` — rewritten as compact right panel
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/browse_sheets_body.dart` — rewritten as compact right panel
+- `lib/view/desktop_view/pages/desktop_home_page/desktop_home_page.dart` — browse_youtube/browse_sheets now show Row(PreviewBody + panel)
+- `lib/view/desktop_view/widgets/ribbon_menu.dart` — browse buttons toggle + isSelected state
+
+### Current state
+- Song list stays visible when browsing YouTube videos or sheet music
+- Browse panels appear on the far right of the desktop layout
+- 0 errors in flutter analyze (179 pre-existing info-level warnings)
+
+---
+
 ## 2025-02-23 - Desktop browse buttons, presentation auto-page by paragraphs, ribbon spacer
 
 ### What was done

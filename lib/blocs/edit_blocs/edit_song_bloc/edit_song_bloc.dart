@@ -559,35 +559,43 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
 
   bool checkModifiedSong() {
     final state = this.state;
-    final oldSong = state.currentEditSong;
-    if (oldSong.title != state.titleController.text || (oldSong.interpret ?? '') != state.interpretController.text) {
+    final song = state.currentEditSong;
+    if (song.title != state.titleController.text || (song.interpret ?? '') != state.interpretController.text) {
       return true;
     }
-    final sortOldGroups = List<String>.from(oldSong.groups ?? [])..sort();
+    final sortOldGroups = List<String>.from(song.groups ?? [])..sort();
     final sortCurrentGroups = List<String>.from(state.currentGroups)..sort();
     if (sortOldGroups.toString() != sortCurrentGroups.toString()) {
       return true;
     }
     if (state.indexSongBookController.text.isNotEmpty) {
-      if (oldSong.indexSongBook != int.parse(state.indexSongBookController.text)) {
+      if (song.indexSongBook != int.parse(state.indexSongBookController.text)) {
         return true;
       }
     }
     if (state.isOriginalLyrics) {
-      if (oldSong.originalLyrics != state.currentText) {
+      if (song.originalLyrics != state.currentText) {
         return true;
       }
     } else {
-      if (oldSong.lyrics != state.currentText) {
+      if (song.lyrics != state.currentText) {
         return true;
       }
     }
-    // Check youtube videos and sheets
-    if (oldSong.youtubeVideos?.length != state.currentEditSong.youtubeVideos?.length || oldSong.youtubeVideos.toString() != state.currentEditSong.youtubeVideos.toString()) {
-      return true;
-    }
-    if (oldSong.sheets?.length != state.currentEditSong.sheets?.length || oldSong.sheets.toString() != state.currentEditSong.sheets.toString()) {
-      return true;
+    // Check youtube videos and sheets against original song from repository
+    final originalSong = songsRepository.getSongById(song.id);
+    if (originalSong != null) {
+      if (song.youtubeVideos?.length != originalSong.youtubeVideos?.length || song.youtubeVideos.toString() != originalSong.youtubeVideos.toString()) {
+        return true;
+      }
+      if (song.sheets?.length != originalSong.sheets?.length || song.sheets.toString() != originalSong.sheets.toString()) {
+        return true;
+      }
+    } else if (song.id.isEmpty) {
+      // New song — check if any youtube/sheets were added
+      if (song.youtubeVideos?.isNotEmpty == true || song.sheets?.isNotEmpty == true) {
+        return true;
+      }
     }
     return false;
   }

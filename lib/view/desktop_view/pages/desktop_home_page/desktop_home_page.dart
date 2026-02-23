@@ -415,45 +415,68 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
             // immediately resend the current page with the new settings
             _onSettingsChanged(settingsState);
           },
-          child: Scaffold(
-            body: BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
-              builder: (context, state) {
-                Widget homeBody = Container();
-                switch (state.bodyName) {
-                  case 'preview':
-                    homeBody = PreviewBody(onRequestFocus: () => _focusNode.requestFocus());
-                    break;
-                  case 'edit':
-                    homeBody = const EditBody();
-                    break;
-                  case 'web':
-                    homeBody = const WebBody();
-                    break;
-                  case 'groups':
-                    homeBody = const GroupsBody();
-                    break;
-                  case 'users':
-                    homeBody = const UsersBody();
-                    break;
-                  case 'presentation_settings':
-                    homeBody = const PresentationSettingsBody();
-                    break;
-                  case 'browse_youtube':
-                    homeBody = const BrowseYoutubeBody();
-                    break;
-                  case 'browse_sheets':
-                    homeBody = const BrowseSheetsBody();
-                    break;
-                  default:
-                    return PreviewBody(onRequestFocus: () => _focusNode.requestFocus());
-                }
-                return Column(
-                  children: [
-                    const RibbonMenu(),
-                    Expanded(child: homeBody),
-                  ],
-                );
-              },
+          child: BlocListener<EditSongBloc, EditSongState>(
+            listenWhen: (previous, current) {
+              // Only sync when the song object itself changed (e.g. after save)
+              // and the song ID matches the currently previewed song
+              if (previous.currentEditSong == current.currentEditSong) return false;
+              final previewSong = context.read<PreviewChordBloc>().state.data.song;
+              if (previewSong == null) return false;
+              return current.currentEditSong.id == previewSong.id;
+            },
+            listener: (context, editState) {
+              // After save, sync updated song data to PreviewChordBloc
+              // so browse YouTube/sheets views show latest data
+              context.read<PreviewChordBloc>().add(ChangeCurrentSong(song: editState.currentEditSong));
+              // Also update the ribbon menu in case YouTube/sheets were added/removed
+              context.read<DesktopRibbonMenuBloc>().add(ChangeIsSelectedSong(song: editState.currentEditSong));
+            },
+            child: Scaffold(
+              body: BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
+                builder: (context, state) {
+                  Widget homeBody = Container();
+                  switch (state.bodyName) {
+                    case 'preview':
+                      homeBody = PreviewBody(onRequestFocus: () => _focusNode.requestFocus());
+                      break;
+                    case 'edit':
+                      homeBody = const EditBody();
+                      break;
+                    case 'web':
+                      homeBody = const WebBody();
+                      break;
+                    case 'groups':
+                      homeBody = const GroupsBody();
+                      break;
+                    case 'users':
+                      homeBody = const UsersBody();
+                      break;
+                    case 'presentation_settings':
+                      homeBody = const PresentationSettingsBody();
+                      break;
+                    case 'browse_youtube':
+                      homeBody = PreviewBody(
+                        onRequestFocus: () => _focusNode.requestFocus(),
+                        contentOverride: const BrowseYoutubeBody(),
+                      );
+                      break;
+                    case 'browse_sheets':
+                      homeBody = PreviewBody(
+                        onRequestFocus: () => _focusNode.requestFocus(),
+                        contentOverride: const BrowseSheetsBody(),
+                      );
+                      break;
+                    default:
+                      return PreviewBody(onRequestFocus: () => _focusNode.requestFocus());
+                  }
+                  return Column(
+                    children: [
+                      const RibbonMenu(),
+                      Expanded(child: homeBody),
+                    ],
+                  );
+                },
+              ),
             ),
           ),
         ),

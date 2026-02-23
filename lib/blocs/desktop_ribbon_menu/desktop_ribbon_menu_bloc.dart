@@ -29,7 +29,24 @@ class DesktopRibbonMenuBloc extends Bloc<DesktopRibbonMenuEvent, DesktopRibbonMe
   }
 
   void _changeIsSelectedSong(ChangeIsSelectedSong event, Emitter<DesktopRibbonMenuState> emit) {
-    emit(state.copyWith(isSelectedSong: event.song != null));
+    final song = event.song;
+    String bodyName = state.bodyName;
+
+    // Auto-switch back to preview if the new song doesn't have the required data
+    if (song != null) {
+      if (bodyName == 'browse_youtube' && (song.youtubeVideos?.isEmpty ?? true)) {
+        bodyName = 'preview';
+      } else if (bodyName == 'browse_sheets' && (song.sheets?.isEmpty ?? true)) {
+        bodyName = 'preview';
+      }
+    } else {
+      // No song selected — go back to preview
+      if (bodyName == 'browse_youtube' || bodyName == 'browse_sheets') {
+        bodyName = 'preview';
+      }
+    }
+
+    emit(state.copyWith(isSelectedSong: song != null, bodyName: bodyName));
   }
 
   void _changePresentationWindowState(ChangePresentationWindowState event, Emitter<DesktopRibbonMenuState> emit) {
