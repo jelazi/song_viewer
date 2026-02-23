@@ -144,15 +144,7 @@ class _ListSongState extends State<ListSong> {
                                                     overflow: TextOverflow.ellipsis,
                                                   )),
                                               onTap: () {
-                                                if (state.data.song?.id != song.id) {
-                                                  context.read<DesktopRibbonMenuBloc>().add(ChangeIsSelectedSong(song: song));
-                                                  context.read<PreviewChordBloc>().add(ChangeCurrentSong(song: song));
-                                                  context.read<EditSongBloc>().add(ChangeEditSong(song: song, isOriginalLyrics: false));
-                                                } else {
-                                                  context.read<DesktopRibbonMenuBloc>().add(const ChangeIsSelectedSong(song: null));
-                                                  context.read<PreviewChordBloc>().add(const ChangeCurrentSong(song: null));
-                                                  context.read<EditSongBloc>().add(ChangeEditSong(song: Song.empty(), isOriginalLyrics: false));
-                                                }
+                                                _handleSongTap(context, state.data.song, song);
                                               },
                                             );
                                           },
@@ -286,6 +278,118 @@ class _ListSongState extends State<ListSong> {
                 ),
               ),
             ]));
+      },
+    );
+  }
+
+  void _switchToSong(BuildContext context, Song song) {
+    context.read<DesktopRibbonMenuBloc>().add(ChangeIsSelectedSong(song: song));
+    context.read<PreviewChordBloc>().add(ChangeCurrentSong(song: song));
+    context.read<EditSongBloc>().add(ChangeEditSong(song: song, isOriginalLyrics: false));
+  }
+
+  void _deselectSong(BuildContext context) {
+    context.read<DesktopRibbonMenuBloc>().add(const ChangeIsSelectedSong(song: null));
+    context.read<PreviewChordBloc>().add(const ChangeCurrentSong(song: null));
+    context.read<EditSongBloc>().add(ChangeEditSong(song: Song.empty(), isOriginalLyrics: false));
+  }
+
+  void _handleSongTap(BuildContext context, Song? currentSong, Song tappedSong) {
+    if (currentSong?.id == tappedSong.id) {
+      // Deselecting current song — check for unsaved changes
+      final editState = context.read<EditSongBloc>().state;
+      if (editState.isCurrentSongModified) {
+        _showUnsavedChangesDialog(context, editState.listModifications, () {
+          _deselectSong(context);
+        });
+      } else {
+        _deselectSong(context);
+      }
+    } else {
+      // Switching to a different song — check for unsaved changes
+      final editState = context.read<EditSongBloc>().state;
+      if (editState.isCurrentSongModified) {
+        _showUnsavedChangesDialog(context, editState.listModifications, () {
+          _switchToSong(context, tappedSong);
+        });
+      } else {
+        _switchToSong(context, tappedSong);
+      }
+    }
+  }
+
+  String _getModificationLabel(String key) {
+    switch (key) {
+      case 'title':
+        return 'modTitle'.tr();
+      case 'interpret':
+        return 'modInterpret'.tr();
+      case 'indexSongBook':
+        return 'modIndexSongBook'.tr();
+      case 'groups':
+        return 'modGroups'.tr();
+      case 'lyrics':
+        return 'modLyrics'.tr();
+      case 'originalLyrics':
+        return 'modOriginalLyrics'.tr();
+      case 'youtubeVideos':
+        return 'modYoutubeVideos'.tr();
+      case 'sheets':
+        return 'modSheets'.tr();
+      default:
+        return key;
+    }
+  }
+
+  void _showUnsavedChangesDialog(BuildContext context, List<String> modifications, VoidCallback onProceed) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text('unsavedChangesTitle'.tr()),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('unsavedChangesMessage'.tr()),
+              const SizedBox(height: 8),
+              ...modifications.map((mod) => Padding(
+                    padding: const EdgeInsets.only(left: 8, top: 4),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.edit, size: 14, color: Colors.orange),
+                        const SizedBox(width: 6),
+                        Text(_getModificationLabel(mod), style: const TextStyle(fontWeight: FontWeight.w500)),
+                      ],
+                    ),
+                  )),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text('cancel'.tr()),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                onProceed();
+              },
+              child: Text('discardChanges'.tr(), style: const TextStyle(color: Colors.red)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                context.read<EditSongBloc>().add(const SaveSong(typeApp: 'desktop'));
+                // Small delay to let save complete before switching
+                Future.delayed(const Duration(milliseconds: 100), () {
+                  onProceed();
+                });
+              },
+              child: Text('saveAndSwitch'.tr()),
+            ),
+          ],
+        );
       },
     );
   }

@@ -104,6 +104,8 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
         interpret: event.song.interpret ?? '',
         indexSongBook: (event.song.indexSongBook == null) ? '' : event.song.indexSongBook.toString(),
         tags: event.song.tags ?? [],
+        isCurrentSongModified: false,
+        listModifications: const [],
       ));
     } else {
       emit(state.copyWith(
@@ -120,6 +122,8 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
         interpret: event.song.interpret ?? '',
         indexSongBook: (event.song.indexSongBook == null) ? '' : event.song.indexSongBook.toString(),
         tags: event.song.tags ?? [],
+        isCurrentSongModified: false,
+        listModifications: const [],
       ));
     }
   }
@@ -247,6 +251,7 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
           }
       }
     }
+    _recalculateModified(emit);
   }
 
   void _checkModifiedSong(CheckModifiedSong event, Emitter<EditSongState> emit) {
@@ -310,6 +315,7 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
     );
     final listUniqueChords = newSong.getAllUniqueChordsFromSong(event.isOriginalLyric ? TypeLyric.original : TypeLyric.translate);
     emit(state.copyWith(currentText: newLyric, listUniqueChords: listUniqueChords, selectChord: '', transposeIncrement: event.transposeIncrement));
+    _recalculateModified(emit);
   }
 
   void _changeFontSizeEdit(ChangeFontSizeEdit event, Emitter<EditSongState> emit) {
@@ -394,6 +400,7 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
     var newLastIndex = lastIndex + (newFirstIndex - firstIndex);
 
     emit(state.copyWith(currentText: text, selectedChord: newLastIndex));
+    _recalculateModified(emit);
   }
 
   void _changeChord(ChangeChord event, Emitter<EditSongState> emit) {
@@ -411,6 +418,7 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
     Song currentSong = Song(id: '0', title: '', lyrics: text);
     emit(state.copyWith(
         currentText: text, listUniqueChords: currentSong.getAllUniqueChordsFromSong(state.isOriginalLyrics ? TypeLyric.original : TypeLyric.translate), selectedChord: -1));
+    _recalculateModified(emit);
   }
 
   void _createChord(CreateChord event, Emitter<EditSongState> emit) {
@@ -421,6 +429,7 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
     Song currentSong = Song(id: '0', title: '', lyrics: text);
     emit(state.copyWith(
         currentText: text, listUniqueChords: currentSong.getAllUniqueChordsFromSong(state.isOriginalLyrics ? TypeLyric.original : TypeLyric.translate), selectedChord: -1));
+    _recalculateModified(emit);
   }
 
   void _deleteChord(DeleteChord event, Emitter<EditSongState> emit) {
@@ -443,6 +452,7 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
           TypeLyric.translate,
         ),
         selectedChord: -1));
+    _recalculateModified(emit);
   }
 
   void _saveSong(SaveSong event, Emitter<EditSongState> emit) async {
@@ -500,7 +510,7 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
         await songsRepository.updateSong(song);
         await songsRepository.updateSongsFromFirebase();
       }
-      emit(state.copyWith(currentEditSong: song, selectedChord: -1));
+      emit(state.copyWith(currentEditSong: song, selectedChord: -1, isCurrentSongModified: false, listModifications: const []));
     } else if (event.typeApp == 'tablet') {
       var song = state.currentEditSong;
       if (song.title != state.title) {
@@ -542,6 +552,8 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
       indexSongBookController: TextEditingController(text: (event.song.indexSongBook == null) ? '' : event.song.indexSongBook.toString()),
       currentGroups: [],
       isOriginalLyrics: false,
+      isCurrentSongModified: false,
+      listModifications: const [],
     ));
   }
 
@@ -555,49 +567,76 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
     }
 
     emit(state.copyWith(currentGroups: currentGroup));
+    _recalculateModified(emit);
   }
 
-  bool checkModifiedSong() {
-    final state = this.state;
+  /// Computes a list of human-readable modification descriptions by comparing
+  /// the current edit state against the original persisted song.
+  List<String> _computeModifications(EditSongState state) {
     final song = state.currentEditSong;
-    if (song.title != state.titleController.text || (song.interpret ?? '') != state.interpretController.text) {
-      return true;
+    final originalSong = songsRepository.getSongById(song.id);
+    final List<String> modifications = [];
+
+    // Title
+    if (song.title != state.titleController.text) {
+      modifications.add('title');
     }
+    // Interpret
+    if ((song.interpret ?? '') != state.interpretController.text) {
+      modifications.add('interpret');
+    }
+    // Index songbook
+    if (state.indexSongBookController.text.isNotEmpty) {
+      if (song.indexSongBook != int.tryParse(state.indexSongBookController.text)) {
+        modifications.add('indexSongBook');
+      }
+    }
+    // Groups
     final sortOldGroups = List<String>.from(song.groups ?? [])..sort();
     final sortCurrentGroups = List<String>.from(state.currentGroups)..sort();
     if (sortOldGroups.toString() != sortCurrentGroups.toString()) {
-      return true;
+      modifications.add('groups');
     }
-    if (state.indexSongBookController.text.isNotEmpty) {
-      if (song.indexSongBook != int.parse(state.indexSongBookController.text)) {
-        return true;
-      }
-    }
+    // Lyrics
     if (state.isOriginalLyrics) {
       if (song.originalLyrics != state.currentText) {
-        return true;
+        modifications.add('originalLyrics');
       }
     } else {
       if (song.lyrics != state.currentText) {
-        return true;
+        modifications.add('lyrics');
       }
     }
-    // Check youtube videos and sheets against original song from repository
-    final originalSong = songsRepository.getSongById(song.id);
+    // YouTube videos — compare against persisted song from repository
     if (originalSong != null) {
       if (song.youtubeVideos?.length != originalSong.youtubeVideos?.length || song.youtubeVideos.toString() != originalSong.youtubeVideos.toString()) {
-        return true;
+        modifications.add('youtubeVideos');
       }
       if (song.sheets?.length != originalSong.sheets?.length || song.sheets.toString() != originalSong.sheets.toString()) {
-        return true;
+        modifications.add('sheets');
       }
     } else if (song.id.isEmpty) {
-      // New song — check if any youtube/sheets were added
-      if (song.youtubeVideos?.isNotEmpty == true || song.sheets?.isNotEmpty == true) {
-        return true;
+      if (song.youtubeVideos?.isNotEmpty == true) {
+        modifications.add('youtubeVideos');
+      }
+      if (song.sheets?.isNotEmpty == true) {
+        modifications.add('sheets');
       }
     }
-    return false;
+    return modifications;
+  }
+
+  /// Recalculates isCurrentSongModified and listModifications and emits new state.
+  void _recalculateModified(Emitter<EditSongState> emit) {
+    final modifications = _computeModifications(state);
+    emit(state.copyWith(
+      isCurrentSongModified: modifications.isNotEmpty,
+      listModifications: modifications,
+    ));
+  }
+
+  bool checkModifiedSong() {
+    return _computeModifications(state).isNotEmpty;
   }
 
   void _deleteCurrentSong(DeleteCurrentSong event, Emitter<EditSongState> emit) async {
@@ -612,6 +651,8 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
         interpretController: TextEditingController(),
         indexSongBookController: TextEditingController(),
         currentGroups: [],
+        isCurrentSongModified: false,
+        listModifications: const [],
       ));
     }
   }
@@ -623,6 +664,7 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
     emit(state.copyWith(
       currentEditSong: state.currentEditSong.copyWith(youtubeVideos: videos),
     ));
+    _recalculateModified(emit);
   }
 
   void _removeYoutubeVideo(RemoveYoutubeVideo event, Emitter<EditSongState> emit) {
@@ -633,6 +675,7 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
       emit(state.copyWith(
         currentEditSong: state.currentEditSong.copyWith(youtubeVideos: videos),
       ));
+      _recalculateModified(emit);
     }
   }
 
@@ -644,6 +687,7 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
       emit(state.copyWith(
         currentEditSong: state.currentEditSong.copyWith(youtubeVideos: videos),
       ));
+      _recalculateModified(emit);
     }
   }
 
@@ -654,6 +698,7 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
     emit(state.copyWith(
       currentEditSong: state.currentEditSong.copyWith(sheets: sheets),
     ));
+    _recalculateModified(emit);
   }
 
   void _removeSheet(RemoveSheet event, Emitter<EditSongState> emit) {
@@ -664,6 +709,7 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
       emit(state.copyWith(
         currentEditSong: state.currentEditSong.copyWith(sheets: sheets),
       ));
+      _recalculateModified(emit);
     }
   }
 }

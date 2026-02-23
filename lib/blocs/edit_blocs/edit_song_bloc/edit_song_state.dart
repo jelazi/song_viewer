@@ -23,6 +23,8 @@ class EditSongState extends Equatable {
   final String indexSongBook;
   final List<String> tags;
   final List<String> notes;
+  final bool isCurrentSongModified;
+  final List<String> listModifications;
 
   const EditSongState({
     required this.currentEditSong,
@@ -46,6 +48,8 @@ class EditSongState extends Equatable {
     required this.indexSongBook,
     required this.tags,
     required this.notes,
+    this.isCurrentSongModified = false,
+    this.listModifications = const [],
   });
 
   @override
@@ -71,6 +75,8 @@ class EditSongState extends Equatable {
         indexSongBook,
         tags,
         notes,
+        isCurrentSongModified,
+        listModifications,
       ];
 
   EditSongState copyWith({
@@ -95,6 +101,8 @@ class EditSongState extends Equatable {
     String? indexSongBook,
     List<String>? tags,
     List<String>? notes,
+    bool? isCurrentSongModified,
+    List<String>? listModifications,
   }) {
     return EditSongState(
       currentEditSong: currentEditSong ?? this.currentEditSong,
@@ -118,6 +126,8 @@ class EditSongState extends Equatable {
       indexSongBook: indexSongBook ?? this.indexSongBook,
       tags: tags ?? this.tags,
       notes: notes ?? this.notes,
+      isCurrentSongModified: isCurrentSongModified ?? this.isCurrentSongModified,
+      listModifications: listModifications ?? this.listModifications,
     );
   }
 

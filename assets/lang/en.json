@@ -191,5 +191,17 @@
     "songsViewer": "Songs Viewer",
     "timeSong": "Song duration",
     "present": "Open presentation",
-    "sendToPresent": "Send to presentation"
+    "sendToPresent": "Send to presentation",
+    "unsavedChangesTitle": "Unsaved changes",
+    "unsavedChangesMessage": "Song has unsaved changes in these areas:",
+    "discardChanges": "Discard changes",
+    "saveAndSwitch": "Save and switch",
+    "modTitle": "Title",
+    "modInterpret": "Artist",
+    "modIndexSongBook": "Songbook number",
+    "modGroups": "Groups",
+    "modLyrics": "Lyrics",
+    "modOriginalLyrics": "Original lyrics",
+    "modYoutubeVideos": "YouTube videos",
+    "modSheets": "Sheets"
 }

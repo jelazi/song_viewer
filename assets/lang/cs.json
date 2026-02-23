@@ -274,5 +274,17 @@
     "allSongs": "Všechny písně",
     "filteredSongs": "Filtrované písně",
     "currentPlaylist": "Aktuální playlist",
-    "test": "Test"
+    "test": "Test",
+    "unsavedChangesTitle": "Neuložené změny",
+    "unsavedChangesMessage": "Píseň má neuložené změny v těchto oblastech:",
+    "discardChanges": "Zahodit změny",
+    "saveAndSwitch": "Uložit a přepnout",
+    "modTitle": "Název",
+    "modInterpret": "Interpret",
+    "modIndexSongBook": "Číslo ve zpěvníku",
+    "modGroups": "Skupiny",
+    "modLyrics": "Text písně",
+    "modOriginalLyrics": "Originální text",
+    "modYoutubeVideos": "YouTube videa",
+    "modSheets": "Noty"
 }

@@ -1,5 +1,53 @@
 # Development Log
 
+## 2026-02-23 - Fix: all edit bodies now use state.isCurrentSongModified consistently
+
+### What was done
+- **edit_chords_body.dart** — replaced inline `state.currentText == state.currentEditSong.lyrics/originalLyrics` with `state.isCurrentSongModified`
+- **edit_lyrics_body.dart** — same replacement
+- **edit_youtube_body.dart** — fixed icon color to be reactive (`state.isCurrentSongModified ? Colors.white : Colors.black`)
+- All 5 edit bodies now consistent: `edit_lyrics_body`, `edit_chords_body`, `edit_youtube_body`, `edit_sheets_body`, `edit_settings_body`
+
+---
+
+## 2026-02-23 - Add isCurrentSongModified reactive state & unsaved changes dialog
+
+### What was done
+
+1. **Added `isCurrentSongModified` (bool) and `listModifications` (List<String>) to `EditSongState`**
+   - Automatically recalculated whenever any song data changes in the bloc
+   - Reset to `false` / `[]` on: song switch (`ChangeEditSong`), save (`SaveSong`), create new song, delete song
+
+2. **Refactored `checkModifiedSong()` into `_computeModifications()`**
+   - Returns a `List<String>` of modification keys (e.g. `['title', 'youtubeVideos', 'sheets']`)
+   - `_recalculateModified(emit)` helper emits updated `isCurrentSongModified` and `listModifications` after every data-changing event
+   - All handlers that modify song data now call `_recalculateModified`: `_changeSongValue`, `_transposeChords`, `_changePositionChord`, `_changeChord`, `_createChord`, `_deleteChord`, `_changeGroupForCurrentSong`, `_addYoutubeVideo`, `_removeYoutubeVideo`, `_updateYoutubeVideo`, `_addSheet`, `_removeSheet`
+
+3. **Updated save buttons to use reactive `state.isCurrentSongModified`**
+   - `edit_youtube_body.dart`, `edit_sheets_body.dart`, `edit_settings_body.dart` now use `state.isCurrentSongModified` instead of calling `checkModifiedSong()` synchronously
+   - More reliable: updates automatically when BLoC state changes
+
+4. **Added unsaved changes dialog on song switch**
+   - When clicking a song in `list_song.dart` while current song has unsaved changes, a dialog appears
+   - Dialog shows list of what was changed (e.g. "Název", "YouTube videa", "Noty") with icons
+   - Three options: Cancel (stay), Discard changes (switch without saving), Save and switch (save then switch)
+
+5. **Added localization keys** in both `cs.json` and `en.json`:
+   - `unsavedChangesTitle`, `unsavedChangesMessage`, `discardChanges`, `saveAndSwitch`
+   - `modTitle`, `modInterpret`, `modIndexSongBook`, `modGroups`, `modLyrics`, `modOriginalLyrics`, `modYoutubeVideos`, `modSheets`
+
+### Files changed
+- `lib/blocs/edit_blocs/edit_song_bloc/edit_song_state.dart` — added `isCurrentSongModified`, `listModifications`
+- `lib/blocs/edit_blocs/edit_song_bloc/edit_song_bloc.dart` — added `_computeModifications()`, `_recalculateModified()`, calls in all data-changing handlers
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/edit_parts_body/edit_youtube_body.dart` — use `state.isCurrentSongModified`
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/edit_parts_body/edit_sheets_body.dart` — use `state.isCurrentSongModified`
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/edit_parts_body/edit_settings_body.dart` — use `state.isCurrentSongModified`
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/list_song.dart` — unsaved changes dialog + helper methods
+- `assets/lang/cs.json` — added localization keys
+- `assets/lang/en.json` — added localization keys
+
+---
+
 ## 2025-02-23 - Fix save button not detecting YouTube/sheets changes
 
 ### What was done

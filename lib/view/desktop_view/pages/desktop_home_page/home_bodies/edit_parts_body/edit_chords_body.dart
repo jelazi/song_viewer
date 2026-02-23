@@ -127,18 +127,11 @@ class _EditChordsBodyState extends State<EditChordsBody> {
                                     width: 30,
                                     margin: const EdgeInsets.only(left: 5, right: 5),
                                     decoration: BoxDecoration(
-                                      color: state.isOriginalLyrics
-                                          ? state.currentText == state.currentEditSong.originalLyrics
-                                              ? AppColor.defaultBackgroundColor
-                                              : AppColor.primaryColor
-                                          : state.currentText == state.currentEditSong.lyrics
-                                              ? AppColor.defaultBackgroundColor
-                                              : AppColor.primaryColor,
+                                      color: state.isCurrentSongModified ? AppColor.primaryColor : AppColor.defaultBackgroundColor,
                                       border: Border.all(color: AppColor.grey1Color),
                                       borderRadius: BorderRadius.circular(5),
                                     ),
-                                    child:
-                                        Center(child: Icon(Icons.save, size: 16, color: state.currentText == state.currentEditSong.originalLyrics ? Colors.black : Colors.white)))),
+                                    child: Center(child: Icon(Icons.save, size: 16, color: state.isCurrentSongModified ? Colors.white : Colors.black)))),
                           )
                         ],
                       ),
