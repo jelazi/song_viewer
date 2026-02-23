@@ -23,6 +23,7 @@ class SettingsState extends Equatable {
   final bool presentationBlackLastPage;
   final bool presentationShowPageNumber;
   final bool presentationShowTitle;
+  final bool presentationAutoPageByParagraphs;
   const SettingsState({
     required this.previewFontTextSize,
     required this.previewFontChordSize,
@@ -44,6 +45,7 @@ class SettingsState extends Equatable {
     required this.presentationBlackLastPage,
     required this.presentationShowPageNumber,
     required this.presentationShowTitle,
+    required this.presentationAutoPageByParagraphs,
   });
 
   @override
@@ -68,6 +70,7 @@ class SettingsState extends Equatable {
         presentationBlackLastPage,
         presentationShowPageNumber,
         presentationShowTitle,
+        presentationAutoPageByParagraphs,
       ];
 
   SettingsState copyWith({
@@ -91,6 +94,7 @@ class SettingsState extends Equatable {
     bool? presentationBlackLastPage,
     bool? presentationShowPageNumber,
     bool? presentationShowTitle,
+    bool? presentationAutoPageByParagraphs,
   }) {
     return SettingsState(
       previewFontTextSize: previewFontTextSize ?? this.previewFontTextSize,
@@ -113,6 +117,7 @@ class SettingsState extends Equatable {
       presentationBlackLastPage: presentationBlackLastPage ?? this.presentationBlackLastPage,
       presentationShowPageNumber: presentationShowPageNumber ?? this.presentationShowPageNumber,
       presentationShowTitle: presentationShowTitle ?? this.presentationShowTitle,
+      presentationAutoPageByParagraphs: presentationAutoPageByParagraphs ?? this.presentationAutoPageByParagraphs,
     );
   }
 }
@@ -139,5 +144,6 @@ class SettingsInitial extends SettingsState {
     required super.presentationBlackLastPage,
     required super.presentationShowPageNumber,
     required super.presentationShowTitle,
+    required super.presentationAutoPageByParagraphs,
   });
 }

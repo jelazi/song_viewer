@@ -56,6 +56,8 @@ class _PresentationSettingsBodyState extends State<PresentationSettingsBody> {
               _buildSectionTitle('Počet řádků na stránku'),
               const SizedBox(height: 8),
               _buildLinesPerPageSelector(state),
+              const SizedBox(height: 12),
+              _buildAutoPageByParagraphsToggle(state),
               const SizedBox(height: 20),
               // Font size
               _buildSectionTitle('Velikost písma'),
@@ -264,6 +266,49 @@ class _PresentationSettingsBodyState extends State<PresentationSettingsBody> {
                         );
                   }
                 : null,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAutoPageByParagraphsToggle(SettingsState state) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        border: Border.all(color: AppColor.grey3Color),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.segment, size: 20),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Rozdělit stránky podle odstavců',
+                  style: TextStyle(fontSize: 13),
+                ),
+                Text(
+                  'Stránky budou rozděleny podle prázdných řádků v textu',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey[600],
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: state.presentationAutoPageByParagraphs,
+            onChanged: (value) {
+              context.read<SettingsBloc>().add(
+                    ChangeSettingsValue('presentationAutoPageByParagraphs', value),
+                  );
+            },
           ),
         ],
       ),

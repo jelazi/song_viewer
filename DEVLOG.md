@@ -1,5 +1,63 @@
 # Development Log
 
+## 2025-02-23 - Desktop browse buttons, presentation auto-page by paragraphs, ribbon spacer
+
+### What was done
+
+1. **Desktop "Browse YouTube" and "Browse Sheets" buttons**
+   - Added two new buttons in the Home ribbon tab (visible when a song is selected in preview mode)
+   - "Browse YouTube" button appears only if the selected song has YouTube videos
+   - "Browse Sheets" button appears only if the selected song has sheet images
+   - Clicking navigates to a dedicated view-only body page
+   - Created `browse_youtube_body.dart` — sidebar list of videos + external browser launch
+   - Created `browse_sheets_body.dart` — thumbnail sidebar + InteractiveViewer for full image with zoom
+   - Updated `desktop_home_page.dart` body switch for new body names
+   - Updated `ribbon_menu.dart` tab controller, TabBar, TabBarView conditions for new bodies
+
+2. **Presentation auto-page by paragraphs setting**
+   - New boolean setting `presentationAutoPageByParagraphs` (default: false)
+   - When enabled, presentation pages are split by paragraphs (empty lines in lyrics) instead of fixed line count
+   - If a paragraph exceeds max lines per page, it is split approximately in half
+   - Full pipeline: `SettingsRepository` → `SettingsBloc` → `SettingsState`
+   - `PresentationBloc`: added `getLyricsLinesWithBlanks()`, `splitByParagraphs()` static methods
+   - Updated `computePageContent()` to accept and use `autoPageByParagraphs` parameter
+   - Updated all 8 `computePageContent` calls in `desktop_home_page.dart`
+   - Added UI toggle (Switch) in `presentation_settings_body.dart` below "Počet řádků na stránku"
+
+3. **Ribbon spacer widget**
+   - Created `ribbon_spacer.dart` — vertical divider widget (12px wide, 40px tall grey line)
+   - Added between transpose buttons and browse/presentation section in Home ribbon
+   - Removed unused `youtube_helper` and `url_launcher` imports from `ribbon_menu.dart`
+
+### Files created
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/browse_youtube_body.dart`
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/browse_sheets_body.dart`
+- `lib/view/desktop_view/widgets/ribbon_spacer.dart`
+
+### Files changed
+- `lib/repositories/settings_repository.dart` — added `presentationAutoPageByParagraphs` field, getter, Hive load, changeSettingsValue case
+- `lib/blocs/settings_bloc/settings_state.dart` — added `presentationAutoPageByParagraphs` field
+- `lib/blocs/settings_bloc/settings_bloc.dart` — added default value, _emitAllValues
+- `lib/blocs/presentation_bloc/presentation_state.dart` — added `autoPageByParagraphs` field
+- `lib/blocs/presentation_bloc/presentation_event.dart` — added `autoPageByParagraphs` to UpdatePresentationSettings
+- `lib/blocs/presentation_bloc/presentation_bloc.dart` — added splitByParagraphs logic, updated _recalculatePages, computePageContent
+- `lib/view/desktop_view/pages/desktop_home_page/desktop_home_page.dart` — imports, body switch, all computePageContent calls updated
+- `lib/view/desktop_view/widgets/ribbon_menu.dart` — new buttons, spacer, removed unused imports
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/presentation_settings_body.dart` — added auto-page toggle UI
+
+### Current state
+- All 3 features implemented and integrated
+- 0 errors in flutter analyze (179 pre-existing info-level warnings only)
+- Desktop ribbon shows browse YouTube/sheets buttons when song has those items
+- Presentation settings has new toggle for paragraph-based page splitting
+- Ribbon has visual spacer between transpose and browse/presentation groups
+
+### Known issues / Next steps
+- Browse YouTube body on macOS opens videos in external browser (WebView not available on desktop)
+- Auto-page by paragraphs not yet connected to tablet/mobile presentation views (desktop only)
+
+---
+
 ## 2026-02-23 - Fix Firebase Storage upload + remove non-functional note ribbon button
 
 ### What was done

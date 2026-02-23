@@ -17,6 +17,7 @@ class PresentationState {
   final int linesPerPage;
   final bool showChords;
   final int screenIndex;
+  final bool autoPageByParagraphs;
   // Computed page content
   final List<String> pageLines;
 
@@ -36,6 +37,7 @@ class PresentationState {
     this.linesPerPage = 8,
     this.showChords = false,
     this.screenIndex = 0,
+    this.autoPageByParagraphs = false,
     this.pageLines = const [],
   });
 
@@ -55,6 +57,7 @@ class PresentationState {
     int? linesPerPage,
     bool? showChords,
     int? screenIndex,
+    bool? autoPageByParagraphs,
     List<String>? pageLines,
   }) {
     return PresentationState(
@@ -73,6 +76,7 @@ class PresentationState {
       linesPerPage: linesPerPage ?? this.linesPerPage,
       showChords: showChords ?? this.showChords,
       screenIndex: screenIndex ?? this.screenIndex,
+      autoPageByParagraphs: autoPageByParagraphs ?? this.autoPageByParagraphs,
       pageLines: pageLines ?? this.pageLines,
     );
   }

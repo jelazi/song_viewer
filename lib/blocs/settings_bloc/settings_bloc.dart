@@ -37,6 +37,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
           presentationBlackLastPage: true,
           presentationShowPageNumber: true,
           presentationShowTitle: true,
+          presentationAutoPageByParagraphs: false,
         )) {
     on<_SettingsInitial>(_settingsInitial);
     on<ChangeSettingsValue>(_changeSettingsValue);
@@ -82,6 +83,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       presentationBlackLastPage: settingsRepository.presentationBlackLastPage,
       presentationShowPageNumber: settingsRepository.presentationShowPageNumber,
       presentationShowTitle: settingsRepository.presentationShowTitle,
+      presentationAutoPageByParagraphs: settingsRepository.presentationAutoPageByParagraphs,
     ));
   }
 }

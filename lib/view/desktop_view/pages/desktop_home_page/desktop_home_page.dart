@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import '../../../../blocs/export_blocs.dart';
 import '../../../../services/presentation_window_manager.dart';
 import '../../widgets/ribbon_menu.dart';
+import 'home_bodies/browse_sheets_body.dart';
+import 'home_bodies/browse_youtube_body.dart';
 import 'home_bodies/edit_parts_body/edit_body.dart';
 import 'home_bodies/groups_body.dart';
 import 'home_bodies/presentation_settings_body.dart';
@@ -155,6 +157,7 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
             linesPerPage: settingsState.presentationLinesPerPage,
             showChords: settingsState.presentationShowChords,
             page: presState.currentPage,
+            autoPageByParagraphs: settingsState.presentationAutoPageByParagraphs,
           );
           _sendPageToWindow(context, song.title, result);
         }
@@ -173,6 +176,7 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
           linesPerPage: presState.linesPerPage,
           showChords: presState.showChords,
           page: nextPage,
+          autoPageByParagraphs: presState.autoPageByParagraphs,
         );
         _sendPageToWindow(context, song.title, result);
       }
@@ -206,14 +210,12 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
       final song = presState.currentSong;
       if (song != null) {
         // Go back to the last page of current song
-        final allLines = PresentationBloc.getLyricsLines(song, presState.showChords);
-        final linesPerPage = presState.linesPerPage;
-        final totalPages = (allLines.length / linesPerPage).ceil().clamp(1, 999);
         final result = PresentationBloc.computePageContent(
           song: song,
-          linesPerPage: linesPerPage,
+          linesPerPage: presState.linesPerPage,
           showChords: presState.showChords,
-          page: totalPages - 1,
+          page: 999, // will be clamped to last page
+          autoPageByParagraphs: presState.autoPageByParagraphs,
         );
         _sendPageToWindow(context, song.title, result);
       }
@@ -231,6 +233,7 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
           linesPerPage: presState.linesPerPage,
           showChords: presState.showChords,
           page: prevPage,
+          autoPageByParagraphs: presState.autoPageByParagraphs,
         );
         _sendPageToWindow(context, song.title, result);
       }
@@ -245,10 +248,14 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
           final prevSong = playlistBloc.state.currentSong;
           if (prevSong != null) {
             // Set to last page so next backward press shows that page correctly
-            final allLines = PresentationBloc.getLyricsLines(prevSong, settingsState.presentationShowChords);
-            final linesPerPage = settingsState.presentationLinesPerPage;
-            final totalPages = (allLines.length / linesPerPage).ceil().clamp(1, 999);
-            context.read<PresentationBloc>().add(UpdatePresentationSong(song: prevSong, page: totalPages - 1));
+            final lastPageResult = PresentationBloc.computePageContent(
+              song: prevSong,
+              linesPerPage: settingsState.presentationLinesPerPage,
+              showChords: settingsState.presentationShowChords,
+              page: 999, // will be clamped to last page
+              autoPageByParagraphs: settingsState.presentationAutoPageByParagraphs,
+            );
+            context.read<PresentationBloc>().add(UpdatePresentationSong(song: prevSong, page: lastPageResult.totalPages - 1));
           }
         });
         _sendBlackScreen(context);
@@ -276,6 +283,7 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
           linesPerPage: settingsState.presentationLinesPerPage,
           showChords: settingsState.presentationShowChords,
           page: 0,
+          autoPageByParagraphs: settingsState.presentationAutoPageByParagraphs,
         );
         _sendPageToWindow(context, nextSong.title, result);
       }
@@ -309,17 +317,22 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
     Future.delayed(const Duration(milliseconds: 50), () {
       final prevSong = playlistBloc.state.currentSong;
       if (prevSong != null) {
-        final allLines = PresentationBloc.getLyricsLines(prevSong, settingsState.presentationShowChords);
-        final linesPerPage = settingsState.presentationLinesPerPage;
-        final totalPages = (allLines.length / linesPerPage).ceil().clamp(1, 999);
-        final lastPage = totalPages - 1;
+        final lastPageResult = PresentationBloc.computePageContent(
+          song: prevSong,
+          linesPerPage: settingsState.presentationLinesPerPage,
+          showChords: settingsState.presentationShowChords,
+          page: 999, // will be clamped to last page
+          autoPageByParagraphs: settingsState.presentationAutoPageByParagraphs,
+        );
+        final lastPage = lastPageResult.totalPages - 1;
         // Update bloc with song AND correct page so hasPreviousPage works on next backward press
         presentationBloc.add(UpdatePresentationSong(song: prevSong, page: lastPage));
         final result = PresentationBloc.computePageContent(
           song: prevSong,
-          linesPerPage: linesPerPage,
+          linesPerPage: settingsState.presentationLinesPerPage,
           showChords: settingsState.presentationShowChords,
           page: lastPage,
+          autoPageByParagraphs: settingsState.presentationAutoPageByParagraphs,
         );
         _sendPageToWindow(context, prevSong.title, result);
       }
@@ -366,6 +379,7 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
       textColor: settingsState.presentationFontColor,
       showChords: settingsState.presentationShowChords,
       screenIndex: settingsState.presentationScreenIndex,
+      autoPageByParagraphs: settingsState.presentationAutoPageByParagraphs,
     ));
 
     // Resend the current page with new settings
@@ -377,6 +391,7 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
         linesPerPage: settingsState.presentationLinesPerPage,
         showChords: settingsState.presentationShowChords,
         page: presState.currentPage,
+        autoPageByParagraphs: settingsState.presentationAutoPageByParagraphs,
       );
       _sendPageToWindow(context, song.title, result);
     }
@@ -423,6 +438,12 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
                   case 'presentation_settings':
                     homeBody = const PresentationSettingsBody();
                     break;
+                  case 'browse_youtube':
+                    homeBody = const BrowseYoutubeBody();
+                    break;
+                  case 'browse_sheets':
+                    homeBody = const BrowseSheetsBody();
+                    break;
                   default:
                     return PreviewBody(onRequestFocus: () => _focusNode.requestFocus());
                 }
@@ -462,6 +483,7 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
       textColor: settingsState.presentationFontColor,
       showChords: settingsState.presentationShowChords,
       screenIndex: settingsState.presentationScreenIndex,
+      autoPageByParagraphs: settingsState.presentationAutoPageByParagraphs,
     ));
 
     // Get the song directly from the playlist (don't rely on BLoC state timing)
@@ -478,6 +500,7 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
       linesPerPage: settingsState.presentationLinesPerPage,
       showChords: settingsState.presentationShowChords,
       page: 0,
+      autoPageByParagraphs: settingsState.presentationAutoPageByParagraphs,
     );
 
     debugPrint('Starting presentation: ${currentSong.title}, '

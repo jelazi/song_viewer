@@ -35,6 +35,7 @@ class SettingsRepository {
   bool _presentationBlackLastPage = true;
   bool _presentationShowPageNumber = true;
   bool _presentationShowTitle = true;
+  bool _presentationAutoPageByParagraphs = false;
 
   SettingsRepository({
     required this.hiveProvider,
@@ -107,6 +108,7 @@ class SettingsRepository {
   bool get presentationBlackLastPage => _presentationBlackLastPage;
   bool get presentationShowPageNumber => _presentationShowPageNumber;
   bool get presentationShowTitle => _presentationShowTitle;
+  bool get presentationAutoPageByParagraphs => _presentationAutoPageByParagraphs;
 
   Future<void> loadLocalSettings() async {
     _previewFontTextSize = await hiveProvider.getSettingsValue('previewFontTextSize') ?? 20;
@@ -134,6 +136,7 @@ class SettingsRepository {
     _presentationBlackLastPage = await hiveProvider.getSettingsValue('presentationBlackLastPage') ?? true;
     _presentationShowPageNumber = await hiveProvider.getSettingsValue('presentationShowPageNumber') ?? true;
     _presentationShowTitle = await hiveProvider.getSettingsValue('presentationShowTitle') ?? true;
+    _presentationAutoPageByParagraphs = await hiveProvider.getSettingsValue('presentationAutoPageByParagraphs') ?? false;
   }
 
   void setCurrentUser(User user) {
@@ -280,6 +283,12 @@ class SettingsRepository {
         {
           _presentationShowTitle = value;
           hiveProvider.setSettingsValue('presentationShowTitle', value);
+          break;
+        }
+      case 'presentationAutoPageByParagraphs':
+        {
+          _presentationAutoPageByParagraphs = value;
+          hiveProvider.setSettingsValue('presentationAutoPageByParagraphs', value);
           break;
         }
     }

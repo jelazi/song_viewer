@@ -44,26 +44,103 @@ class PresentationBloc extends Bloc<PresentationEvent, PresentationState> {
     }
   }
 
+  /// Split lyrics into lines preserving empty lines (for paragraph detection)
+  static List<String> getLyricsLinesWithBlanks(Song song, bool showChords) {
+    final lines = song.lyrics.split('\n');
+    if (showChords) {
+      return lines;
+    } else {
+      return lines.map((line) => line.replaceAll(RegExp(r'\[.*?\]'), '')).toList();
+    }
+  }
+
+  /// Split lyrics into paragraph-based pages.
+  /// Each paragraph (separated by empty lines) becomes one page.
+  /// If a paragraph exceeds maxLines, it gets split approximately in half.
+  static List<List<String>> splitByParagraphs(Song song, bool showChords, int maxLinesPerPage) {
+    final allLines = getLyricsLinesWithBlanks(song, showChords);
+
+    // Split into paragraphs by empty lines
+    final paragraphs = <List<String>>[];
+    var currentParagraph = <String>[];
+
+    for (final line in allLines) {
+      if (line.trim().isEmpty) {
+        if (currentParagraph.isNotEmpty) {
+          paragraphs.add(currentParagraph);
+          currentParagraph = <String>[];
+        }
+      } else {
+        currentParagraph.add(line);
+      }
+    }
+    if (currentParagraph.isNotEmpty) {
+      paragraphs.add(currentParagraph);
+    }
+
+    if (paragraphs.isEmpty) return [[]];
+
+    // Now build pages from paragraphs
+    final pages = <List<String>>[];
+
+    for (final paragraph in paragraphs) {
+      if (paragraph.length <= maxLinesPerPage) {
+        // Paragraph fits in one page
+        pages.add(paragraph);
+      } else {
+        // Paragraph is too long, split it into chunks
+        // Split into roughly equal parts
+        final numParts = (paragraph.length / maxLinesPerPage).ceil();
+        final linesPerPart = (paragraph.length / numParts).ceil();
+
+        for (int i = 0; i < paragraph.length; i += linesPerPart) {
+          final end = (i + linesPerPart).clamp(0, paragraph.length);
+          pages.add(paragraph.sublist(i, end));
+        }
+      }
+    }
+
+    return pages.isEmpty ? [[]] : pages;
+  }
+
   /// Calculate pages and current page lines
   PresentationState _recalculatePages(PresentationState currentState, {Song? newSong, int? newPage}) {
     final song = newSong ?? currentState.currentSong;
     if (song == null) return currentState;
 
-    final allLines = getLyricsLines(song, currentState.showChords);
     final linesPerPage = currentState.linesPerPage;
-    final totalPages = (allLines.length / linesPerPage).ceil().clamp(1, 999);
-    final page = (newPage ?? currentState.currentPage).clamp(0, totalPages - 1);
+    final page = newPage ?? currentState.currentPage;
 
-    final startIndex = page * linesPerPage;
-    final endIndex = (startIndex + linesPerPage).clamp(0, allLines.length);
-    final pageLines = allLines.sublist(startIndex, endIndex);
+    if (currentState.autoPageByParagraphs) {
+      // Paragraph-based splitting
+      final paragraphPages = splitByParagraphs(song, currentState.showChords, linesPerPage);
+      final totalPages = paragraphPages.length.clamp(1, 999);
+      final clampedPage = page.clamp(0, totalPages - 1);
+      final pageLines = paragraphPages[clampedPage];
 
-    return currentState.copyWith(
-      currentSong: song,
-      currentPage: page,
-      totalPages: totalPages,
-      pageLines: pageLines,
-    );
+      return currentState.copyWith(
+        currentSong: song,
+        currentPage: clampedPage,
+        totalPages: totalPages,
+        pageLines: pageLines,
+      );
+    } else {
+      // Original line-count-based splitting
+      final allLines = getLyricsLines(song, currentState.showChords);
+      final totalPages = (allLines.length / linesPerPage).ceil().clamp(1, 999);
+      final clampedPage = page.clamp(0, totalPages - 1);
+
+      final startIndex = clampedPage * linesPerPage;
+      final endIndex = (startIndex + linesPerPage).clamp(0, allLines.length);
+      final pageLines = allLines.sublist(startIndex, endIndex);
+
+      return currentState.copyWith(
+        currentSong: song,
+        currentPage: clampedPage,
+        totalPages: totalPages,
+        pageLines: pageLines,
+      );
+    }
   }
 
   Future<void> _onOpenPresentation(
@@ -224,6 +301,9 @@ class PresentationBloc extends Bloc<PresentationEvent, PresentationState> {
     if (event.screenIndex != null) {
       newState = newState.copyWith(screenIndex: event.screenIndex);
     }
+    if (event.autoPageByParagraphs != null) {
+      newState = newState.copyWith(autoPageByParagraphs: event.autoPageByParagraphs);
+    }
     // Recalculate pages with new settings
     newState = _recalculatePages(newState);
     emit(newState);
@@ -261,7 +341,21 @@ class PresentationBloc extends Bloc<PresentationEvent, PresentationState> {
     required int linesPerPage,
     required bool showChords,
     int page = 0,
+    bool autoPageByParagraphs = false,
   }) {
+    if (autoPageByParagraphs) {
+      final paragraphPages = splitByParagraphs(song, showChords, linesPerPage);
+      final totalPages = paragraphPages.length.clamp(1, 999);
+      final clampedPage = page.clamp(0, totalPages - 1);
+      final pageLines = paragraphPages[clampedPage];
+
+      return PageContentResult(
+        pageContent: pageLines.join('\n'),
+        currentPage: clampedPage,
+        totalPages: totalPages,
+      );
+    }
+
     final allLines = getLyricsLines(song, showChords);
     final totalPages = (allLines.length / linesPerPage).ceil().clamp(1, 999);
     final clampedPage = page.clamp(0, totalPages - 1);

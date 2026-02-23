@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:default_project/core/youtube_helper.dart';
 import 'package:default_project/services/constants.dart';
 import 'package:default_project/services/presentation_window_manager.dart';
 import 'package:default_project/view/mobile_view/widgets/dialogs/dialogs_export.dart';
@@ -8,13 +7,13 @@ import 'package:default_project/view/mobile_view/widgets/dialogs/question_dialog
 import 'package:easy_localization/easy_localization.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../blocs/export_blocs.dart';
 import '../../../model/playlist.dart';
 import '../../../model/song/song.dart';
 import 'my_toast.dart';
 import 'ribbon_button.dart';
+import 'ribbon_spacer.dart';
 
 class RibbonMenu extends StatefulWidget {
   const RibbonMenu({super.key});
@@ -45,7 +44,7 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
       builder: (context, state) {
         if (state.bodyName == 'edit') {
           _tabController = TabController(length: 2, vsync: this);
-        } else if (state.bodyName == 'preview') {
+        } else if (state.bodyName == 'preview' || state.bodyName == 'browse_youtube' || state.bodyName == 'browse_sheets') {
           _tabController = TabController(length: 2, vsync: this);
         } else if (state.bodyName == 'web') {
           _tabController = TabController(length: 2, vsync: this);
@@ -73,7 +72,7 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
                   children: [
                     SizedBox(
                       height: 30,
-                      child: state.bodyName == 'preview'
+                      child: state.bodyName == 'preview' || state.bodyName == 'browse_youtube' || state.bodyName == 'browse_sheets'
                           ? TabBar(
                               isScrollable: true,
                               tabAlignment: TabAlignment.start,
@@ -159,7 +158,7 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
                     ),
                     SizedBox(
                       height: 60,
-                      child: state.bodyName == 'preview'
+                      child: state.bodyName == 'preview' || state.bodyName == 'browse_youtube' || state.bodyName == 'browse_sheets'
                           ? TabBarView(
                               controller: _tabController,
                               children: const [
@@ -363,6 +362,7 @@ class SettingsTabbar extends StatelessWidget {
                 );
               },
             ),
+            const RibbonSpacer(),
             RibbonButton(
                 text: 'groups'.tr(),
                 icon: const Icon(
@@ -503,7 +503,7 @@ class HomeTabbar extends StatelessWidget {
         child: BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
           builder: (context, state) {
             return state.isSelectedSong
-                ? state.bodyName == 'preview'
+                ? state.bodyName == 'preview' || state.bodyName == 'browse_youtube' || state.bodyName == 'browse_sheets'
                     ? Row(
                         children: [
                           BlocBuilder<PreviewChordBloc, PreviewChordState>(
@@ -584,36 +584,54 @@ class HomeTabbar extends StatelessWidget {
                                   });
                             },
                           ),
-                          _buildPresentationButton(context),
+                          const RibbonSpacer(),
                           BlocBuilder<PreviewChordBloc, PreviewChordState>(
                             builder: (context, previewState) {
                               final hasYoutube = previewState.data.song?.youtubeVideos?.isNotEmpty ?? false;
                               if (!hasYoutube) return const SizedBox.shrink();
                               return RibbonButton(
-                                  text: 'YouTube',
+                                  text: 'openVideos'.tr(),
                                   isEnabled: true,
                                   icon: const Icon(
                                     Icons.play_circle_fill,
                                     color: Colors.red,
                                   ),
-                                  onPressed: () async {
-                                    final videos = previewState.data.song!.youtubeVideos!;
-                                    final videoId = extractYoutubeVideoId(videos.first.path);
-                                    if (videoId != null) {
-                                      final uri = Uri.parse('https://www.youtube.com/watch?v=$videoId');
-                                      if (await canLaunchUrl(uri)) {
-                                        await launchUrl(uri, mode: LaunchMode.externalApplication);
-                                      }
-                                    }
+                                  onPressed: () {
+                                    context.read<DesktopRibbonMenuBloc>().add(const ChangeHomeBody(bodyName: 'browse_youtube'));
                                   });
                             },
                           ),
+                          BlocBuilder<PreviewChordBloc, PreviewChordState>(
+                            builder: (context, previewState) {
+                              final hasSheets = previewState.data.song?.sheets?.isNotEmpty ?? false;
+                              if (!hasSheets) return const SizedBox.shrink();
+                              return RibbonButton(
+                                  text: 'openSheet'.tr(),
+                                  isEnabled: true,
+                                  icon: const Icon(
+                                    Icons.music_note,
+                                    color: Colors.black,
+                                  ),
+                                  onPressed: () {
+                                    context.read<DesktopRibbonMenuBloc>().add(const ChangeHomeBody(bodyName: 'browse_sheets'));
+                                  });
+                            },
+                          ),
+                          BlocBuilder<PreviewChordBloc, PreviewChordState>(
+                            builder: (context, state) {
+                              return state.data.song?.youtubeVideos?.isNotEmpty == true || state.data.song?.sheets?.isNotEmpty == true
+                                  ? const RibbonSpacer()
+                                  : const SizedBox.shrink();
+                            },
+                          ),
+                          _buildPresentationButton(context),
                         ],
                       )
                     : state.bodyName == 'edit'
                         ? Row(
                             children: [
                               getNewSongButton(context),
+                              const RibbonSpacer(),
                               RibbonButton(
                                   text: 'lyrics'.tr(),
                                   icon: const Icon(
@@ -697,6 +715,7 @@ class HomeTabbar extends StatelessWidget {
                 : Row(
                     children: [
                       getNewSongButton(context),
+                      const RibbonSpacer(),
                       _buildPresentationButton(context),
                     ],
                   );

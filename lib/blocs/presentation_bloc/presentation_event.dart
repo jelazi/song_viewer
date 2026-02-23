@@ -66,6 +66,7 @@ class UpdatePresentationSettings extends PresentationEvent {
   final Color? textColor;
   final bool? showChords;
   final int? screenIndex;
+  final bool? autoPageByParagraphs;
 
   const UpdatePresentationSettings({
     this.linesPerPage,
@@ -73,5 +74,6 @@ class UpdatePresentationSettings extends PresentationEvent {
     this.textColor,
     this.showChords,
     this.screenIndex,
+    this.autoPageByParagraphs,
   });
 }
