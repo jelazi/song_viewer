@@ -27,112 +27,134 @@ class _UsersBodyState extends State<UsersBody> {
     return BlocBuilder<UsersBloc, UsersState>(
       builder: (context, state) {
         return Container(
-          width: 300,
-          child: ListView(children: [
-            Card(
-                child: ListTile(
-              onTap: () {
-                TextEditingController nameController = TextEditingController();
-                TextEditingController passwordController = TextEditingController();
+          width: MediaQuery.of(context).size.width,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 16, 8, 8),
+                  child: Text(
+                    'users'.tr(),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(
+                height: MediaQuery.of(context).size.height - 200,
+                width: 300,
+                child: ListView(children: [
+                  Card(
+                      child: ListTile(
+                    onTap: () {
+                      TextEditingController nameController = TextEditingController();
+                      TextEditingController passwordController = TextEditingController();
 
-                showDialog(
-                    context: context,
-                    builder: (context) {
-                      List<String> choiceGroups = [];
+                      showDialog(
+                          context: context,
+                          builder: (context) {
+                            List<String> choiceGroups = [];
 
-                      String nameTypeUser = TypeUser.admin.name;
+                            String nameTypeUser = TypeUser.admin.name;
 
-                      return StatefulBuilder(builder: (context, setState) {
-                        return EditDialog(
-                            height: 500,
-                            title: 'addUser'.tr(),
-                            okBack: false,
-                            okClick: () {
-                              if (nameController.text.isEmpty || passwordController.text.isEmpty) {
-                                MyToast.showText(text: 'fieldEmpty'.tr(), typeNotification: TypeNotification.error);
-                                return;
-                              }
-                              context.read<UsersBloc>().add(AddUser(
-                                  user: User(nameController.text, passwordController.text)
-                                    ..allowedGroup = choiceGroups
-                                    ..typeUser = User.getTypeUserByName(nameTypeUser)));
-                              Navigator.of(context).pop();
-                            },
-                            widgetContent: getUserDialogContent(nameController, passwordController, typeUsers, nameTypeUser, setState, choiceGroups, true));
-                      });
-                    });
-              },
-              title: Text('addUser'.tr()),
-              trailing: Icon(Icons.add),
-            )),
-            ...state.users
-                .map((e) => Card(
-                        child: ListTile(
-                      title: Text(e.name),
-                      trailing: SizedBox(
-                        width: 80,
-                        child: Row(
-                          children: [
-                            IconButton(
-                              onPressed: () {
-                                TextEditingController nameController = TextEditingController(text: e.name);
-                                TextEditingController passwordController = TextEditingController(text: e.password);
-                                String nameTypeUser = e.typeUser.name;
-                                List<String> choiceGroups = e.allowedGroup;
+                            return StatefulBuilder(builder: (context, setState) {
+                              return EditDialog(
+                                  height: 500,
+                                  title: 'addUser'.tr(),
+                                  okBack: false,
+                                  okClick: () {
+                                    if (nameController.text.isEmpty || passwordController.text.isEmpty) {
+                                      MyToast.showText(text: 'fieldEmpty'.tr(), typeNotification: TypeNotification.error);
+                                      return;
+                                    }
+                                    context.read<UsersBloc>().add(AddUser(
+                                        user: User(nameController.text, passwordController.text)
+                                          ..allowedGroup = choiceGroups
+                                          ..typeUser = User.getTypeUserByName(nameTypeUser)));
+                                    Navigator.of(context).pop();
+                                  },
+                                  widgetContent: getUserDialogContent(nameController, passwordController, typeUsers, nameTypeUser, setState, choiceGroups, true));
+                            });
+                          });
+                    },
+                    title: Text('addUser'.tr()),
+                    trailing: Icon(Icons.add),
+                  )),
+                  ...state.users
+                      .map((e) => Card(
+                              child: ListTile(
+                            title: Text(e.name),
+                            trailing: SizedBox(
+                              width: 80,
+                              child: Row(
+                                children: [
+                                  IconButton(
+                                    onPressed: () {
+                                      TextEditingController nameController = TextEditingController(text: e.name);
+                                      TextEditingController passwordController = TextEditingController(text: e.password);
+                                      String nameTypeUser = e.typeUser.name;
+                                      List<String> choiceGroups = e.allowedGroup;
 
-                                showDialog(
-                                    context: context,
-                                    builder: (context) {
-                                      return StatefulBuilder(builder: (context, setState) {
-                                        return EditDialog(
-                                            okBack: false,
-                                            title: 'editUser'.tr(),
-                                            height: 500,
-                                            okClick: () {
-                                              if (nameController.text.isEmpty || passwordController.text.isEmpty) {
-                                                MyToast.showText(text: 'fieldEmpty'.tr(), typeNotification: TypeNotification.error);
-                                                return;
-                                              }
-                                              context.read<UsersBloc>().add(UpdateUser(
-                                                  user: User(e.name, passwordController.text)
-                                                    ..allowedGroup = e.allowedGroup
-                                                    ..typeUser = User.getTypeUserByName(nameTypeUser)));
-                                              Navigator.of(context).pop();
-                                            },
-                                            widgetContent: getUserDialogContent(nameController, passwordController, typeUsers, nameTypeUser, setState, choiceGroups, false));
-                                      });
-                                    });
-                              },
-                              icon: const Icon(
-                                Icons.edit,
-                                color: Colors.blue,
+                                      showDialog(
+                                          context: context,
+                                          builder: (context) {
+                                            return StatefulBuilder(builder: (context, setState) {
+                                              return EditDialog(
+                                                  okBack: false,
+                                                  title: 'editUser'.tr(),
+                                                  height: 500,
+                                                  okClick: () {
+                                                    if (nameController.text.isEmpty || passwordController.text.isEmpty) {
+                                                      MyToast.showText(text: 'fieldEmpty'.tr(), typeNotification: TypeNotification.error);
+                                                      return;
+                                                    }
+                                                    context.read<UsersBloc>().add(UpdateUser(
+                                                        user: User(e.name, passwordController.text)
+                                                          ..allowedGroup = e.allowedGroup
+                                                          ..typeUser = User.getTypeUserByName(nameTypeUser)));
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                  widgetContent: getUserDialogContent(nameController, passwordController, typeUsers, nameTypeUser, setState, choiceGroups, false));
+                                            });
+                                          });
+                                    },
+                                    icon: const Icon(
+                                      Icons.edit,
+                                      color: Colors.blue,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    onPressed: () {
+                                      showDialog(
+                                          context: context,
+                                          builder: (context) {
+                                            return QuestionDialog(
+                                              title: 'deleteUser'.tr(),
+                                              okClick: () {
+                                                context.read<UsersBloc>().add(DeleteUser(user: e));
+                                              },
+                                              question: '${'deleteUserQuestion'.tr()} ${e.name}?',
+                                            );
+                                          });
+                                    },
+                                    icon: const Icon(
+                                      Icons.delete,
+                                      color: Colors.red,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            IconButton(
-                              onPressed: () {
-                                showDialog(
-                                    context: context,
-                                    builder: (context) {
-                                      return QuestionDialog(
-                                        title: 'deleteUser'.tr(),
-                                        okClick: () {
-                                          context.read<UsersBloc>().add(DeleteUser(user: e));
-                                        },
-                                        question: '${'deleteUserQuestion'.tr()} ${e.name}?',
-                                      );
-                                    });
-                              },
-                              icon: const Icon(
-                                Icons.delete,
-                                color: Colors.red,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )))
-                .toList()
-          ]),
+                          )))
+                      .toList()
+                ]),
+              ),
+            ],
+          ),
         );
       },
     );

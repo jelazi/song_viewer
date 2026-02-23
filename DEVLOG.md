@@ -1,5 +1,19 @@
 # Development Log
 
+## 2026-02-23 - Add page titles to groups_body and users_body
+
+### What was done
+- Added a bold `Text` heading at the top of `GroupsBody` — displays `'manageGroups'.tr()` ("Skupiny")
+- Added a bold `Text` heading at the top of `UsersBody` — displays `'users'.tr()` ("Uživatelé")
+- Heading style matches `presentation_settings_body.dart` (fontSize 18, fontWeight bold)
+- `GroupsBody` layout updated: `SizedBox(height)` wrapper replaced with `Column` + `Expanded` so Row fills remaining space without a hardcoded height
+
+### Files changed
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/groups_body.dart`
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/users_body.dart`
+
+---
+
 ## 2026-02-23 - Fix: all edit bodies now use state.isCurrentSongModified consistently
 
 ### What was done

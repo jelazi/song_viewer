@@ -14,11 +14,23 @@ class GroupsBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<HomePageBloc, HomePageState>(
       builder: (context, state) {
-        return SizedBox(
-            height: MediaQuery.of(context).size.height - 100,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+        return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: Text(
+                  'manageGroups'.tr(),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                 SingleChildScrollView(
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
@@ -110,7 +122,9 @@ class GroupsBody extends StatelessWidget {
                               trailing: const Icon(Icons.add),
                             )))),
               ],
-            ));
+                ),
+              ),
+            ]);
       },
     );
   }
