@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:default_project/core/youtube_helper.dart';
 import 'package:default_project/services/constants.dart';
 import 'package:default_project/services/presentation_window_manager.dart';
 import 'package:default_project/view/mobile_view/widgets/dialogs/dialogs_export.dart';
@@ -7,6 +8,7 @@ import 'package:default_project/view/mobile_view/widgets/dialogs/question_dialog
 import 'package:easy_localization/easy_localization.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../blocs/export_blocs.dart';
 import '../../../model/playlist.dart';
@@ -583,6 +585,29 @@ class HomeTabbar extends StatelessWidget {
                             },
                           ),
                           _buildPresentationButton(context),
+                          BlocBuilder<PreviewChordBloc, PreviewChordState>(
+                            builder: (context, previewState) {
+                              final hasYoutube = previewState.data.song?.youtubeVideos?.isNotEmpty ?? false;
+                              if (!hasYoutube) return const SizedBox.shrink();
+                              return RibbonButton(
+                                  text: 'YouTube',
+                                  isEnabled: true,
+                                  icon: const Icon(
+                                    Icons.play_circle_fill,
+                                    color: Colors.red,
+                                  ),
+                                  onPressed: () async {
+                                    final videos = previewState.data.song!.youtubeVideos!;
+                                    final videoId = extractYoutubeVideoId(videos.first.path);
+                                    if (videoId != null) {
+                                      final uri = Uri.parse('https://www.youtube.com/watch?v=$videoId');
+                                      if (await canLaunchUrl(uri)) {
+                                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                      }
+                                    }
+                                  });
+                            },
+                          ),
                         ],
                       )
                     : state.bodyName == 'edit'
@@ -612,16 +637,27 @@ class HomeTabbar extends StatelessWidget {
                                   isEnabled: true,
                                   isSelected: state.bodyEditName == 'chords'),
                               RibbonButton(
-                                  text: 'note'.tr(),
+                                  text: 'youtube'.tr(),
+                                  icon: const Icon(
+                                    Icons.videocam,
+                                    color: Colors.black,
+                                  ),
+                                  onPressed: () {
+                                    context.read<DesktopRibbonMenuBloc>().add(const ChangeEditBody(bodyName: 'youtube'));
+                                  },
+                                  isEnabled: true,
+                                  isSelected: state.bodyEditName == 'youtube'),
+                              RibbonButton(
+                                  text: 'sheets'.tr(),
                                   icon: const Icon(
                                     Icons.music_note,
                                     color: Colors.black,
                                   ),
                                   onPressed: () {
-                                    context.read<DesktopRibbonMenuBloc>().add(const ChangeEditBody(bodyName: 'note'));
+                                    context.read<DesktopRibbonMenuBloc>().add(const ChangeEditBody(bodyName: 'sheets'));
                                   },
                                   isEnabled: true,
-                                  isSelected: state.bodyEditName == 'note'),
+                                  isSelected: state.bodyEditName == 'sheets'),
                               RibbonButton(
                                   text: 'otherSettings'.tr(),
                                   icon: const Icon(

@@ -4,7 +4,7 @@ import 'package:default_project/core/youtube_helper.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:youtube_player_iframe/youtube_player_iframe.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../../blocs/export_blocs.dart';
 import '../../../model/youtube_video.dart';
@@ -17,15 +17,15 @@ class YoutubeVideoPageMobile extends StatefulWidget {
 }
 
 class _YoutubeVideoPageMobileState extends State<YoutubeVideoPageMobile> {
-  YoutubePlayerController? _controller;
+  WebViewController? _webController;
   int _currentIndex = 0;
   List<YoutubeVideo> _videos = [];
+  bool _isLoading = true;
 
   bool get _isDesktop => Platform.isLinux || Platform.isWindows || Platform.isMacOS;
 
   @override
   void dispose() {
-    _controller?.close();
     super.dispose();
   }
 
@@ -34,18 +34,27 @@ class _YoutubeVideoPageMobileState extends State<YoutubeVideoPageMobile> {
     final videoId = extractYoutubeVideoId(videos[index].path);
     if (videoId == null) return;
 
-    _controller?.close();
-    _controller = YoutubePlayerController.fromVideoId(
-      videoId: videoId,
-      autoPlay: true,
-      params: const YoutubePlayerParams(
-        showControls: true,
-        showFullscreenButton: true,
-      ),
-    );
+    final youtubeUrl = 'https://www.youtube.com/watch?v=$videoId';
+
+    final controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageStarted: (_) {
+            if (mounted) setState(() => _isLoading = true);
+          },
+          onPageFinished: (_) {
+            if (mounted) setState(() => _isLoading = false);
+          },
+        ),
+      )
+      ..loadRequest(Uri.parse(youtubeUrl));
+
     setState(() {
+      _webController = controller;
       _currentIndex = index;
       _videos = videos;
+      _isLoading = true;
     });
   }
 
@@ -96,10 +105,15 @@ class _YoutubeVideoPageMobileState extends State<YoutubeVideoPageMobile> {
               : Column(
                   children: [
                     // Video player area
-                    if (_controller != null && !_isDesktop)
-                      YoutubePlayer(
-                        controller: _controller!,
-                        aspectRatio: 16 / 9,
+                    if (_webController != null && !_isDesktop)
+                      Expanded(
+                        flex: 2,
+                        child: Stack(
+                          children: [
+                            WebViewWidget(controller: _webController!),
+                            if (_isLoading) const Center(child: CircularProgressIndicator()),
+                          ],
+                        ),
                       )
                     else if (_isDesktop)
                       AspectRatio(
@@ -115,7 +129,7 @@ class _YoutubeVideoPageMobileState extends State<YoutubeVideoPageMobile> {
                                 ElevatedButton.icon(
                                   onPressed: () => _openInBrowser(_getYoutubeUrl(videos[_currentIndex].path)),
                                   icon: const Icon(Icons.open_in_browser),
-                                  label: const Text('Open in Browser'),
+                                  label: const Text('Otevřít v prohlížeči'),
                                 ),
                               ],
                             ),

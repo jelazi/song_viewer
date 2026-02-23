@@ -1,5 +1,154 @@
 # Development Log
 
+## 2026-02-23 - Fix Firebase Storage upload + remove non-functional note ribbon button
+
+### What was done
+
+1. **Firebase Storage upload fix**
+   - Reverted `storageBucket` back to `songlist-7b702.appspot.com` in all 5 platform configs (the `.firebasestorage.app` change from previous session pointed to a non-existent bucket, causing `object-not-found` error)
+   - Changed upload method from `putFile` to `putData` with `SettableMetadata` on all 3 platforms (desktop, tablet, mobile) — more reliable, avoids macOS sandbox file-access issues
+   - Added `withData: true` to `FilePicker.platform.pickFiles()` to get bytes directly
+   - Added fallback: if `file.bytes` is null, reads bytes from `File(file.path!).readAsBytes()`
+   - Added `dart:typed_data` import for `Uint8List` in tablet and mobile files
+
+2. **macOS entitlements**
+   - Added `com.apple.security.files.user-selected.read-only` to both `DebugProfile.entitlements` and `Release.entitlements`
+
+3. **Desktop ribbon — removed non-functional "note" button**
+   - Removed the "note" RibbonButton (dispatched `ChangeEditBody(bodyName: 'note')` which had no handler in `edit_body.dart`)
+   - Changed "sheets" button icon from `Icons.image` to `Icons.music_note` (better icon, as user requested)
+
+### Files changed
+- `lib/firebase_options.dart` — reverted storageBucket to `.appspot.com`
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/edit_parts_body/edit_sheets_body.dart` — putData + withData
+- `lib/view/tablet_view/pages/tablet_edit_pages/edit_page_tablet.dart` — putData + withData + typed_data import
+- `lib/view/mobile_view/pages/edit_pages/edit_page.dart` — putData + withData + typed_data import
+- `lib/view/desktop_view/widgets/ribbon_menu.dart` — removed note button, changed sheets icon
+- `macos/Runner/DebugProfile.entitlements` — added files.user-selected.read-only
+- `macos/Runner/Release.entitlements` — added files.user-selected.read-only
+
+### Current state
+- Firebase Storage upload should now work correctly (correct bucket + putData)
+- Desktop ribbon has: lyrics, chord, youtube, sheets (music_note icon), settings, delete
+- 0 errors in flutter analyze (179 pre-existing info-level warnings)
+
+### Known issues
+- The original "-1 code" error may have been a transient issue or security rules problem — if upload still fails, check Firebase Console Storage rules
+
+---
+
+## 2026-02-23 - Tablet/Mobile: YouTube & Sheets editing + Firebase Storage bucket fix
+
+### What was done
+
+1. **Tablet edit page — YouTube editing added**
+   - Added YouTube videos section (`getYoutubeVideos`) to `edit_page_tablet.dart`
+   - Full CRUD: add (dialog with name + URL), edit (dialog), delete
+   - Each video shows name, URL, validation icon, open-in-browser button
+   - Uses `extractYoutubeVideoId()` for URL validation
+
+2. **Tablet edit page — Sheets editing fixed**
+   - Replaced stub `getSheets` (had `onTap: () {}` and broken `Image.file`) with working implementation
+   - Two add methods: add sheet by URL (dialog), upload image (FilePicker → Firebase Storage)
+   - Horizontal scrollable thumbnail list with `CachedNetworkImage`
+   - Delete button per sheet, full-screen preview dialog with InteractiveViewer zoom
+
+3. **Mobile edit page — same treatment**
+   - Added `getYoutubeVideosMobile` with full YouTube CRUD (add/edit/delete)
+   - Replaced `getSheetsMobile` with working upload + URL + thumbnails + delete
+   - Same Firebase Storage upload flow as tablet/desktop
+
+4. **Firebase Storage bucket fix**
+   - Changed all `storageBucket` values in `firebase_options.dart` from `songlist-7b702.appspot.com` to `songlist-7b702.firebasestorage.app`
+   - The old `.appspot.com` format was causing "Unexpected -1 code from backend" error on macOS/desktop
+   - Updated all 5 platform configs: windows, web, android, ios, macos
+
+### Files changed
+- `lib/view/tablet_view/pages/tablet_edit_pages/edit_page_tablet.dart` — YouTube + Sheets editing
+- `lib/view/mobile_view/pages/edit_pages/edit_page.dart` — YouTube + Sheets editing
+- `lib/firebase_options.dart` — Updated all storageBucket to `.firebasestorage.app`
+
+### Current state
+- All platforms (mobile, tablet, desktop) now have full YouTube and Sheets editing
+- Firebase Storage should work correctly with updated bucket URL
+- `flutter analyze` passes with 0 errors
+
+### Known issues
+- If `.firebasestorage.app` bucket still gives errors, Firebase Storage rules may need configuration in Firebase Console
+
+## 2026-02-23 - Fix: YouTube player iPad error 152 — replaced youtube_player_iframe with webview_flutter
+
+### What was done
+- Replaced `youtube_player_iframe` package with `webview_flutter` for YouTube video playback
+- Root cause: `youtube_player_iframe` uses YouTube IFrame embed API (`youtube.com/embed/ID`), which YouTube blocks for certain videos (error 150/152 = embedding disabled by video owner)
+- Solution: Load full YouTube page URL (`youtube.com/watch?v=ID`) in a `WebViewWidget` — works like a browser within the app, avoids all embedding restrictions
+- Updated both `YoutubeVideoPageMobile` and `YoutubeVideoPageTablet` to use `WebViewController` + `WebViewWidget`
+- Added loading indicator (CircularProgressIndicator) while WebView loads
+- Desktop fallback (open in browser via url_launcher) remains unchanged
+- Removed `youtube_player_iframe: ^5.1.2` from pubspec.yaml, added `webview_flutter: ^4.13.1`
+- `flutter analyze` passes with 0 errors
+
+### Files changed
+- `pubspec.yaml` — Replaced `youtube_player_iframe` with `webview_flutter`
+- `lib/view/mobile_view/pages/youtube_video_page.dart` — Rewritten to use WebViewWidget
+- `lib/view/tablet_view/pages/youtube_video_page_tablet.dart` — Rewritten to use WebViewWidget
+
+### What is the current state
+- YouTube videos should now play correctly on iPad/iPhone/Android via in-app WebView
+- Desktop continues to open YouTube in external browser
+
+## 2026-02-23 - Desktop: YouTube editing, Sheets editing with Firebase Storage, Preview YouTube button
+
+### What was done
+
+1. **Task 1 & 2: YouTube link editing + play/test in desktop edit page — completed**
+   - Created `EditYoutubeBody` widget at `lib/view/desktop_view/pages/desktop_home_page/home_bodies/edit_parts_body/edit_youtube_body.dart`
+   - Full CRUD for YouTube videos: add (dialog with name + URL), edit (dialog), delete
+   - Real-time URL validation using `extractYoutubeVideoId()` — shows green check or red error in dialogs
+   - "Test" button in dialogs opens YouTube URL in external browser via `url_launcher`
+   - Play button on each video row opens in browser
+   - Save button with change detection indicator
+
+2. **Task 3: YouTube playback button in desktop preview ribbon — completed**
+   - Added conditional YouTube button to HomeTabbar preview section in `ribbon_menu.dart`
+   - Button only appears when selected song has YouTube videos (`youtubeVideos?.isNotEmpty`)
+   - Opens first YouTube video in external browser via `url_launcher`
+
+3. **Task 4: Sheet music editing with Firebase Storage upload — completed**
+   - Added `firebase_storage: ^13.0.6` to pubspec.yaml
+   - Created `EditSheetsBody` widget at `lib/view/desktop_view/pages/desktop_home_page/home_bodies/edit_parts_body/edit_sheets_body.dart`
+   - Two ways to add sheets: upload image file (via FilePicker → Firebase Storage) or add URL directly
+   - Firebase Storage upload: picks image file → uploads to `songs/{songId}/sheets/{timestamp_filename}` → gets download URL → adds to song sheets
+   - Upload progress indicator with percentage
+   - Grid view with thumbnails (via CachedNetworkImage), delete button per sheet
+   - Full-screen image preview dialog with InteractiveViewer zoom
+   - Save button with change detection
+
+4. **BLoC infrastructure — completed**
+   - Added 5 new events to EditSongBloc: `AddYoutubeVideo`, `RemoveYoutubeVideo`, `UpdateYoutubeVideo`, `AddSheet`, `RemoveSheet`
+   - Implemented all 5 event handlers modifying `currentEditSong` via `copyWith`
+   - Updated `_saveSong` desktop path to detect youtube/sheets changes
+   - Updated `checkModifiedSong()` for youtube/sheets comparison
+
+5. **Ribbon menu & edit body switch — completed**
+   - Added "Youtube videa" and "Noty" buttons to edit ribbon section in `ribbon_menu.dart`
+   - Added 'youtube' and 'sheets' cases to `edit_body.dart` switch
+   - Added translation keys: `addSheet`, `uploadSheet`, `addSheetUrl` to cs.json and en.json
+
+### What is the current state
+- All 4 desktop tasks implemented and passing `flutter analyze` (0 errors, only pre-existing info warnings)
+- Desktop edit mode now has 6 sub-pages: lyrics, chords, note, youtube, sheets, settings
+- Preview ribbon conditionally shows YouTube button when song has videos
+- Firebase Storage configured and ready for sheet image uploads
+
+### What is pending / next steps
+- Testing actual Firebase Storage upload with real images
+- Consider adding drag-and-drop reordering for sheets
+- Consider sheet preview in preview body (not just edit mode)
+
+### Known issues
+- `use_build_context_synchronously` info warnings in edit_sheets_body.dart (standard for async upload with mounted check)
+
 ## 2026-02-23 - Sheet music, YouTube videos, mobile 3-dot menu
 
 ### What was done

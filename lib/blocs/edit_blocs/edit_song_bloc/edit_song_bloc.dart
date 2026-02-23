@@ -5,6 +5,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 
 import '../../../model/song/song.dart';
+import '../../../model/youtube_video.dart';
 import '../../../services/enums.dart';
 import '../../../view/mobile_view/widgets/chords_lyric/chord_parser.dart' as chordParser;
 
@@ -57,6 +58,11 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
     on<CreateNewSong>(_createNewSong);
     on<ChangeGroupForCurrentSong>(_changeGroupForCurrentSong);
     on<DeleteCurrentSong>(_deleteCurrentSong);
+    on<AddYoutubeVideo>(_addYoutubeVideo);
+    on<RemoveYoutubeVideo>(_removeYoutubeVideo);
+    on<UpdateYoutubeVideo>(_updateYoutubeVideo);
+    on<AddSheet>(_addSheet);
+    on<RemoveSheet>(_removeSheet);
 
     add(const _Init());
   }
@@ -473,6 +479,20 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
         song = song.copyWith(groups: state.currentGroups);
         isChanged = true;
       }
+      // YouTube videos and sheets are modified directly on currentEditSong,
+      // so compare against the original song from repository
+      final originalSong = songsRepository.getSongById(song.id);
+      if (originalSong != null) {
+        if (song.youtubeVideos?.length != originalSong.youtubeVideos?.length || song.youtubeVideos.toString() != originalSong.youtubeVideos.toString()) {
+          isChanged = true;
+        }
+        if (song.sheets?.length != originalSong.sheets?.length || song.sheets.toString() != originalSong.sheets.toString()) {
+          isChanged = true;
+        }
+      } else if (song.id.isEmpty) {
+        // New song — always changed
+        isChanged = true;
+      }
       if (isChanged) {
         if (song.id.isEmpty) {
           song.generateId();
@@ -562,6 +582,13 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
         return true;
       }
     }
+    // Check youtube videos and sheets
+    if (oldSong.youtubeVideos?.length != state.currentEditSong.youtubeVideos?.length || oldSong.youtubeVideos.toString() != state.currentEditSong.youtubeVideos.toString()) {
+      return true;
+    }
+    if (oldSong.sheets?.length != state.currentEditSong.sheets?.length || oldSong.sheets.toString() != state.currentEditSong.sheets.toString()) {
+      return true;
+    }
     return false;
   }
 
@@ -577,6 +604,57 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
         interpretController: TextEditingController(),
         indexSongBookController: TextEditingController(),
         currentGroups: [],
+      ));
+    }
+  }
+
+  void _addYoutubeVideo(AddYoutubeVideo event, Emitter<EditSongState> emit) {
+    final state = this.state;
+    final videos = List<YoutubeVideo>.from(state.currentEditSong.youtubeVideos ?? []);
+    videos.add(event.video);
+    emit(state.copyWith(
+      currentEditSong: state.currentEditSong.copyWith(youtubeVideos: videos),
+    ));
+  }
+
+  void _removeYoutubeVideo(RemoveYoutubeVideo event, Emitter<EditSongState> emit) {
+    final state = this.state;
+    final videos = List<YoutubeVideo>.from(state.currentEditSong.youtubeVideos ?? []);
+    if (event.index >= 0 && event.index < videos.length) {
+      videos.removeAt(event.index);
+      emit(state.copyWith(
+        currentEditSong: state.currentEditSong.copyWith(youtubeVideos: videos),
+      ));
+    }
+  }
+
+  void _updateYoutubeVideo(UpdateYoutubeVideo event, Emitter<EditSongState> emit) {
+    final state = this.state;
+    final videos = List<YoutubeVideo>.from(state.currentEditSong.youtubeVideos ?? []);
+    if (event.index >= 0 && event.index < videos.length) {
+      videos[event.index] = event.video;
+      emit(state.copyWith(
+        currentEditSong: state.currentEditSong.copyWith(youtubeVideos: videos),
+      ));
+    }
+  }
+
+  void _addSheet(AddSheet event, Emitter<EditSongState> emit) {
+    final state = this.state;
+    final sheets = List<String>.from(state.currentEditSong.sheets ?? []);
+    sheets.add(event.sheetUrl);
+    emit(state.copyWith(
+      currentEditSong: state.currentEditSong.copyWith(sheets: sheets),
+    ));
+  }
+
+  void _removeSheet(RemoveSheet event, Emitter<EditSongState> emit) {
+    final state = this.state;
+    final sheets = List<String>.from(state.currentEditSong.sheets ?? []);
+    if (event.index >= 0 && event.index < sheets.length) {
+      sheets.removeAt(event.index);
+      emit(state.copyWith(
+        currentEditSong: state.currentEditSong.copyWith(sheets: sheets),
       ));
     }
   }

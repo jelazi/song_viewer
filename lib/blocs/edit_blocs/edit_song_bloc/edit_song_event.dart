@@ -140,3 +140,44 @@ class ChangeGroupForCurrentSong extends EditSongEvent {
 class DeleteCurrentSong extends EditSongEvent {
   const DeleteCurrentSong();
 }
+
+class AddYoutubeVideo extends EditSongEvent {
+  final YoutubeVideo video;
+  const AddYoutubeVideo({required this.video});
+
+  @override
+  List<Object> get props => [video];
+}
+
+class RemoveYoutubeVideo extends EditSongEvent {
+  final int index;
+  const RemoveYoutubeVideo({required this.index});
+
+  @override
+  List<Object> get props => [index];
+}
+
+class UpdateYoutubeVideo extends EditSongEvent {
+  final int index;
+  final YoutubeVideo video;
+  const UpdateYoutubeVideo({required this.index, required this.video});
+
+  @override
+  List<Object> get props => [index, video];
+}
+
+class AddSheet extends EditSongEvent {
+  final String sheetUrl;
+  const AddSheet({required this.sheetUrl});
+
+  @override
+  List<Object> get props => [sheetUrl];
+}
+
+class RemoveSheet extends EditSongEvent {
+  final int index;
+  const RemoveSheet({required this.index});
+
+  @override
+  List<Object> get props => [index];
+}
