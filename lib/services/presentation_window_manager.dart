@@ -355,9 +355,7 @@ class PresentationWindowManager {
   Future<Map<String, int>?> _getScreenBounds(int screenIndex) async {
     try {
       final displays = await screenRetriever.getAllDisplays();
-      final target = screenIndex < displays.length
-          ? displays[screenIndex]
-          : displays.first;
+      final target = screenIndex < displays.length ? displays[screenIndex] : displays.first;
       final pos = target.visiblePosition ?? const Offset(0, 0);
       final size = target.size;
       return {

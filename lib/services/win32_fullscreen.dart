@@ -30,23 +30,14 @@ void enterFullscreenWin32({
   try {
     final user32 = DynamicLibrary.open('user32.dll');
 
-    final getForegroundWindow = user32.lookupFunction<
-        IntPtr Function(),
-        int Function()>('GetForegroundWindow');
+    final getForegroundWindow = user32.lookupFunction<IntPtr Function(), int Function()>('GetForegroundWindow');
 
-    final getWindowLong = user32.lookupFunction<
-        Int32 Function(IntPtr hWnd, Int32 nIndex),
-        int Function(int hWnd, int nIndex)>('GetWindowLongW');
+    final getWindowLong = user32.lookupFunction<Int32 Function(IntPtr hWnd, Int32 nIndex), int Function(int hWnd, int nIndex)>('GetWindowLongW');
 
-    final setWindowLong = user32.lookupFunction<
-        Int32 Function(IntPtr hWnd, Int32 nIndex, Int32 dwNewLong),
-        int Function(int hWnd, int nIndex, int dwNewLong)>('SetWindowLongW');
+    final setWindowLong = user32.lookupFunction<Int32 Function(IntPtr hWnd, Int32 nIndex, Int32 dwNewLong), int Function(int hWnd, int nIndex, int dwNewLong)>('SetWindowLongW');
 
-    final setWindowPos = user32.lookupFunction<
-        Int32 Function(IntPtr hWnd, IntPtr hWndInsertAfter, Int32 x, Int32 y,
-            Int32 cx, Int32 cy, Uint32 uFlags),
-        int Function(int hWnd, int hWndInsertAfter, int x, int y, int cx,
-            int cy, int uFlags)>('SetWindowPos');
+    final setWindowPos = user32.lookupFunction<Int32 Function(IntPtr hWnd, IntPtr hWndInsertAfter, Int32 x, Int32 y, Int32 cx, Int32 cy, Uint32 uFlags),
+        int Function(int hWnd, int hWndInsertAfter, int x, int y, int cx, int cy, int uFlags)>('SetWindowPos');
 
     final hWnd = getForegroundWindow();
     if (hWnd == 0) {
