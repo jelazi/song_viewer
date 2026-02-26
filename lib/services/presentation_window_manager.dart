@@ -155,8 +155,7 @@ class PresentationWindowManager {
         Future.delayed(const Duration(seconds: 2), () async {
           if (_presentationWindowController != null && _isPresenting) {
             try {
-              await _presentationWindowController!.invokeMethod(
-                'update_page', jsonEncode(backupPageData));
+              await _presentationWindowController!.invokeMethod('update_page', jsonEncode(backupPageData));
               debugPrint('Backup initial page sent via WindowController');
             } catch (e) {
               debugPrint('Error sending backup initial page: $e');
@@ -224,8 +223,7 @@ class PresentationWindowManager {
       if (Platform.isMacOS) {
         await _bridgeChannel.invokeMethod('update_page', pageData);
       } else if (Platform.isWindows) {
-        await _presentationWindowController!.invokeMethod(
-          'update_page', jsonEncode(pageData));
+        await _presentationWindowController!.invokeMethod('update_page', jsonEncode(pageData));
       }
       debugPrint('Page sent successfully');
     } catch (e) {
@@ -245,8 +243,7 @@ class PresentationWindowManager {
       if (Platform.isMacOS) {
         await _bridgeChannel.invokeMethod('update_song', song.toJson());
       } else if (Platform.isWindows) {
-        await _presentationWindowController!.invokeMethod(
-          'update_song', jsonEncode(song.toJson()));
+        await _presentationWindowController!.invokeMethod('update_song', jsonEncode(song.toJson()));
       }
       debugPrint('Song sent successfully');
 
