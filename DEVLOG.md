@@ -1,5 +1,53 @@
 # Development Log
 
+## 2026-02-26 - Firebase Realtime Database REST API + SSE for Windows
+
+### What was done
+- Implemented Firebase Realtime Database support for Windows via REST API and Server-Sent Events (SSE)
+- The native `firebase_database` Flutter package does not support Windows — this implementation provides full RTDB functionality on Windows using Firebase's REST API
+- **Cloud Firestore** already works on Windows via C++ SDK — no changes needed
+
+### Architecture
+- Created `FirebaseRtdbRestProvider` — a standalone REST/SSE client for Firebase RTDB
+  - REST operations: GET, PUT (set), PATCH (update), DELETE via `dart:io` `HttpClient`
+  - SSE streaming: persistent event-stream connections with automatic reconnection (exponential backoff)
+  - Auth: uses Firebase Auth ID tokens (`?auth=<token>`) from anonymous sign-in
+  - Handles SSE events: `put`, `patch`, `keep-alive`, `cancel`, `auth_revoked`
+  - Auto-reconnects on disconnect, token expiry (`auth_revoked`), or errors
+
+- **Platform-agnostic streams** added to `FirebaseProvider`:
+  - `selectedSongStream` — `Stream<Map<String, dynamic>?>` for `currentSong` RTDB path
+  - `updateSongListStream` — `Stream<Map<String, dynamic>?>` for `updateSongList` RTDB path
+  - On non-Windows (iOS, Android, macOS, Web): fed from native `DatabaseReference.onValue`
+  - On Windows: fed from SSE REST provider
+  - Write operations (`saveNewSelectedSong`, `removeSelectedSong`, `setUpdateSongList`) also route through REST on Windows
+
+- `SongsRepository` updated to use the new platform-agnostic streams instead of directly accessing `DatabaseReference`
+
+### RTDB paths used via REST/SSE
+| Path | Operations | Purpose |
+|---|---|---|
+| `currentSong` | SSE listen + PATCH (update) | Broadcast currently selected/playing song |
+| `updateSongList` | SSE listen + PUT (set) | Song list change notifications with timestamps |
+
+### Files changed
+- `lib/providers/firebase_rtdb_rest_provider.dart` — **new file**, REST/SSE client for RTDB
+- `lib/providers/firebase_provider.dart` — added REST provider for Windows, platform-agnostic RTDB streams, updated write operations
+- `lib/repositories/songs_repository.dart` — uses `selectedSongStream` / `updateSongListStream` instead of native `DatabaseReference.onValue`
+
+### Current state
+- All 3 files compile with no errors
+- Non-Windows platforms use native SDK as before (no behavioral change)
+- Windows now has full RTDB support: reading, writing, and real-time listeners via SSE
+- `firedart` package in pubspec.yaml is still unused (dead dependency)
+
+### Pending / Next steps
+- Runtime testing on Windows with actual Firebase connectivity
+- Consider removing unused `firedart` dependency from pubspec.yaml
+- If Cloud Firestore C++ SDK causes issues on Windows at runtime, a similar REST approach can be applied
+
+---
+
 ## 2026-02-26 - Windows build setup & Inno Setup installer
 
 ### What was done
