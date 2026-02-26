@@ -1,5 +1,46 @@
 # Development Log
 
+## 2026-02-26 - Fix Windows presentation window MissingPluginException
+
+### What was done
+- Fixed `MissingPluginException(No implementation found for method setScreenIndex on channel com.songviewer/presentation_bridge)` on Windows
+- Root cause: The `com.songviewer/presentation_bridge` MethodChannel had native handlers only on macOS (Swift), with no C++ equivalent on Windows
+- Solution: Added platform-aware communication in Dart — on macOS uses native bridge (unchanged), on Windows uses `desktop_multi_window` v0.3.0 cross-window messaging API (`WindowController.invokeMethod`, `WindowMethodChannel`)
+
+### Changes
+- **`lib/services/presentation_window_manager.dart`**:
+  - All `_bridgeChannel.invokeMethod` calls now wrapped with `Platform.isMacOS` / `Platform.isWindows` guards
+  - On Windows: `update_page` / `update_song` sent via `WindowController.invokeMethod` (JSON-encoded)
+  - On Windows: `hide_window` uses `WindowController.hide()`
+  - On Windows: `destroy` uses `hide()` + reference cleanup (no native `close()` API available)
+  - `setScreenIndex` skipped on Windows (positioning handled by init data)
+  - Removed `screen_retriever` import (not needed for current approach)
+- **`lib/main.dart`** (sub-window `PresentationApp`):
+  - Extracted shared `_handleIncomingMethod()` for processing incoming messages
+  - On macOS: keeps `com.songviewer/page_data` MethodChannel + `sub_window_ready` signal
+  - On Windows: uses `WindowController.setWindowMethodHandler` to receive cross-window messages
+  - Navigation key events: on Windows uses `WindowMethodChannel('com.songviewer/nav_bridge')` instead of native `navigate_bridge`
+- **`lib/view/desktop_view/pages/desktop_home_page/desktop_home_page.dart`**:
+  - On Windows: registers `WindowMethodChannel('com.songviewer/nav_bridge')` handler for receiving navigation from sub-window
+  - Proper cleanup in `dispose()` for both platforms
+
+### Current state
+- Presentation window should now open on Windows without MissingPluginException
+- Cross-window messaging (page updates, navigation) works via `desktop_multi_window` API
+- Window positioning on specific screen not yet implemented on Windows (appears at default position)
+- macOS behavior unchanged
+
+### Pending / Next steps
+- Test presentation window end-to-end on Windows (open, navigate, close)
+- Implement screen positioning for Windows presentation window (may need C++ native channel or `window_manager` integration)
+- Consider adding window close detection on Windows (currently hide-only)
+
+### Known issues
+- On Windows, the presentation window may not appear on the selected external display (screen positioning TODO)
+- On Windows, `destroyPresentationWindow` hides instead of truly destroying (no `close()` API in `desktop_multi_window` v0.3.0)
+
+---
+
 ## 2026-02-26 - Windows build setup & Inno Setup installer
 
 ### What was done

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +9,7 @@ import '../blocs/desktop_ribbon_menu/desktop_ribbon_menu_bloc.dart';
 import '../model/song/song.dart';
 
 /// Native bridge channel: main window Dart → native → sub-window Dart.
-/// Bypasses desktop_multi_window channel system entirely.
+/// Used on macOS only. On Windows, DesktopMultiWindow cross-window messaging is used.
 const _bridgeChannel = MethodChannel('com.songviewer/presentation_bridge');
 
 /// Manager for presentation window operations.
@@ -55,9 +56,14 @@ class PresentationWindowManager {
       if (_presentationWindowController != null) {
         debugPrint('Reusing existing hidden presentation window');
 
-        // Show window and reposition on the correct screen via native bridge
+        // Show window and reposition on the correct screen
         try {
-          await _bridgeChannel.invokeMethod('show_reposition_window', screenIndex);
+          if (Platform.isMacOS) {
+            await _bridgeChannel.invokeMethod('show_reposition_window', screenIndex);
+          } else if (Platform.isWindows) {
+            await _presentationWindowController!.show();
+            // TODO: Add screen positioning for Windows presentation window
+          }
         } catch (e) {
           debugPrint('Error showing/repositioning window: $e');
           // Window might have been destroyed unexpectedly — fall through to create
@@ -89,9 +95,11 @@ class PresentationWindowManager {
       // CREATE PATH: first-time creation of the sub-window
       debugPrint('Creating new presentation window... (screenIndex=$screenIndex)');
 
-      // Send screenIndex to native BEFORE creating the window so Swift can position it
-      debugPrint('Sending setScreenIndex=$screenIndex to native bridge');
-      await _bridgeChannel.invokeMethod('setScreenIndex', screenIndex);
+      // Send screenIndex to native BEFORE creating the window so macOS/Swift can position it
+      if (Platform.isMacOS) {
+        debugPrint('Sending setScreenIndex=$screenIndex to native bridge');
+        await _bridgeChannel.invokeMethod('setScreenIndex', screenIndex);
+      }
 
       // Create new window with initial data (including screenIndex for Swift positioning)
       final initData = jsonEncode({
@@ -121,10 +129,9 @@ class PresentationWindowManager {
       debugPrint('Window shown with page data');
 
       // Also send the initial page via the bridge as a backup (fire-and-forget).
-      // This gets buffered by Swift until sub_window_ready, then flushed.
       // Ensures data arrives even if WindowController.arguments parsing fails.
       debugPrint('Sending initial page via bridge as backup...');
-      _bridgeChannel.invokeMethod('update_page', {
+      final backupPageData = {
         'title': title,
         'pageContent': pageContent,
         'fontSize': fontSize,
@@ -135,11 +142,28 @@ class PresentationWindowManager {
         'linesPerPage': linesPerPage,
         'showTitle': showTitle,
         'showPageNumber': showPageNumber,
-      }).then((_) {
-        debugPrint('Backup initial page sent via bridge');
-      }).catchError((e) {
-        debugPrint('Error sending backup initial page: $e');
-      });
+      };
+      if (Platform.isMacOS) {
+        // On macOS, the native bridge buffers until sub_window_ready
+        _bridgeChannel.invokeMethod('update_page', backupPageData).then((_) {
+          debugPrint('Backup initial page sent via bridge');
+        }).catchError((e) {
+          debugPrint('Error sending backup initial page: $e');
+        });
+      } else if (Platform.isWindows) {
+        // On Windows, use WindowController cross-window messaging with a delay
+        Future.delayed(const Duration(seconds: 2), () async {
+          if (_presentationWindowController != null && _isPresenting) {
+            try {
+              await _presentationWindowController!.invokeMethod(
+                'update_page', jsonEncode(backupPageData));
+              debugPrint('Backup initial page sent via WindowController');
+            } catch (e) {
+              debugPrint('Error sending backup initial page: $e');
+            }
+          }
+        });
+      }
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -185,7 +209,7 @@ class PresentationWindowManager {
 
     try {
       debugPrint('Sending page to presentation: $title (page ${currentPage + 1}/$totalPages)');
-      await _bridgeChannel.invokeMethod('update_page', {
+      final pageData = {
         'title': title,
         'pageContent': pageContent,
         'fontSize': fontSize,
@@ -196,7 +220,13 @@ class PresentationWindowManager {
         'linesPerPage': linesPerPage,
         'showTitle': showTitle,
         'showPageNumber': showPageNumber,
-      });
+      };
+      if (Platform.isMacOS) {
+        await _bridgeChannel.invokeMethod('update_page', pageData);
+      } else if (Platform.isWindows) {
+        await _presentationWindowController!.invokeMethod(
+          'update_page', jsonEncode(pageData));
+      }
       debugPrint('Page sent successfully');
     } catch (e) {
       debugPrint('Error sending page: $e');
@@ -212,7 +242,12 @@ class PresentationWindowManager {
 
     try {
       debugPrint('Sending song to presentation: ${song.title}');
-      await _bridgeChannel.invokeMethod('update_song', song.toJson());
+      if (Platform.isMacOS) {
+        await _bridgeChannel.invokeMethod('update_song', song.toJson());
+      } else if (Platform.isWindows) {
+        await _presentationWindowController!.invokeMethod(
+          'update_song', jsonEncode(song.toJson()));
+      }
       debugPrint('Song sent successfully');
 
       if (context.mounted) {
@@ -239,16 +274,21 @@ class PresentationWindowManager {
   }
 
   /// Hide the presentation window (keep engine alive for instant reuse).
-  /// Uses native bridge to hide without destroying.
+  /// Uses native bridge on macOS, WindowController on Windows.
   Future<void> closePresentationWindow() async {
     if (!_isPresenting) return;
 
     try {
-      debugPrint('Hiding presentation window via bridge...');
-      await _bridgeChannel.invokeMethod('hide_window');
-      debugPrint('Window hidden — engine kept alive for reuse');
+      debugPrint('Hiding presentation window...');
+      if (Platform.isMacOS) {
+        await _bridgeChannel.invokeMethod('hide_window');
+        debugPrint('Window hidden via native bridge — engine kept alive for reuse');
+      } else if (Platform.isWindows) {
+        await _presentationWindowController?.hide();
+        debugPrint('Window hidden via WindowController');
+      }
     } catch (e) {
-      debugPrint('Error hiding window via bridge: $e');
+      debugPrint('Error hiding window: $e');
     }
 
     _isPresenting = false;
@@ -261,9 +301,16 @@ class PresentationWindowManager {
     if (_presentationWindowController == null) return;
 
     try {
-      debugPrint('Destroying presentation window via bridge...');
-      await _bridgeChannel.invokeMethod('close_window_with_exit');
-      debugPrint('Window destroyed by native');
+      debugPrint('Destroying presentation window...');
+      if (Platform.isMacOS) {
+        await _bridgeChannel.invokeMethod('close_window_with_exit');
+        debugPrint('Window destroyed by native bridge');
+      } else if (Platform.isWindows) {
+        // On Windows, hide the window (no native close available)
+        await _presentationWindowController?.hide();
+        _presentationWindowController = null;
+        debugPrint('Window hidden and references cleared');
+      }
     } catch (e) {
       debugPrint('Error destroying window: $e');
     }

@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -27,10 +30,16 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
 
   static const _navigationChannel = MethodChannel('com.songviewer/navigation');
 
+  /// WindowMethodChannel for receiving navigation from sub-window on Windows
+  static const _windowNavChannel = WindowMethodChannel(
+    'com.songviewer/nav_bridge',
+    mode: ChannelMode.unidirectional,
+  );
+
   @override
   void initState() {
     super.initState();
-    // Listen for navigation commands forwarded from the presentation window via native bridge
+    // On macOS: listen for navigation commands via native bridge MethodChannel
     _navigationChannel.setMethodCallHandler((call) async {
       if (call.method == 'navigate') {
         final command = call.arguments as String;
@@ -39,6 +48,19 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
       }
       return null;
     });
+
+    // On Windows: also listen for navigation via WindowMethodChannel cross-window messaging
+    if (Platform.isWindows) {
+      _windowNavChannel.setMethodCallHandler((call) async {
+        debugPrint('Main window received WindowMethodChannel: ${call.method}');
+        if (call.method == 'navigate') {
+          final command = call.arguments as String;
+          _handleRemoteNavigation(command);
+          return 'ok';
+        }
+        return null;
+      });
+    }
   }
 
   /// Handle navigation commands from the presentation window
@@ -72,6 +94,9 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
   @override
   void dispose() {
     _navigationChannel.setMethodCallHandler(null);
+    if (Platform.isWindows) {
+      _windowNavChannel.setMethodCallHandler(null);
+    }
     _focusNode.dispose();
     super.dispose();
   }

@@ -212,147 +212,194 @@ class _PresentationAppState extends State<PresentationApp> {
   }
 
   void _setupMessageHandler() {
-    // Use native bridge MethodChannel (bypasses desktop_multi_window channel system)
-    const pageDataChannel = MethodChannel('com.songviewer/page_data');
-    pageDataChannel.setMethodCallHandler((call) async {
-      debugPrint('PresentationApp received method: ${call.method}');
+    // On macOS: use native bridge MethodChannel (bypasses desktop_multi_window channel system)
+    if (Platform.isMacOS) {
+      const pageDataChannel = MethodChannel('com.songviewer/page_data');
+      pageDataChannel.setMethodCallHandler((call) async {
+        debugPrint('PresentationApp received method via native bridge: ${call.method}');
+        return _handleIncomingMethod(call.method, call.arguments);
+      });
+      debugPrint('macOS page data handler setup complete');
 
-      switch (call.method) {
-        case 'close_window_with_exit':
-          debugPrint('Received close window with exit command');
-          if (Platform.isMacOS) {
-            try {
-              final platform = const MethodChannel('com.songviewer/window');
-              await platform.invokeMethod('closeWindowWithExit');
-            } catch (e) {
-              debugPrint('Error closing window: $e');
-            }
-          }
-          return 'ok';
+      // Signal to native bridge that the Dart handler is now registered.
+      // Swift will flush any messages that were buffered during engine startup.
+      const navigateBridge = MethodChannel('com.songviewer/navigate_bridge');
+      navigateBridge.invokeMethod('sub_window_ready').then((_) {
+        debugPrint('Sub-window ready signal sent to native bridge');
+      }).catchError((e) {
+        debugPrint('Error sending sub_window_ready: $e');
+      });
+    }
 
-        case 'close_window_native':
-          debugPrint('Received close window native command');
-          if (Platform.isMacOS) {
-            try {
-              final platform = const MethodChannel('com.songviewer/window');
-              await platform.invokeMethod('exitFullscreen');
-              await Future.delayed(const Duration(milliseconds: 300));
-              await platform.invokeMethod('closeWindow');
-            } catch (e) {
-              debugPrint('Error closing window: $e');
-            }
-          }
-          return 'ok';
+    // On Windows: use WindowController cross-window messaging
+    if (Platform.isWindows) {
+      _setupWindowsMessageHandler();
+    }
+  }
 
-        case 'enter_fullscreen':
-          debugPrint('Received enter fullscreen command');
-          if (Platform.isMacOS) {
-            try {
-              final platform = const MethodChannel('com.songviewer/window');
-              await platform.invokeMethod('enterFullscreen');
-            } catch (e) {
-              debugPrint('Error entering fullscreen: $e');
-            }
-          }
-          return 'ok';
-
-        case 'exit_fullscreen':
-          debugPrint('Received exit fullscreen command');
-          if (Platform.isMacOS) {
-            try {
-              final platform = const MethodChannel('com.songviewer/window');
-              await platform.invokeMethod('exitFullscreen');
-            } catch (e) {
-              debugPrint('Error exiting fullscreen: $e');
-            }
-          }
-          return 'ok';
-
-        case 'close_window':
-          debugPrint('Received close command');
-          if (Platform.isMacOS) {
-            try {
-              final platform = const MethodChannel('com.songviewer/window');
-              await platform.invokeMethod('closeWindow');
-            } catch (e) {
-              debugPrint('Error closing window: $e');
-            }
-          }
-          return 'ok';
-
-        case 'update_page':
+  /// Set up message handler on Windows using WindowController's built-in channel
+  Future<void> _setupWindowsMessageHandler() async {
+    try {
+      final controller = await WindowController.fromCurrentEngine();
+      await controller.setWindowMethodHandler((call) async {
+        debugPrint('PresentationApp received method via WindowController: ${call.method}');
+        // Arguments from WindowController may come as JSON-encoded strings
+        dynamic args = call.arguments;
+        if (args is String) {
           try {
-            debugPrint('Received page update');
-            final rawMap = call.arguments as Map;
-            final data = Map<String, dynamic>.from(rawMap);
-            if (mounted) {
-              setState(() {
-                _title = data['title'] ?? _title;
-                _pageContent = data['pageContent'] ?? '';
-                _fontSize = (data['fontSize'] ?? _fontSize).toDouble();
-                _textColor = Color.fromARGB(
-                  ((data['textColor'] ?? _textColor.toARGB32()) >> 24) & 0xFF,
-                  ((data['textColor'] ?? _textColor.toARGB32()) >> 16) & 0xFF,
-                  ((data['textColor'] ?? _textColor.toARGB32()) >> 8) & 0xFF,
-                  (data['textColor'] ?? _textColor.toARGB32()) & 0xFF,
-                );
-                _showChords = data['showChords'] ?? _showChords;
-                _currentPage = data['currentPage'] ?? _currentPage;
-                _totalPages = data['totalPages'] ?? _totalPages;
-                _showTitle = data['showTitle'] ?? _showTitle;
-                _showPageNumber = data['showPageNumber'] ?? _showPageNumber;
-              });
-            }
-            return 'ok';
-          } catch (e, stackTrace) {
-            debugPrint('Error processing page data: $e');
-            debugPrint('Stack trace: $stackTrace');
-            return 'error: $e';
+            args = jsonDecode(args);
+          } catch (_) {
+            // Keep as string if not valid JSON
           }
+        }
+        return _handleIncomingMethod(call.method, args);
+      });
+      debugPrint('Windows WindowController handler setup complete');
+    } catch (e) {
+      debugPrint('Error setting up Windows message handler: $e');
+    }
+  }
 
-        case 'update_song':
+  /// Shared handler for incoming method calls (used by both macOS native bridge and Windows WindowController)
+  dynamic _handleIncomingMethod(String method, dynamic arguments) {
+    switch (method) {
+      case 'close_window_with_exit':
+        debugPrint('Received close window with exit command');
+        if (Platform.isMacOS) {
           try {
-            debugPrint('Received arguments type: ${call.arguments.runtimeType}');
-            final rawMap = call.arguments as Map;
-            final songJson = Map<String, dynamic>.from(rawMap);
-            debugPrint('Converted to Map<String, dynamic>, parsing Song...');
-            final song = Song.fromJson(songJson);
-            debugPrint('Song parsed successfully: ${song.title}');
-            if (mounted) {
-              setState(() {
-                _title = song.title;
-                _pageContent = _extractLyrics(song);
-              });
-            }
-            return 'ok';
-          } catch (e, stackTrace) {
-            debugPrint('Error processing song data: $e');
-            debugPrint('Stack trace: $stackTrace');
-            return 'error: $e';
+            final platform = const MethodChannel('com.songviewer/window');
+            platform.invokeMethod('closeWindowWithExit');
+          } catch (e) {
+            debugPrint('Error closing window: $e');
           }
-        case 'show_text':
-          final text = call.arguments as String;
+        }
+        return 'ok';
+
+      case 'close_window_native':
+        debugPrint('Received close window native command');
+        if (Platform.isMacOS) {
+          try {
+            final platform = const MethodChannel('com.songviewer/window');
+            platform.invokeMethod('exitFullscreen');
+            Future.delayed(const Duration(milliseconds: 300), () {
+              platform.invokeMethod('closeWindow');
+            });
+          } catch (e) {
+            debugPrint('Error closing window: $e');
+          }
+        }
+        return 'ok';
+
+      case 'enter_fullscreen':
+        debugPrint('Received enter fullscreen command');
+        if (Platform.isMacOS) {
+          try {
+            final platform = const MethodChannel('com.songviewer/window');
+            platform.invokeMethod('enterFullscreen');
+          } catch (e) {
+            debugPrint('Error entering fullscreen: $e');
+          }
+        }
+        return 'ok';
+
+      case 'exit_fullscreen':
+        debugPrint('Received exit fullscreen command');
+        if (Platform.isMacOS) {
+          try {
+            final platform = const MethodChannel('com.songviewer/window');
+            platform.invokeMethod('exitFullscreen');
+          } catch (e) {
+            debugPrint('Error exiting fullscreen: $e');
+          }
+        }
+        return 'ok';
+
+      case 'close_window':
+        debugPrint('Received close command');
+        if (Platform.isMacOS) {
+          try {
+            final platform = const MethodChannel('com.songviewer/window');
+            platform.invokeMethod('closeWindow');
+          } catch (e) {
+            debugPrint('Error closing window: $e');
+          }
+        }
+        return 'ok';
+
+      case 'update_page':
+        try {
+          debugPrint('Received page update');
+          final Map<String, dynamic> data;
+          if (arguments is Map) {
+            data = Map<String, dynamic>.from(arguments);
+          } else {
+            debugPrint('Unexpected arguments type: ${arguments.runtimeType}');
+            return 'error: unexpected type';
+          }
           if (mounted) {
             setState(() {
-              _pageContent = text;
+              _title = data['title'] ?? _title;
+              _pageContent = data['pageContent'] ?? '';
+              _fontSize = (data['fontSize'] ?? _fontSize).toDouble();
+              _textColor = Color.fromARGB(
+                ((data['textColor'] ?? _textColor.toARGB32()) >> 24) & 0xFF,
+                ((data['textColor'] ?? _textColor.toARGB32()) >> 16) & 0xFF,
+                ((data['textColor'] ?? _textColor.toARGB32()) >> 8) & 0xFF,
+                (data['textColor'] ?? _textColor.toARGB32()) & 0xFF,
+              );
+              _showChords = data['showChords'] ?? _showChords;
+              _currentPage = data['currentPage'] ?? _currentPage;
+              _totalPages = data['totalPages'] ?? _totalPages;
+              _showTitle = data['showTitle'] ?? _showTitle;
+              _showPageNumber = data['showPageNumber'] ?? _showPageNumber;
             });
           }
           return 'ok';
-        default:
-          debugPrint('Unknown method: ${call.method}');
-          return null;
-      }
-    });
-    debugPrint('Page data handler setup complete');
+        } catch (e, stackTrace) {
+          debugPrint('Error processing page data: $e');
+          debugPrint('Stack trace: $stackTrace');
+          return 'error: $e';
+        }
 
-    // Signal to native bridge that the Dart handler is now registered.
-    // Swift will flush any messages that were buffered during engine startup.
-    const navigateBridge = MethodChannel('com.songviewer/navigate_bridge');
-    navigateBridge.invokeMethod('sub_window_ready').then((_) {
-      debugPrint('Sub-window ready signal sent to native bridge');
-    }).catchError((e) {
-      debugPrint('Error sending sub_window_ready: $e');
-    });
+      case 'update_song':
+        try {
+          debugPrint('Received arguments type: ${arguments.runtimeType}');
+          final Map<String, dynamic> songJson;
+          if (arguments is Map) {
+            songJson = Map<String, dynamic>.from(arguments);
+          } else {
+            debugPrint('Unexpected arguments type: ${arguments.runtimeType}');
+            return 'error: unexpected type';
+          }
+          debugPrint('Converted to Map<String, dynamic>, parsing Song...');
+          final song = Song.fromJson(songJson);
+          debugPrint('Song parsed successfully: ${song.title}');
+          if (mounted) {
+            setState(() {
+              _title = song.title;
+              _pageContent = _extractLyrics(song);
+            });
+          }
+          return 'ok';
+        } catch (e, stackTrace) {
+          debugPrint('Error processing song data: $e');
+          debugPrint('Stack trace: $stackTrace');
+          return 'error: $e';
+        }
+
+      case 'show_text':
+        final text = arguments as String;
+        if (mounted) {
+          setState(() {
+            _pageContent = text;
+          });
+        }
+        return 'ok';
+
+      default:
+        debugPrint('Unknown method: $method');
+        return null;
+    }
   }
 
   String _extractLyrics(Song song) {
@@ -394,9 +441,18 @@ class _PresentationAppState extends State<PresentationApp> {
 
     if (command != null) {
       try {
-        // Use native bridge MethodChannel (bypasses desktop_multi_window channel system)
-        const navigateBridge = MethodChannel('com.songviewer/navigate_bridge');
-        await navigateBridge.invokeMethod('navigate', command);
+        if (Platform.isMacOS) {
+          // Use native bridge MethodChannel (bypasses desktop_multi_window channel system)
+          const navigateBridge = MethodChannel('com.songviewer/navigate_bridge');
+          await navigateBridge.invokeMethod('navigate', command);
+        } else if (Platform.isWindows) {
+          // Use WindowMethodChannel to send navigation to main window
+          const navChannel = WindowMethodChannel(
+            'com.songviewer/nav_bridge',
+            mode: ChannelMode.unidirectional,
+          );
+          await navChannel.invokeMethod('navigate', command);
+        }
       } catch (e) {
         debugPrint('Error forwarding key event to main window: $e');
       }
