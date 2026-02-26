@@ -294,5 +294,6 @@
     "shareLink": "Sdílet odkaz",
     "shareQrCode": "Sdílet QR",
     "qrCurrentSongUrl": "URL právě přehrávané písně",
-    "qrWebAppUrl": "URL webové aplikace"
+    "qrWebAppUrl": "URL webové aplikace",
+    "generalSettings": "Obecná nastavení"
 }

@@ -7,6 +7,7 @@ import '../../widgets/ribbon_menu.dart';
 import 'home_bodies/browse_sheets_body.dart';
 import 'home_bodies/browse_youtube_body.dart';
 import 'home_bodies/edit_parts_body/edit_body.dart';
+import 'home_bodies/general_settings_body.dart';
 import 'home_bodies/groups_body.dart';
 import 'home_bodies/presentation_settings_body.dart';
 import 'home_bodies/preview_body.dart';
@@ -453,6 +454,9 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
                       break;
                     case 'presentation_settings':
                       homeBody = const PresentationSettingsBody();
+                      break;
+                    case 'general_settings':
+                      homeBody = const GeneralSettingsBody();
                       break;
                     case 'browse_youtube':
                       homeBody = PreviewBody(

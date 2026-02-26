@@ -211,5 +211,7 @@
     "shareLink": "Share link",
     "shareQrCode": "Share QR",
     "qrCurrentSongUrl": "Currently playing song URL",
-    "qrWebAppUrl": "Web application URL"
+    "qrWebAppUrl": "Web application URL",
+    "general": "General",
+    "generalSettings": "General settings"
 }

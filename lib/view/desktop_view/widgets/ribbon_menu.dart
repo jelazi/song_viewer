@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:default_project/services/constants.dart';
 import 'package:default_project/services/presentation_window_manager.dart';
 import 'package:default_project/view/mobile_view/widgets/dialogs/dialogs_export.dart';
+import 'package:default_project/view/mobile_view/widgets/dialogs/qr_code_dialog.dart';
 import 'package:default_project/view/mobile_view/widgets/dialogs/question_dialog.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:file_picker/file_picker.dart';
@@ -53,6 +54,8 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
         } else if (state.bodyName == 'users') {
           _tabController = TabController(length: 2, vsync: this, initialIndex: 1);
         } else if (state.bodyName == 'presentation_settings') {
+          _tabController = TabController(length: 2, vsync: this, initialIndex: 1);
+        } else if (state.bodyName == 'general_settings') {
           _tabController = TabController(length: 2, vsync: this, initialIndex: 1);
         } else {
           _tabController = TabController(length: 1, vsync: this);
@@ -147,14 +150,29 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
                                                     Tab(text: 'settings'.tr()),
                                                   ],
                                                 )
-                                              : TabBar(
-                                                  isScrollable: true,
-                                                  tabAlignment: TabAlignment.start,
-                                                  controller: _tabController,
-                                                  tabs: [
-                                                    Tab(text: 'home'.tr()),
-                                                  ],
-                                                ),
+                                              : state.bodyName == 'general_settings'
+                                                  ? TabBar(
+                                                      isScrollable: true,
+                                                      tabAlignment: TabAlignment.start,
+                                                      controller: _tabController,
+                                                      onTap: (index) {
+                                                        if (index == 0) {
+                                                          context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: 'preview'));
+                                                        }
+                                                      },
+                                                      tabs: [
+                                                        Tab(text: 'home'.tr()),
+                                                        Tab(text: 'settings'.tr()),
+                                                      ],
+                                                    )
+                                                  : TabBar(
+                                                      isScrollable: true,
+                                                      tabAlignment: TabAlignment.start,
+                                                      controller: _tabController,
+                                                      tabs: [
+                                                        Tab(text: 'home'.tr()),
+                                                      ],
+                                                    ),
                     ),
                     SizedBox(
                       height: 60,
@@ -206,12 +224,20 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
                                                     SettingsTabbar(),
                                                   ],
                                                 )
-                                              : TabBarView(
-                                                  controller: _tabController,
-                                                  children: const [
-                                                    HomeTabbar(),
-                                                  ],
-                                                ),
+                                              : state.bodyName == 'general_settings'
+                                                  ? TabBarView(
+                                                      controller: _tabController,
+                                                      children: const [
+                                                        HomeTabbar(),
+                                                        SettingsTabbar(),
+                                                      ],
+                                                    )
+                                                  : TabBarView(
+                                                      controller: _tabController,
+                                                      children: const [
+                                                        HomeTabbar(),
+                                                      ],
+                                                    ),
                     ),
                   ],
                 ),
@@ -392,6 +418,27 @@ class SettingsTabbar extends StatelessWidget {
                 isEnabled: true,
                 onPressed: () {
                   context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: 'presentation_settings'));
+                }),
+            RibbonButton(
+                text: 'generalSettings'.tr(),
+                icon: const Icon(
+                  Icons.settings,
+                  color: Colors.blueGrey,
+                ),
+                isEnabled: true,
+                onPressed: () {
+                  context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: 'general_settings'));
+                }),
+            const RibbonSpacer(),
+            RibbonButton(
+                text: 'qrCode'.tr(),
+                icon: const Icon(
+                  Icons.qr_code,
+                  color: Colors.orange,
+                ),
+                isEnabled: true,
+                onPressed: () {
+                  QrCodeDialog.show(context);
                 }),
           ],
         ));

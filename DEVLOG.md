@@ -17,6 +17,13 @@
   - Persisted via Hive, QR dialog reads from `SettingsBloc` state
 - Localization keys: `qrCodeTitle`, `qrCurrentSong`, `qrWebApp`, `qrCode`, `shareLink`, `shareQrCode`, `qrCurrentSongUrl`, `qrWebAppUrl` in both `cs.json` and `en.json`
 
+- **Desktop (macOS):** 
+  - Created new `GeneralSettingsBody` — separate settings body for general (non-presentation) settings, with QR URL editing
+  - QR URL settings moved out of `presentation_settings_body.dart` into `general_settings_body.dart`
+  - New "General settings" ribbon button in SettingsTabbar → opens GeneralSettingsBody
+  - New "QR kód" ribbon button in SettingsTabbar → opens QrCodeDialog directly
+  - Registered `general_settings` body in `desktop_home_page.dart` switch
+
 ### Files changed
 - `pubspec.yaml` — added `qr_flutter` dependency
 - `lib/repositories/settings_repository.dart` — added `qrCurrentSongUrl`, `qrWebAppUrl` fields with persistence
@@ -27,8 +34,12 @@
 - `lib/view/tablet_view/pages/settings_page_tablet.dart` — QR URL settings section
 - `lib/view/mobile_view/pages/settings_page.dart` — QR URL settings section
 - `lib/view/mobile_view/widgets/home_drawer.dart` — QR menu item under settings
-- `assets/lang/cs.json` — QR localization keys
-- `assets/lang/en.json` — QR localization keys
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/general_settings_body.dart` — new General settings body with QR URL editing
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/presentation_settings_body.dart` — removed QR URL section
+- `lib/view/desktop_view/pages/desktop_home_page/desktop_home_page.dart` — registered general_settings body
+- `lib/view/desktop_view/widgets/ribbon_menu.dart` — added General settings + QR ribbon buttons
+- `assets/lang/cs.json` — QR + generalSettings localization keys
+- `assets/lang/en.json` — QR + general + generalSettings localization keys
 
 ---
 
