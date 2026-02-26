@@ -1,8 +1,11 @@
+import 'dart:io' show Platform;
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:default_project/model/update_songlist_data.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:logger_pkg/logger_pkg.dart';
 
 import '../model/playlist.dart';
@@ -15,8 +18,14 @@ class FirebaseProvider {
   CollectionReference<Map<String, dynamic>> playlistCollection = FirebaseFirestore.instance.collection('playlists');
   CollectionReference<Map<String, dynamic>> groupCollection = FirebaseFirestore.instance.collection('groups');
   FirebaseFirestore inst = FirebaseFirestore.instance;
-  final DatabaseReference selectedSong = FirebaseDatabase.instance.ref().child('currentSong');
-  final DatabaseReference updateSongList = FirebaseDatabase.instance.ref().child('updateSongList');
+
+  /// Whether Firebase Realtime Database is supported on this platform.
+  static bool get _isRealtimeDbSupported => kIsWeb || !Platform.isWindows;
+
+  late final DatabaseReference? selectedSong =
+      _isRealtimeDbSupported ? FirebaseDatabase.instance.ref().child('currentSong') : null;
+  late final DatabaseReference? updateSongList =
+      _isRealtimeDbSupported ? FirebaseDatabase.instance.ref().child('updateSongList') : null;
 
   FirebaseProvider() {
     inst.settings = const Settings(
@@ -36,21 +45,25 @@ class FirebaseProvider {
       userCollection = inst.collection('users');
       playlistCollection = inst.collection('playlists');
       groupCollection = inst.collection('groups');
-      selectedSong.onValue.listen((DatabaseEvent event) {
-        final data = event.snapshot.value;
-        if (data != null && data is Map) {
-          //TODO: listener for current song on database
-        }
-      });
-      try {
-        updateSongList.onValue.listen((DatabaseEvent event) {
+      if (_isRealtimeDbSupported) {
+        selectedSong?.onValue.listen((DatabaseEvent event) {
           final data = event.snapshot.value;
           if (data != null && data is Map) {
-            //TODO: listener for update song list on database
+            //TODO: listener for current song on database
           }
         });
-      } catch (e) {
-        logger.e('Error listening to updateSongList: $e');
+        try {
+          updateSongList?.onValue.listen((DatabaseEvent event) {
+            final data = event.snapshot.value;
+            if (data != null && data is Map) {
+              //TODO: listener for update song list on database
+            }
+          });
+        } catch (e) {
+          logger.e('Error listening to updateSongList: $e');
+        }
+      } else {
+        logger.i('Firebase Realtime Database is not supported on Windows – skipping listeners');
       }
     } catch (e) {
       logger.e('$e');
@@ -58,8 +71,9 @@ class FirebaseProvider {
   }
 
   Future<void> setUpdateSongList(UpdateSongListData updateSongListData) async {
+    if (!_isRealtimeDbSupported) return;
     try {
-      await updateSongList.set(updateSongListData.toJson());
+      await updateSongList?.set(updateSongListData.toJson());
     } catch (e) {
       logger.e('$e');
     }
@@ -81,11 +95,13 @@ class FirebaseProvider {
   }
 
   void saveNewSelectedSong(String id, String title, String interpret, String lyricsWithoutChords) {
-    selectedSong.update({'song': id, 'title': title, 'interpret': interpret, 'lyricsWithoutChords': lyricsWithoutChords});
+    if (!_isRealtimeDbSupported) return;
+    selectedSong?.update({'song': id, 'title': title, 'interpret': interpret, 'lyricsWithoutChords': lyricsWithoutChords});
   }
 
   void removeSelectedSong() {
-    selectedSong.update({'song': '', 'title': '', 'interpret': '', 'lyricsWithoutChords': ''});
+    if (!_isRealtimeDbSupported) return;
+    selectedSong?.update({'song': '', 'title': '', 'interpret': '', 'lyricsWithoutChords': ''});
   }
 
   Future<bool> updateUser(User user) async {

@@ -1,5 +1,54 @@
 # Development Log
 
+## 2026-02-26 - Windows build setup & Inno Setup installer
+
+### What was done
+- Fixed Windows app name from "default_project" to "Songs Viewer" / "songs_viewer" in:
+  - `windows/CMakeLists.txt` — project name and BINARY_NAME
+  - `windows/runner/main.cpp` — window title
+  - `windows/runner/Runner.rc` — version info (CompanyName, FileDescription, InternalName, OriginalFilename, ProductName)
+- Generated Windows app icon from `assets/logos/ic_launcher.png` via `flutter_launcher_icons`
+  - Added `windows:` section to `flutter_launcher_icons.yaml`
+  - Produced `windows/runner/resources/app_icon.ico`
+- Fixed `logger_pkg` path in `pubspec.yaml` from `../../logger` to `../logger`
+- Generated all 13 `.g.dart` files via `dart run build_runner build --delete-conflicting-outputs`
+- Created `lib/firebase_options.dart` with Windows platform support (using web Firebase config)
+- Created Inno Setup script at `installers/SongsViewer.iss`
+  - AppName: "Songs Viewer", version 1.1.25
+  - Source: `build\windows\x64\runner\Release\*`
+  - Output: `C:\Users\jelazi\Workspace\Setups\SongsViewerSetup_1.1.25.exe`
+  - Czech + English language support
+  - Desktop icon option, uninstall with user data cleanup
+
+### Build issue (RESOLVED)
+- Windows release build initially failed with MSVC LNK2019 linker errors on Firebase C++ SDK
+- Root cause: Firebase C++ SDK pre-built libs require MSVC 19.40+ (VS 2022 17.10+), but system had MSVC 19.39 (VS 2022 17.9)
+- Fix: Updated Visual Studio 2022 from 17.9 to 17.14 (MSVC 14.44 / compiler 19.44)
+- After VS update, `flutter build windows --release` completed successfully in ~307 seconds
+
+### Current state
+- Windows release build successful: `build\windows\x64\runner\Release\songs_viewer.exe` (14.4 MB)
+- App launches and runs correctly, window title shows "Songs Viewer", process is responsive
+- Only minor warnings: CMake deprecation warning in Firebase SDK CMakeLists.txt, ZIP decompression warning (-5) during extraction (non-fatal)
+- 3 analyzer warnings in generated .g.dart files (unused JSON serialization functions) — non-blocking
+- Inno Setup script ready at `installers/SongsViewer.iss`
+
+### Pending / Next steps
+- Compile Inno Setup installer (`installers/SongsViewer.iss`) to produce `SongsViewerSetup_1.1.25.exe`
+- Full runtime testing with Firebase connectivity
+- Consider updating pubspec.yaml `name` from `default_project` to `songs_viewer` (cosmetic)
+
+### Files changed
+- `pubspec.yaml` — logger_pkg path fix
+- `windows/CMakeLists.txt` — project name → songs_viewer
+- `windows/runner/main.cpp` — window title → "Songs Viewer"
+- `windows/runner/Runner.rc` — version info → "Songs Viewer"
+- `flutter_launcher_icons.yaml` — added windows section
+- `lib/firebase_options.dart` — new file, Firebase config with Windows support
+- `installers/SongsViewer.iss` — new file, Inno Setup installer script
+
+---
+
 ## 2026-02-26 - Add QR code button for tablet, iPhone and Android
 
 ### What was done

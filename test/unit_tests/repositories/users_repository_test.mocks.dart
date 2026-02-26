@@ -984,6 +984,30 @@ class MockSettingsRepository extends _i1.Mock
       ) as bool);
 
   @override
+  bool get presentationAutoPageByParagraphs => (super.noSuchMethod(
+        Invocation.getter(#presentationAutoPageByParagraphs),
+        returnValue: false,
+      ) as bool);
+
+  @override
+  String get qrCurrentSongUrl => (super.noSuchMethod(
+        Invocation.getter(#qrCurrentSongUrl),
+        returnValue: _i16.dummyValue<String>(
+          this,
+          Invocation.getter(#qrCurrentSongUrl),
+        ),
+      ) as String);
+
+  @override
+  String get qrWebAppUrl => (super.noSuchMethod(
+        Invocation.getter(#qrWebAppUrl),
+        returnValue: _i16.dummyValue<String>(
+          this,
+          Invocation.getter(#qrWebAppUrl),
+        ),
+      ) as String);
+
+  @override
   void getInfoApp() => super.noSuchMethod(
         Invocation.method(
           #getInfoApp,

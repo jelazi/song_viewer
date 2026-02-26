@@ -46,14 +46,14 @@ class SongsRepository {
 
   void _init() {
     updateSongListData = _hiveProvider.getUpdateSongListData('updateSongListData') ?? UpdateSongListData(DateTime(1900), {});
-    _firebaseProvider.selectedSong.onValue.listen((event) {
+    _firebaseProvider.selectedSong?.onValue.listen((event) {
       final data = event.snapshot.value;
       if (data != null && data is Map && data['song'] != null) {
         selectSongController.sink.add(data['song']);
         selectedSongId = data['song'];
       }
     });
-    _firebaseProvider.updateSongList.onValue.listen((event) {
+    _firebaseProvider.updateSongList?.onValue.listen((event) {
       final data = event.snapshot.value;
       if (data != null && data is Map) {
         try {

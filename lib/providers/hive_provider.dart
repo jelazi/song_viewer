@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:default_project/model/update_songlist_data.dart';
 import 'package:default_project/model/user.dart';
 import 'package:default_project/model/web_interpret.dart';
 import 'package:default_project/model/web_song.dart';
 import 'package:hive/hive.dart';
+import 'package:logger_pkg/logger_pkg.dart';
+import 'package:path_provider/path_provider.dart' as path_provider;
 
 class HiveProvider {
   late Box settingsBox;
@@ -10,10 +14,27 @@ class HiveProvider {
   late Box webSongBox;
   late Box interpretWebBox;
   Future<void> initHiveBox() async {
-    settingsBox = await Hive.openBox('settingsBox');
-    transposeBox = await Hive.openBox('transposeBox');
-    webSongBox = await Hive.openBox('webSongBox');
-    interpretWebBox = await Hive.openBox('interpretWebBox');
+    settingsBox = await _openBoxSafe('settingsBox');
+    transposeBox = await _openBoxSafe('transposeBox');
+    webSongBox = await _openBoxSafe('webSongBox');
+    interpretWebBox = await _openBoxSafe('interpretWebBox');
+  }
+
+  /// Opens a Hive box, removing stale lock files on failure and retrying once.
+  Future<Box> _openBoxSafe(String name) async {
+    try {
+      return await Hive.openBox(name);
+    } on PathAccessException catch (e) {
+      logger.w('Hive box "$name" locked, removing stale lock and retrying: $e');
+      final dir = await path_provider.getApplicationDocumentsDirectory();
+      final lockFile = File('${dir.path}/$name.lock');
+      if (await lockFile.exists()) {
+        try {
+          await lockFile.delete();
+        } catch (_) {}
+      }
+      return await Hive.openBox(name);
+    }
   }
 
   dynamic getSettingsValue(String name) {
