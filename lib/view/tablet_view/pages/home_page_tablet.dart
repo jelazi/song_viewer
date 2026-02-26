@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 
 import '../../../blocs/export_blocs.dart';
 import '../../../services/constants.dart';
+import '../../mobile_view/widgets/dialogs/qr_code_dialog.dart';
 import '../widgets/filter_field_tablet.dart';
 import '../widgets/song_card_tablet.dart';
 import '../widgets/song_card_tablet_web.dart';
@@ -108,20 +109,41 @@ class _HomePageTabletState extends State<HomePageTablet> {
                                 ),
                               ),
                             ),
-                            MouseRegion(
-                              cursor: SystemMouseCursors.click,
-                              child: GestureDetector(
-                                onTap: () {
-                                  Navigator.pushNamed(context, '/settingsPage');
-                                },
-                                child: Container(
-                                  height: 40,
-                                  width: 40,
-                                  decoration: BoxDecoration(border: Border.all(color: AppColor.grey3Color), borderRadius: BorderRadius.circular(5)),
-                                  padding: EdgeInsets.zero,
-                                  child: const Icon(Icons.settings, color: AppColor.grey2Color, size: 14),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                MouseRegion(
+                                  cursor: SystemMouseCursors.click,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      QrCodeDialog.show(context);
+                                    },
+                                    child: Container(
+                                      height: 40,
+                                      width: 40,
+                                      decoration: BoxDecoration(border: Border.all(color: AppColor.grey3Color), borderRadius: BorderRadius.circular(5)),
+                                      padding: EdgeInsets.zero,
+                                      child: const Icon(Icons.qr_code, color: AppColor.grey2Color, size: 14),
+                                    ),
+                                  ),
                                 ),
-                              ),
+                                const SizedBox(width: 8),
+                                MouseRegion(
+                                  cursor: SystemMouseCursors.click,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      Navigator.pushNamed(context, '/settingsPage');
+                                    },
+                                    child: Container(
+                                      height: 40,
+                                      width: 40,
+                                      decoration: BoxDecoration(border: Border.all(color: AppColor.grey3Color), borderRadius: BorderRadius.circular(5)),
+                                      padding: EdgeInsets.zero,
+                                      child: const Icon(Icons.settings, color: AppColor.grey2Color, size: 14),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),

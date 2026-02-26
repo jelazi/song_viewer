@@ -1,5 +1,37 @@
 # Development Log
 
+## 2026-02-26 - Add QR code button for tablet, iPhone and Android
+
+### What was done
+- Added `qr_flutter` package dependency for QR code generation
+- Created `QrCodeDialog` with two expandable QR code sections:
+  - **Právě přehrávaná píseň** — `https://your-site.example/` (expanded by default)
+  - **Webová aplikace** — `https://songsviewerweb.web.app/`
+- Each section is collapsible (expand/collapse) and shows clickable URL link (opens in browser via `url_launcher`)
+- Share buttons: "Sdílet odkaz" (share URL) and "Sdílet QR" (share QR code as PNG image)
+- **Tablet (iPad):** QR code button next to settings button on home page left panel
+- **Mobile (iPhone/Android):** QR code menu item in drawer, placed right below Settings
+- **QR URLs are editable in Settings** — new "QR kód" section in settings on both tablet and mobile
+  - `qrCurrentSongUrl` — URL for currently playing song (default: `https://your-site.example/`)
+  - `qrWebAppUrl` — URL for web application (default: `https://songsviewerweb.web.app/`)
+  - Persisted via Hive, QR dialog reads from `SettingsBloc` state
+- Localization keys: `qrCodeTitle`, `qrCurrentSong`, `qrWebApp`, `qrCode`, `shareLink`, `shareQrCode`, `qrCurrentSongUrl`, `qrWebAppUrl` in both `cs.json` and `en.json`
+
+### Files changed
+- `pubspec.yaml` — added `qr_flutter` dependency
+- `lib/repositories/settings_repository.dart` — added `qrCurrentSongUrl`, `qrWebAppUrl` fields with persistence
+- `lib/blocs/settings_bloc/settings_state.dart` — added `qrCurrentSongUrl`, `qrWebAppUrl` to state
+- `lib/blocs/settings_bloc/settings_bloc.dart` — emit QR URL values
+- `lib/view/mobile_view/widgets/dialogs/qr_code_dialog.dart` — QR code dialog reads URLs from SettingsBloc
+- `lib/view/tablet_view/pages/home_page_tablet.dart` — QR button next to settings
+- `lib/view/tablet_view/pages/settings_page_tablet.dart` — QR URL settings section
+- `lib/view/mobile_view/pages/settings_page.dart` — QR URL settings section
+- `lib/view/mobile_view/widgets/home_drawer.dart` — QR menu item under settings
+- `assets/lang/cs.json` — QR localization keys
+- `assets/lang/en.json` — QR localization keys
+
+---
+
 ## 2026-02-23 - Add page titles to groups_body and users_body
 
 ### What was done

@@ -3,6 +3,7 @@ import 'package:default_project/services/constants.dart';
 import 'package:default_project/services/enums.dart';
 import 'package:default_project/view/desktop_view/widgets/my_dropdown_field.dart';
 import 'package:default_project/view/mobile_view/widgets/dialogs/dialogs_export.dart';
+import 'package:default_project/view/mobile_view/widgets/dialogs/qr_code_dialog.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -100,6 +101,19 @@ class _HomeDrawerState extends State<HomeDrawer> {
               onTap: () {
                 Navigator.pop(context);
                 Navigator.pushNamed(context, '/settingsPage');
+              },
+            ),
+            ListTile(
+              title: Row(children: [
+                const Icon(Icons.qr_code),
+                const SizedBox(
+                  width: 10,
+                ),
+                Text('qrCode'.tr()),
+              ]),
+              onTap: () {
+                Navigator.pop(context);
+                QrCodeDialog.show(context);
               },
             ),
             ListTile(

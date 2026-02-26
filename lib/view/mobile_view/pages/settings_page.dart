@@ -179,6 +179,37 @@ class _SettingsPageMobileState extends State<SettingsPageMobile> {
                         switchValue: state.autoHideTopBar),
                   ],
                 ),
+                SettingsSection(
+                  title: 'qrCodeTitle'.tr(),
+                  tiles: [
+                    SettingsTile(
+                      title: 'qrCurrentSongUrl'.tr(),
+                      onPressed: (BuildContext context) {
+                        _showEditUrlDialog(
+                          context: context,
+                          title: 'qrCurrentSongUrl'.tr(),
+                          currentValue: state.qrCurrentSongUrl,
+                          settingsKey: 'qrCurrentSongUrl',
+                        );
+                      },
+                      iconData: Icons.link,
+                      value: state.qrCurrentSongUrl,
+                    ),
+                    SettingsTile(
+                      title: 'qrWebAppUrl'.tr(),
+                      onPressed: (BuildContext context) {
+                        _showEditUrlDialog(
+                          context: context,
+                          title: 'qrWebAppUrl'.tr(),
+                          currentValue: state.qrWebAppUrl,
+                          settingsKey: 'qrWebAppUrl',
+                        );
+                      },
+                      iconData: Icons.link,
+                      value: state.qrWebAppUrl,
+                    ),
+                  ],
+                ),
               ],
             );
           },
@@ -241,5 +272,34 @@ class _SettingsPageMobileState extends State<SettingsPageMobile> {
         ),
       );
     });
+  }
+
+  void _showEditUrlDialog({
+    required BuildContext context,
+    required String title,
+    required String currentValue,
+    required String settingsKey,
+  }) {
+    final controller = TextEditingController(text: currentValue);
+    showDialog(
+      context: context,
+      builder: (context) {
+        return EditDialog(
+          title: title,
+          okClick: () {
+            context.read<SettingsBloc>().add(ChangeSettingsValue(settingsKey, controller.text));
+          },
+          widgetContent: TextField(
+            controller: controller,
+            decoration: InputDecoration(
+              hintText: 'https://',
+              border: const OutlineInputBorder(),
+              labelText: 'URL',
+            ),
+            keyboardType: TextInputType.url,
+          ),
+        );
+      },
+    );
   }
 }

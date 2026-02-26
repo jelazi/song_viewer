@@ -203,5 +203,13 @@
     "modLyrics": "Lyrics",
     "modOriginalLyrics": "Original lyrics",
     "modYoutubeVideos": "YouTube videos",
-    "modSheets": "Sheets"
+    "modSheets": "Sheets",
+    "qrCodeTitle": "QR Code",
+    "qrCurrentSong": "Currently playing song",
+    "qrWebApp": "Web application",
+    "qrCode": "QR Code",
+    "shareLink": "Share link",
+    "shareQrCode": "Share QR",
+    "qrCurrentSongUrl": "Currently playing song URL",
+    "qrWebAppUrl": "Web application URL"
 }

@@ -37,6 +37,10 @@ class SettingsRepository {
   bool _presentationShowTitle = true;
   bool _presentationAutoPageByParagraphs = false;
 
+  // QR code URLs
+  String _qrCurrentSongUrl = 'https://your-site.example/';
+  String _qrWebAppUrl = 'https://songsviewerweb.web.app/';
+
   SettingsRepository({
     required this.hiveProvider,
   });
@@ -110,6 +114,9 @@ class SettingsRepository {
   bool get presentationShowTitle => _presentationShowTitle;
   bool get presentationAutoPageByParagraphs => _presentationAutoPageByParagraphs;
 
+  String get qrCurrentSongUrl => _qrCurrentSongUrl;
+  String get qrWebAppUrl => _qrWebAppUrl;
+
   Future<void> loadLocalSettings() async {
     _previewFontTextSize = await hiveProvider.getSettingsValue('previewFontTextSize') ?? 20;
     _previewFontChordSize = await hiveProvider.getSettingsValue('previewFontChordSize') ?? 20;
@@ -137,6 +144,10 @@ class SettingsRepository {
     _presentationShowPageNumber = await hiveProvider.getSettingsValue('presentationShowPageNumber') ?? true;
     _presentationShowTitle = await hiveProvider.getSettingsValue('presentationShowTitle') ?? true;
     _presentationAutoPageByParagraphs = await hiveProvider.getSettingsValue('presentationAutoPageByParagraphs') ?? false;
+
+    // QR code URLs
+    _qrCurrentSongUrl = await hiveProvider.getSettingsValue('qrCurrentSongUrl') ?? 'https://your-site.example/';
+    _qrWebAppUrl = await hiveProvider.getSettingsValue('qrWebAppUrl') ?? 'https://songsviewerweb.web.app/';
   }
 
   void setCurrentUser(User user) {
@@ -289,6 +300,18 @@ class SettingsRepository {
         {
           _presentationAutoPageByParagraphs = value;
           hiveProvider.setSettingsValue('presentationAutoPageByParagraphs', value);
+          break;
+        }
+      case 'qrCurrentSongUrl':
+        {
+          _qrCurrentSongUrl = value;
+          hiveProvider.setSettingsValue('qrCurrentSongUrl', value);
+          break;
+        }
+      case 'qrWebAppUrl':
+        {
+          _qrWebAppUrl = value;
+          hiveProvider.setSettingsValue('qrWebAppUrl', value);
           break;
         }
     }

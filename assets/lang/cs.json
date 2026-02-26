@@ -286,5 +286,13 @@
     "modLyrics": "Text písně",
     "modOriginalLyrics": "Originální text",
     "modYoutubeVideos": "YouTube videa",
-    "modSheets": "Noty"
+    "modSheets": "Noty",
+    "qrCodeTitle": "QR kód",
+    "qrCurrentSong": "Právě přehrávaná píseň",
+    "qrWebApp": "Webová aplikace",
+    "qrCode": "QR kód",
+    "shareLink": "Sdílet odkaz",
+    "shareQrCode": "Sdílet QR",
+    "qrCurrentSongUrl": "URL právě přehrávané písně",
+    "qrWebAppUrl": "URL webové aplikace"
 }
