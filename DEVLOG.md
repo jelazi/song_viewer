@@ -1,5 +1,78 @@
 # Development Log
 
+## 2026-02-26 - Windows presentation window borderless fullscreen
+
+### What was done
+- Presentation window on Windows now opens in borderless fullscreen on the target screen (matching macOS behavior)
+- Main window uses `screen_retriever` to get screen bounds for the target `screenIndex`
+- Screen bounds (left, top, width, height) are passed to the sub-window via `WindowConfiguration.arguments`
+- Sub-window uses `dart:ffi` Win32 APIs to remove window decorations and position the window to fill the entire target screen
+- REUSE path: main window sends `enter_fullscreen` command via TCP bridge with screen bounds, sub-window re-enters fullscreen
+
+### Files changed
+- **`lib/services/win32_fullscreen.dart`** (NEW) — `enterFullscreenWin32()` using `dart:ffi` to call `GetForegroundWindow`, `GetWindowLongW`, `SetWindowLongW`, `SetWindowPos`
+- **`lib/services/presentation_window_manager.dart`** — `_getScreenBounds()` helper using `screen_retriever`, passes bounds in initData, sends `enter_fullscreen` on REUSE path
+- **`lib/main.dart`** — `_enterFullscreenFromArgs()` / `_applyFullscreen()` in sub-window, handles `enter_fullscreen` bridge command
+
+### Current state
+- Windows presentation window opens borderless fullscreen on the correct screen
+- REUSE path also re-enters fullscreen with correct screen bounds
+
+---
+
+## 2026-02-26 - Replace broken WindowMethodChannel with TCP bridge (Windows)
+
+### What was done
+- Replaced `WindowController.invokeMethod` / `WindowMethodChannel` cross-window messaging with a localhost TCP socket bridge on Windows
+- Root cause: `desktop_multi_window` v0.3.0's `WindowMethodChannel` system always fails with `WindowChannelException(CHANNEL_UNREGISTERED)` on Windows — the native `WindowChannelPlugin` does not properly share channel registrations across Flutter engines, even with retry logic (tested 4 attempts over 3s)
+- Solution: TCP localhost bridge using line-delimited JSON over `ServerSocket`/`Socket` — reliable, no dependency on `desktop_multi_window` channel system
+
+### How it works
+1. Main window starts a TCP server on `localhost:0` (random free port)
+2. Bridge port is included in `WindowConfiguration(arguments: initData)` passed to sub-window
+3. Sub-window reads port from arguments and connects via `Socket.connect`
+4. Bidirectional communication: main→sub for page/song updates, sub→main for keyboard navigation
+5. Messages are JSON objects delimited by newlines (`writeln` / `LineSplitter`)
+
+### Files changed
+- **`lib/services/presentation_bridge.dart`** (NEW) — TCP bridge service: `startServer()`, `connectToServer(port)`, `send(method, data)`, `onMessage` callback, `stop()`
+- **`lib/services/presentation_window_manager.dart`**:
+  - Starts bridge server in CREATE PATH, passes port in window arguments
+  - Handles incoming navigation via `_bridge.onMessage` → `onNavigationCommand` callback
+  - `sendPageToPresentation` / `sendSongToPresentation` use `_bridge.send()` instead of `_invokeWithRetry`
+  - `destroyPresentationWindow` stops bridge
+  - Removed `_invokeWithRetry` method entirely
+- **`lib/main.dart`** (sub-window):
+  - `_setupWindowsBridge()` replaces `_setupWindowsMessageHandler()` — connects to bridge, routes messages to `_handleIncomingMethod`
+  - Navigation key events use `PresentationBridge().send('navigate', command)` instead of `WindowMethodChannel`
+- **`lib/view/desktop_view/pages/desktop_home_page/desktop_home_page.dart`**:
+  - Navigation via `PresentationWindowManager().onNavigationCommand` callback instead of `WindowMethodChannel`
+  - Removed `desktop_multi_window` import (no longer needed)
+
+### Current state
+- Windows: presentation window opens, receives initial data via arguments, subsequent page updates via TCP bridge, keyboard navigation forwarded back to main window via bridge
+- macOS: completely unchanged — uses native Swift bridge as before
+- Bridge stays alive when window is hidden (reuse path) — instant reconnection not needed
+
+### Known issues / Pending
+- Screen positioning not yet implemented on Windows (window appears at default position)
+- Window close detection on Windows (currently hide-only)
+
+---
+
+## 2026-02-26 - Fix WindowChannelException on backup page send (Windows)
+
+### What was done
+- Fixed `WindowChannelException(CHANNEL_UNREGISTERED)` when opening presentation window on Windows
+- Root cause: Main window tried to send backup page data via `WindowController.invokeMethod` before the sub-window had registered its `setWindowMethodHandler` (race condition)
+- On Windows, initial data already arrives reliably via `WindowConfiguration(arguments: initData)` parsed in `_loadInitialData()` — backup send is unnecessary
+- Added `_invokeWithRetry` helper for `sendPageToPresentation` / `sendSongToPresentation` — retries up to 3 times with exponential backoff (500ms, 1s, 1.5s) in case handler isn't registered yet
+
+### Files changed
+- `lib/services/presentation_window_manager.dart` — skip backup send on Windows, add retry logic
+
+---
+
 ## 2026-02-26 - Fix Windows presentation window MissingPluginException
 
 ### What was done

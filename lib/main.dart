@@ -12,7 +12,9 @@ import 'package:default_project/repositories/songs_repository.dart';
 import 'package:default_project/repositories/user_repository.dart';
 import 'package:default_project/services/constants.dart';
 import 'package:default_project/services/enums.dart';
+import 'package:default_project/services/presentation_bridge.dart';
 import 'package:default_project/services/presentation_window_manager.dart';
+import 'package:default_project/services/win32_fullscreen.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -150,6 +152,13 @@ class _PresentationAppState extends State<PresentationApp> {
         final controller = await WindowController.fromCurrentEngine();
         await controller.show();
         debugPrint('Window show() called after first frame');
+
+        // On Windows: enter borderless fullscreen on the target screen
+        if (Platform.isWindows) {
+          // Small delay to ensure the window is fully rendered and foreground
+          await Future.delayed(const Duration(milliseconds: 200));
+          _enterFullscreenFromArgs();
+        }
       } catch (e) {
         debugPrint('Error showing window after frame: $e');
       }
@@ -161,6 +170,30 @@ class _PresentationAppState extends State<PresentationApp> {
         }
       });
     });
+  }
+
+  /// Enter borderless fullscreen using screen bounds from window arguments.
+  void _enterFullscreenFromArgs() {
+    try {
+      final arguments = PresentationApp.cachedArguments ?? '';
+      if (arguments.isEmpty) return;
+      final data = jsonDecode(arguments) as Map<String, dynamic>;
+      _applyFullscreen(data['screenBounds']);
+    } catch (e) {
+      debugPrint('Error entering fullscreen from args: $e');
+    }
+  }
+
+  /// Apply borderless fullscreen with the given screen bounds map.
+  void _applyFullscreen(dynamic screenBoundsData) {
+    if (screenBoundsData == null || screenBoundsData is! Map) return;
+    final bounds = Map<String, dynamic>.from(screenBoundsData);
+    enterFullscreenWin32(
+      left: (bounds['left'] as num).toInt(),
+      top: (bounds['top'] as num).toInt(),
+      width: (bounds['width'] as num).toInt(),
+      height: (bounds['height'] as num).toInt(),
+    );
   }
 
   void _loadInitialData() {
@@ -231,32 +264,39 @@ class _PresentationAppState extends State<PresentationApp> {
       });
     }
 
-    // On Windows: use WindowController cross-window messaging
+    // On Windows: connect to TCP bridge for cross-window messaging
     if (Platform.isWindows) {
-      _setupWindowsMessageHandler();
+      _setupWindowsBridge();
     }
   }
 
-  /// Set up message handler on Windows using WindowController's built-in channel
-  Future<void> _setupWindowsMessageHandler() async {
+  /// Set up TCP bridge connection on Windows (replaces broken WindowMethodChannel)
+  Future<void> _setupWindowsBridge() async {
     try {
-      final controller = await WindowController.fromCurrentEngine();
-      await controller.setWindowMethodHandler((call) async {
-        debugPrint('PresentationApp received method via WindowController: ${call.method}');
-        // Arguments from WindowController may come as JSON-encoded strings
-        dynamic args = call.arguments;
-        if (args is String) {
-          try {
-            args = jsonDecode(args);
-          } catch (_) {
-            // Keep as string if not valid JSON
-          }
+      final arguments = PresentationApp.cachedArguments ?? '';
+      if (arguments.isEmpty) return;
+
+      final data = jsonDecode(arguments) as Map<String, dynamic>;
+      final bridgePort = data['bridgePort'] as int?;
+      if (bridgePort == null) {
+        debugPrint('No bridgePort in arguments, cannot connect to bridge');
+        return;
+      }
+
+      final bridge = PresentationBridge();
+      await bridge.connectToServer(bridgePort);
+      bridge.onMessage = (method, msgData) {
+        debugPrint('PresentationApp received via bridge: $method');
+        if (method == 'enter_fullscreen') {
+          // REUSE path: main window sends screen bounds for fullscreen re-entry
+          _applyFullscreen(msgData);
+          return;
         }
-        return _handleIncomingMethod(call.method, args);
-      });
-      debugPrint('Windows WindowController handler setup complete');
+        _handleIncomingMethod(method, msgData);
+      };
+      debugPrint('Windows TCP bridge connected on port $bridgePort');
     } catch (e) {
-      debugPrint('Error setting up Windows message handler: $e');
+      debugPrint('Error setting up Windows bridge: $e');
     }
   }
 
@@ -446,12 +486,8 @@ class _PresentationAppState extends State<PresentationApp> {
           const navigateBridge = MethodChannel('com.songviewer/navigate_bridge');
           await navigateBridge.invokeMethod('navigate', command);
         } else if (Platform.isWindows) {
-          // Use WindowMethodChannel to send navigation to main window
-          const navChannel = WindowMethodChannel(
-            'com.songviewer/nav_bridge',
-            mode: ChannelMode.unidirectional,
-          );
-          await navChannel.invokeMethod('navigate', command);
+          // Use TCP bridge to send navigation to main window
+          PresentationBridge().send('navigate', command);
         }
       } catch (e) {
         debugPrint('Error forwarding key event to main window: $e');

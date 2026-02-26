@@ -4,9 +4,11 @@ import 'dart:io';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:screen_retriever/screen_retriever.dart';
 
 import '../blocs/desktop_ribbon_menu/desktop_ribbon_menu_bloc.dart';
 import '../model/song/song.dart';
+import 'presentation_bridge.dart';
 
 /// Native bridge channel: main window Dart → native → sub-window Dart.
 /// Used on macOS only. On Windows, DesktopMultiWindow cross-window messaging is used.
@@ -28,6 +30,13 @@ class PresentationWindowManager {
 
   // Bloc reference for state updates
   DesktopRibbonMenuBloc? _ribbonMenuBloc;
+
+  // TCP bridge for cross-window communication on Windows
+  final PresentationBridge _bridge = PresentationBridge();
+
+  /// Callback for navigation commands received from the presentation window (Windows).
+  /// Set by the main window's home page to handle forward/backward/escape.
+  void Function(String command)? onNavigationCommand;
 
   /// Set the bloc reference
   void setBloc(DesktopRibbonMenuBloc bloc) {
@@ -62,7 +71,11 @@ class PresentationWindowManager {
             await _bridgeChannel.invokeMethod('show_reposition_window', screenIndex);
           } else if (Platform.isWindows) {
             await _presentationWindowController!.show();
-            // TODO: Add screen positioning for Windows presentation window
+            // Send fullscreen command with screen bounds via bridge
+            final screenBounds = await _getScreenBounds(screenIndex);
+            if (screenBounds != null) {
+              _bridge.send('enter_fullscreen', screenBounds);
+            }
           }
         } catch (e) {
           debugPrint('Error showing/repositioning window: $e');
@@ -101,6 +114,23 @@ class PresentationWindowManager {
         await _bridgeChannel.invokeMethod('setScreenIndex', screenIndex);
       }
 
+      // On Windows: start TCP bridge server, get screen bounds, include in window arguments
+      int? bridgePort;
+      Map<String, int>? screenBounds;
+      if (Platform.isWindows) {
+        bridgePort = await _bridge.startServer();
+        debugPrint('TCP bridge server started on port $bridgePort');
+        screenBounds = await _getScreenBounds(screenIndex);
+        // Handle navigation commands from the sub-window
+        _bridge.onMessage = (method, data) {
+          if (method == 'navigate') {
+            final command = data as String;
+            debugPrint('Bridge received navigation: $command');
+            onNavigationCommand?.call(command);
+          }
+        };
+      }
+
       // Create new window with initial data (including screenIndex for Swift positioning)
       final initData = jsonEncode({
         'title': title,
@@ -112,6 +142,8 @@ class PresentationWindowManager {
         'totalPages': totalPages,
         'linesPerPage': linesPerPage,
         'screenIndex': screenIndex,
+        if (bridgePort != null) 'bridgePort': bridgePort,
+        if (screenBounds != null) 'screenBounds': screenBounds,
       });
 
       final window = await WindowController.create(WindowConfiguration(
@@ -151,17 +183,9 @@ class PresentationWindowManager {
           debugPrint('Error sending backup initial page: $e');
         });
       } else if (Platform.isWindows) {
-        // On Windows, use WindowController cross-window messaging with a delay
-        Future.delayed(const Duration(seconds: 2), () async {
-          if (_presentationWindowController != null && _isPresenting) {
-            try {
-              await _presentationWindowController!.invokeMethod('update_page', jsonEncode(backupPageData));
-              debugPrint('Backup initial page sent via WindowController');
-            } catch (e) {
-              debugPrint('Error sending backup initial page: $e');
-            }
-          }
-        });
+        // On Windows, initial data is already delivered reliably via WindowConfiguration.arguments
+        // (parsed by sub-window in _loadInitialData). No backup send needed.
+        debugPrint('Windows: skipping backup send — initial data delivered via window arguments');
       }
 
       if (context.mounted) {
@@ -223,7 +247,7 @@ class PresentationWindowManager {
       if (Platform.isMacOS) {
         await _bridgeChannel.invokeMethod('update_page', pageData);
       } else if (Platform.isWindows) {
-        await _presentationWindowController!.invokeMethod('update_page', jsonEncode(pageData));
+        _bridge.send('update_page', pageData);
       }
       debugPrint('Page sent successfully');
     } catch (e) {
@@ -243,7 +267,7 @@ class PresentationWindowManager {
       if (Platform.isMacOS) {
         await _bridgeChannel.invokeMethod('update_song', song.toJson());
       } else if (Platform.isWindows) {
-        await _presentationWindowController!.invokeMethod('update_song', jsonEncode(song.toJson()));
+        _bridge.send('update_song', song.toJson());
       }
       debugPrint('Song sent successfully');
 
@@ -303,10 +327,11 @@ class PresentationWindowManager {
         await _bridgeChannel.invokeMethod('close_window_with_exit');
         debugPrint('Window destroyed by native bridge');
       } else if (Platform.isWindows) {
-        // On Windows, hide the window (no native close available)
+        // Stop TCP bridge and hide the window
+        await _bridge.stop();
         await _presentationWindowController?.hide();
         _presentationWindowController = null;
-        debugPrint('Window hidden and references cleared');
+        debugPrint('Bridge stopped, window hidden and references cleared');
       }
     } catch (e) {
       debugPrint('Error destroying window: $e');
@@ -325,4 +350,25 @@ class PresentationWindowManager {
 
   /// Get presentation window controller
   WindowController? get presentationWindow => _presentationWindowController;
+
+  /// Get the screen bounds for the target screen index using screen_retriever.
+  Future<Map<String, int>?> _getScreenBounds(int screenIndex) async {
+    try {
+      final displays = await screenRetriever.getAllDisplays();
+      final target = screenIndex < displays.length
+          ? displays[screenIndex]
+          : displays.first;
+      final pos = target.visiblePosition ?? const Offset(0, 0);
+      final size = target.size;
+      return {
+        'left': pos.dx.toInt(),
+        'top': pos.dy.toInt(),
+        'width': size.width.toInt(),
+        'height': size.height.toInt(),
+      };
+    } catch (e) {
+      debugPrint('Error getting screen bounds: $e');
+      return null;
+    }
+  }
 }
