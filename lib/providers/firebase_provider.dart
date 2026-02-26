@@ -22,10 +22,8 @@ class FirebaseProvider {
   /// Whether Firebase Realtime Database is supported on this platform.
   static bool get _isRealtimeDbSupported => kIsWeb || !Platform.isWindows;
 
-  late final DatabaseReference? selectedSong =
-      _isRealtimeDbSupported ? FirebaseDatabase.instance.ref().child('currentSong') : null;
-  late final DatabaseReference? updateSongList =
-      _isRealtimeDbSupported ? FirebaseDatabase.instance.ref().child('updateSongList') : null;
+  late final DatabaseReference? selectedSong = _isRealtimeDbSupported ? FirebaseDatabase.instance.ref().child('currentSong') : null;
+  late final DatabaseReference? updateSongList = _isRealtimeDbSupported ? FirebaseDatabase.instance.ref().child('updateSongList') : null;
 
   FirebaseProvider() {
     inst.settings = const Settings(
