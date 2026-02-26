@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io' show Platform;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -11,6 +12,7 @@ import 'package:logger_pkg/logger_pkg.dart';
 import '../model/playlist.dart';
 import '../model/song/song.dart';
 import '../model/user.dart';
+import 'firebase_rtdb_rest_provider.dart';
 
 class FirebaseProvider {
   CollectionReference<Map<String, dynamic>> songCollection = FirebaseFirestore.instance.collection('songs');
@@ -19,11 +21,28 @@ class FirebaseProvider {
   CollectionReference<Map<String, dynamic>> groupCollection = FirebaseFirestore.instance.collection('groups');
   FirebaseFirestore inst = FirebaseFirestore.instance;
 
-  /// Whether Firebase Realtime Database is supported on this platform.
-  static bool get _isRealtimeDbSupported => kIsWeb || !Platform.isWindows;
+  /// Whether the native Firebase Realtime Database SDK is supported.
+  static bool get _isNativeRtdbSupported => kIsWeb || !Platform.isWindows;
 
-  late final DatabaseReference? selectedSong = _isRealtimeDbSupported ? FirebaseDatabase.instance.ref().child('currentSong') : null;
-  late final DatabaseReference? updateSongList = _isRealtimeDbSupported ? FirebaseDatabase.instance.ref().child('updateSongList') : null;
+  // Native RTDB references (null on Windows)
+  late final DatabaseReference? _nativeSelectedSong = _isNativeRtdbSupported ? FirebaseDatabase.instance.ref().child('currentSong') : null;
+  late final DatabaseReference? _nativeUpdateSongList = _isNativeRtdbSupported ? FirebaseDatabase.instance.ref().child('updateSongList') : null;
+
+  // REST/SSE provider for Windows
+  FirebaseRtdbRestProvider? _rtdbRestProvider;
+
+  // ---------------------------------------------------------------------------
+  // Platform-agnostic RTDB streams
+  // ---------------------------------------------------------------------------
+  final _selectedSongController = StreamController<Map<String, dynamic>?>.broadcast();
+
+  /// Stream of `currentSong` data from Realtime Database. Works on all platforms.
+  Stream<Map<String, dynamic>?> get selectedSongStream => _selectedSongController.stream;
+
+  final _updateSongListController = StreamController<Map<String, dynamic>?>.broadcast();
+
+  /// Stream of `updateSongList` data from Realtime Database. Works on all platforms.
+  Stream<Map<String, dynamic>?> get updateSongListStream => _updateSongListController.stream;
 
   FirebaseProvider() {
     inst.settings = const Settings(
@@ -43,25 +62,50 @@ class FirebaseProvider {
       userCollection = inst.collection('users');
       playlistCollection = inst.collection('playlists');
       groupCollection = inst.collection('groups');
-      if (_isRealtimeDbSupported) {
-        selectedSong?.onValue.listen((DatabaseEvent event) {
+
+      if (_isNativeRtdbSupported) {
+        // --- Native SDK listeners (iOS, Android, macOS, Web) ---
+        _nativeSelectedSong?.onValue.listen((DatabaseEvent event) {
           final data = event.snapshot.value;
           if (data != null && data is Map) {
-            //TODO: listener for current song on database
+            _selectedSongController.add(Map<String, dynamic>.from(data));
+          } else {
+            _selectedSongController.add(null);
           }
         });
         try {
-          updateSongList?.onValue.listen((DatabaseEvent event) {
+          _nativeUpdateSongList?.onValue.listen((DatabaseEvent event) {
             final data = event.snapshot.value;
             if (data != null && data is Map) {
-              //TODO: listener for update song list on database
+              _updateSongListController.add(Map<String, dynamic>.from(data));
+            } else {
+              _updateSongListController.add(null);
             }
           });
         } catch (e) {
           logger.e('Error listening to updateSongList: $e');
         }
       } else {
-        logger.i('Firebase Realtime Database is not supported on Windows – skipping listeners');
+        // --- Windows: REST API + SSE listeners ---
+        final databaseUrl = Firebase.app().options.databaseURL ?? 'https://songlist-7b702-default-rtdb.firebaseio.com';
+        logger.i('Windows detected — using Firebase RTDB REST API ($databaseUrl)');
+
+        _rtdbRestProvider = FirebaseRtdbRestProvider(
+          databaseUrl: databaseUrl,
+          getAuthToken: () async {
+            return await fb_auth.FirebaseAuth.instance.currentUser?.getIdToken();
+          },
+        );
+
+        _rtdbRestProvider!.listen('currentSong').listen((data) {
+          _selectedSongController.add(data);
+        });
+
+        _rtdbRestProvider!.listen('updateSongList').listen((data) {
+          _updateSongListController.add(data);
+        });
+
+        logger.i('Firebase RTDB REST/SSE listeners started for currentSong + updateSongList');
       }
     } catch (e) {
       logger.e('$e');
@@ -69,9 +113,12 @@ class FirebaseProvider {
   }
 
   Future<void> setUpdateSongList(UpdateSongListData updateSongListData) async {
-    if (!_isRealtimeDbSupported) return;
     try {
-      await updateSongList?.set(updateSongListData.toJson());
+      if (_isNativeRtdbSupported) {
+        await _nativeUpdateSongList?.set(updateSongListData.toJson());
+      } else {
+        await _rtdbRestProvider?.set('updateSongList', updateSongListData.toJson());
+      }
     } catch (e) {
       logger.e('$e');
     }
@@ -93,13 +140,21 @@ class FirebaseProvider {
   }
 
   void saveNewSelectedSong(String id, String title, String interpret, String lyricsWithoutChords) {
-    if (!_isRealtimeDbSupported) return;
-    selectedSong?.update({'song': id, 'title': title, 'interpret': interpret, 'lyricsWithoutChords': lyricsWithoutChords});
+    final data = {'song': id, 'title': title, 'interpret': interpret, 'lyricsWithoutChords': lyricsWithoutChords};
+    if (_isNativeRtdbSupported) {
+      _nativeSelectedSong?.update(data);
+    } else {
+      _rtdbRestProvider?.update('currentSong', data);
+    }
   }
 
   void removeSelectedSong() {
-    if (!_isRealtimeDbSupported) return;
-    selectedSong?.update({'song': '', 'title': '', 'interpret': '', 'lyricsWithoutChords': ''});
+    final data = {'song': '', 'title': '', 'interpret': '', 'lyricsWithoutChords': ''};
+    if (_isNativeRtdbSupported) {
+      _nativeSelectedSong?.update(data);
+    } else {
+      _rtdbRestProvider?.update('currentSong', data);
+    }
   }
 
   Future<bool> updateUser(User user) async {

@@ -46,19 +46,20 @@ class SongsRepository {
 
   void _init() {
     updateSongListData = _hiveProvider.getUpdateSongListData('updateSongListData') ?? UpdateSongListData(DateTime(1900), {});
-    _firebaseProvider.selectedSong?.onValue.listen((event) {
-      final data = event.snapshot.value;
-      if (data != null && data is Map && data['song'] != null) {
-        selectSongController.sink.add(data['song']);
-        selectedSongId = data['song'];
+
+    // Listen to selected song changes (works on all platforms including Windows)
+    _firebaseProvider.selectedSongStream.listen((data) {
+      if (data != null && data['song'] != null) {
+        selectSongController.sink.add(data['song'].toString());
+        selectedSongId = data['song'].toString();
       }
     });
-    _firebaseProvider.updateSongList?.onValue.listen((event) {
-      final data = event.snapshot.value;
-      if (data != null && data is Map) {
+
+    // Listen to song list update notifications (works on all platforms including Windows)
+    _firebaseProvider.updateSongListStream.listen((data) {
+      if (data != null) {
         try {
-          final castedData = _convertMapToStringDynamic(data);
-          final newUpdateSongListData = UpdateSongListData.fromJson(castedData);
+          final newUpdateSongListData = UpdateSongListData.fromJson(data);
           if (newUpdateSongListData.lastUpdate.isAfter(updateSongListData.lastUpdate)) {
             updateDataByUpdateSongListData(newUpdateSongListData);
           }
@@ -239,20 +240,5 @@ class SongsRepository {
     } else {
       logger.e('Error update group');
     }
-  }
-
-  Map<String, dynamic> _convertMapToStringDynamic(Map map) {
-    final result = <String, dynamic>{};
-    map.forEach((key, value) {
-      final stringKey = key.toString();
-      if (value is Map) {
-        result[stringKey] = _convertMapToStringDynamic(value);
-      } else if (value is List) {
-        result[stringKey] = value.map((item) => item is Map ? _convertMapToStringDynamic(item) : item).toList();
-      } else {
-        result[stringKey] = value;
-      }
-    });
-    return result;
   }
 }
