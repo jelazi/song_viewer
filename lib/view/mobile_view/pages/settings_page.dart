@@ -208,6 +208,19 @@ class _SettingsPageMobileState extends State<SettingsPageMobile> {
                       iconData: Icons.link,
                       value: state.qrWebAppUrl,
                     ),
+                    SettingsTile(
+                      title: 'qrZizkoviUrl'.tr(),
+                      onPressed: (BuildContext context) {
+                        _showEditUrlDialog(
+                          context: context,
+                          title: 'qrZizkoviUrl'.tr(),
+                          currentValue: state.qrZizkoviUrl,
+                          settingsKey: 'qrZizkoviUrl',
+                        );
+                      },
+                      iconData: Icons.link,
+                      value: state.qrZizkoviUrl,
+                    ),
                   ],
                 ),
               ],

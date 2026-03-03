@@ -26,7 +26,6 @@ class _EditYoutubeBodyState extends State<EditYoutubeBody> {
             children: [
               // Header row with save and add buttons
               SizedBox(
-                width: MediaQuery.of(context).size.width - 300,
                 height: 40,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,

@@ -22,7 +22,6 @@ class _ListWebSongState extends State<ListWebSong> {
     'zpevnik.proscholy.cz',
     'songs.worshipleaderapp.com',
   ];
-  String dropdownValue = 'pisnicky-akordy.cz';
 
   final TextEditingController _filterInterpretPisnickyAkordy = TextEditingController();
   final TextEditingController _filterSongPisnickyAkordy = TextEditingController();
@@ -48,6 +47,8 @@ class _ListWebSongState extends State<ListWebSong> {
   Widget build(BuildContext context) {
     return BlocBuilder<WebBloc, WebState>(
       builder: (context, state) {
+        // Derive dropdown value from bloc state to stay in sync
+        final dropdownValue = state.searchWeb >= 0 && state.searchWeb < list.length ? list[state.searchWeb] : list[1];
         return Container(
             width: 400,
             height: MediaQuery.of(context).size.height - 150,
@@ -73,17 +74,14 @@ class _ListWebSongState extends State<ListWebSong> {
                       if (value == dropdownValue) {
                         return;
                       }
-                      setState(() {
-                        _filterSongVelkyZpevnik.clear();
-                        _filterInterpretVelkyZpevnik.clear();
-                        _filterInterpretPisnickyAkordy.clear();
-                        _filterSongPisnickyAkordy.clear();
-                        _filterInterpretProScholy.clear();
-                        _filterSongProScholy.clear();
-                        _filterWorshipLeader.clear();
-                        dropdownValue = value!;
-                        context.read<WebBloc>().add(ChangeSearchWeb(searchWeb: list.indexOf(dropdownValue)));
-                      });
+                      _filterSongVelkyZpevnik.clear();
+                      _filterInterpretVelkyZpevnik.clear();
+                      _filterInterpretPisnickyAkordy.clear();
+                      _filterSongPisnickyAkordy.clear();
+                      _filterInterpretProScholy.clear();
+                      _filterSongProScholy.clear();
+                      _filterWorshipLeader.clear();
+                      context.read<WebBloc>().add(ChangeSearchWeb(searchWeb: list.indexOf(value!)));
                     },
                     value: dropdownValue),
               ),

@@ -295,5 +295,8 @@
     "shareQrCode": "Sdílet QR",
     "qrCurrentSongUrl": "URL právě přehrávané písně",
     "qrWebAppUrl": "URL webové aplikace",
+    "qrZizkovi": "Žížkovi Online",
+    "qrZizkoviUrl": "URL Žížkovi Online",
+    "currentSong": "Aktuální píseň",
     "generalSettings": "Obecná nastavení"
 }

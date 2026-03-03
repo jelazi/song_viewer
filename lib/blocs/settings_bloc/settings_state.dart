@@ -27,6 +27,7 @@ class SettingsState extends Equatable {
   // QR code URLs
   final String qrCurrentSongUrl;
   final String qrWebAppUrl;
+  final String qrZizkoviUrl;
   const SettingsState({
     required this.previewFontTextSize,
     required this.previewFontChordSize,
@@ -51,6 +52,7 @@ class SettingsState extends Equatable {
     required this.presentationAutoPageByParagraphs,
     required this.qrCurrentSongUrl,
     required this.qrWebAppUrl,
+    required this.qrZizkoviUrl,
   });
 
   @override
@@ -78,6 +80,7 @@ class SettingsState extends Equatable {
         presentationAutoPageByParagraphs,
         qrCurrentSongUrl,
         qrWebAppUrl,
+        qrZizkoviUrl,
       ];
 
   SettingsState copyWith({
@@ -104,6 +107,7 @@ class SettingsState extends Equatable {
     bool? presentationAutoPageByParagraphs,
     String? qrCurrentSongUrl,
     String? qrWebAppUrl,
+    String? qrZizkoviUrl,
   }) {
     return SettingsState(
       previewFontTextSize: previewFontTextSize ?? this.previewFontTextSize,
@@ -129,6 +133,7 @@ class SettingsState extends Equatable {
       presentationAutoPageByParagraphs: presentationAutoPageByParagraphs ?? this.presentationAutoPageByParagraphs,
       qrCurrentSongUrl: qrCurrentSongUrl ?? this.qrCurrentSongUrl,
       qrWebAppUrl: qrWebAppUrl ?? this.qrWebAppUrl,
+      qrZizkoviUrl: qrZizkoviUrl ?? this.qrZizkoviUrl,
     );
   }
 }
@@ -158,5 +163,6 @@ class SettingsInitial extends SettingsState {
     required super.presentationAutoPageByParagraphs,
     required super.qrCurrentSongUrl,
     required super.qrWebAppUrl,
+    required super.qrZizkoviUrl,
   });
 }

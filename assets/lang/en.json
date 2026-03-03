@@ -212,6 +212,9 @@
     "shareQrCode": "Share QR",
     "qrCurrentSongUrl": "Currently playing song URL",
     "qrWebAppUrl": "Web application URL",
+    "qrZizkovi": "Žížkovi Online",
+    "qrZizkoviUrl": "Žížkovi Online URL",
     "general": "General",
+    "currentSong": "Current song",
     "generalSettings": "General settings"
 }

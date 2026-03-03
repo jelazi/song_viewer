@@ -64,6 +64,14 @@ class GeneralSettingsBody extends StatelessWidget {
             settingsKey: 'qrWebAppUrl',
             icon: Icons.language,
           ),
+          const SizedBox(height: 12),
+          _buildUrlField(
+            context: context,
+            label: 'qrZizkoviUrl'.tr(),
+            value: state.qrZizkoviUrl,
+            settingsKey: 'qrZizkoviUrl',
+            icon: Icons.home,
+          ),
         ],
       ),
     );

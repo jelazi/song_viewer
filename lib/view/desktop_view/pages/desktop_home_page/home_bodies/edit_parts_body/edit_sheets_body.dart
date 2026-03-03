@@ -32,7 +32,6 @@ class _EditSheetsBodyState extends State<EditSheetsBody> {
             children: [
               // Header row
               SizedBox(
-                width: MediaQuery.of(context).size.width - 300,
                 height: 40,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,

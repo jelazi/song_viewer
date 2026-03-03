@@ -1,5 +1,6 @@
 import 'package:default_project/view/desktop_view/pages/desktop_home_page/home_bodies/edit_parts_body/edit_chords_body.dart';
 import 'package:default_project/view/desktop_view/pages/desktop_home_page/home_bodies/edit_parts_body/edit_lyrics_body.dart';
+import 'package:default_project/view/desktop_view/pages/desktop_home_page/home_bodies/edit_parts_body/edit_lyrics_preview_column.dart';
 import 'package:default_project/view/desktop_view/pages/desktop_home_page/home_bodies/edit_parts_body/edit_settings_body.dart';
 import 'package:default_project/view/desktop_view/pages/desktop_home_page/home_bodies/edit_parts_body/edit_sheets_body.dart';
 import 'package:default_project/view/desktop_view/pages/desktop_home_page/home_bodies/edit_parts_body/edit_youtube_body.dart';
@@ -31,11 +32,11 @@ class _EditBodyState extends State<EditBody> {
                   case 'chords':
                     return const EditChordsBody();
                   case 'settings':
-                    return const EditSettingsBody();
+                    return _withLyricsPreview(const EditSettingsBody());
                   case 'youtube':
-                    return const EditYoutubeBody();
+                    return _withLyricsPreview(const EditYoutubeBody());
                   case 'sheets':
-                    return const EditSheetsBody();
+                    return _withLyricsPreview(const EditSheetsBody());
                   default:
                     return Container();
                 }
@@ -44,6 +45,20 @@ class _EditBodyState extends State<EditBody> {
           ],
         );
       },
+    );
+  }
+
+  /// Wraps the given edit body in an Expanded Row with a narrow lyrics
+  /// preview column on the left and the original body on the right.
+  Widget _withLyricsPreview(Widget editBody) {
+    return Expanded(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const EditLyricsPreviewColumn(),
+          editBody,
+        ],
+      ),
     );
   }
 }

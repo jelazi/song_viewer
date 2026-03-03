@@ -54,7 +54,6 @@ class WebBloc extends Bloc<WebEvent, WebState> {
   final listSearchWeb = ['velkyzpevnik.cz', 'pisnicky-akordy.cz', 'zpevnik.proscholy.cz', 'songs.worshipleaderapp.com'];
 
   void _init(_Init event, Emitter<WebState> emit) async {
-    final state = this.state;
     emit(state.copyWith(
       textStyle: TextStyle(fontSize: settingsRepository.previewFontTextSize, color: settingsRepository.previewColorText),
       chordStyle: TextStyle(
@@ -168,27 +167,27 @@ class WebBloc extends Bloc<WebEvent, WebState> {
 
   void _filterInterprets(FilterInterprets event, Emitter<WebState> emit) async {
     List<WebInterpret> list = [];
-    final state = this.state;
     emit(state.copyWith(isSearching: true));
     if (event.filter.isEmpty) {
       emit(state.copyWith(interprets: [], isSearching: false, filteredInterprets: [], searchWebInterprets: false));
       return;
     }
-    if (state.searchWeb == 0) {
+    final searchWeb = state.searchWeb;
+    if (searchWeb == 0) {
       List<WebItem> listItem = await webRepository.findSongAndInterpretsFromVelkyZpevnik(event.filter);
       list = listItem.map((e) => e is WebInterpret ? e : null).where((element) => element != null).toList().cast<WebInterpret>();
     }
 
-    if (state.searchWeb == 1) {
+    if (searchWeb == 1) {
       list = await webRepository.findInterpretPisnickyAkordy(event.filter);
     }
-    if (state.searchWeb == 2) {
+    if (searchWeb == 2) {
       list = await webRepository.findInterpretProScholy(event.filter);
       final searchedSongs = await webRepository.searchSongsProScholyLocal(event.filter);
       emit(state.copyWith(interprets: list, isSearching: false, filteredInterprets: list, searchWebInterprets: false, songs: searchedSongs, filteredSongs: searchedSongs));
       return;
     }
-    if (state.searchWeb == 3) {
+    if (searchWeb == 3) {
       final searchedSongs = await webRepository.searchSongsWorshipLeader(event.filter);
       emit(state.copyWith(interprets: [], isSearching: false, filteredInterprets: [], searchWebInterprets: false, songs: searchedSongs, filteredSongs: searchedSongs));
       return;

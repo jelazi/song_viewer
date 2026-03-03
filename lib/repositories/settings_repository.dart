@@ -40,6 +40,7 @@ class SettingsRepository {
   // QR code URLs
   String _qrCurrentSongUrl = 'https://your-site.example/';
   String _qrWebAppUrl = 'https://songsviewerweb.web.app/';
+  String _qrZizkoviUrl = 'https://www.zizkovi.online/';
 
   SettingsRepository({
     required this.hiveProvider,
@@ -116,6 +117,7 @@ class SettingsRepository {
 
   String get qrCurrentSongUrl => _qrCurrentSongUrl;
   String get qrWebAppUrl => _qrWebAppUrl;
+  String get qrZizkoviUrl => _qrZizkoviUrl;
 
   Future<void> loadLocalSettings() async {
     _previewFontTextSize = await hiveProvider.getSettingsValue('previewFontTextSize') ?? 20;
@@ -148,6 +150,7 @@ class SettingsRepository {
     // QR code URLs
     _qrCurrentSongUrl = await hiveProvider.getSettingsValue('qrCurrentSongUrl') ?? 'https://your-site.example/';
     _qrWebAppUrl = await hiveProvider.getSettingsValue('qrWebAppUrl') ?? 'https://songsviewerweb.web.app/';
+    _qrZizkoviUrl = await hiveProvider.getSettingsValue('qrZizkoviUrl') ?? 'https://www.zizkovi.online/';
   }
 
   void setCurrentUser(User user) {
@@ -312,6 +315,12 @@ class SettingsRepository {
         {
           _qrWebAppUrl = value;
           hiveProvider.setSettingsValue('qrWebAppUrl', value);
+          break;
+        }
+      case 'qrZizkoviUrl':
+        {
+          _qrZizkoviUrl = value;
+          hiveProvider.setSettingsValue('qrZizkoviUrl', value);
           break;
         }
     }

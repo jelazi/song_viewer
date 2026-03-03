@@ -40,6 +40,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
           presentationAutoPageByParagraphs: false,
           qrCurrentSongUrl: 'https://your-site.example/',
           qrWebAppUrl: 'https://songsviewerweb.web.app/',
+          qrZizkoviUrl: 'https://www.zizkovi.online/',
         )) {
     on<_SettingsInitial>(_settingsInitial);
     on<ChangeSettingsValue>(_changeSettingsValue);
@@ -88,6 +89,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       presentationAutoPageByParagraphs: settingsRepository.presentationAutoPageByParagraphs,
       qrCurrentSongUrl: settingsRepository.qrCurrentSongUrl,
       qrWebAppUrl: settingsRepository.qrWebAppUrl,
+      qrZizkoviUrl: settingsRepository.qrZizkoviUrl,
     ));
   }
 }

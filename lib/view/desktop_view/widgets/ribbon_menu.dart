@@ -67,184 +67,203 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
           decoration: BoxDecoration(
             border: Border.all(color: Colors.black),
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Stack(
             children: [
-              Expanded(
-                child: Column(
-                  children: [
-                    SizedBox(
-                      height: 30,
-                      child: state.bodyName == 'preview' || state.bodyName == 'browse_youtube' || state.bodyName == 'browse_sheets'
-                          ? TabBar(
-                              isScrollable: true,
-                              tabAlignment: TabAlignment.start,
-                              controller: _tabController,
-                              tabs: [
-                                Tab(text: 'home'.tr()),
-                                Tab(text: 'settings'.tr()),
-                              ],
-                            )
-                          : state.bodyName == 'edit'
-                              ? TabBar(
-                                  isScrollable: true,
-                                  tabAlignment: TabAlignment.start,
-                                  controller: _tabController,
-                                  tabs: [
-                                    Tab(text: 'home'.tr()),
-                                    Tab(text: 'settings'.tr()),
-                                  ],
-                                )
-                              : state.bodyName == 'web'
-                                  ? TabBar(
-                                      isScrollable: true,
-                                      tabAlignment: TabAlignment.start,
-                                      controller: _tabController,
-                                      tabs: [
-                                        Tab(text: 'home'.tr()),
-                                        Tab(text: 'settings'.tr()),
-                                      ],
-                                    )
-                                  : state.bodyName == 'groups'
-                                      ? TabBar(
-                                          isScrollable: true,
-                                          tabAlignment: TabAlignment.start,
-                                          controller: _tabController,
-                                          onTap: (index) {
-                                            if (index == 0) {
-                                              context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: 'preview'));
-                                            }
-                                          },
-                                          tabs: [
-                                            Tab(text: 'home'.tr()),
-                                            Tab(text: 'settings'.tr()),
-                                          ],
-                                        )
-                                      : state.bodyName == 'users'
-                                          ? TabBar(
-                                              isScrollable: true,
-                                              tabAlignment: TabAlignment.start,
-                                              controller: _tabController,
-                                              onTap: (index) {
-                                                if (index == 0) {
-                                                  context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: 'preview'));
-                                                }
-                                              },
-                                              tabs: [
-                                                Tab(text: 'home'.tr()),
-                                                Tab(text: 'settings'.tr()),
-                                              ],
-                                            )
-                                          : state.bodyName == 'presentation_settings'
-                                              ? TabBar(
-                                                  isScrollable: true,
-                                                  tabAlignment: TabAlignment.start,
-                                                  controller: _tabController,
-                                                  onTap: (index) {
-                                                    if (index == 0) {
-                                                      context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: 'preview'));
-                                                    }
-                                                  },
-                                                  tabs: [
-                                                    Tab(text: 'home'.tr()),
-                                                    Tab(text: 'settings'.tr()),
-                                                  ],
-                                                )
-                                              : state.bodyName == 'general_settings'
-                                                  ? TabBar(
-                                                      isScrollable: true,
-                                                      tabAlignment: TabAlignment.start,
-                                                      controller: _tabController,
-                                                      onTap: (index) {
-                                                        if (index == 0) {
-                                                          context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: 'preview'));
-                                                        }
-                                                      },
-                                                      tabs: [
-                                                        Tab(text: 'home'.tr()),
-                                                        Tab(text: 'settings'.tr()),
-                                                      ],
-                                                    )
-                                                  : TabBar(
-                                                      isScrollable: true,
-                                                      tabAlignment: TabAlignment.start,
-                                                      controller: _tabController,
-                                                      tabs: [
-                                                        Tab(text: 'home'.tr()),
-                                                      ],
-                                                    ),
-                    ),
-                    SizedBox(
-                      height: 60,
-                      child: state.bodyName == 'preview' || state.bodyName == 'browse_youtube' || state.bodyName == 'browse_sheets'
-                          ? TabBarView(
-                              controller: _tabController,
-                              children: const [
-                                HomeTabbar(),
-                                SettingsTabbar(),
-                              ],
-                            )
-                          : state.bodyName == 'edit'
-                              ? TabBarView(
-                                  controller: _tabController,
-                                  children: const [
-                                    HomeTabbar(),
-                                    SettingsTabbar(),
-                                  ],
-                                )
-                              : state.bodyName == 'groups'
-                                  ? TabBarView(
-                                      controller: _tabController,
-                                      children: const [
-                                        HomeTabbar(),
-                                        SettingsTabbar(),
-                                      ],
-                                    )
-                                  : state.bodyName == 'web'
-                                      ? TabBarView(
-                                          controller: _tabController,
-                                          children: const [
-                                            HomeTabbar(),
-                                            SettingsTabbar(),
-                                          ],
-                                        )
-                                      : state.bodyName == 'users'
-                                          ? TabBarView(
-                                              controller: _tabController,
-                                              children: const [
-                                                HomeTabbar(),
-                                                SettingsTabbar(),
-                                              ],
-                                            )
-                                          : state.bodyName == 'presentation_settings'
-                                              ? TabBarView(
-                                                  controller: _tabController,
-                                                  children: const [
-                                                    HomeTabbar(),
-                                                    SettingsTabbar(),
-                                                  ],
-                                                )
-                                              : state.bodyName == 'general_settings'
-                                                  ? TabBarView(
-                                                      controller: _tabController,
-                                                      children: const [
-                                                        HomeTabbar(),
-                                                        SettingsTabbar(),
-                                                      ],
-                                                    )
-                                                  : TabBarView(
-                                                      controller: _tabController,
-                                                      children: const [
-                                                        HomeTabbar(),
-                                                      ],
-                                                    ),
-                    ),
-                  ],
+              Positioned(
+                top: 0,
+                left: 0,
+                child: SizedBox(
+                  height: 90,
+                  width: MediaQuery.of(context).size.width,
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: 30,
+                        child: state.bodyName == 'preview' || state.bodyName == 'browse_youtube' || state.bodyName == 'browse_sheets'
+                            ? TabBar(
+                                isScrollable: true,
+                                tabAlignment: TabAlignment.start,
+                                controller: _tabController,
+                                tabs: [
+                                  Tab(text: 'home'.tr()),
+                                  Tab(text: 'settings'.tr()),
+                                ],
+                              )
+                            : state.bodyName == 'edit'
+                                ? TabBar(
+                                    isScrollable: true,
+                                    tabAlignment: TabAlignment.start,
+                                    controller: _tabController,
+                                    tabs: [
+                                      Tab(text: 'home'.tr()),
+                                      Tab(text: 'settings'.tr()),
+                                    ],
+                                  )
+                                : state.bodyName == 'web'
+                                    ? TabBar(
+                                        isScrollable: true,
+                                        tabAlignment: TabAlignment.start,
+                                        controller: _tabController,
+                                        tabs: [
+                                          Tab(text: 'home'.tr()),
+                                          Tab(text: 'settings'.tr()),
+                                        ],
+                                      )
+                                    : state.bodyName == 'groups'
+                                        ? TabBar(
+                                            isScrollable: true,
+                                            tabAlignment: TabAlignment.start,
+                                            controller: _tabController,
+                                            onTap: (index) {
+                                              if (index == 0) {
+                                                context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: 'preview'));
+                                              }
+                                            },
+                                            tabs: [
+                                              Tab(text: 'home'.tr()),
+                                              Tab(text: 'settings'.tr()),
+                                            ],
+                                          )
+                                        : state.bodyName == 'users'
+                                            ? TabBar(
+                                                isScrollable: true,
+                                                tabAlignment: TabAlignment.start,
+                                                controller: _tabController,
+                                                onTap: (index) {
+                                                  if (index == 0) {
+                                                    context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: 'preview'));
+                                                  }
+                                                },
+                                                tabs: [
+                                                  Tab(text: 'home'.tr()),
+                                                  Tab(text: 'settings'.tr()),
+                                                ],
+                                              )
+                                            : state.bodyName == 'presentation_settings'
+                                                ? TabBar(
+                                                    isScrollable: true,
+                                                    tabAlignment: TabAlignment.start,
+                                                    controller: _tabController,
+                                                    onTap: (index) {
+                                                      if (index == 0) {
+                                                        context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: 'preview'));
+                                                      }
+                                                    },
+                                                    tabs: [
+                                                      Tab(text: 'home'.tr()),
+                                                      Tab(text: 'settings'.tr()),
+                                                    ],
+                                                  )
+                                                : state.bodyName == 'general_settings'
+                                                    ? TabBar(
+                                                        isScrollable: true,
+                                                        tabAlignment: TabAlignment.start,
+                                                        controller: _tabController,
+                                                        onTap: (index) {
+                                                          if (index == 0) {
+                                                            context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: 'preview'));
+                                                          }
+                                                        },
+                                                        tabs: [
+                                                          Tab(text: 'home'.tr()),
+                                                          Tab(text: 'settings'.tr()),
+                                                        ],
+                                                      )
+                                                    : TabBar(
+                                                        isScrollable: true,
+                                                        tabAlignment: TabAlignment.start,
+                                                        controller: _tabController,
+                                                        tabs: [
+                                                          Tab(text: 'home'.tr()),
+                                                        ],
+                                                      ),
+                      ),
+                      SizedBox(
+                        height: 60,
+                        child: state.bodyName == 'preview' || state.bodyName == 'browse_youtube' || state.bodyName == 'browse_sheets'
+                            ? TabBarView(
+                                controller: _tabController,
+                                children: const [
+                                  HomeTabbar(),
+                                  SettingsTabbar(),
+                                ],
+                              )
+                            : state.bodyName == 'edit'
+                                ? TabBarView(
+                                    controller: _tabController,
+                                    children: const [
+                                      HomeTabbar(),
+                                      SettingsTabbar(),
+                                    ],
+                                  )
+                                : state.bodyName == 'groups'
+                                    ? TabBarView(
+                                        controller: _tabController,
+                                        children: const [
+                                          HomeTabbar(),
+                                          SettingsTabbar(),
+                                        ],
+                                      )
+                                    : state.bodyName == 'web'
+                                        ? TabBarView(
+                                            controller: _tabController,
+                                            children: const [
+                                              HomeTabbar(),
+                                              SettingsTabbar(),
+                                            ],
+                                          )
+                                        : state.bodyName == 'users'
+                                            ? TabBarView(
+                                                controller: _tabController,
+                                                children: const [
+                                                  HomeTabbar(),
+                                                  SettingsTabbar(),
+                                                ],
+                                              )
+                                            : state.bodyName == 'presentation_settings'
+                                                ? TabBarView(
+                                                    controller: _tabController,
+                                                    children: const [
+                                                      HomeTabbar(),
+                                                      SettingsTabbar(),
+                                                    ],
+                                                  )
+                                                : state.bodyName == 'general_settings'
+                                                    ? TabBarView(
+                                                        controller: _tabController,
+                                                        children: const [
+                                                          HomeTabbar(),
+                                                          SettingsTabbar(),
+                                                        ],
+                                                      )
+                                                    : TabBarView(
+                                                        controller: _tabController,
+                                                        children: const [
+                                                          HomeTabbar(),
+                                                        ],
+                                                      ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              _getTopButton('preview', Icons.preview),
-              _getTopButton('edit', Icons.edit),
-              _getTopButton('web', Icons.web),
+              Positioned(
+                top: 0,
+                right: 0,
+                child: SizedBox(
+                  height: 30,
+                  width: 150,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _getTopButton('preview', Icons.preview),
+                      _getTopButton('edit', Icons.edit),
+                      _getTopButton('web', Icons.web),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         );
@@ -553,6 +572,8 @@ class HomeTabbar extends StatelessWidget {
                 ? state.bodyName == 'preview' || state.bodyName == 'browse_youtube' || state.bodyName == 'browse_sheets'
                     ? Row(
                         children: [
+                          _buildCurrentSongButton(context),
+                          const RibbonSpacer(),
                           BlocBuilder<PreviewChordBloc, PreviewChordState>(
                             builder: (context, state) {
                               return RibbonButton(
@@ -679,6 +700,7 @@ class HomeTabbar extends StatelessWidget {
                                   : const SizedBox.shrink();
                             },
                           ),
+                          const RibbonSpacer(),
                           _buildPresentationButton(context),
                         ],
                       )
@@ -771,6 +793,8 @@ class HomeTabbar extends StatelessWidget {
                     children: [
                       getNewSongButton(context),
                       const RibbonSpacer(),
+                      _buildCurrentSongButton(context),
+                      const RibbonSpacer(),
                       _buildPresentationButton(context),
                     ],
                   );
@@ -833,6 +857,39 @@ class HomeTabbar extends StatelessWidget {
             });
       },
       isEnabled: true,
+    );
+  }
+
+  Widget _buildCurrentSongButton(BuildContext context) {
+    return BlocBuilder<PreviewChordBloc, PreviewChordState>(
+      builder: (context, previewState) {
+        final song = previewState.data.song;
+        if (song == null) return const SizedBox.shrink();
+        return BlocBuilder<HomePageBloc, HomePageState>(
+          builder: (context, homeState) {
+            final isActive = homeState.selectedSongId == song.id && song.id.isNotEmpty;
+            return RibbonButton(
+              text: 'currentSong'.tr(),
+              isEnabled: true,
+              isSelected: isActive,
+              icon: Icon(
+                isActive ? Icons.cloud_done : Icons.cloud_upload,
+                size: 22,
+                color: isActive ? Colors.green : Colors.blueGrey,
+              ),
+              onPressed: () {
+                context.read<HomePageBloc>().add(SelectSong(
+                      selectedSongId: song.id,
+                      title: song.title,
+                      interpret: song.interpret ?? '',
+                      lyricsWithoutChords: song.lyricsWithoutChords,
+                      lyricsWithChords: song.lyrics,
+                    ));
+              },
+            );
+          },
+        );
+      },
     );
   }
 

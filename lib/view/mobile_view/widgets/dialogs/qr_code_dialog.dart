@@ -31,9 +31,11 @@ class QrCodeDialog extends StatefulWidget {
 class _QrCodeDialogState extends State<QrCodeDialog> {
   bool _showCurrentSong = true;
   bool _showWebApp = false;
+  bool _showZizkovi = false;
 
   final GlobalKey _currentSongQrKey = GlobalKey();
   final GlobalKey _webAppQrKey = GlobalKey();
+  final GlobalKey _zizkoviQrKey = GlobalKey();
 
   Future<void> _launchUrl(String url) async {
     final uri = Uri.parse(url);
@@ -222,6 +224,14 @@ class _QrCodeDialogState extends State<QrCodeDialog> {
                 isExpanded: _showWebApp,
                 onToggle: (v) => setState(() => _showWebApp = v),
                 qrKey: _webAppQrKey,
+              ),
+              const Divider(color: AppColor.grey3Color),
+              _buildQrSection(
+                titleKey: 'qrZizkovi',
+                url: context.read<SettingsBloc>().state.qrZizkoviUrl,
+                isExpanded: _showZizkovi,
+                onToggle: (v) => setState(() => _showZizkovi = v),
+                qrKey: _zizkoviQrKey,
               ),
             ],
           ),

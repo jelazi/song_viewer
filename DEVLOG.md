@@ -1,5 +1,71 @@
 # Development Log
 
+## 2026-03-03 - Add third QR code for Žížkovi Online
+
+### What was done
+- Added a third QR code section across all platforms (mobile, tablet, desktop) pointing to `https://www.zizkovi.online/`
+- New setting `qrZizkoviUrl` added to SettingsState, SettingsBloc, and SettingsRepository with persistence via Hive
+- QR code dialog now shows 3 expandable sections: "Právě přehrávaná píseň", "Webová aplikace", "Žížkovi Online"
+- Settings pages on all 3 platforms (mobile, tablet, desktop) show the editable URL field
+
+### Files changed
+- **`lib/blocs/settings_bloc/settings_state.dart`** — added `qrZizkoviUrl` field, constructor, props, copyWith, SettingsInitial
+- **`lib/blocs/settings_bloc/settings_bloc.dart`** — added default value and `_emitAllValues` mapping
+- **`lib/repositories/settings_repository.dart`** — added private field, getter, loadLocalSettings, changeSettingsValue switch case
+- **`lib/view/mobile_view/widgets/dialogs/qr_code_dialog.dart`** — added 3rd QR section with state toggle and GlobalKey
+- **`lib/view/mobile_view/pages/settings_page.dart`** — added `qrZizkoviUrl` SettingsTile
+- **`lib/view/tablet_view/pages/settings_page_tablet.dart`** — added `qrZizkoviUrl` SettingsTile
+- **`lib/view/desktop_view/pages/desktop_home_page/home_bodies/general_settings_body.dart`** — added `qrZizkoviUrl` URL field
+- **`assets/lang/cs.json`** — added `qrZizkovi`, `qrZizkoviUrl` translations
+- **`assets/lang/en.json`** — added `qrZizkovi`, `qrZizkoviUrl` translations
+
+### Current state
+- All 3 QR codes work across mobile, tablet, and desktop
+- URLs are editable in settings and persisted via Hive
+
+---
+
+## 2026-03-03 - Desktop: current song button, edit lyrics preview, fix worshipleader search
+
+### What was done
+
+#### 1. "Nahrát píseň" ribbon button (current song toggle)
+- Added a new ribbon button in the desktop presentation section (HomeTabbar) that uploads/removes the current song to Firebase RTDB — same behavior as the mobile radio button
+- Button is shown when a song is selected (preview mode) and also when no song is selected (alongside presentation controls)
+- Visual state: green `cloud_done` icon when active, blueGrey `cloud_upload` when inactive
+- Dispatches `SelectSong` event to `HomePageBloc`, which calls `SongsRepository.selectSong()` (toggle on/off)
+
+#### 2. Lyrics preview column in edit mode (youtube/sheets/settings sections)
+- When editing a song and viewing the youtube, sheets, or settings section, a narrow (250px) read-only lyrics preview column now appears on the left
+- Shows the song title and full lyrics with chords in monospace font (10px, scrollable)
+- Allows seeing the song text while editing metadata/youtube/sheets without switching tabs
+- `EditBody` now wraps youtube/sheets/settings bodies with `_withLyricsPreview()` which adds `EditLyricsPreviewColumn` on the left
+- `EditSettingsBody` was wrapped in `Expanded` to match youtube/sheets pattern
+- Removed hardcoded `MediaQuery.of(context).size.width - 300` width from youtube/sheets/settings headers (now flex-sized via Expanded)
+
+#### 3. Fix worshipleaderapp.com search on desktop
+- **Root cause**: `WebBloc._init()` and `_filterInterprets()` captured `final state = this.state;` before `await` calls, then used the stale captured state for emits after the await completed. If `ChangeSearchWeb(3)` ran during the await (e.g., user switched to worshipleader while init was loading pisnicky-akordy), the final emit would overwrite `searchWeb` back to the old value (1)
+- **Fix in `_init`**: removed captured `state` variable, use `state` (bloc's current property) directly for all emits — emits after `await` now build on the latest state, preserving `searchWeb` changes
+- **Fix in `_filterInterprets`**: same pattern — removed captured `state`, capture only `searchWeb` before the await for the if-else branching, use `state` for post-await emits
+- **Fix in `ListWebSong`**: dropdown value is now derived from `state.searchWeb` (bloc state) instead of local `dropdownValue` variable — eliminates desync between dropdown display and actual bloc state when the state changes externally (e.g., reset by `_init`)
+
+### Files changed
+- **`lib/view/desktop_view/widgets/ribbon_menu.dart`** — added `_buildCurrentSongButton()` method, placed it in preview and default ribbon rows
+- **`lib/view/desktop_view/pages/desktop_home_page/home_bodies/edit_parts_body/edit_lyrics_preview_column.dart`** (NEW) — narrow read-only lyrics preview widget
+- **`lib/view/desktop_view/pages/desktop_home_page/home_bodies/edit_parts_body/edit_body.dart`** — wraps youtube/sheets/settings with `_withLyricsPreview()`
+- **`lib/view/desktop_view/pages/desktop_home_page/home_bodies/edit_parts_body/edit_settings_body.dart`** — wrapped in `Expanded`, removed hardcoded width
+- **`lib/view/desktop_view/pages/desktop_home_page/home_bodies/edit_parts_body/edit_youtube_body.dart`** — removed hardcoded width
+- **`lib/view/desktop_view/pages/desktop_home_page/home_bodies/edit_parts_body/edit_sheets_body.dart`** — removed hardcoded width
+- **`lib/blocs/web_bloc/web_bloc.dart`** — fixed stale state in `_init()` and `_filterInterprets()`
+- **`lib/view/desktop_view/pages/desktop_home_page/home_bodies/list_web_song.dart`** — dropdown value derived from bloc state
+
+### Current state
+- Desktop ribbon shows "Nahrát píseň" button when in preview mode with a song selected — toggle uploads/removes current song from RTDB
+- Edit mode youtube/sheets/settings sections now show a narrow lyrics preview column on the left
+- WorshipLeaderApp search works correctly on desktop — no more state desync when switching providers
+
+---
+
 ## 2026-03-03 - Optimize RTDB currentSong: skip lyrics for saved songs
 
 ### What was done

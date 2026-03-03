@@ -126,16 +126,18 @@ class _ListSongState extends State<ListSong> {
                                       ),
                                       child: Container(
                                         height: 40,
-                                        decoration: const BoxDecoration(
+                                        decoration: BoxDecoration(
+                                          color: state.selectedSongId == song.id ? AppColor.alertSuccessLightColor : Colors.transparent,
                                           border: Border(
-                                            top: BorderSide(color: AppColor.grey3Color, width: 1.0),
+                                            top: BorderSide(color: state.selectedSongId == song.id ? AppColor.alertErrorDarkColor : AppColor.grey3Color, width: 1.0),
                                           ),
                                         ),
                                         child: BlocBuilder<PreviewChordBloc, PreviewChordState>(
                                           builder: (context, state) {
                                             return ListTile(
                                               selected: state.data.song?.id == song.id,
-                                              selectedTileColor: AppColor.grey4Color,
+                                              selectedTileColor: state.selectedSongId == song.id ? AppColor.alertErrorLightColor : AppColor.grey4Color,
+                                              hoverColor: state.selectedSongId == song.id ? AppColor.alertSuccessDarkColor : AppColor.grey5Color,
                                               title: SizedBox(
                                                   width: 200,
                                                   child: Text(
