@@ -106,7 +106,11 @@ class _SongCardState extends State<SongCard> {
                     ),
                     onPressed: () {
                       context.read<HomePageBloc>().add(SelectSong(
-                          selectedSongId: widget.song.id, title: widget.song.title, interpret: widget.song.interpret ?? '', lyricsWithoutChords: widget.song.lyricsWithoutChords));
+                          selectedSongId: widget.song.id,
+                          title: widget.song.title,
+                          interpret: widget.song.interpret ?? '',
+                          lyricsWithoutChords: widget.song.lyricsWithoutChords,
+                          lyricsWithChords: widget.song.lyrics));
                     }),
                 // 3-dot menu
                 BlocBuilder<UsersBloc, UsersState>(

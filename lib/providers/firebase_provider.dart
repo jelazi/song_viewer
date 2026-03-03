@@ -139,8 +139,8 @@ class FirebaseProvider {
     }
   }
 
-  void saveNewSelectedSong(String id, String title, String interpret, String lyricsWithoutChords) {
-    final data = {'song': id, 'title': title, 'interpret': interpret, 'lyricsWithoutChords': lyricsWithoutChords};
+  void saveNewSelectedSong(String id, String title, String interpret, String lyricsWithoutChords, String lyricsWithChords) {
+    final data = {'song': id, 'title': title, 'interpret': interpret, 'lyricsWithoutChords': lyricsWithoutChords, 'lyricsWithChords': lyricsWithChords};
     if (_isNativeRtdbSupported) {
       _nativeSelectedSong?.update(data);
     } else {
@@ -149,7 +149,7 @@ class FirebaseProvider {
   }
 
   void removeSelectedSong() {
-    final data = {'song': '', 'title': '', 'interpret': '', 'lyricsWithoutChords': ''};
+    final data = {'song': '', 'title': '', 'interpret': '', 'lyricsWithoutChords': '', 'lyricsWithChords': ''};
     if (_isNativeRtdbSupported) {
       _nativeSelectedSong?.update(data);
     } else {

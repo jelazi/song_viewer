@@ -1,5 +1,71 @@
 # Development Log
 
+## 2026-03-03 - Optimize RTDB currentSong: skip lyrics for saved songs
+
+### What was done
+- Modified `SongsRepository.selectSong()` to conditionally send lyrics to Firebase Realtime Database
+- **Saved songs** (non-empty `id`): only `id`, `title`, and `interpret` are sent — `lyricsWithoutChords` and `lyricsWithChords` are sent as empty strings to reduce RTDB payload
+- **Unsaved/web songs** (empty `id`, e.g. downloaded from web search): full `lyricsWithoutChords` and `lyricsWithChords` are sent, since the receiving side cannot look up the lyrics by id
+
+### Files changed
+- **`lib/repositories/songs_repository.dart`** — added `songId.isNotEmpty` check in `selectSong()` to conditionally omit lyrics
+
+### Current state
+- Saved songs broadcast only metadata (id, title, interpret) to RTDB — web viewers can fetch full lyrics from Firestore using the id
+- Web-downloaded (unsaved) songs still broadcast full lyrics so web viewers can display them without Firestore lookup
+
+---
+
+## 2026-03-03 - Fix updateSongList type cast + lyricsWithChords format
+
+### What was done
+- Fixed `type '_Map<Object?, Object?>' is not a subtype of type 'Map<String, dynamic>'` error in `SongsRepository._init` by adding `Map<String, dynamic>.from(data)` cast before passing to `UpdateSongListData.fromJson()`
+- Fixed `lyricsWithChords` sent to Realtime Database: was sending the display format (chords above text lines via `Song.lyricsWithChords` getter), now sends the raw `Song.lyrics` field which uses `[chord]` inline bracket format — the same format stored in Firestore
+
+### Files changed
+- **`lib/repositories/songs_repository.dart`** — deep-cast RTDB data to `Map<String, dynamic>` before parsing
+- **`lib/view/mobile_view/widgets/song_card.dart`** — use `song.lyrics` instead of `song.lyricsWithChords`
+- **`lib/view/tablet_view/widgets/song_card_tablet.dart`** — use `song.lyrics` instead of `song.lyricsWithChords`
+- **`lib/view/tablet_view/pages/preview_page_tablet.dart`** — use `song.lyrics` instead of `song.lyricsWithChords`
+- **`lib/blocs/playlist_bloc/playlists_bloc.dart`** — use `selectedSong.lyrics` instead of `selectedSong.lyricsWithChords`
+
+### Current state
+- No more type cast error when receiving updateSongList from Firebase RTDB
+- `lyricsWithChords` in realtime database now contains the raw lyrics with `[chord]` bracket format, matching Firestore storage format
+
+---
+
+## 2026-03-03 - Add lyricsWithChords to Realtime Database selected song
+
+### What was done
+- Added `lyricsWithChords` field to the data sent to Firebase Realtime Database when a song is selected as "currently playing"
+- Previously only `title`, `interpret`, `lyricsWithoutChords` and `song` (ID) were sent; now `lyricsWithChords` is also included
+- The `lyricsWithChords` format matches the Song model's `lyricsWithChords` getter (chord lines above lyric lines)
+- This allows web viewers to display the full song with chords from the realtime database data
+
+### Files changed
+- **`lib/providers/firebase_provider.dart`** — added `lyricsWithChords` to `saveNewSelectedSong()` and `removeSelectedSong()`
+- **`lib/repositories/songs_repository.dart`** — added `lyricsWithChords` parameter to `selectSong()`
+- **`lib/blocs/home_page_bloc/home_page_event.dart`** — added `lyricsWithChords` field to `SelectSong` event
+- **`lib/blocs/home_page_bloc/home_page_bloc.dart`** — pass `lyricsWithChords` to repository
+- **`lib/blocs/preview_bloc/preview_chord_event.dart`** — added `lyricsWithChords` field to `SelectSongInPreview` event
+- **`lib/blocs/preview_bloc/preview_chord_bloc.dart`** — pass `lyricsWithChords` to repository
+- **`lib/blocs/playlist_bloc/playlists_bloc.dart`** — pass `lyricsWithChords` in playlist song selection
+- **`lib/view/mobile_view/widgets/song_card.dart`** — pass `lyricsWithChords` in SelectSong event
+- **`lib/view/mobile_view/pages/preview_page.dart`** — pass empty `lyricsWithChords` in deselect
+- **`lib/view/tablet_view/widgets/song_card_tablet.dart`** — pass `lyricsWithChords` in SelectSong event
+- **`lib/view/tablet_view/pages/preview_page_tablet.dart`** — pass `lyricsWithChords` in SelectSongInPreview event
+
+### Current state
+- All platforms (web, mobile, tablet, desktop) now send `lyricsWithChords` to Firebase Realtime Database when selecting a song as currently playing
+- Realtime Database `currentSong` node now contains: `song`, `title`, `interpret`, `lyricsWithoutChords`, `lyricsWithChords`
+- Web viewers can read `lyricsWithChords` from the realtime database stream
+
+### Known issues
+- Pre-existing test mock error in `songs_repository_test.dart` (`selectedSong` getter not defined on MockFirebaseProvider) — unrelated to this change
+
+---
+
 ## 2026-02-26 - Windows presentation window borderless fullscreen
 
 ### What was done

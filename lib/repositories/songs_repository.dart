@@ -59,7 +59,8 @@ class SongsRepository {
     _firebaseProvider.updateSongListStream.listen((data) {
       if (data != null) {
         try {
-          final newUpdateSongListData = UpdateSongListData.fromJson(data);
+          final castedData = Map<String, dynamic>.from(data);
+          final newUpdateSongListData = UpdateSongListData.fromJson(castedData);
           if (newUpdateSongListData.lastUpdate.isAfter(updateSongListData.lastUpdate)) {
             updateDataByUpdateSongListData(newUpdateSongListData);
           }
@@ -122,14 +123,20 @@ class SongsRepository {
     }
   }
 
-  void selectSong(String songId, String title, String interpret, String lyricsWithoutChords) {
+  void selectSong(String songId, String title, String interpret, String lyricsWithoutChords, String lyricsWithChords) {
     if (selectedSongId == songId) {
       selectedSongId = '';
       _firebaseProvider.removeSelectedSong();
       return;
     }
     selectedSongId = songId;
-    _firebaseProvider.saveNewSelectedSong(songId, title, interpret, lyricsWithoutChords);
+    // Saved song (has ID) → send only id, title, interpret (no lyrics)
+    // Web/unsaved song (empty ID) → send full lyrics with and without chords
+    if (songId.isNotEmpty) {
+      _firebaseProvider.saveNewSelectedSong(songId, title, interpret, '', '');
+    } else {
+      _firebaseProvider.saveNewSelectedSong(songId, title, interpret, lyricsWithoutChords, lyricsWithChords);
+    }
   }
 
   List<Song> getSongByFilter(String filterSong) {

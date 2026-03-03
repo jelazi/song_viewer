@@ -125,7 +125,11 @@ class _SongCardTabletState extends State<SongCardTablet> with TickerProviderStat
                     ),
                     onPressed: () {
                       context.read<HomePageBloc>().add(SelectSong(
-                          selectedSongId: widget.song.id, title: widget.song.title, interpret: widget.song.interpret ?? '', lyricsWithoutChords: widget.song.lyricsWithoutChords));
+                          selectedSongId: widget.song.id,
+                          title: widget.song.title,
+                          interpret: widget.song.interpret ?? '',
+                          lyricsWithoutChords: widget.song.lyricsWithoutChords,
+                          lyricsWithChords: widget.song.lyrics));
                     }),
                 Visibility(
                   visible: widget.isEditIconVisible,

@@ -49,12 +49,14 @@ class SelectSong extends HomePageEvent {
   final String title;
   final String interpret;
   final String lyricsWithoutChords;
+  final String lyricsWithChords;
 
   const SelectSong({
     required this.selectedSongId,
     required this.title,
     required this.interpret,
     required this.lyricsWithoutChords,
+    required this.lyricsWithChords,
   });
 
   @override

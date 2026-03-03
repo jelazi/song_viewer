@@ -170,7 +170,7 @@ class PreviewChordBloc extends Bloc<PreviewChordEvent, PreviewChordState> {
 
   void _selectSong(SelectSongInPreview event, Emitter<PreviewChordState> emit) {
     final state = this.state;
-    songsRepository.selectSong(event.selectSongId, event.title, event.interpret, event.lyricsWithoutChords);
+    songsRepository.selectSong(event.selectSongId, event.title, event.interpret, event.lyricsWithoutChords, event.lyricsWithChords);
 
     emit(state.copyWith(selectedSongId: songsRepository.selectedSongId));
   }

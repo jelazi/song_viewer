@@ -97,7 +97,7 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
   }
 
   void _selectSong(SelectSong event, Emitter<HomePageState> emit) {
-    songsRepository.selectSong(event.selectedSongId, event.title, event.interpret, event.lyricsWithoutChords);
+    songsRepository.selectSong(event.selectedSongId, event.title, event.interpret, event.lyricsWithoutChords, event.lyricsWithChords);
   }
 
   void _changeExpandedCard(ChangeExpandedCard event, Emitter<HomePageState> emit) {

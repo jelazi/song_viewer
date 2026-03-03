@@ -263,7 +263,8 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
                         selectSongId: state.data.song?.id ?? '',
                         title: state.data.song?.title ?? '',
                         interpret: state.data.song?.interpret ?? '',
-                        lyricsWithoutChords: state.data.song?.lyricsWithoutChordsWithLines ?? ''));
+                        lyricsWithoutChords: state.data.song?.lyricsWithoutChordsWithLines ?? '',
+                        lyricsWithChords: state.data.song?.lyrics ?? ''));
                   });
             },
           ),

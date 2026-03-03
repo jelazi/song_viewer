@@ -74,7 +74,8 @@ class SelectSongInPreview extends PreviewChordEvent {
   final String title;
   final String interpret;
   final String lyricsWithoutChords;
-  const SelectSongInPreview({required this.selectSongId, required this.title, required this.interpret, required this.lyricsWithoutChords});
+  final String lyricsWithChords;
+  const SelectSongInPreview({required this.selectSongId, required this.title, required this.interpret, required this.lyricsWithoutChords, required this.lyricsWithChords});
 
   @override
   List<Object> get props => [selectSongId];

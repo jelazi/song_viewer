@@ -3,19 +3,18 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i6;
+import 'dart:async' as _i5;
 
 import 'package:cloud_firestore/cloud_firestore.dart' as _i2;
-import 'package:default_project/model/playlist.dart' as _i10;
-import 'package:default_project/model/song/song.dart' as _i9;
-import 'package:default_project/model/update_songlist_data.dart' as _i7;
-import 'package:default_project/model/user.dart' as _i8;
-import 'package:default_project/model/web_interpret.dart' as _i13;
-import 'package:default_project/model/web_song.dart' as _i12;
-import 'package:default_project/providers/firebase_provider.dart' as _i5;
-import 'package:default_project/providers/hive_provider.dart' as _i11;
-import 'package:firebase_database/firebase_database.dart' as _i3;
-import 'package:hive/hive.dart' as _i4;
+import 'package:default_project/model/playlist.dart' as _i9;
+import 'package:default_project/model/song/song.dart' as _i8;
+import 'package:default_project/model/update_songlist_data.dart' as _i6;
+import 'package:default_project/model/user.dart' as _i7;
+import 'package:default_project/model/web_interpret.dart' as _i12;
+import 'package:default_project/model/web_song.dart' as _i11;
+import 'package:default_project/providers/firebase_provider.dart' as _i4;
+import 'package:default_project/providers/hive_provider.dart' as _i10;
+import 'package:hive/hive.dart' as _i3;
 import 'package:mockito/mockito.dart' as _i1;
 
 // ignore_for_file: type=lint
@@ -53,19 +52,8 @@ class _FakeFirebaseFirestore_1 extends _i1.SmartFake
         );
 }
 
-class _FakeDatabaseReference_2 extends _i1.SmartFake
-    implements _i3.DatabaseReference {
-  _FakeDatabaseReference_2(
-    Object parent,
-    Invocation parentInvocation,
-  ) : super(
-          parent,
-          parentInvocation,
-        );
-}
-
-class _FakeBox_3<E> extends _i1.SmartFake implements _i4.Box<E> {
-  _FakeBox_3(
+class _FakeBox_2<E> extends _i1.SmartFake implements _i3.Box<E> {
+  _FakeBox_2(
     Object parent,
     Invocation parentInvocation,
   ) : super(
@@ -77,7 +65,7 @@ class _FakeBox_3<E> extends _i1.SmartFake implements _i4.Box<E> {
 /// A class which mocks [FirebaseProvider].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockFirebaseProvider extends _i1.Mock implements _i5.FirebaseProvider {
+class MockFirebaseProvider extends _i1.Mock implements _i4.FirebaseProvider {
   MockFirebaseProvider() {
     _i1.throwOnMissingStub(this);
   }
@@ -185,53 +173,49 @@ class MockFirebaseProvider extends _i1.Mock implements _i5.FirebaseProvider {
       );
 
   @override
-  _i3.DatabaseReference get selectedSong => (super.noSuchMethod(
-        Invocation.getter(#selectedSong),
-        returnValue: _FakeDatabaseReference_2(
-          this,
-          Invocation.getter(#selectedSong),
-        ),
-      ) as _i3.DatabaseReference);
+  _i5.Stream<Map<String, dynamic>?> get selectedSongStream =>
+      (super.noSuchMethod(
+        Invocation.getter(#selectedSongStream),
+        returnValue: _i5.Stream<Map<String, dynamic>?>.empty(),
+      ) as _i5.Stream<Map<String, dynamic>?>);
 
   @override
-  _i3.DatabaseReference get updateSongList => (super.noSuchMethod(
-        Invocation.getter(#updateSongList),
-        returnValue: _FakeDatabaseReference_2(
-          this,
-          Invocation.getter(#updateSongList),
-        ),
-      ) as _i3.DatabaseReference);
+  _i5.Stream<Map<String, dynamic>?> get updateSongListStream =>
+      (super.noSuchMethod(
+        Invocation.getter(#updateSongListStream),
+        returnValue: _i5.Stream<Map<String, dynamic>?>.empty(),
+      ) as _i5.Stream<Map<String, dynamic>?>);
 
   @override
-  _i6.Future<void> authenticateUser() => (super.noSuchMethod(
+  _i5.Future<void> authenticateUser() => (super.noSuchMethod(
         Invocation.method(
           #authenticateUser,
           [],
         ),
-        returnValue: _i6.Future<void>.value(),
-        returnValueForMissingStub: _i6.Future<void>.value(),
-      ) as _i6.Future<void>);
+        returnValue: _i5.Future<void>.value(),
+        returnValueForMissingStub: _i5.Future<void>.value(),
+      ) as _i5.Future<void>);
 
   @override
-  _i6.Future<void> setUpdateSongList(
-          _i7.UpdateSongListData? updateSongListData) =>
+  _i5.Future<void> setUpdateSongList(
+          _i6.UpdateSongListData? updateSongListData) =>
       (super.noSuchMethod(
         Invocation.method(
           #setUpdateSongList,
           [updateSongListData],
         ),
-        returnValue: _i6.Future<void>.value(),
-        returnValueForMissingStub: _i6.Future<void>.value(),
-      ) as _i6.Future<void>);
+        returnValue: _i5.Future<void>.value(),
+        returnValueForMissingStub: _i5.Future<void>.value(),
+      ) as _i5.Future<void>);
 
   @override
-  _i6.Future<bool> addUserToFirebase(_i8.User? user) => (super.noSuchMethod(
+  _i5.Future<bool> addUserToFirebase(_i7.User? user) => (super.noSuchMethod(
         Invocation.method(
           #addUserToFirebase,
           [user],
         ),
-        returnValue: _i6.Future<bool>.value(false),
-      ) as _i6.Future<bool>);
+        returnValue: _i5.Future<bool>.value(false),
+      ) as _i5.Future<bool>);
 
   @override
   void saveNewSelectedSong(
@@ -239,6 +223,7 @@ class MockFirebaseProvider extends _i1.Mock implements _i5.FirebaseProvider {
     String? title,
     String? interpret,
     String? lyricsWithoutChords,
+    String? lyricsWithChords,
   ) =>
       super.noSuchMethod(
         Invocation.method(
@@ -248,6 +233,7 @@ class MockFirebaseProvider extends _i1.Mock implements _i5.FirebaseProvider {
             title,
             interpret,
             lyricsWithoutChords,
+            lyricsWithChords,
           ],
         ),
         returnValueForMissingStub: null,
@@ -263,53 +249,53 @@ class MockFirebaseProvider extends _i1.Mock implements _i5.FirebaseProvider {
       );
 
   @override
-  _i6.Future<bool> updateUser(_i8.User? user) => (super.noSuchMethod(
+  _i5.Future<bool> updateUser(_i7.User? user) => (super.noSuchMethod(
         Invocation.method(
           #updateUser,
           [user],
         ),
-        returnValue: _i6.Future<bool>.value(false),
-      ) as _i6.Future<bool>);
+        returnValue: _i5.Future<bool>.value(false),
+      ) as _i5.Future<bool>);
 
   @override
-  _i6.Future<List<_i8.User>> getListUsersFromFirestore() => (super.noSuchMethod(
+  _i5.Future<List<_i7.User>> getListUsersFromFirestore() => (super.noSuchMethod(
         Invocation.method(
           #getListUsersFromFirestore,
           [],
         ),
-        returnValue: _i6.Future<List<_i8.User>>.value(<_i8.User>[]),
-      ) as _i6.Future<List<_i8.User>>);
+        returnValue: _i5.Future<List<_i7.User>>.value(<_i7.User>[]),
+      ) as _i5.Future<List<_i7.User>>);
 
   @override
-  _i6.Future<List<String>> getListSongGroupFromFirestore() =>
+  _i5.Future<List<String>> getListSongGroupFromFirestore() =>
       (super.noSuchMethod(
         Invocation.method(
           #getListSongGroupFromFirestore,
           [],
         ),
-        returnValue: _i6.Future<List<String>>.value(<String>[]),
-      ) as _i6.Future<List<String>>);
+        returnValue: _i5.Future<List<String>>.value(<String>[]),
+      ) as _i5.Future<List<String>>);
 
   @override
-  _i6.Future<bool> createNewGroup(String? groupName) => (super.noSuchMethod(
+  _i5.Future<bool> createNewGroup(String? groupName) => (super.noSuchMethod(
         Invocation.method(
           #createNewGroup,
           [groupName],
         ),
-        returnValue: _i6.Future<bool>.value(false),
-      ) as _i6.Future<bool>);
+        returnValue: _i5.Future<bool>.value(false),
+      ) as _i5.Future<bool>);
 
   @override
-  _i6.Future<bool> deleteGroup(String? groupName) => (super.noSuchMethod(
+  _i5.Future<bool> deleteGroup(String? groupName) => (super.noSuchMethod(
         Invocation.method(
           #deleteGroup,
           [groupName],
         ),
-        returnValue: _i6.Future<bool>.value(false),
-      ) as _i6.Future<bool>);
+        returnValue: _i5.Future<bool>.value(false),
+      ) as _i5.Future<bool>);
 
   @override
-  _i6.Future<bool> updateGroup(
+  _i5.Future<bool> updateGroup(
     String? oldGroupName,
     String? newGroupName,
   ) =>
@@ -321,124 +307,124 @@ class MockFirebaseProvider extends _i1.Mock implements _i5.FirebaseProvider {
             newGroupName,
           ],
         ),
-        returnValue: _i6.Future<bool>.value(false),
-      ) as _i6.Future<bool>);
+        returnValue: _i5.Future<bool>.value(false),
+      ) as _i5.Future<bool>);
 
   @override
-  _i6.Future<bool> deleteUser(_i8.User? user) => (super.noSuchMethod(
+  _i5.Future<bool> deleteUser(_i7.User? user) => (super.noSuchMethod(
         Invocation.method(
           #deleteUser,
           [user],
         ),
-        returnValue: _i6.Future<bool>.value(false),
-      ) as _i6.Future<bool>);
+        returnValue: _i5.Future<bool>.value(false),
+      ) as _i5.Future<bool>);
 
   @override
-  _i6.Future<bool> addSongToFirebase(_i9.Song? songData) => (super.noSuchMethod(
+  _i5.Future<bool> addSongToFirebase(_i8.Song? songData) => (super.noSuchMethod(
         Invocation.method(
           #addSongToFirebase,
           [songData],
         ),
-        returnValue: _i6.Future<bool>.value(false),
-      ) as _i6.Future<bool>);
+        returnValue: _i5.Future<bool>.value(false),
+      ) as _i5.Future<bool>);
 
   @override
-  _i6.Future<bool> updateSong(_i9.Song? songData) => (super.noSuchMethod(
+  _i5.Future<bool> updateSong(_i8.Song? songData) => (super.noSuchMethod(
         Invocation.method(
           #updateSong,
           [songData],
         ),
-        returnValue: _i6.Future<bool>.value(false),
-      ) as _i6.Future<bool>);
+        returnValue: _i5.Future<bool>.value(false),
+      ) as _i5.Future<bool>);
 
   @override
-  _i6.Future<List<_i9.Song>> getListSongsFromFirestore() => (super.noSuchMethod(
+  _i5.Future<List<_i8.Song>> getListSongsFromFirestore() => (super.noSuchMethod(
         Invocation.method(
           #getListSongsFromFirestore,
           [],
         ),
-        returnValue: _i6.Future<List<_i9.Song>>.value(<_i9.Song>[]),
-      ) as _i6.Future<List<_i9.Song>>);
+        returnValue: _i5.Future<List<_i8.Song>>.value(<_i8.Song>[]),
+      ) as _i5.Future<List<_i8.Song>>);
 
   @override
-  _i6.Future<bool> deleteSong(String? songId) => (super.noSuchMethod(
+  _i5.Future<bool> deleteSong(String? songId) => (super.noSuchMethod(
         Invocation.method(
           #deleteSong,
           [songId],
         ),
-        returnValue: _i6.Future<bool>.value(false),
-      ) as _i6.Future<bool>);
+        returnValue: _i5.Future<bool>.value(false),
+      ) as _i5.Future<bool>);
 
   @override
-  _i6.Future<bool> addPlaylistToFirebase(_i10.Playlist? playlist) =>
+  _i5.Future<bool> addPlaylistToFirebase(_i9.Playlist? playlist) =>
       (super.noSuchMethod(
         Invocation.method(
           #addPlaylistToFirebase,
           [playlist],
         ),
-        returnValue: _i6.Future<bool>.value(false),
-      ) as _i6.Future<bool>);
+        returnValue: _i5.Future<bool>.value(false),
+      ) as _i5.Future<bool>);
 
   @override
-  _i6.Future<bool> updatePlaylist(_i10.Playlist? playlist) =>
+  _i5.Future<bool> updatePlaylist(_i9.Playlist? playlist) =>
       (super.noSuchMethod(
         Invocation.method(
           #updatePlaylist,
           [playlist],
         ),
-        returnValue: _i6.Future<bool>.value(false),
-      ) as _i6.Future<bool>);
+        returnValue: _i5.Future<bool>.value(false),
+      ) as _i5.Future<bool>);
 
   @override
-  _i6.Future<bool> addGroupsToFirebase(List<String>? listGroup) =>
+  _i5.Future<bool> addGroupsToFirebase(List<String>? listGroup) =>
       (super.noSuchMethod(
         Invocation.method(
           #addGroupsToFirebase,
           [listGroup],
         ),
-        returnValue: _i6.Future<bool>.value(false),
-      ) as _i6.Future<bool>);
+        returnValue: _i5.Future<bool>.value(false),
+      ) as _i5.Future<bool>);
 
   @override
-  _i6.Future<List<_i10.Playlist>> getListPlaylistsFromFirestore() =>
+  _i5.Future<List<_i9.Playlist>> getListPlaylistsFromFirestore() =>
       (super.noSuchMethod(
         Invocation.method(
           #getListPlaylistsFromFirestore,
           [],
         ),
-        returnValue: _i6.Future<List<_i10.Playlist>>.value(<_i10.Playlist>[]),
-      ) as _i6.Future<List<_i10.Playlist>>);
+        returnValue: _i5.Future<List<_i9.Playlist>>.value(<_i9.Playlist>[]),
+      ) as _i5.Future<List<_i9.Playlist>>);
 
   @override
-  _i6.Future<bool> deletePlaylist(_i10.Playlist? playlist) =>
+  _i5.Future<bool> deletePlaylist(_i9.Playlist? playlist) =>
       (super.noSuchMethod(
         Invocation.method(
           #deletePlaylist,
           [playlist],
         ),
-        returnValue: _i6.Future<bool>.value(false),
-      ) as _i6.Future<bool>);
+        returnValue: _i5.Future<bool>.value(false),
+      ) as _i5.Future<bool>);
 }
 
 /// A class which mocks [HiveProvider].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockHiveProvider extends _i1.Mock implements _i11.HiveProvider {
+class MockHiveProvider extends _i1.Mock implements _i10.HiveProvider {
   MockHiveProvider() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i4.Box<dynamic> get settingsBox => (super.noSuchMethod(
+  _i3.Box<dynamic> get settingsBox => (super.noSuchMethod(
         Invocation.getter(#settingsBox),
-        returnValue: _FakeBox_3<dynamic>(
+        returnValue: _FakeBox_2<dynamic>(
           this,
           Invocation.getter(#settingsBox),
         ),
-      ) as _i4.Box<dynamic>);
+      ) as _i3.Box<dynamic>);
 
   @override
-  set settingsBox(_i4.Box<dynamic>? _settingsBox) => super.noSuchMethod(
+  set settingsBox(_i3.Box<dynamic>? _settingsBox) => super.noSuchMethod(
         Invocation.setter(
           #settingsBox,
           _settingsBox,
@@ -447,16 +433,16 @@ class MockHiveProvider extends _i1.Mock implements _i11.HiveProvider {
       );
 
   @override
-  _i4.Box<dynamic> get transposeBox => (super.noSuchMethod(
+  _i3.Box<dynamic> get transposeBox => (super.noSuchMethod(
         Invocation.getter(#transposeBox),
-        returnValue: _FakeBox_3<dynamic>(
+        returnValue: _FakeBox_2<dynamic>(
           this,
           Invocation.getter(#transposeBox),
         ),
-      ) as _i4.Box<dynamic>);
+      ) as _i3.Box<dynamic>);
 
   @override
-  set transposeBox(_i4.Box<dynamic>? _transposeBox) => super.noSuchMethod(
+  set transposeBox(_i3.Box<dynamic>? _transposeBox) => super.noSuchMethod(
         Invocation.setter(
           #transposeBox,
           _transposeBox,
@@ -465,16 +451,16 @@ class MockHiveProvider extends _i1.Mock implements _i11.HiveProvider {
       );
 
   @override
-  _i4.Box<dynamic> get webSongBox => (super.noSuchMethod(
+  _i3.Box<dynamic> get webSongBox => (super.noSuchMethod(
         Invocation.getter(#webSongBox),
-        returnValue: _FakeBox_3<dynamic>(
+        returnValue: _FakeBox_2<dynamic>(
           this,
           Invocation.getter(#webSongBox),
         ),
-      ) as _i4.Box<dynamic>);
+      ) as _i3.Box<dynamic>);
 
   @override
-  set webSongBox(_i4.Box<dynamic>? _webSongBox) => super.noSuchMethod(
+  set webSongBox(_i3.Box<dynamic>? _webSongBox) => super.noSuchMethod(
         Invocation.setter(
           #webSongBox,
           _webSongBox,
@@ -483,16 +469,16 @@ class MockHiveProvider extends _i1.Mock implements _i11.HiveProvider {
       );
 
   @override
-  _i4.Box<dynamic> get interpretWebBox => (super.noSuchMethod(
+  _i3.Box<dynamic> get interpretWebBox => (super.noSuchMethod(
         Invocation.getter(#interpretWebBox),
-        returnValue: _FakeBox_3<dynamic>(
+        returnValue: _FakeBox_2<dynamic>(
           this,
           Invocation.getter(#interpretWebBox),
         ),
-      ) as _i4.Box<dynamic>);
+      ) as _i3.Box<dynamic>);
 
   @override
-  set interpretWebBox(_i4.Box<dynamic>? _interpretWebBox) => super.noSuchMethod(
+  set interpretWebBox(_i3.Box<dynamic>? _interpretWebBox) => super.noSuchMethod(
         Invocation.setter(
           #interpretWebBox,
           _interpretWebBox,
@@ -501,14 +487,14 @@ class MockHiveProvider extends _i1.Mock implements _i11.HiveProvider {
       );
 
   @override
-  _i6.Future<void> initHiveBox() => (super.noSuchMethod(
+  _i5.Future<void> initHiveBox() => (super.noSuchMethod(
         Invocation.method(
           #initHiveBox,
           [],
         ),
-        returnValue: _i6.Future<void>.value(),
-        returnValueForMissingStub: _i6.Future<void>.value(),
-      ) as _i6.Future<void>);
+        returnValue: _i5.Future<void>.value(),
+        returnValueForMissingStub: _i5.Future<void>.value(),
+      ) as _i5.Future<void>);
 
   @override
   dynamic getSettingsValue(String? name) =>
@@ -559,7 +545,7 @@ class MockHiveProvider extends _i1.Mock implements _i11.HiveProvider {
       ) as int);
 
   @override
-  void setCurrentUser(_i8.User? user) => super.noSuchMethod(
+  void setCurrentUser(_i7.User? user) => super.noSuchMethod(
         Invocation.method(
           #setCurrentUser,
           [user],
@@ -570,7 +556,7 @@ class MockHiveProvider extends _i1.Mock implements _i11.HiveProvider {
   @override
   void setWebSong(
     String? key,
-    _i12.WebSong? value,
+    _i11.WebSong? value,
   ) =>
       super.noSuchMethod(
         Invocation.method(
@@ -586,7 +572,7 @@ class MockHiveProvider extends _i1.Mock implements _i11.HiveProvider {
   @override
   void setUpdateSongListData(
     String? key,
-    _i7.UpdateSongListData? value,
+    _i6.UpdateSongListData? value,
   ) =>
       super.noSuchMethod(
         Invocation.method(
@@ -600,23 +586,23 @@ class MockHiveProvider extends _i1.Mock implements _i11.HiveProvider {
       );
 
   @override
-  _i7.UpdateSongListData? getUpdateSongListData(String? key) =>
+  _i6.UpdateSongListData? getUpdateSongListData(String? key) =>
       (super.noSuchMethod(Invocation.method(
         #getUpdateSongListData,
         [key],
-      )) as _i7.UpdateSongListData?);
+      )) as _i6.UpdateSongListData?);
 
   @override
-  _i12.WebSong? getWebSong(String? key) =>
+  _i11.WebSong? getWebSong(String? key) =>
       (super.noSuchMethod(Invocation.method(
         #getWebSong,
         [key],
-      )) as _i12.WebSong?);
+      )) as _i11.WebSong?);
 
   @override
   void setHistoryInterpretToWebBox(
     String? nameWeb,
-    _i13.WebInterpret? interpret,
+    _i12.WebInterpret? interpret,
   ) =>
       super.noSuchMethod(
         Invocation.method(
@@ -630,7 +616,7 @@ class MockHiveProvider extends _i1.Mock implements _i11.HiveProvider {
       );
 
   @override
-  _i13.WebInterpret? getInterpretFromWebBox(
+  _i12.WebInterpret? getInterpretFromWebBox(
     String? nameWeb,
     String? ref,
   ) =>
@@ -640,15 +626,15 @@ class MockHiveProvider extends _i1.Mock implements _i11.HiveProvider {
           nameWeb,
           ref,
         ],
-      )) as _i13.WebInterpret?);
+      )) as _i12.WebInterpret?);
 
   @override
-  List<_i13.WebInterpret> getInterpretsFromWebBox(String? nameWeb) =>
+  List<_i12.WebInterpret> getInterpretsFromWebBox(String? nameWeb) =>
       (super.noSuchMethod(
         Invocation.method(
           #getInterpretsFromWebBox,
           [nameWeb],
         ),
-        returnValue: <_i13.WebInterpret>[],
-      ) as List<_i13.WebInterpret>);
+        returnValue: <_i12.WebInterpret>[],
+      ) as List<_i12.WebInterpret>);
 }

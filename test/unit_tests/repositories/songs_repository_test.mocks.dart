@@ -14,8 +14,8 @@ import 'package:default_project/model/web_interpret.dart' as _i13;
 import 'package:default_project/model/web_song.dart' as _i12;
 import 'package:default_project/providers/firebase_provider.dart' as _i5;
 import 'package:default_project/providers/hive_provider.dart' as _i11;
-import 'package:firebase_database/firebase_database.dart' as _i3;
-import 'package:hive/hive.dart' as _i4;
+import 'package:firebase_database/firebase_database.dart' as _i4;
+import 'package:hive/hive.dart' as _i3;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i14;
 
@@ -54,9 +54,8 @@ class _FakeFirebaseFirestore_1 extends _i1.SmartFake
         );
 }
 
-class _FakeDatabaseReference_2 extends _i1.SmartFake
-    implements _i3.DatabaseReference {
-  _FakeDatabaseReference_2(
+class _FakeBox_2<E> extends _i1.SmartFake implements _i3.Box<E> {
+  _FakeBox_2(
     Object parent,
     Invocation parentInvocation,
   ) : super(
@@ -65,8 +64,9 @@ class _FakeDatabaseReference_2 extends _i1.SmartFake
         );
 }
 
-class _FakeBox_3<E> extends _i1.SmartFake implements _i4.Box<E> {
-  _FakeBox_3(
+class _FakeDatabaseReference_3 extends _i1.SmartFake
+    implements _i4.DatabaseReference {
+  _FakeDatabaseReference_3(
     Object parent,
     Invocation parentInvocation,
   ) : super(
@@ -76,7 +76,7 @@ class _FakeBox_3<E> extends _i1.SmartFake implements _i4.Box<E> {
 }
 
 class _FakeTransactionResult_4 extends _i1.SmartFake
-    implements _i3.TransactionResult {
+    implements _i4.TransactionResult {
   _FakeTransactionResult_4(
     Object parent,
     Invocation parentInvocation,
@@ -86,7 +86,7 @@ class _FakeTransactionResult_4 extends _i1.SmartFake
         );
 }
 
-class _FakeOnDisconnect_5 extends _i1.SmartFake implements _i3.OnDisconnect {
+class _FakeOnDisconnect_5 extends _i1.SmartFake implements _i4.OnDisconnect {
   _FakeOnDisconnect_5(
     Object parent,
     Invocation parentInvocation,
@@ -96,7 +96,7 @@ class _FakeOnDisconnect_5 extends _i1.SmartFake implements _i3.OnDisconnect {
         );
 }
 
-class _FakeDataSnapshot_6 extends _i1.SmartFake implements _i3.DataSnapshot {
+class _FakeDataSnapshot_6 extends _i1.SmartFake implements _i4.DataSnapshot {
   _FakeDataSnapshot_6(
     Object parent,
     Invocation parentInvocation,
@@ -106,7 +106,7 @@ class _FakeDataSnapshot_6 extends _i1.SmartFake implements _i3.DataSnapshot {
         );
 }
 
-class _FakeDatabaseEvent_7 extends _i1.SmartFake implements _i3.DatabaseEvent {
+class _FakeDatabaseEvent_7 extends _i1.SmartFake implements _i4.DatabaseEvent {
   _FakeDatabaseEvent_7(
     Object parent,
     Invocation parentInvocation,
@@ -116,7 +116,7 @@ class _FakeDatabaseEvent_7 extends _i1.SmartFake implements _i3.DatabaseEvent {
         );
 }
 
-class _FakeQuery_8 extends _i1.SmartFake implements _i3.Query {
+class _FakeQuery_8 extends _i1.SmartFake implements _i4.Query {
   _FakeQuery_8(
     Object parent,
     Invocation parentInvocation,
@@ -237,22 +237,18 @@ class MockFirebaseProvider extends _i1.Mock implements _i5.FirebaseProvider {
       );
 
   @override
-  _i3.DatabaseReference get selectedSong => (super.noSuchMethod(
-        Invocation.getter(#selectedSong),
-        returnValue: _FakeDatabaseReference_2(
-          this,
-          Invocation.getter(#selectedSong),
-        ),
-      ) as _i3.DatabaseReference);
+  _i6.Stream<Map<String, dynamic>?> get selectedSongStream =>
+      (super.noSuchMethod(
+        Invocation.getter(#selectedSongStream),
+        returnValue: _i6.Stream<Map<String, dynamic>?>.empty(),
+      ) as _i6.Stream<Map<String, dynamic>?>);
 
   @override
-  _i3.DatabaseReference get updateSongList => (super.noSuchMethod(
-        Invocation.getter(#updateSongList),
-        returnValue: _FakeDatabaseReference_2(
-          this,
-          Invocation.getter(#updateSongList),
-        ),
-      ) as _i3.DatabaseReference);
+  _i6.Stream<Map<String, dynamic>?> get updateSongListStream =>
+      (super.noSuchMethod(
+        Invocation.getter(#updateSongListStream),
+        returnValue: _i6.Stream<Map<String, dynamic>?>.empty(),
+      ) as _i6.Stream<Map<String, dynamic>?>);
 
   @override
   _i6.Future<void> authenticateUser() => (super.noSuchMethod(
@@ -291,6 +287,7 @@ class MockFirebaseProvider extends _i1.Mock implements _i5.FirebaseProvider {
     String? title,
     String? interpret,
     String? lyricsWithoutChords,
+    String? lyricsWithChords,
   ) =>
       super.noSuchMethod(
         Invocation.method(
@@ -300,6 +297,7 @@ class MockFirebaseProvider extends _i1.Mock implements _i5.FirebaseProvider {
             title,
             interpret,
             lyricsWithoutChords,
+            lyricsWithChords,
           ],
         ),
         returnValueForMissingStub: null,
@@ -481,16 +479,16 @@ class MockHiveProvider extends _i1.Mock implements _i11.HiveProvider {
   }
 
   @override
-  _i4.Box<dynamic> get settingsBox => (super.noSuchMethod(
+  _i3.Box<dynamic> get settingsBox => (super.noSuchMethod(
         Invocation.getter(#settingsBox),
-        returnValue: _FakeBox_3<dynamic>(
+        returnValue: _FakeBox_2<dynamic>(
           this,
           Invocation.getter(#settingsBox),
         ),
-      ) as _i4.Box<dynamic>);
+      ) as _i3.Box<dynamic>);
 
   @override
-  set settingsBox(_i4.Box<dynamic>? _settingsBox) => super.noSuchMethod(
+  set settingsBox(_i3.Box<dynamic>? _settingsBox) => super.noSuchMethod(
         Invocation.setter(
           #settingsBox,
           _settingsBox,
@@ -499,16 +497,16 @@ class MockHiveProvider extends _i1.Mock implements _i11.HiveProvider {
       );
 
   @override
-  _i4.Box<dynamic> get transposeBox => (super.noSuchMethod(
+  _i3.Box<dynamic> get transposeBox => (super.noSuchMethod(
         Invocation.getter(#transposeBox),
-        returnValue: _FakeBox_3<dynamic>(
+        returnValue: _FakeBox_2<dynamic>(
           this,
           Invocation.getter(#transposeBox),
         ),
-      ) as _i4.Box<dynamic>);
+      ) as _i3.Box<dynamic>);
 
   @override
-  set transposeBox(_i4.Box<dynamic>? _transposeBox) => super.noSuchMethod(
+  set transposeBox(_i3.Box<dynamic>? _transposeBox) => super.noSuchMethod(
         Invocation.setter(
           #transposeBox,
           _transposeBox,
@@ -517,16 +515,16 @@ class MockHiveProvider extends _i1.Mock implements _i11.HiveProvider {
       );
 
   @override
-  _i4.Box<dynamic> get webSongBox => (super.noSuchMethod(
+  _i3.Box<dynamic> get webSongBox => (super.noSuchMethod(
         Invocation.getter(#webSongBox),
-        returnValue: _FakeBox_3<dynamic>(
+        returnValue: _FakeBox_2<dynamic>(
           this,
           Invocation.getter(#webSongBox),
         ),
-      ) as _i4.Box<dynamic>);
+      ) as _i3.Box<dynamic>);
 
   @override
-  set webSongBox(_i4.Box<dynamic>? _webSongBox) => super.noSuchMethod(
+  set webSongBox(_i3.Box<dynamic>? _webSongBox) => super.noSuchMethod(
         Invocation.setter(
           #webSongBox,
           _webSongBox,
@@ -535,16 +533,16 @@ class MockHiveProvider extends _i1.Mock implements _i11.HiveProvider {
       );
 
   @override
-  _i4.Box<dynamic> get interpretWebBox => (super.noSuchMethod(
+  _i3.Box<dynamic> get interpretWebBox => (super.noSuchMethod(
         Invocation.getter(#interpretWebBox),
-        returnValue: _FakeBox_3<dynamic>(
+        returnValue: _FakeBox_2<dynamic>(
           this,
           Invocation.getter(#interpretWebBox),
         ),
-      ) as _i4.Box<dynamic>);
+      ) as _i3.Box<dynamic>);
 
   @override
-  set interpretWebBox(_i4.Box<dynamic>? _interpretWebBox) => super.noSuchMethod(
+  set interpretWebBox(_i3.Box<dynamic>? _interpretWebBox) => super.noSuchMethod(
         Invocation.setter(
           #interpretWebBox,
           _interpretWebBox,
@@ -708,28 +706,28 @@ class MockHiveProvider extends _i1.Mock implements _i11.HiveProvider {
 /// A class which mocks [DatabaseReference].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockDatabaseReference extends _i1.Mock implements _i3.DatabaseReference {
+class MockDatabaseReference extends _i1.Mock implements _i4.DatabaseReference {
   MockDatabaseReference() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i3.DatabaseReference get root => (super.noSuchMethod(
+  _i4.DatabaseReference get root => (super.noSuchMethod(
         Invocation.getter(#root),
-        returnValue: _FakeDatabaseReference_2(
+        returnValue: _FakeDatabaseReference_3(
           this,
           Invocation.getter(#root),
         ),
-      ) as _i3.DatabaseReference);
+      ) as _i4.DatabaseReference);
 
   @override
-  _i3.DatabaseReference get ref => (super.noSuchMethod(
+  _i4.DatabaseReference get ref => (super.noSuchMethod(
         Invocation.getter(#ref),
-        returnValue: _FakeDatabaseReference_2(
+        returnValue: _FakeDatabaseReference_3(
           this,
           Invocation.getter(#ref),
         ),
-      ) as _i3.DatabaseReference);
+      ) as _i4.DatabaseReference);
 
   @override
   String get path => (super.noSuchMethod(
@@ -741,64 +739,64 @@ class MockDatabaseReference extends _i1.Mock implements _i3.DatabaseReference {
       ) as String);
 
   @override
-  _i6.Stream<_i3.DatabaseEvent> get onChildAdded => (super.noSuchMethod(
+  _i6.Stream<_i4.DatabaseEvent> get onChildAdded => (super.noSuchMethod(
         Invocation.getter(#onChildAdded),
-        returnValue: _i6.Stream<_i3.DatabaseEvent>.empty(),
-      ) as _i6.Stream<_i3.DatabaseEvent>);
+        returnValue: _i6.Stream<_i4.DatabaseEvent>.empty(),
+      ) as _i6.Stream<_i4.DatabaseEvent>);
 
   @override
-  _i6.Stream<_i3.DatabaseEvent> get onChildRemoved => (super.noSuchMethod(
+  _i6.Stream<_i4.DatabaseEvent> get onChildRemoved => (super.noSuchMethod(
         Invocation.getter(#onChildRemoved),
-        returnValue: _i6.Stream<_i3.DatabaseEvent>.empty(),
-      ) as _i6.Stream<_i3.DatabaseEvent>);
+        returnValue: _i6.Stream<_i4.DatabaseEvent>.empty(),
+      ) as _i6.Stream<_i4.DatabaseEvent>);
 
   @override
-  _i6.Stream<_i3.DatabaseEvent> get onChildChanged => (super.noSuchMethod(
+  _i6.Stream<_i4.DatabaseEvent> get onChildChanged => (super.noSuchMethod(
         Invocation.getter(#onChildChanged),
-        returnValue: _i6.Stream<_i3.DatabaseEvent>.empty(),
-      ) as _i6.Stream<_i3.DatabaseEvent>);
+        returnValue: _i6.Stream<_i4.DatabaseEvent>.empty(),
+      ) as _i6.Stream<_i4.DatabaseEvent>);
 
   @override
-  _i6.Stream<_i3.DatabaseEvent> get onChildMoved => (super.noSuchMethod(
+  _i6.Stream<_i4.DatabaseEvent> get onChildMoved => (super.noSuchMethod(
         Invocation.getter(#onChildMoved),
-        returnValue: _i6.Stream<_i3.DatabaseEvent>.empty(),
-      ) as _i6.Stream<_i3.DatabaseEvent>);
+        returnValue: _i6.Stream<_i4.DatabaseEvent>.empty(),
+      ) as _i6.Stream<_i4.DatabaseEvent>);
 
   @override
-  _i6.Stream<_i3.DatabaseEvent> get onValue => (super.noSuchMethod(
+  _i6.Stream<_i4.DatabaseEvent> get onValue => (super.noSuchMethod(
         Invocation.getter(#onValue),
-        returnValue: _i6.Stream<_i3.DatabaseEvent>.empty(),
-      ) as _i6.Stream<_i3.DatabaseEvent>);
+        returnValue: _i6.Stream<_i4.DatabaseEvent>.empty(),
+      ) as _i6.Stream<_i4.DatabaseEvent>);
 
   @override
-  _i3.DatabaseReference child(String? path) => (super.noSuchMethod(
+  _i4.DatabaseReference child(String? path) => (super.noSuchMethod(
         Invocation.method(
           #child,
           [path],
         ),
-        returnValue: _FakeDatabaseReference_2(
+        returnValue: _FakeDatabaseReference_3(
           this,
           Invocation.method(
             #child,
             [path],
           ),
         ),
-      ) as _i3.DatabaseReference);
+      ) as _i4.DatabaseReference);
 
   @override
-  _i3.DatabaseReference push() => (super.noSuchMethod(
+  _i4.DatabaseReference push() => (super.noSuchMethod(
         Invocation.method(
           #push,
           [],
         ),
-        returnValue: _FakeDatabaseReference_2(
+        returnValue: _FakeDatabaseReference_3(
           this,
           Invocation.method(
             #push,
             [],
           ),
         ),
-      ) as _i3.DatabaseReference);
+      ) as _i4.DatabaseReference);
 
   @override
   _i6.Future<void> set(Object? value) => (super.noSuchMethod(
@@ -858,8 +856,8 @@ class MockDatabaseReference extends _i1.Mock implements _i3.DatabaseReference {
       ) as _i6.Future<void>);
 
   @override
-  _i6.Future<_i3.TransactionResult> runTransaction(
-    _i3.TransactionHandler? transactionHandler, {
+  _i6.Future<_i4.TransactionResult> runTransaction(
+    _i4.TransactionHandler? transactionHandler, {
     bool? applyLocally = true,
   }) =>
       (super.noSuchMethod(
@@ -869,7 +867,7 @@ class MockDatabaseReference extends _i1.Mock implements _i3.DatabaseReference {
           {#applyLocally: applyLocally},
         ),
         returnValue:
-            _i6.Future<_i3.TransactionResult>.value(_FakeTransactionResult_4(
+            _i6.Future<_i4.TransactionResult>.value(_FakeTransactionResult_4(
           this,
           Invocation.method(
             #runTransaction,
@@ -877,10 +875,10 @@ class MockDatabaseReference extends _i1.Mock implements _i3.DatabaseReference {
             {#applyLocally: applyLocally},
           ),
         )),
-      ) as _i6.Future<_i3.TransactionResult>);
+      ) as _i6.Future<_i4.TransactionResult>);
 
   @override
-  _i3.OnDisconnect onDisconnect() => (super.noSuchMethod(
+  _i4.OnDisconnect onDisconnect() => (super.noSuchMethod(
         Invocation.method(
           #onDisconnect,
           [],
@@ -892,42 +890,42 @@ class MockDatabaseReference extends _i1.Mock implements _i3.DatabaseReference {
             [],
           ),
         ),
-      ) as _i3.OnDisconnect);
+      ) as _i4.OnDisconnect);
 
   @override
-  _i6.Future<_i3.DataSnapshot> get() => (super.noSuchMethod(
+  _i6.Future<_i4.DataSnapshot> get() => (super.noSuchMethod(
         Invocation.method(
           #get,
           [],
         ),
-        returnValue: _i6.Future<_i3.DataSnapshot>.value(_FakeDataSnapshot_6(
+        returnValue: _i6.Future<_i4.DataSnapshot>.value(_FakeDataSnapshot_6(
           this,
           Invocation.method(
             #get,
             [],
           ),
         )),
-      ) as _i6.Future<_i3.DataSnapshot>);
+      ) as _i6.Future<_i4.DataSnapshot>);
 
   @override
-  _i6.Future<_i3.DatabaseEvent> once(
-          [_i3.DatabaseEventType? eventType = _i3.DatabaseEventType.value]) =>
+  _i6.Future<_i4.DatabaseEvent> once(
+          [_i4.DatabaseEventType? eventType = _i4.DatabaseEventType.value]) =>
       (super.noSuchMethod(
         Invocation.method(
           #once,
           [eventType],
         ),
-        returnValue: _i6.Future<_i3.DatabaseEvent>.value(_FakeDatabaseEvent_7(
+        returnValue: _i6.Future<_i4.DatabaseEvent>.value(_FakeDatabaseEvent_7(
           this,
           Invocation.method(
             #once,
             [eventType],
           ),
         )),
-      ) as _i6.Future<_i3.DatabaseEvent>);
+      ) as _i6.Future<_i4.DatabaseEvent>);
 
   @override
-  _i3.Query startAt(
+  _i4.Query startAt(
     Object? value, {
     String? key,
   }) =>
@@ -945,10 +943,10 @@ class MockDatabaseReference extends _i1.Mock implements _i3.DatabaseReference {
             {#key: key},
           ),
         ),
-      ) as _i3.Query);
+      ) as _i4.Query);
 
   @override
-  _i3.Query startAfter(
+  _i4.Query startAfter(
     Object? value, {
     String? key,
   }) =>
@@ -966,10 +964,10 @@ class MockDatabaseReference extends _i1.Mock implements _i3.DatabaseReference {
             {#key: key},
           ),
         ),
-      ) as _i3.Query);
+      ) as _i4.Query);
 
   @override
-  _i3.Query endAt(
+  _i4.Query endAt(
     Object? value, {
     String? key,
   }) =>
@@ -987,10 +985,10 @@ class MockDatabaseReference extends _i1.Mock implements _i3.DatabaseReference {
             {#key: key},
           ),
         ),
-      ) as _i3.Query);
+      ) as _i4.Query);
 
   @override
-  _i3.Query endBefore(
+  _i4.Query endBefore(
     Object? value, {
     String? key,
   }) =>
@@ -1008,10 +1006,10 @@ class MockDatabaseReference extends _i1.Mock implements _i3.DatabaseReference {
             {#key: key},
           ),
         ),
-      ) as _i3.Query);
+      ) as _i4.Query);
 
   @override
-  _i3.Query equalTo(
+  _i4.Query equalTo(
     Object? value, {
     String? key,
   }) =>
@@ -1029,10 +1027,10 @@ class MockDatabaseReference extends _i1.Mock implements _i3.DatabaseReference {
             {#key: key},
           ),
         ),
-      ) as _i3.Query);
+      ) as _i4.Query);
 
   @override
-  _i3.Query limitToFirst(int? limit) => (super.noSuchMethod(
+  _i4.Query limitToFirst(int? limit) => (super.noSuchMethod(
         Invocation.method(
           #limitToFirst,
           [limit],
@@ -1044,10 +1042,10 @@ class MockDatabaseReference extends _i1.Mock implements _i3.DatabaseReference {
             [limit],
           ),
         ),
-      ) as _i3.Query);
+      ) as _i4.Query);
 
   @override
-  _i3.Query limitToLast(int? limit) => (super.noSuchMethod(
+  _i4.Query limitToLast(int? limit) => (super.noSuchMethod(
         Invocation.method(
           #limitToLast,
           [limit],
@@ -1059,10 +1057,10 @@ class MockDatabaseReference extends _i1.Mock implements _i3.DatabaseReference {
             [limit],
           ),
         ),
-      ) as _i3.Query);
+      ) as _i4.Query);
 
   @override
-  _i3.Query orderByChild(String? path) => (super.noSuchMethod(
+  _i4.Query orderByChild(String? path) => (super.noSuchMethod(
         Invocation.method(
           #orderByChild,
           [path],
@@ -1074,10 +1072,10 @@ class MockDatabaseReference extends _i1.Mock implements _i3.DatabaseReference {
             [path],
           ),
         ),
-      ) as _i3.Query);
+      ) as _i4.Query);
 
   @override
-  _i3.Query orderByKey() => (super.noSuchMethod(
+  _i4.Query orderByKey() => (super.noSuchMethod(
         Invocation.method(
           #orderByKey,
           [],
@@ -1089,10 +1087,10 @@ class MockDatabaseReference extends _i1.Mock implements _i3.DatabaseReference {
             [],
           ),
         ),
-      ) as _i3.Query);
+      ) as _i4.Query);
 
   @override
-  _i3.Query orderByValue() => (super.noSuchMethod(
+  _i4.Query orderByValue() => (super.noSuchMethod(
         Invocation.method(
           #orderByValue,
           [],
@@ -1104,10 +1102,10 @@ class MockDatabaseReference extends _i1.Mock implements _i3.DatabaseReference {
             [],
           ),
         ),
-      ) as _i3.Query);
+      ) as _i4.Query);
 
   @override
-  _i3.Query orderByPriority() => (super.noSuchMethod(
+  _i4.Query orderByPriority() => (super.noSuchMethod(
         Invocation.method(
           #orderByPriority,
           [],
@@ -1119,7 +1117,7 @@ class MockDatabaseReference extends _i1.Mock implements _i3.DatabaseReference {
             [],
           ),
         ),
-      ) as _i3.Query);
+      ) as _i4.Query);
 
   @override
   _i6.Future<void> keepSynced(bool? value) => (super.noSuchMethod(

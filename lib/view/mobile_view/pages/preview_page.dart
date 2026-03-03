@@ -79,7 +79,9 @@ class _PreviewPageMobileState extends State<PreviewPageMobile> {
                             color: (state.data.song != null && state.selectedSongId == state.data.song?.id) ? Colors.green : AppColor.primaryDarkColor,
                           ),
                           onPressed: () {
-                            context.read<PreviewChordBloc>().add(SelectSongInPreview(selectSongId: state.data.song?.id ?? '', title: '', interpret: '', lyricsWithoutChords: ''));
+                            context
+                                .read<PreviewChordBloc>()
+                                .add(SelectSongInPreview(selectSongId: state.data.song?.id ?? '', title: '', interpret: '', lyricsWithoutChords: '', lyricsWithChords: ''));
                           }),
                       IconButton(
                           onPressed: () {

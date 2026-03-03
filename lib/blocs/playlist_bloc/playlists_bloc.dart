@@ -265,9 +265,9 @@ class PlaylistsBloc extends Bloc<PlaylistsEvent, PlaylistsState> {
     final state = this.state;
     Song? selectedSong = songsRepository.songs.firstWhereOrNull((element) => element.id == event.selectSongId);
     if (selectedSong == null) {
-      songsRepository.selectSong(event.selectSongId, '', '', '');
+      songsRepository.selectSong(event.selectSongId, '', '', '', '');
     } else {
-      songsRepository.selectSong(event.selectSongId, selectedSong.title, selectedSong.interpret ?? '', selectedSong.lyricsWithoutChords);
+      songsRepository.selectSong(event.selectSongId, selectedSong.title, selectedSong.interpret ?? '', selectedSong.lyricsWithoutChords, selectedSong.lyrics);
       emit(state.copyWith(selectedSongId: songsRepository.selectedSongId));
     }
   }
