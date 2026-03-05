@@ -287,6 +287,13 @@ class MockFirebaseProvider extends _i1.Mock implements _i7.FirebaseProvider {
       ) as _i8.Stream<Map<String, dynamic>?>);
 
   @override
+  _i8.Stream<Map<String, dynamic>?> get updatePlaylistStream =>
+      (super.noSuchMethod(
+        Invocation.getter(#updatePlaylistStream),
+        returnValue: _i8.Stream<Map<String, dynamic>?>.empty(),
+      ) as _i8.Stream<Map<String, dynamic>?>);
+
+  @override
   _i8.Future<void> authenticateUser() => (super.noSuchMethod(
         Invocation.method(
           #authenticateUser,
@@ -303,6 +310,18 @@ class MockFirebaseProvider extends _i1.Mock implements _i7.FirebaseProvider {
         Invocation.method(
           #setUpdateSongList,
           [updateSongListData],
+        ),
+        returnValue: _i8.Future<void>.value(),
+        returnValueForMissingStub: _i8.Future<void>.value(),
+      ) as _i8.Future<void>);
+
+  @override
+  _i8.Future<void> setUpdatePlaylist(
+          _i9.UpdateSongListData? updatePlaylistData) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #setUpdatePlaylist,
+          [updatePlaylistData],
         ),
         returnValue: _i8.Future<void>.value(),
         returnValueForMissingStub: _i8.Future<void>.value(),
@@ -990,6 +1009,15 @@ class MockSettingsRepository extends _i1.Mock
         returnValue: _i15.dummyValue<String>(
           this,
           Invocation.getter(#qrWebAppUrl),
+        ),
+      ) as String);
+
+  @override
+  String get qrZizkoviUrl => (super.noSuchMethod(
+        Invocation.getter(#qrZizkoviUrl),
+        returnValue: _i15.dummyValue<String>(
+          this,
+          Invocation.getter(#qrZizkoviUrl),
         ),
       ) as String);
 

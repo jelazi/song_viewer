@@ -216,5 +216,12 @@
     "qrZizkoviUrl": "Žížkovi Online URL",
     "general": "General",
     "currentSong": "Current song",
-    "generalSettings": "General settings"
+    "generalSettings": "General settings",
+    "bracketScanTitle": "Bracket error check in songs",
+    "bracketScan": "Scan all songs",
+    "bracketNoErrors": "No errors found",
+    "bracketFoundErrors": "Errors found",
+    "bracketFixAll": "Fix all",
+    "bracketFix": "Fix",
+    "bracketLine": "Line"
 }

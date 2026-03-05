@@ -201,6 +201,7 @@
     "view": "Zobrazení",
     "preview": "Prezentace",
     "edit": "Editace",
+    "playlist": "Playlisty",
     "zoomIn": "Přiblížit",
     "zoomOut": "Oddálit",
     "present": "Otevřít prezentaci",
@@ -298,5 +299,12 @@
     "qrZizkovi": "Žížkovi Online",
     "qrZizkoviUrl": "URL Žížkovi Online",
     "currentSong": "Aktuální píseň",
-    "generalSettings": "Obecná nastavení"
+    "generalSettings": "Obecná nastavení",
+    "bracketScanTitle": "Kontrola závorek v písních",
+    "bracketScan": "Prohledat všechny písně",
+    "bracketNoErrors": "Žádné chyby nenalezeny",
+    "bracketFoundErrors": "Nalezeno chyb",
+    "bracketFixAll": "Opravit vše",
+    "bracketFix": "Opravit",
+    "bracketLine": "Řádek"
 }

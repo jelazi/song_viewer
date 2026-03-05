@@ -72,4 +72,5 @@ Future<void> initHiveFunction() async {
   Hive.registerAdapter(WebSongAdapter());
   Hive.registerAdapter(WebInterpretAdapter());
   Hive.registerAdapter(UpdateSongListDataAdapter());
+  Hive.registerAdapter(UpdatePlaylistDataAdapter());
 }

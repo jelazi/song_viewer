@@ -11,6 +11,15 @@ import '../providers/firebase_provider.dart';
 import '../providers/hive_provider.dart';
 import '../services/auxiliary_functions.dart';
 
+Map<String, dynamic> _deepCastMap(Map data) {
+  return data.map((key, value) {
+    if (value is Map) {
+      return MapEntry(key.toString(), _deepCastMap(value));
+    }
+    return MapEntry(key.toString(), value);
+  });
+}
+
 class SongsRepository {
   final HiveProvider _hiveProvider;
   final FirebaseProvider _firebaseProvider;
@@ -59,7 +68,7 @@ class SongsRepository {
     _firebaseProvider.updateSongListStream.listen((data) {
       if (data != null) {
         try {
-          final castedData = Map<String, dynamic>.from(data);
+          final castedData = _deepCastMap(data);
           final newUpdateSongListData = UpdateSongListData.fromJson(castedData);
           if (newUpdateSongListData.lastUpdate.isAfter(updateSongListData.lastUpdate)) {
             updateDataByUpdateSongListData(newUpdateSongListData);

@@ -1,5 +1,88 @@
 # Development Log
 
+## 2026-03-05 - Desktop Playlist Section
+
+### What was done
+- Added a new dedicated "Playlisty" section in the desktop app for creating, editing, presenting, and managing playlists
+- New playlist button added to the ribbon menu top-right bar (alongside preview/edit/web)
+- Left panel shows all saved playlists with song count, action buttons (present/edit/delete)
+- Right panel shows playlist detail (read-only) or full editor (name input, reorderable song list, add songs panel with search filter)
+- Double-click a playlist to enter edit mode
+- "Load to presentation" button dispatches playlist to `PresentationPlaylistBloc`
+- New playlist defaults name to current date (dd.MM.yyyy)
+- Songs can be clicked in read-only view to open them in preview
+
+### Files created
+- **`lib/view/desktop_view/pages/desktop_home_page/home_bodies/playlist_body.dart`** — full playlist management body widget
+
+### Files changed
+- **`lib/view/desktop_view/pages/desktop_home_page/desktop_home_page.dart`** — added `playlist` case to body switch, import
+- **`lib/view/desktop_view/widgets/ribbon_menu.dart`** — added `_getTopButton('playlist', Icons.playlist_play)` to top bar, tab controller handling, widened button container
+- **`assets/lang/cs.json`** — added `"playlist": "Playlisty"` translation key
+
+### Current state
+- Desktop playlist section fully functional: CRUD playlists, add/remove/reorder songs, load to presentation
+- All existing playlist infrastructure (PlaylistsBloc, PlaylistRepository, RTDB sync) is reused
+
+---
+
+## 2026-03-05 - Real-time playlist update notifications via RTDB
+
+### What was done
+- Added `updatePlaylist` node to Firebase Realtime Database — mirrors the existing `updateSongList` pattern
+- When a playlist is saved or deleted, a notification is pushed to RTDB with timestamp + playlist ID
+- Other app instances listen to the `updatePlaylist` stream and automatically re-fetch playlists from Firestore when a change is detected
+- Reuses existing `UpdateSongListData` model (same structure: lastUpdate + map of IDs→timestamps)
+- Local cache via Hive (`updatePlaylistData` key) prevents unnecessary re-fetches
+
+### How it works
+1. User saves/deletes a playlist → `PlaylistRepository._notifyPlaylistUpdate()` writes to RTDB
+2. Other instances receive the change via `FirebaseProvider.updatePlaylistStream`
+3. `PlaylistRepository` compares timestamps — if newer, re-fetches all playlists from Firestore
+4. `isChangedPlaylist` stream emits → `PlaylistsBloc` listens and refreshes state
+5. Works on all platforms: native RTDB SDK (iOS/Android/macOS/Web) + REST/SSE fallback (Windows)
+
+### Files changed
+- **`lib/providers/firebase_provider.dart`** — added `_nativeUpdatePlaylist` RTDB ref, `_updatePlaylistController` stream, native + Windows listeners, `setUpdatePlaylist()` method
+- **`lib/repositories/playlist_repository.dart`** — added `updatePlaylistData` tracking, RTDB stream listener, `_updatePlaylistsFromFirebase()`, `_notifyPlaylistUpdate()`, `isChangedPlaylist` stream
+- **`lib/blocs/playlist_bloc/playlists_bloc.dart`** — added `RefreshPlaylists` event handler, listens to `playlistRepository.isChangedPlaylist`
+- **`lib/blocs/playlist_bloc/playlists_event.dart`** — added `RefreshPlaylists` event
+
+### Current state
+- Playlist create/edit/delete triggers RTDB notification across all connected instances
+- Receiving instances automatically re-fetch and refresh their playlist UI
+- Cleanup: entries older than 3 days are pruned from the update map
+
+---
+
+## 2026-03-05 - Desktop: Bracket error scanner in General Settings
+
+### What was done
+- Added a bracket error scanner tool to the desktop General Settings page
+- Scans all songs for malformed bracket patterns in lyrics (and originalLyrics):
+  - Duplicate consecutive brackets (`[[`, `]]`, `{{`, `}}`)
+  - Orphaned closing brackets (`]` or `}` without matching opener)
+  - Unclosed opening brackets (`[` or `{` without matching closer)
+- Displays results with song name, interpret, line number, error description, and the problematic line text
+- "Fix" button per song: automatically cleans bracket errors (removes duplicates, orphaned brackets)
+- "Fix all" button: fixes all songs with errors at once
+- After fixing, re-scans to verify corrections
+- Songs are saved to Firebase after fix via `UpdateSong` event
+
+### Files changed
+- **`lib/view/desktop_view/pages/desktop_home_page/home_bodies/bracket_error_scanner.dart`** (NEW) — `BracketErrorScanner` stateful widget with scanning logic, error display, and auto-fix functionality
+- **`lib/view/desktop_view/pages/desktop_home_page/home_bodies/general_settings_body.dart`** — added `BracketErrorScanner` section below QR URL settings
+- **`assets/lang/cs.json`** — added bracket scanner translations (bracketScanTitle, bracketScan, bracketNoErrors, bracketFoundErrors, bracketFixAll, bracketFix, bracketLine)
+- **`assets/lang/en.json`** — added bracket scanner translations
+
+### Current state
+- Desktop: General Settings → "Kontrola závorek v písních" section with "Prohledat všechny písně" button
+- Scans all songs, shows error list with details
+- Per-song and bulk fix buttons available
+- Fixes saved to Firebase
+
+---
+
 ## 2026-03-03 - Add third QR code for Žížkovi Online
 
 ### What was done

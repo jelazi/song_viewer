@@ -57,6 +57,8 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
           _tabController = TabController(length: 2, vsync: this, initialIndex: 1);
         } else if (state.bodyName == 'general_settings') {
           _tabController = TabController(length: 2, vsync: this, initialIndex: 1);
+        } else if (state.bodyName == 'playlist') {
+          _tabController = TabController(length: 1, vsync: this);
         } else {
           _tabController = TabController(length: 1, vsync: this);
         }
@@ -252,7 +254,7 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
                 right: 0,
                 child: SizedBox(
                   height: 30,
-                  width: 150,
+                  width: 200,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -260,6 +262,7 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
                       _getTopButton('preview', Icons.preview),
                       _getTopButton('edit', Icons.edit),
                       _getTopButton('web', Icons.web),
+                      _getTopButton('playlist', Icons.playlist_play),
                     ],
                   ),
                 ),

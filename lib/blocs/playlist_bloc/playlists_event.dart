@@ -134,3 +134,9 @@ class UpdatePlaylistDirect extends PlaylistsEvent {
   @override
   List<Object> get props => [playlist];
 }
+
+class RefreshPlaylists extends PlaylistsEvent {
+  const RefreshPlaylists();
+  @override
+  List<Object> get props => [];
+}

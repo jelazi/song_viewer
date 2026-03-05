@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:default_project/model/update_playlist_data.dart';
 import 'package:default_project/model/update_songlist_data.dart';
 import 'package:default_project/model/user.dart';
 import 'package:default_project/model/web_interpret.dart';
@@ -71,6 +72,22 @@ class HiveProvider {
 
   UpdateSongListData? getUpdateSongListData(String key) {
     return webSongBox.get(key);
+  }
+
+  void setUpdatePlaylistData(String key, UpdatePlaylistData value) {
+    webSongBox.put(key, value);
+  }
+
+  UpdatePlaylistData? getUpdatePlaylistData(String key) {
+    final data = webSongBox.get(key);
+    if (data is UpdatePlaylistData) return data;
+    // Migration: old data was stored as UpdateSongListData
+    if (data is UpdateSongListData) {
+      final migrated = UpdatePlaylistData(data.lastUpdate, Map<String, DateTime>.from(data.mapIdSongs));
+      webSongBox.put(key, migrated);
+      return migrated;
+    }
+    return null;
   }
 
   WebSong? getWebSong(String key) {

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../blocs/export_blocs.dart';
 import '../../../../../services/constants.dart';
+import 'bracket_error_scanner.dart';
 
 class GeneralSettingsBody extends StatelessWidget {
   const GeneralSettingsBody({super.key});
@@ -25,6 +26,11 @@ class GeneralSettingsBody extends StatelessWidget {
               _buildSectionTitle('qrCodeTitle'.tr()),
               const SizedBox(height: 8),
               _buildQrUrlSettings(context, state),
+              const SizedBox(height: 24),
+              // Bracket error scanner
+              _buildSectionTitle('bracketScanTitle'.tr()),
+              const SizedBox(height: 8),
+              const BracketErrorScanner(),
             ],
           ),
         );

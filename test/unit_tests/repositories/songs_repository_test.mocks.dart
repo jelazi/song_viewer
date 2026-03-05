@@ -251,6 +251,13 @@ class MockFirebaseProvider extends _i1.Mock implements _i5.FirebaseProvider {
       ) as _i6.Stream<Map<String, dynamic>?>);
 
   @override
+  _i6.Stream<Map<String, dynamic>?> get updatePlaylistStream =>
+      (super.noSuchMethod(
+        Invocation.getter(#updatePlaylistStream),
+        returnValue: _i6.Stream<Map<String, dynamic>?>.empty(),
+      ) as _i6.Stream<Map<String, dynamic>?>);
+
+  @override
   _i6.Future<void> authenticateUser() => (super.noSuchMethod(
         Invocation.method(
           #authenticateUser,
@@ -267,6 +274,18 @@ class MockFirebaseProvider extends _i1.Mock implements _i5.FirebaseProvider {
         Invocation.method(
           #setUpdateSongList,
           [updateSongListData],
+        ),
+        returnValue: _i6.Future<void>.value(),
+        returnValueForMissingStub: _i6.Future<void>.value(),
+      ) as _i6.Future<void>);
+
+  @override
+  _i6.Future<void> setUpdatePlaylist(
+          _i7.UpdateSongListData? updatePlaylistData) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #setUpdatePlaylist,
+          [updatePlaylistData],
         ),
         returnValue: _i6.Future<void>.value(),
         returnValueForMissingStub: _i6.Future<void>.value(),

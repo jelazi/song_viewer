@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io' show Platform;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:default_project/model/update_playlist_data.dart';
 import 'package:default_project/model/update_songlist_data.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:firebase_core/firebase_core.dart';
@@ -27,6 +28,7 @@ class FirebaseProvider {
   // Native RTDB references (null on Windows)
   late final DatabaseReference? _nativeSelectedSong = _isNativeRtdbSupported ? FirebaseDatabase.instance.ref().child('currentSong') : null;
   late final DatabaseReference? _nativeUpdateSongList = _isNativeRtdbSupported ? FirebaseDatabase.instance.ref().child('updateSongList') : null;
+  late final DatabaseReference? _nativeUpdatePlaylist = _isNativeRtdbSupported ? FirebaseDatabase.instance.ref().child('updatePlaylist') : null;
 
   // REST/SSE provider for Windows
   FirebaseRtdbRestProvider? _rtdbRestProvider;
@@ -43,6 +45,11 @@ class FirebaseProvider {
 
   /// Stream of `updateSongList` data from Realtime Database. Works on all platforms.
   Stream<Map<String, dynamic>?> get updateSongListStream => _updateSongListController.stream;
+
+  final _updatePlaylistController = StreamController<Map<String, dynamic>?>.broadcast();
+
+  /// Stream of `updatePlaylist` data from Realtime Database. Works on all platforms.
+  Stream<Map<String, dynamic>?> get updatePlaylistStream => _updatePlaylistController.stream;
 
   FirebaseProvider() {
     inst.settings = const Settings(
@@ -72,19 +79,29 @@ class FirebaseProvider {
           } else {
             _selectedSongController.add(null);
           }
+        }, onError: (e) {
+          logger.e('Error listening to currentSong: $e');
         });
-        try {
-          _nativeUpdateSongList?.onValue.listen((DatabaseEvent event) {
-            final data = event.snapshot.value;
-            if (data != null && data is Map) {
-              _updateSongListController.add(Map<String, dynamic>.from(data));
-            } else {
-              _updateSongListController.add(null);
-            }
-          });
-        } catch (e) {
+        _nativeUpdateSongList?.onValue.listen((DatabaseEvent event) {
+          final data = event.snapshot.value;
+          if (data != null && data is Map) {
+            _updateSongListController.add(Map<String, dynamic>.from(data));
+          } else {
+            _updateSongListController.add(null);
+          }
+        }, onError: (e) {
           logger.e('Error listening to updateSongList: $e');
-        }
+        });
+        _nativeUpdatePlaylist?.onValue.listen((DatabaseEvent event) {
+          final data = event.snapshot.value;
+          if (data != null && data is Map) {
+            _updatePlaylistController.add(Map<String, dynamic>.from(data));
+          } else {
+            _updatePlaylistController.add(null);
+          }
+        }, onError: (e) {
+          logger.e('Error listening to updatePlaylist: $e');
+        });
       } else {
         // --- Windows: REST API + SSE listeners ---
         final databaseUrl = Firebase.app().options.databaseURL ?? 'https://songlist-7b702-default-rtdb.firebaseio.com';
@@ -105,7 +122,11 @@ class FirebaseProvider {
           _updateSongListController.add(data);
         });
 
-        logger.i('Firebase RTDB REST/SSE listeners started for currentSong + updateSongList');
+        _rtdbRestProvider!.listen('updatePlaylist').listen((data) {
+          _updatePlaylistController.add(data);
+        });
+
+        logger.i('Firebase RTDB REST/SSE listeners started for currentSong + updateSongList + updatePlaylist');
       }
     } catch (e) {
       logger.e('$e');
@@ -118,6 +139,18 @@ class FirebaseProvider {
         await _nativeUpdateSongList?.set(updateSongListData.toJson());
       } else {
         await _rtdbRestProvider?.set('updateSongList', updateSongListData.toJson());
+      }
+    } catch (e) {
+      logger.e('$e');
+    }
+  }
+
+  Future<void> setUpdatePlaylist(UpdatePlaylistData updatePlaylistData) async {
+    try {
+      if (_isNativeRtdbSupported) {
+        await _nativeUpdatePlaylist?.set(updatePlaylistData.toJson());
+      } else {
+        await _rtdbRestProvider?.set('updatePlaylist', updatePlaylistData.toJson());
       }
     } catch (e) {
       logger.e('$e');
@@ -381,6 +414,18 @@ class FirebaseProvider {
       logger.e('$e');
     }
     return listPlaylists;
+  }
+
+  Future<Playlist?> getPlaylistFromFirestore(String playlistId) async {
+    try {
+      final doc = await playlistCollection.doc(playlistId).get();
+      if (doc.exists && doc.data() != null) {
+        return Playlist.fromJson(doc.data()!);
+      }
+    } catch (e) {
+      logger.e('$e');
+    }
+    return null;
   }
 
   Future<bool> deletePlaylist(Playlist playlist) async {
