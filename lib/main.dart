@@ -36,6 +36,7 @@ import 'model/web_song.dart';
 import 'providers/firebase_provider.dart';
 import 'providers/hive_provider.dart';
 import 'repositories/web_repository.dart';
+import 'services/ai_search_service.dart';
 import 'view/desktop_view/widgets/my_toast.dart';
 import 'view/router/app_router.dart';
 
@@ -711,6 +712,12 @@ class _MyAppState extends State<MyApp> with WindowListener {
             create: (context) => PresentationPlaylistBloc(
               playlistRepository: widget.repositories.playlistRepository,
               songsRepository: widget.repositories.songsRepository,
+            ),
+          ),
+          BlocProvider(
+            create: (context) => SongEnrichmentBloc(
+              aiSearchService: AiSearchService(),
+              settingsRepository: widget.repositories.settingsRepository,
             ),
           ),
         ],

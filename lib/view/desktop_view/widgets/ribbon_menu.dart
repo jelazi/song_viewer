@@ -58,7 +58,9 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
         } else if (state.bodyName == 'general_settings') {
           _tabController = TabController(length: 2, vsync: this, initialIndex: 1);
         } else if (state.bodyName == 'playlist') {
-          _tabController = TabController(length: 1, vsync: this);
+          _tabController = TabController(length: 2, vsync: this);
+        } else if (state.bodyName == 'song_enrichment') {
+          _tabController = TabController(length: 2, vsync: this);
         } else {
           _tabController = TabController(length: 1, vsync: this);
         }
@@ -171,14 +173,29 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
                                                           Tab(text: 'settings'.tr()),
                                                         ],
                                                       )
-                                                    : TabBar(
-                                                        isScrollable: true,
-                                                        tabAlignment: TabAlignment.start,
-                                                        controller: _tabController,
-                                                        tabs: [
-                                                          Tab(text: 'home'.tr()),
-                                                        ],
-                                                      ),
+                                                    : state.bodyName == 'playlist' || state.bodyName == 'song_enrichment'
+                                                        ? TabBar(
+                                                            isScrollable: true,
+                                                            tabAlignment: TabAlignment.start,
+                                                            controller: _tabController,
+                                                            onTap: (index) {
+                                                              if (index == 0) {
+                                                                context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: state.bodyName));
+                                                              }
+                                                            },
+                                                            tabs: [
+                                                              Tab(text: 'home'.tr()),
+                                                              Tab(text: 'settings'.tr()),
+                                                            ],
+                                                          )
+                                                        : TabBar(
+                                                            isScrollable: true,
+                                                            tabAlignment: TabAlignment.start,
+                                                            controller: _tabController,
+                                                            tabs: [
+                                                              Tab(text: 'home'.tr()),
+                                                            ],
+                                                          ),
                       ),
                       SizedBox(
                         height: 60,
@@ -238,12 +255,20 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
                                                           SettingsTabbar(),
                                                         ],
                                                       )
-                                                    : TabBarView(
-                                                        controller: _tabController,
-                                                        children: const [
-                                                          HomeTabbar(),
-                                                        ],
-                                                      ),
+                                                    : state.bodyName == 'playlist' || state.bodyName == 'song_enrichment'
+                                                        ? TabBarView(
+                                                            controller: _tabController,
+                                                            children: const [
+                                                              HomeTabbar(),
+                                                              SettingsTabbar(),
+                                                            ],
+                                                          )
+                                                        : TabBarView(
+                                                            controller: _tabController,
+                                                            children: const [
+                                                              HomeTabbar(),
+                                                            ],
+                                                          ),
                       ),
                     ],
                   ),
@@ -254,7 +279,7 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
                 right: 0,
                 child: SizedBox(
                   height: 30,
-                  width: 200,
+                  width: 240,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -263,6 +288,7 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
                       _getTopButton('edit', Icons.edit),
                       _getTopButton('web', Icons.web),
                       _getTopButton('playlist', Icons.playlist_play),
+                      _getTopButton('song_enrichment', Icons.auto_awesome),
                     ],
                   ),
                 ),

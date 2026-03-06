@@ -14,6 +14,7 @@ import 'home_bodies/groups_body.dart';
 import 'home_bodies/playlist_body.dart';
 import 'home_bodies/presentation_settings_body.dart';
 import 'home_bodies/preview_body.dart';
+import 'home_bodies/song_enrichment_body.dart';
 import 'home_bodies/users_body.dart';
 import 'home_bodies/web_body.dart';
 
@@ -474,6 +475,9 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
                       break;
                     case 'playlist':
                       homeBody = const PlaylistBody();
+                      break;
+                    case 'song_enrichment':
+                      homeBody = const SongEnrichmentBody();
                       break;
                     case 'browse_youtube':
                       homeBody = PreviewBody(

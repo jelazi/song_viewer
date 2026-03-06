@@ -28,6 +28,9 @@ class SettingsState extends Equatable {
   final String qrCurrentSongUrl;
   final String qrWebAppUrl;
   final String qrZizkoviUrl;
+  // AI enrichment API keys
+  final String groqApiKey;
+  final String youtubeApiKey;
   const SettingsState({
     required this.previewFontTextSize,
     required this.previewFontChordSize,
@@ -53,6 +56,8 @@ class SettingsState extends Equatable {
     required this.qrCurrentSongUrl,
     required this.qrWebAppUrl,
     required this.qrZizkoviUrl,
+    required this.groqApiKey,
+    required this.youtubeApiKey,
   });
 
   @override
@@ -81,6 +86,8 @@ class SettingsState extends Equatable {
         qrCurrentSongUrl,
         qrWebAppUrl,
         qrZizkoviUrl,
+        groqApiKey,
+        youtubeApiKey,
       ];
 
   SettingsState copyWith({
@@ -108,6 +115,8 @@ class SettingsState extends Equatable {
     String? qrCurrentSongUrl,
     String? qrWebAppUrl,
     String? qrZizkoviUrl,
+    String? groqApiKey,
+    String? youtubeApiKey,
   }) {
     return SettingsState(
       previewFontTextSize: previewFontTextSize ?? this.previewFontTextSize,
@@ -134,6 +143,8 @@ class SettingsState extends Equatable {
       qrCurrentSongUrl: qrCurrentSongUrl ?? this.qrCurrentSongUrl,
       qrWebAppUrl: qrWebAppUrl ?? this.qrWebAppUrl,
       qrZizkoviUrl: qrZizkoviUrl ?? this.qrZizkoviUrl,
+      groqApiKey: groqApiKey ?? this.groqApiKey,
+      youtubeApiKey: youtubeApiKey ?? this.youtubeApiKey,
     );
   }
 }
@@ -164,5 +175,7 @@ class SettingsInitial extends SettingsState {
     required super.qrCurrentSongUrl,
     required super.qrWebAppUrl,
     required super.qrZizkoviUrl,
+    required super.groqApiKey,
+    required super.youtubeApiKey,
   });
 }

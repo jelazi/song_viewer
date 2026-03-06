@@ -8,6 +8,7 @@ export './playlist_bloc/playlists_bloc.dart';
 export './presentation_bloc/presentation_bloc.dart';
 export './presentation_playlist_bloc/presentation_playlist_bloc.dart';
 export './settings_bloc/settings_bloc.dart';
+export './song_enrichment_bloc/song_enrichment_bloc.dart';
 export './users_bloc/users_bloc.dart';
 export './web_bloc/web_bloc.dart';
 export 'preview_bloc/preview_chord_bloc.dart';

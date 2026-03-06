@@ -41,6 +41,8 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
           qrCurrentSongUrl: 'https://your-site.example/',
           qrWebAppUrl: 'https://songsviewerweb.web.app/',
           qrZizkoviUrl: 'https://www.zizkovi.online/',
+          groqApiKey: '',
+          youtubeApiKey: '',
         )) {
     on<_SettingsInitial>(_settingsInitial);
     on<ChangeSettingsValue>(_changeSettingsValue);
@@ -90,6 +92,8 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       qrCurrentSongUrl: settingsRepository.qrCurrentSongUrl,
       qrWebAppUrl: settingsRepository.qrWebAppUrl,
       qrZizkoviUrl: settingsRepository.qrZizkoviUrl,
+      groqApiKey: settingsRepository.groqApiKey,
+      youtubeApiKey: settingsRepository.youtubeApiKey,
     ));
   }
 }

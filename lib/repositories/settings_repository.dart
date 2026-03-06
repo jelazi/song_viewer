@@ -42,6 +42,10 @@ class SettingsRepository {
   String _qrWebAppUrl = 'https://songsviewerweb.web.app/';
   String _qrZizkoviUrl = 'https://www.zizkovi.online/';
 
+  // AI enrichment API keys
+  String _groqApiKey = '';
+  String _youtubeApiKey = '';
+
   SettingsRepository({
     required this.hiveProvider,
   });
@@ -119,6 +123,9 @@ class SettingsRepository {
   String get qrWebAppUrl => _qrWebAppUrl;
   String get qrZizkoviUrl => _qrZizkoviUrl;
 
+  String get groqApiKey => _groqApiKey;
+  String get youtubeApiKey => _youtubeApiKey;
+
   Future<void> loadLocalSettings() async {
     _previewFontTextSize = await hiveProvider.getSettingsValue('previewFontTextSize') ?? 20;
     _previewFontChordSize = await hiveProvider.getSettingsValue('previewFontChordSize') ?? 20;
@@ -151,6 +158,10 @@ class SettingsRepository {
     _qrCurrentSongUrl = await hiveProvider.getSettingsValue('qrCurrentSongUrl') ?? 'https://your-site.example/';
     _qrWebAppUrl = await hiveProvider.getSettingsValue('qrWebAppUrl') ?? 'https://songsviewerweb.web.app/';
     _qrZizkoviUrl = await hiveProvider.getSettingsValue('qrZizkoviUrl') ?? 'https://www.zizkovi.online/';
+
+    // AI enrichment API keys
+    _groqApiKey = await hiveProvider.getSettingsValue('groqApiKey') ?? '';
+    _youtubeApiKey = await hiveProvider.getSettingsValue('youtubeApiKey') ?? '';
   }
 
   void setCurrentUser(User user) {
@@ -321,6 +332,18 @@ class SettingsRepository {
         {
           _qrZizkoviUrl = value;
           hiveProvider.setSettingsValue('qrZizkoviUrl', value);
+          break;
+        }
+      case 'groqApiKey':
+        {
+          _groqApiKey = value;
+          hiveProvider.setSettingsValue('groqApiKey', value);
+          break;
+        }
+      case 'youtubeApiKey':
+        {
+          _youtubeApiKey = value;
+          hiveProvider.setSettingsValue('youtubeApiKey', value);
           break;
         }
     }

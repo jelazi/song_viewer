@@ -1,5 +1,60 @@
 # Development Log
 
+## 2026-03-06 - AI Song Enrichment (Desktop)
+
+### What was done
+- Added a new AI-powered song enrichment page to the desktop app
+- Uses Groq API (Llama 3.3 70B, free tier) to analyze songs — identifies author, original title, language, genre
+- YouTube Data API v3 integration for searching related videos
+- ProScholy GraphQL API integration for searching sheet music files
+- User approval workflow: each found item can be individually approved/rejected before saving
+- API keys stored securely in settings (Hive persistence)
+- New ribbon menu button (sparkles icon) for quick access
+
+### Architecture
+- **AiSearchService** (`lib/services/ai_search_service.dart`) — Groq API, YouTube API, ProScholy sheet scraping
+- **SongEnrichmentBloc** (`lib/blocs/song_enrichment_bloc/`) — orchestrates analysis → search → approval → save workflow
+- **SongEnrichmentBody** (`lib/view/desktop_view/pages/.../song_enrichment_body.dart`) — full UI with sections for AI results, YouTube videos, sheet music, approved changes summary
+
+### Files created
+- `lib/services/ai_search_service.dart` — AI analysis & web search service
+- `lib/blocs/song_enrichment_bloc/song_enrichment_bloc.dart` — BLoC
+- `lib/blocs/song_enrichment_bloc/song_enrichment_event.dart` — Events
+- `lib/blocs/song_enrichment_bloc/song_enrichment_state.dart` — State
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/song_enrichment_body.dart` — UI
+
+### Files changed
+- `lib/main.dart` — added SongEnrichmentBloc BlocProvider + AiSearchService import
+- `lib/blocs/export_blocs.dart` — export new bloc
+- `lib/repositories/settings_repository.dart` — added groqApiKey, youtubeApiKey fields
+- `lib/blocs/settings_bloc/settings_state.dart` — added groqApiKey, youtubeApiKey to state
+- `lib/blocs/settings_bloc/settings_bloc.dart` — added groqApiKey, youtubeApiKey to initial + emit
+- `lib/view/desktop_view/pages/desktop_home_page/desktop_home_page.dart` — added song_enrichment body case + import
+- `lib/view/desktop_view/widgets/ribbon_menu.dart` — added song_enrichment top button + tab controller
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/general_settings_body.dart` — added API key input fields section
+- `assets/lang/cs.json` — added enrichment translations
+- `assets/lang/en.json` — added enrichment translations
+
+### How to use
+1. Go to General Settings → set Groq API key (get free at https://console.groq.com)
+2. Optionally set YouTube API key (get at https://console.cloud.google.com)
+3. Select a song in preview, click the sparkles (✨) button in ribbon
+4. Click "Analyzovat píseň" — AI analyzes + searches YouTube + sheets
+5. Approve desired items with green checkmarks
+6. Click "Uložit změny" to save to Firebase
+
+### Current state
+- AI analysis works with Groq free tier (30 req/min)
+- YouTube search requires separate API key (10,000 units/day free)
+- Sheet music search via ProScholy (no API key needed)
+- All approved changes merge with existing song data (no overwrite)
+
+### Known issues
+- Sheet music results depend on ProScholy having the song with external file links
+- YouTube search quality depends on AI-generated search queries
+
+---
+
 ## 2026-03-05 - Desktop Playlist Section
 
 ### What was done

@@ -27,6 +27,11 @@ class GeneralSettingsBody extends StatelessWidget {
               const SizedBox(height: 8),
               _buildQrUrlSettings(context, state),
               const SizedBox(height: 24),
+              // AI enrichment API keys
+              _buildSectionTitle('enrichApiKeysTitle'.tr()),
+              const SizedBox(height: 8),
+              _buildApiKeySettings(context, state),
+              const SizedBox(height: 24),
               // Bracket error scanner
               _buildSectionTitle('bracketScanTitle'.tr()),
               const SizedBox(height: 8),
@@ -83,12 +88,45 @@ class GeneralSettingsBody extends StatelessWidget {
     );
   }
 
+  Widget _buildApiKeySettings(BuildContext context, SettingsState state) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        border: Border.all(color: AppColor.grey3Color),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildUrlField(
+            context: context,
+            label: 'enrichGroqApiKey'.tr(),
+            value: state.groqApiKey,
+            settingsKey: 'groqApiKey',
+            icon: Icons.psychology,
+            obscureText: true,
+          ),
+          const SizedBox(height: 12),
+          _buildUrlField(
+            context: context,
+            label: 'enrichYoutubeApiKey'.tr(),
+            value: state.youtubeApiKey,
+            settingsKey: 'youtubeApiKey',
+            icon: Icons.play_circle,
+            obscureText: true,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildUrlField({
     required BuildContext context,
     required String label,
     required String value,
     required String settingsKey,
     required IconData icon,
+    bool obscureText = false,
   }) {
     final controller = TextEditingController(text: value);
     return Row(
@@ -107,6 +145,7 @@ class GeneralSettingsBody extends StatelessWidget {
           child: TextField(
             controller: controller,
             style: const TextStyle(fontSize: 13),
+            obscureText: obscureText,
             decoration: InputDecoration(
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -114,10 +153,10 @@ class GeneralSettingsBody extends StatelessWidget {
                 borderRadius: BorderRadius.circular(6),
                 borderSide: const BorderSide(color: AppColor.grey3Color),
               ),
-              hintText: 'https://',
+              hintText: obscureText ? 'API key...' : 'https://',
               hintStyle: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
-            keyboardType: TextInputType.url,
+            keyboardType: obscureText ? TextInputType.text : TextInputType.url,
             onSubmitted: (newValue) {
               context.read<SettingsBloc>().add(ChangeSettingsValue(settingsKey, newValue));
             },
