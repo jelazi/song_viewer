@@ -73,10 +73,20 @@ class AiSearchService {
     required String songLyrics,
     String? currentInterpret,
     String? geminiApiKey,
+    List<String> rejectedAuthors = const [],
+    List<String> rejectedTitles = const [],
   }) async {
     if (apiKey.isEmpty && (geminiApiKey == null || geminiApiKey.isEmpty)) return null;
 
     final lyricsSnippet = songLyrics.length > 1200 ? songLyrics.substring(0, 1200) : songLyrics;
+
+    final rejectionHint = StringBuffer();
+    if (rejectedAuthors.isNotEmpty) {
+      rejectionHint.writeln('\nIMPORTANT: The user has REJECTED these author suggestions as incorrect: ${rejectedAuthors.join(', ')}. You MUST suggest a DIFFERENT author. Think harder about who really wrote this song.');
+    }
+    if (rejectedTitles.isNotEmpty) {
+      rejectionHint.writeln('\nIMPORTANT: The user has REJECTED these original title suggestions as incorrect: ${rejectedTitles.join(', ')}. You MUST suggest a DIFFERENT original title. Consider other possibilities.');
+    }
 
     final prompt = '''You are a music expert specializing in identifying songs, their original authors, and original titles.
 
@@ -101,7 +111,7 @@ IMPORTANT RULES:
 6. For youtube_search_queries: provide 4-5 queries. Put CZECH queries FIRST (Czech title + "píseň" or "chvály"), then original language queries. This ensures Czech results appear first.
 7. Be confident — if you recognize the song, state the author definitively. Don't hedge with "possibly" or "probably" unless truly uncertain.
 8. Pay attention to the LYRICS content, not just the title. The lyrics are the strongest clue for identification.
-
+$rejectionHint
 Return ONLY a valid JSON object (no markdown, no extra text):
 {
   "original_title": "original title in original language, or null if Czech original",

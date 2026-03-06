@@ -1,5 +1,55 @@
 # Development Log
 
+## 2026-03-06d - Reject AI suggestions + re-analyze
+
+### What was done
+1. **Reject AI author/title**: Orange "✕" button next to each AI suggestion (author, original title) lets the user reject the suggestion. The system immediately re-runs AI analysis with a hint telling the AI to suggest a DIFFERENT author/title (lists all previously rejected values).
+2. **Reject YouTube results**: "Odmítnout výsledky a hledat znovu" button below YouTube results dismisses all current results and searches with alternative queries (karaoke, live, worship, lyrics variants). Previously rejected video IDs are excluded from new results.
+3. **State tracks rejections**: `rejectedAuthors`, `rejectedTitles`, `rejectedVideoIds` lists in `SongEnrichmentState` persist across re-analyses so the AI keeps getting better hints.
+4. **AI prompt injection**: Rejected values are injected into the AI prompt as "IMPORTANT: The user has REJECTED these..." instructions, forcing the AI to try different answers.
+
+### Files changed
+- `lib/blocs/song_enrichment_bloc/song_enrichment_event.dart` — added `RejectAnalysis`, `RejectYoutubeResults` events
+- `lib/blocs/song_enrichment_bloc/song_enrichment_state.dart` — added `rejectedAuthors`, `rejectedTitles`, `rejectedVideoIds` lists
+- `lib/blocs/song_enrichment_bloc/song_enrichment_bloc.dart` — added `_rejectAnalysis`, `_rejectYoutubeResults` handlers
+- `lib/services/ai_search_service.dart` — `analyzeSong` accepts `rejectedAuthors`/`rejectedTitles`, injects into prompt
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/song_enrichment_body.dart` — reject buttons in approval rows + YouTube section
+- `assets/lang/cs.json` — added `enrichReject`, `enrichRejectYoutube`
+- `assets/lang/en.json` — same new keys
+
+### Current state
+- Zero compilation errors, zero analysis issues
+- User can reject AI suggestions → re-analysis with rejection hints
+- User can reject YouTube results → alternative search queries
+
+---
+
+## 2026-03-06c - Enrichment auto-save, song info bar, API key export
+
+### What was done
+1. **Enrichment auto-save on approve**: Clicking approve on YouTube video, sheet music, author, or original title now immediately saves the change to the song (no separate "Save" button needed). Each approve action updates the song in BLoC state and triggers `UpdateSong` to persist to Firebase.
+2. **AI analyze author fix**: Approve button now works correctly for author — immediately sets song interpret. Removed buggy "remove" button that reset entire enrichment state.
+3. **Copy text from AI results**: All AI analysis values (author, title, language, genre) now have copy buttons and use `SelectableText` for easy selection.
+4. **Full song info in chord preview**: The top bar in chord preview now shows: songbook number, interpret, cap, bpm, time signature, and tags (separated by dots) instead of just "cap: 0".
+5. **Export all API keys**: New button in settings API keys section copies all configured API keys (Groq, YouTube, Gemini) to clipboard.
+
+### Files changed
+- `lib/blocs/song_enrichment_bloc/song_enrichment_state.dart` — added `songVersion` counter for detecting individual approve saves
+- `lib/blocs/song_enrichment_bloc/song_enrichment_bloc.dart` — all approve handlers now update the song immediately + increment songVersion
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/song_enrichment_body.dart` — auto-save via `listenWhen` songVersion detection, copy buttons, SelectableText, fixed author approve
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/preview_body.dart` — rich song info bar replacing simple "cap: X"
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/general_settings_body.dart` — export API keys button
+- `assets/lang/cs.json` — added enrichCopy, enrichCopied, exportApiKeys, exportApiKeysCopied
+- `assets/lang/en.json` — same new keys
+
+### Current state
+- Zero compilation errors, zero analysis issues
+- Enrichment approve → immediate save to song + Firebase
+- AI results are selectable and copyable
+- Chord preview shows full song metadata
+
+---
+
 ## 2026-03-06b - Enrichment UX fixes + presentation title
 
 ### What was done

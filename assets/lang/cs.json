@@ -341,5 +341,11 @@
     "enrichCurrentData": "Aktuální data písně",
     "enrichSongbookIndex": "Číslo ve zpěvníku",
     "enrichTags": "Štítky",
-    "enrichAlreadySaved": "Již uloženo v písni"
+    "enrichAlreadySaved": "Již uloženo v písni",
+    "enrichCopy": "Kopírovat",
+    "enrichCopied": "Zkopírováno do schránky",
+    "exportApiKeys": "Exportovat všechny API klíče",
+    "exportApiKeysCopied": "API klíče zkopírovány do schránky",
+    "enrichReject": "Odmítnout a zkusit znovu",
+    "enrichRejectYoutube": "Odmítnout výsledky a hledat znovu"
 }

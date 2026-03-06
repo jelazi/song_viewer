@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../../blocs/export_blocs.dart';
 import '../../../../../model/qr_link.dart';
@@ -236,6 +237,34 @@ class GeneralSettingsBody extends StatelessWidget {
             settingsKey: 'geminiApiKey',
             icon: Icons.auto_awesome,
             obscureText: true,
+          ),
+          const SizedBox(height: 16),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: () {
+                final buffer = StringBuffer();
+                if (state.groqApiKey.isNotEmpty) {
+                  buffer.writeln('Groq API: ${state.groqApiKey}');
+                }
+                if (state.youtubeApiKey.isNotEmpty) {
+                  buffer.writeln('YouTube API: ${state.youtubeApiKey}');
+                }
+                if (state.geminiApiKey.isNotEmpty) {
+                  buffer.writeln('Gemini API: ${state.geminiApiKey}');
+                }
+                if (buffer.isEmpty) return;
+                Clipboard.setData(ClipboardData(text: buffer.toString().trim()));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('exportApiKeysCopied'.tr()),
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.copy, size: 18),
+              label: Text('exportApiKeys'.tr(), style: const TextStyle(fontSize: 13)),
+            ),
           ),
         ],
       ),

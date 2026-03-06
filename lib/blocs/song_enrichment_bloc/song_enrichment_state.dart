@@ -31,6 +31,14 @@ class SongEnrichmentState extends Equatable {
   final String? approvedAuthor;
   final String? approvedOriginalTitle;
 
+  // Rejected values — used as hints for re-analysis
+  final List<String> rejectedAuthors;
+  final List<String> rejectedTitles;
+  final List<String> rejectedVideoIds;
+
+  // Incremented on each individual approve-save so BlocListener can detect changes
+  final int songVersion;
+
   const SongEnrichmentState({
     this.song,
     this.status = EnrichmentStatus.initial,
@@ -42,6 +50,10 @@ class SongEnrichmentState extends Equatable {
     this.approvedSheets = const [],
     this.approvedAuthor,
     this.approvedOriginalTitle,
+    this.rejectedAuthors = const [],
+    this.rejectedTitles = const [],
+    this.rejectedVideoIds = const [],
+    this.songVersion = 0,
   });
 
   bool get hasApprovedChanges => approvedAuthor != null || approvedOriginalTitle != null || approvedVideos.isNotEmpty || approvedSheets.isNotEmpty;
@@ -59,6 +71,10 @@ class SongEnrichmentState extends Equatable {
         approvedSheets.length,
         approvedAuthor,
         approvedOriginalTitle,
+        rejectedAuthors.length,
+        rejectedTitles.length,
+        rejectedVideoIds.length,
+        songVersion,
       ];
 
   SongEnrichmentState copyWith({
@@ -72,6 +88,10 @@ class SongEnrichmentState extends Equatable {
     List<SheetMusicResult>? approvedSheets,
     String? approvedAuthor,
     String? approvedOriginalTitle,
+    List<String>? rejectedAuthors,
+    List<String>? rejectedTitles,
+    List<String>? rejectedVideoIds,
+    int? songVersion,
     bool clearApprovedAuthor = false,
     bool clearApprovedOriginalTitle = false,
     bool clearError = false,
@@ -87,6 +107,10 @@ class SongEnrichmentState extends Equatable {
       approvedSheets: approvedSheets ?? this.approvedSheets,
       approvedAuthor: clearApprovedAuthor ? null : (approvedAuthor ?? this.approvedAuthor),
       approvedOriginalTitle: clearApprovedOriginalTitle ? null : (approvedOriginalTitle ?? this.approvedOriginalTitle),
+      rejectedAuthors: rejectedAuthors ?? this.rejectedAuthors,
+      rejectedTitles: rejectedTitles ?? this.rejectedTitles,
+      rejectedVideoIds: rejectedVideoIds ?? this.rejectedVideoIds,
+      songVersion: songVersion ?? this.songVersion,
     );
   }
 }

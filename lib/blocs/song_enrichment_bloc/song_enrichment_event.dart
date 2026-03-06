@@ -82,3 +82,16 @@ class SaveEnrichment extends SongEnrichmentEvent {
 class ResetEnrichment extends SongEnrichmentEvent {
   const ResetEnrichment();
 }
+
+class RejectAnalysis extends SongEnrichmentEvent {
+  final String? rejectedAuthor;
+  final String? rejectedTitle;
+  const RejectAnalysis({this.rejectedAuthor, this.rejectedTitle});
+
+  @override
+  List<Object?> get props => [rejectedAuthor, rejectedTitle];
+}
+
+class RejectYoutubeResults extends SongEnrichmentEvent {
+  const RejectYoutubeResults();
+}

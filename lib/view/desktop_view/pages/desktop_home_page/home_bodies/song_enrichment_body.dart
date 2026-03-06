@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:default_project/services/ai_search_service.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../../blocs/export_blocs.dart';
@@ -20,6 +21,7 @@ class _SongEnrichmentBodyState extends State<SongEnrichmentBody> {
   final TextEditingController _youtubeSearchController = TextEditingController();
   final TextEditingController _songSearchController = TextEditingController();
   Song? _selectedSong;
+  int _lastSongVersion = 0;
 
   @override
   void initState() {
@@ -41,12 +43,27 @@ class _SongEnrichmentBodyState extends State<SongEnrichmentBody> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<SongEnrichmentBloc, SongEnrichmentState>(
+      listenWhen: (previous, current) {
+        return (current.status == EnrichmentStatus.saved && previous.status != EnrichmentStatus.saved) ||
+            current.songVersion != previous.songVersion ||
+            (current.status == EnrichmentStatus.error && current.errorMessage != null);
+      },
       listener: (context, state) {
-        if (state.status == EnrichmentStatus.saved && state.song != null) {
+        // Auto-save on individual approve (songVersion changed) or batch save
+        if (state.song != null && state.songVersion != _lastSongVersion) {
+          _lastSongVersion = state.songVersion;
           context.read<HomePageBloc>().add(UpdateSong(song: state.song!));
           context.read<PreviewChordBloc>().add(ChangeCurrentSong(song: state.song!));
           context.read<DesktopRibbonMenuBloc>().add(ChangeIsSelectedSong(song: state.song!));
-          // Update local selected song so the UI reflects saved changes
+          setState(() {
+            _selectedSong = state.song;
+          });
+          MyToast.showText(text: 'enrichSaved'.tr(), typeNotification: TypeNotification.success);
+        }
+        if (state.status == EnrichmentStatus.saved && state.song != null && state.songVersion == _lastSongVersion) {
+          context.read<HomePageBloc>().add(UpdateSong(song: state.song!));
+          context.read<PreviewChordBloc>().add(ChangeCurrentSong(song: state.song!));
+          context.read<DesktopRibbonMenuBloc>().add(ChangeIsSelectedSong(song: state.song!));
           setState(() {
             _selectedSong = state.song;
           });
@@ -330,29 +347,29 @@ class _SongEnrichmentBodyState extends State<SongEnrichmentBody> {
             _buildApprovalRow(
               label: 'enrichAuthor'.tr(),
               value: analysis.author!,
-              isApproved: enrichState.approvedAuthor == analysis.author,
+              isApproved: enrichState.approvedAuthor == analysis.author || authorAlreadySaved,
               alreadySaved: authorAlreadySaved,
               onApprove: () {
                 context.read<SongEnrichmentBloc>().add(ApproveAuthor(author: analysis.author!));
               },
-              onRemove: enrichState.approvedAuthor == analysis.author
-                  ? () {
-                      context.read<SongEnrichmentBloc>().add(const ResetEnrichment());
-                    }
-                  : null,
+              onReject: () {
+                context.read<SongEnrichmentBloc>().add(RejectAnalysis(rejectedAuthor: analysis.author));
+              },
             ),
           if (analysis.originalTitle != null && analysis.originalTitle!.isNotEmpty)
             _buildApprovalRow(
               label: 'enrichOriginalTitle'.tr(),
               value: analysis.originalTitle!,
-              isApproved: enrichState.approvedOriginalTitle == analysis.originalTitle,
+              isApproved: enrichState.approvedOriginalTitle == analysis.originalTitle || titleAlreadySaved,
               alreadySaved: titleAlreadySaved,
               onApprove: () {
                 context.read<SongEnrichmentBloc>().add(
                       ApproveOriginalTitle(originalTitle: analysis.originalTitle!),
                     );
               },
-              onRemove: null,
+              onReject: () {
+                context.read<SongEnrichmentBloc>().add(RejectAnalysis(rejectedTitle: analysis.originalTitle));
+              },
             ),
           if (analysis.originalLanguage != null) _buildInfoRow('enrichOriginalLanguage'.tr(), analysis.originalLanguage!),
           if (analysis.genre != null) _buildInfoRow('enrichGenre'.tr(), analysis.genre!),
@@ -374,7 +391,7 @@ class _SongEnrichmentBodyState extends State<SongEnrichmentBody> {
     required String value,
     required bool isApproved,
     required VoidCallback onApprove,
-    VoidCallback? onRemove,
+    VoidCallback? onReject,
     bool alreadySaved = false,
   }) {
     return Padding(
@@ -386,32 +403,37 @@ class _SongEnrichmentBodyState extends State<SongEnrichmentBody> {
             child: Text(label, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13)),
           ),
           Expanded(
-            child: Text(value, style: const TextStyle(fontSize: 13)),
+            child: SelectableText(value, style: const TextStyle(fontSize: 13)),
+          ),
+          IconButton(
+            icon: const Icon(Icons.copy, size: 16, color: Colors.grey),
+            tooltip: 'enrichCopy'.tr(),
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: value));
+              MyToast.showText(text: 'enrichCopied'.tr(), typeNotification: TypeNotification.info);
+            },
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
           ),
           if (alreadySaved)
             Tooltip(
               message: 'enrichAlreadySaved'.tr(),
               child: const Icon(Icons.check_circle, color: Colors.blue, size: 22),
             )
-          else if (!isApproved)
+          else if (!isApproved) ...[
             IconButton(
               icon: const Icon(Icons.check_circle_outline, color: Colors.green, size: 22),
               tooltip: 'enrichApprove'.tr(),
               onPressed: onApprove,
-            )
-          else
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.check_circle, color: Colors.green, size: 22),
-                if (onRemove != null)
-                  IconButton(
-                    icon: const Icon(Icons.cancel_outlined, color: Colors.red, size: 20),
-                    tooltip: 'enrichRemove'.tr(),
-                    onPressed: onRemove,
-                  ),
-              ],
             ),
+            if (onReject != null)
+              IconButton(
+                icon: const Icon(Icons.cancel_outlined, color: Colors.orange, size: 22),
+                tooltip: 'enrichReject'.tr(),
+                onPressed: onReject,
+              ),
+          ] else
+            const Icon(Icons.check_circle, color: Colors.green, size: 22),
         ],
       ),
     );
@@ -426,7 +448,17 @@ class _SongEnrichmentBodyState extends State<SongEnrichmentBody> {
             width: 140,
             child: Text(label, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13)),
           ),
-          Expanded(child: Text(value, style: const TextStyle(fontSize: 13))),
+          Expanded(child: SelectableText(value, style: const TextStyle(fontSize: 13))),
+          IconButton(
+            icon: const Icon(Icons.copy, size: 16, color: Colors.grey),
+            tooltip: 'enrichCopy'.tr(),
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: value));
+              MyToast.showText(text: 'enrichCopied'.tr(), typeNotification: TypeNotification.info);
+            },
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+          ),
         ],
       ),
     );
@@ -489,6 +521,20 @@ class _SongEnrichmentBodyState extends State<SongEnrichmentBody> {
               final alreadyInSong = existingVideos.any((v) => v.path.contains(video.videoId));
               return _buildYoutubeVideoTile(context, video, isApproved, alreadyInSong);
             }),
+          if (enrichState.youtubeResults.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: TextButton.icon(
+                onPressed: () {
+                  context.read<SongEnrichmentBloc>().add(const RejectYoutubeResults());
+                },
+                icon: const Icon(Icons.refresh, size: 18, color: Colors.orange),
+                label: Text(
+                  'enrichRejectYoutube'.tr(),
+                  style: const TextStyle(fontSize: 12, color: Colors.orange),
+                ),
+              ),
+            ),
         ],
       ),
     );

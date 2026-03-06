@@ -99,13 +99,38 @@ class _PreviewBodyState extends State<PreviewBody> {
                                   children: [
                                     BlocBuilder<PreviewChordBloc, PreviewChordState>(
                                       builder: (context, state) {
+                                        final song = state.data.song;
+                                        final parts = <String>[];
+                                        if (song?.indexSongBook != null && song!.indexSongBook! > 0) {
+                                          parts.add('#${song.indexSongBook}');
+                                        }
+                                        if (song?.interpret != null && song!.interpret!.isNotEmpty) {
+                                          parts.add(song.interpret!);
+                                        }
+                                        parts.add('cap: ${state.cap}');
+                                        if (song?.bmp != null && song!.bmp! > 0) {
+                                          parts.add('bpm: ${song.bmp}');
+                                        }
+                                        if (song?.songBar != null && song!.songBar! > 0) {
+                                          parts.add('${song.songBar}/4');
+                                        }
+                                        if (song?.tags != null && song!.tags!.isNotEmpty) {
+                                          parts.add(song.tags!.join(', '));
+                                        }
                                         return Align(
                                           alignment: Alignment.centerLeft,
-                                          child: Text('cap: ${state.cap}',
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(vertical: 4),
+                                            child: Text(
+                                              parts.join('  ·  '),
                                               style: const TextStyle(
-                                                fontSize: 14,
+                                                fontSize: 13,
                                                 color: AppColor.primaryColor,
-                                              )),
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                              maxLines: 1,
+                                            ),
+                                          ),
                                         );
                                       },
                                     ),

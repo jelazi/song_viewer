@@ -27,6 +27,8 @@ class SongEnrichmentBloc extends Bloc<SongEnrichmentEvent, SongEnrichmentState> 
     on<RemoveSheetMusic>(_removeSheetMusic);
     on<SaveEnrichment>(_saveEnrichment);
     on<ResetEnrichment>(_resetEnrichment);
+    on<RejectAnalysis>(_rejectAnalysis);
+    on<RejectYoutubeResults>(_rejectYoutubeResults);
   }
 
   void _startEnrichment(StartEnrichment event, Emitter<SongEnrichmentState> emit) async {
@@ -137,17 +139,43 @@ class SongEnrichmentBloc extends Bloc<SongEnrichmentEvent, SongEnrichmentState> 
   }
 
   void _approveAuthor(ApproveAuthor event, Emitter<SongEnrichmentState> emit) {
-    emit(state.copyWith(approvedAuthor: event.author));
+    if (state.song == null) return;
+    final updatedSong = state.song!.copyWith(interpret: event.author);
+    emit(state.copyWith(
+      approvedAuthor: event.author,
+      song: updatedSong,
+      songVersion: state.songVersion + 1,
+    ));
   }
 
   void _approveOriginalTitle(ApproveOriginalTitle event, Emitter<SongEnrichmentState> emit) {
-    emit(state.copyWith(approvedOriginalTitle: event.originalTitle));
+    if (state.song == null) return;
+    final newTags = List<String>.from(state.song!.tags ?? []);
+    if (!newTags.contains(event.originalTitle)) {
+      newTags.add(event.originalTitle);
+    }
+    final updatedSong = state.song!.copyWith(tags: newTags);
+    emit(state.copyWith(
+      approvedOriginalTitle: event.originalTitle,
+      song: updatedSong,
+      songVersion: state.songVersion + 1,
+    ));
   }
 
   void _approveYoutubeVideo(ApproveYoutubeVideo event, Emitter<SongEnrichmentState> emit) {
+    if (state.song == null) return;
     final alreadyApproved = state.approvedVideos.any((v) => v.videoId == event.video.videoId);
     if (!alreadyApproved) {
-      emit(state.copyWith(approvedVideos: [...state.approvedVideos, event.video]));
+      final newYoutubeVideos = List<YoutubeVideo>.from(state.song!.youtubeVideos ?? []);
+      if (!newYoutubeVideos.any((v) => v.path.contains(event.video.videoId))) {
+        newYoutubeVideos.add(YoutubeVideo(name: event.video.title, path: event.video.videoUrl));
+      }
+      final updatedSong = state.song!.copyWith(youtubeVideos: newYoutubeVideos);
+      emit(state.copyWith(
+        approvedVideos: [...state.approvedVideos, event.video],
+        song: updatedSong,
+        songVersion: state.songVersion + 1,
+      ));
     }
   }
 
@@ -158,9 +186,19 @@ class SongEnrichmentBloc extends Bloc<SongEnrichmentEvent, SongEnrichmentState> 
   }
 
   void _approveSheetMusic(ApproveSheetMusic event, Emitter<SongEnrichmentState> emit) {
+    if (state.song == null) return;
     final alreadyApproved = state.approvedSheets.any((s) => s.imageUrl == event.sheet.imageUrl);
     if (!alreadyApproved) {
-      emit(state.copyWith(approvedSheets: [...state.approvedSheets, event.sheet]));
+      final newSheets = List<String>.from(state.song!.sheets ?? []);
+      if (!newSheets.contains(event.sheet.imageUrl)) {
+        newSheets.add(event.sheet.imageUrl);
+      }
+      final updatedSong = state.song!.copyWith(sheets: newSheets);
+      emit(state.copyWith(
+        approvedSheets: [...state.approvedSheets, event.sheet],
+        song: updatedSong,
+        songVersion: state.songVersion + 1,
+      ));
     }
   }
 
@@ -219,5 +257,96 @@ class SongEnrichmentBloc extends Bloc<SongEnrichmentEvent, SongEnrichmentState> 
 
   void _resetEnrichment(ResetEnrichment event, Emitter<SongEnrichmentState> emit) {
     emit(const SongEnrichmentState());
+  }
+
+  void _rejectAnalysis(RejectAnalysis event, Emitter<SongEnrichmentState> emit) async {
+    if (state.song == null) return;
+
+    final newRejectedAuthors = List<String>.from(state.rejectedAuthors);
+    final newRejectedTitles = List<String>.from(state.rejectedTitles);
+    if (event.rejectedAuthor != null) newRejectedAuthors.add(event.rejectedAuthor!);
+    if (event.rejectedTitle != null) newRejectedTitles.add(event.rejectedTitle!);
+
+    emit(state.copyWith(
+      status: EnrichmentStatus.analyzing,
+      rejectedAuthors: newRejectedAuthors,
+      rejectedTitles: newRejectedTitles,
+    ));
+
+    final groqApiKey = settingsRepository.groqApiKey;
+    if (groqApiKey.isEmpty) return;
+
+    final analysis = await aiSearchService.analyzeSong(
+      apiKey: groqApiKey,
+      songTitle: state.song!.title,
+      songLyrics: state.song!.lyrics,
+      currentInterpret: state.song!.interpret,
+      geminiApiKey: settingsRepository.geminiApiKey,
+      rejectedAuthors: newRejectedAuthors,
+      rejectedTitles: newRejectedTitles,
+    );
+
+    if (analysis == null) {
+      emit(state.copyWith(
+        status: EnrichmentStatus.error,
+        errorMessage: 'Opakovaná AI analýza selhala.',
+      ));
+      return;
+    }
+
+    emit(state.copyWith(
+      analysis: analysis,
+      status: EnrichmentStatus.analyzed,
+    ));
+  }
+
+  void _rejectYoutubeResults(RejectYoutubeResults event, Emitter<SongEnrichmentState> emit) async {
+    if (state.song == null || state.analysis == null) return;
+
+    final newRejectedIds = List<String>.from(state.rejectedVideoIds);
+    for (final v in state.youtubeResults) {
+      if (!state.approvedVideos.any((a) => a.videoId == v.videoId)) {
+        newRejectedIds.add(v.videoId);
+      }
+    }
+
+    emit(state.copyWith(
+      status: EnrichmentStatus.searchingYoutube,
+      rejectedVideoIds: newRejectedIds,
+    ));
+
+    final youtubeApiKey = settingsRepository.youtubeApiKey;
+    if (youtubeApiKey.isEmpty) {
+      emit(state.copyWith(status: EnrichmentStatus.analyzed));
+      return;
+    }
+
+    // Use the song title + interpret as an alternative query set
+    final altQueries = <String>[
+      '${state.song!.title} píseň karaoke',
+      '${state.song!.title} ${state.analysis?.author ?? ''} live',
+      '${state.analysis?.originalTitle ?? state.song!.title} worship',
+      '${state.analysis?.originalTitle ?? state.song!.title} lyrics',
+    ];
+
+    final allResults = <YoutubeSearchResult>[];
+    final seenIds = <String>{...newRejectedIds, ...state.approvedVideos.map((v) => v.videoId)};
+    for (final query in altQueries) {
+      final results = await aiSearchService.searchYoutube(
+        apiKey: youtubeApiKey,
+        query: query,
+        maxResults: 5,
+      );
+      for (final r in results) {
+        if (seenIds.add(r.videoId)) {
+          allResults.add(r);
+        }
+      }
+    }
+
+    emit(state.copyWith(
+      youtubeResults: allResults,
+      status: EnrichmentStatus.analyzed,
+    ));
   }
 }

@@ -258,5 +258,11 @@
     "enrichCurrentData": "Current song data",
     "enrichSongbookIndex": "Songbook number",
     "enrichTags": "Tags",
-    "enrichAlreadySaved": "Already saved in song"
+    "enrichAlreadySaved": "Already saved in song",
+    "enrichCopy": "Copy",
+    "enrichCopied": "Copied to clipboard",
+    "exportApiKeys": "Export all API keys",
+    "exportApiKeysCopied": "API keys copied to clipboard",
+    "enrichReject": "Reject and try again",
+    "enrichRejectYoutube": "Reject results and search again"
 }
