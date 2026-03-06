@@ -89,20 +89,26 @@ $lyricsSnippet
 
 IMPORTANT RULES:
 1. Most Czech worship songs are translations of English worship songs. Search your knowledge thoroughly.
-2. For example: "Ať požehnán je Bůh" = "Blessed Be Your Name" by Matt Redman. "Pán je můj pastýř" = "The Lord Is My Shepherd". "Apoštolská" from Jesus Christ Superstar by Andrew Lloyd Webber.
+2. Songs can also come from MUSICALS (e.g. Jesus Christ Superstar, Godspell, Joseph and the Amazing Technicolor Dreamcoat). For example:
+   - "Apoštolská" = "The Last Supper" / "The Apostles' Song" from Jesus Christ Superstar by Andrew Lloyd Webber & Tim Rice
+   - "Ať požehnán je Bůh" = "Blessed Be Your Name" by Matt Redman
+   - "Pán je můj pastýř" = "The Lord Is My Shepherd"
+   - "Svítá" = a Czech original by Bratři Ebenové or Svítá band (NOT a translation)
+   - "Shine Jesus Shine" = "Shine, Jesus, Shine" (also known as "Lord, the Light of Your Love") by Graham Kendrick
 3. Even if the Czech title seems original, check if the melody/lyrics match a known international song.
 4. Return the ORIGINAL songwriter/composer, not the Czech translator.
 5. If the song IS genuinely a Czech original, state that clearly in additional_info but still try to identify the author.
-6. For youtube_search_queries, include BOTH the original language title AND the Czech title for best results.
+6. For youtube_search_queries: provide 4-5 queries. Put CZECH queries FIRST (Czech title + "píseň" or "chvály"), then original language queries. This ensures Czech results appear first.
 7. Be confident — if you recognize the song, state the author definitively. Don't hedge with "possibly" or "probably" unless truly uncertain.
+8. Pay attention to the LYRICS content, not just the title. The lyrics are the strongest clue for identification.
 
 Return ONLY a valid JSON object (no markdown, no extra text):
 {
   "original_title": "original title in original language, or null if Czech original",
   "author": "original songwriter/composer name",
-  "original_language": "original language (e.g. English, German)",
+  "original_language": "original language (e.g. English, German, Czech)",
   "genre": "genre (e.g. worship, hymn, pop, rock, musical)",
-  "youtube_search_queries": ["query1", "query2", "query3"],
+  "youtube_search_queries": ["czech query 1", "czech query 2", "original language query 1", "original language query 2"],
   "additional_info": "brief interesting facts about the song"
 }''';
 

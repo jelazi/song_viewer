@@ -254,5 +254,9 @@
     "enrichGroqApiKey": "Groq API key (AI analysis)",
     "enrichYoutubeApiKey": "YouTube API key (video search)",
     "enrichGeminiApiKey": "Gemini API key (Google AI, better identification)",
-    "enrichApiKeysTitle": "AI Enrichment — API keys"
+    "enrichApiKeysTitle": "AI Enrichment — API keys",
+    "enrichCurrentData": "Current song data",
+    "enrichSongbookIndex": "Songbook number",
+    "enrichTags": "Tags",
+    "enrichAlreadySaved": "Already saved in song"
 }

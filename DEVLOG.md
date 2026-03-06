@@ -1,5 +1,30 @@
 # Development Log
 
+## 2026-03-06b - Enrichment UX fixes + presentation title
+
+### What was done
+1. **YouTube saving fix**: After enrichment save, `_selectedSong` is now updated locally so the UI immediately reflects saved YouTube videos/sheets in all views
+2. **Enrichment state preserved across tabs**: `initState()` restores `_selectedSong` from BLoC state — switching to presentation/edit and back no longer loses the analysis
+3. **Current song data shown in AI analysis**: New "Current song data" section shows what's already saved (interpret, songbook number, YouTube count, sheets, tags) with green/grey indicators. AI results that already match saved data show a blue "already saved" icon instead of approve button
+4. **YouTube Czech first**: AI prompt now returns Czech search queries first, searches up to 4 queries (was 2)
+5. **Presentation title fix**: `_startPresentation` now uses `_buildPresentationTitle(song)` instead of `currentSong.title` — shows interpret + songbook number
+6. **Better AI prompt**: Improved song identification — added musical examples (Jesus Christ Superstar), explicit Czech→English mapping, lyrics-based identification rule, better structured query guidance
+
+### Files changed
+- `lib/view/desktop_view/pages/desktop_home_page/desktop_home_page.dart` — fixed `_startPresentation` title
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/song_enrichment_body.dart` — restored state from BLoC in initState, added current song info section, green/blue icons, updated `_selectedSong` after save
+- `lib/services/ai_search_service.dart` — improved AI prompt with musical examples, Czech-first queries
+- `lib/blocs/song_enrichment_bloc/song_enrichment_bloc.dart` — search up to 4 YouTube queries
+- `assets/lang/cs.json` — added enrichCurrentData, enrichSongbookIndex, enrichTags, enrichAlreadySaved
+- `assets/lang/en.json` — same new keys
+
+### Current state
+- Zero compilation errors (168 info-level warnings, all pre-existing)
+- Enrichment state survives tab switches
+- Presentation title shows full format (#number title — interpret)
+
+---
+
 ## 2026-03-07 - Multi-task improvements (Tasks 1-6)
 
 ### What was done

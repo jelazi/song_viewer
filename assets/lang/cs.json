@@ -337,5 +337,9 @@
     "enrichGroqApiKey": "Groq API klíč (AI analýza)",
     "enrichYoutubeApiKey": "YouTube API klíč (vyhledávání videí)",
     "enrichGeminiApiKey": "Gemini API klíč (Google AI, lepší identifikace)",
-    "enrichApiKeysTitle": "AI Obohacení — API klíče"
+    "enrichApiKeysTitle": "AI Obohacení — API klíče",
+    "enrichCurrentData": "Aktuální data písně",
+    "enrichSongbookIndex": "Číslo ve zpěvníku",
+    "enrichTags": "Štítky",
+    "enrichAlreadySaved": "Již uloženo v písni"
 }

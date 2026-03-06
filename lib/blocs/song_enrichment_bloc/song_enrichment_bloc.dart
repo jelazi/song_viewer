@@ -73,11 +73,11 @@ class SongEnrichmentBloc extends Bloc<SongEnrichmentEvent, SongEnrichmentState> 
 
       final allResults = <YoutubeSearchResult>[];
       final seenIds = <String>{};
-      for (final query in analysis.youtubeSearchQueries.take(2)) {
+      for (final query in analysis.youtubeSearchQueries.take(4)) {
         final results = await aiSearchService.searchYoutube(
           apiKey: youtubeApiKey,
           query: query,
-          maxResults: 5,
+          maxResults: 4,
         );
         for (final r in results) {
           if (seenIds.add(r.videoId)) {

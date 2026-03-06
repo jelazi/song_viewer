@@ -22,6 +22,16 @@ class _SongEnrichmentBodyState extends State<SongEnrichmentBody> {
   Song? _selectedSong;
 
   @override
+  void initState() {
+    super.initState();
+    // Restore selected song from BLoC state (survives tab switches)
+    final enrichState = context.read<SongEnrichmentBloc>().state;
+    if (enrichState.song != null) {
+      _selectedSong = enrichState.song;
+    }
+  }
+
+  @override
   void dispose() {
     _youtubeSearchController.dispose();
     _songSearchController.dispose();
@@ -36,6 +46,10 @@ class _SongEnrichmentBodyState extends State<SongEnrichmentBody> {
           context.read<HomePageBloc>().add(UpdateSong(song: state.song!));
           context.read<PreviewChordBloc>().add(ChangeCurrentSong(song: state.song!));
           context.read<DesktopRibbonMenuBloc>().add(ChangeIsSelectedSong(song: state.song!));
+          // Update local selected song so the UI reflects saved changes
+          setState(() {
+            _selectedSong = state.song;
+          });
           MyToast.showText(text: 'enrichSaved'.tr(), typeNotification: TypeNotification.success);
         }
         if (state.status == EnrichmentStatus.error && state.errorMessage != null) {
@@ -69,6 +83,8 @@ class _SongEnrichmentBodyState extends State<SongEnrichmentBody> {
                           children: [
                             _buildHeader(context, _selectedSong!, enrichState),
                             const SizedBox(height: 20),
+                            _buildCurrentSongInfo(context, _selectedSong!),
+                            const SizedBox(height: 16),
                             if (enrichState.status == EnrichmentStatus.analyzing) _buildLoadingSection('enrichAnalyzing'.tr()),
                             if (enrichState.status == EnrichmentStatus.searchingYoutube) _buildLoadingSection('enrichSearchingYoutube'.tr()),
                             if (enrichState.status == EnrichmentStatus.searchingSheets) _buildLoadingSection('enrichSearchingSheets'.tr()),
@@ -241,8 +257,69 @@ class _SongEnrichmentBodyState extends State<SongEnrichmentBody> {
     );
   }
 
+  Widget _buildCurrentSongInfo(BuildContext context, Song song) {
+    final hasInterpret = song.interpret != null && song.interpret!.isNotEmpty;
+    final hasYoutube = song.youtubeVideos != null && song.youtubeVideos!.isNotEmpty;
+    final hasSheets = song.sheets != null && song.sheets!.isNotEmpty;
+    final hasTags = song.tags != null && song.tags!.isNotEmpty;
+    final hasIndex = song.indexSongBook != null && song.indexSongBook! > 0;
+
+    return _buildSection(
+      title: 'enrichCurrentData'.tr(),
+      icon: Icons.info_outline,
+      color: Colors.blue.withValues(alpha: 0.03),
+      borderColor: Colors.blue.withValues(alpha: 0.2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildCurrentInfoRow(Icons.person, 'enrichAuthor'.tr(), hasInterpret ? song.interpret! : '-', hasInterpret),
+          _buildCurrentInfoRow(Icons.numbers, 'enrichSongbookIndex'.tr(), hasIndex ? '#${song.indexSongBook}' : '-', hasIndex),
+          _buildCurrentInfoRow(Icons.play_circle, 'enrichYoutube'.tr(), hasYoutube ? '${song.youtubeVideos!.length} videí' : '-', hasYoutube),
+          if (hasYoutube)
+            ...song.youtubeVideos!.map((v) => Padding(
+                  padding: const EdgeInsets.only(left: 32),
+                  child: Text(v.name, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                )),
+          _buildCurrentInfoRow(Icons.music_note, 'enrichSheetMusic'.tr(), hasSheets ? '${song.sheets!.length} not' : '-', hasSheets),
+          _buildCurrentInfoRow(Icons.label, 'enrichTags'.tr(), hasTags ? song.tags!.join(', ') : '-', hasTags),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCurrentInfoRow(IconData icon, String label, String value, bool hasData) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: hasData ? Colors.green : Colors.grey),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 130,
+            child: Text(label, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 12)),
+          ),
+          Expanded(
+            child: Text(value, style: TextStyle(fontSize: 12, color: hasData ? Colors.black87 : Colors.grey)),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildAiAnalysisSection(BuildContext context, SongEnrichmentState enrichState) {
     final analysis = enrichState.analysis!;
+    final song = _selectedSong;
+    final existingInterpret = song?.interpret ?? '';
+    final existingTags = song?.tags ?? [];
+
+    // Check if AI author already matches song's interpret
+    final authorAlreadySaved =
+        analysis.author != null && analysis.author!.isNotEmpty && existingInterpret.isNotEmpty && existingInterpret.toLowerCase() == analysis.author!.toLowerCase();
+
+    // Check if original title is already in tags
+    final titleAlreadySaved =
+        analysis.originalTitle != null && analysis.originalTitle!.isNotEmpty && existingTags.any((t) => t.toLowerCase() == analysis.originalTitle!.toLowerCase());
+
     return _buildSection(
       title: 'enrichAiResults'.tr(),
       icon: Icons.psychology,
@@ -254,19 +331,22 @@ class _SongEnrichmentBodyState extends State<SongEnrichmentBody> {
               label: 'enrichAuthor'.tr(),
               value: analysis.author!,
               isApproved: enrichState.approvedAuthor == analysis.author,
+              alreadySaved: authorAlreadySaved,
               onApprove: () {
                 context.read<SongEnrichmentBloc>().add(ApproveAuthor(author: analysis.author!));
               },
-              onRemove: () {
-                context.read<SongEnrichmentBloc>().add(const ResetEnrichment());
-                // Re-trigger with a state that clears author
-              },
+              onRemove: enrichState.approvedAuthor == analysis.author
+                  ? () {
+                      context.read<SongEnrichmentBloc>().add(const ResetEnrichment());
+                    }
+                  : null,
             ),
           if (analysis.originalTitle != null && analysis.originalTitle!.isNotEmpty)
             _buildApprovalRow(
               label: 'enrichOriginalTitle'.tr(),
               value: analysis.originalTitle!,
               isApproved: enrichState.approvedOriginalTitle == analysis.originalTitle,
+              alreadySaved: titleAlreadySaved,
               onApprove: () {
                 context.read<SongEnrichmentBloc>().add(
                       ApproveOriginalTitle(originalTitle: analysis.originalTitle!),
@@ -295,6 +375,7 @@ class _SongEnrichmentBodyState extends State<SongEnrichmentBody> {
     required bool isApproved,
     required VoidCallback onApprove,
     VoidCallback? onRemove,
+    bool alreadySaved = false,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -307,7 +388,12 @@ class _SongEnrichmentBodyState extends State<SongEnrichmentBody> {
           Expanded(
             child: Text(value, style: const TextStyle(fontSize: 13)),
           ),
-          if (!isApproved)
+          if (alreadySaved)
+            Tooltip(
+              message: 'enrichAlreadySaved'.tr(),
+              child: const Icon(Icons.check_circle, color: Colors.blue, size: 22),
+            )
+          else if (!isApproved)
             IconButton(
               icon: const Icon(Icons.check_circle_outline, color: Colors.green, size: 22),
               tooltip: 'enrichApprove'.tr(),
@@ -399,14 +485,16 @@ class _SongEnrichmentBodyState extends State<SongEnrichmentBody> {
           else
             ...enrichState.youtubeResults.map((video) {
               final isApproved = enrichState.approvedVideos.any((v) => v.videoId == video.videoId);
-              return _buildYoutubeVideoTile(context, video, isApproved);
+              final existingVideos = _selectedSong?.youtubeVideos ?? [];
+              final alreadyInSong = existingVideos.any((v) => v.path.contains(video.videoId));
+              return _buildYoutubeVideoTile(context, video, isApproved, alreadyInSong);
             }),
         ],
       ),
     );
   }
 
-  Widget _buildYoutubeVideoTile(BuildContext context, YoutubeSearchResult video, bool isApproved) {
+  Widget _buildYoutubeVideoTile(BuildContext context, YoutubeSearchResult video, bool isApproved, bool alreadyInSong) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -469,7 +557,12 @@ class _SongEnrichmentBodyState extends State<SongEnrichmentBody> {
             },
           ),
           // Approve/remove
-          if (!isApproved)
+          if (alreadyInSong)
+            Tooltip(
+              message: 'enrichAlreadySaved'.tr(),
+              child: const Icon(Icons.check_circle, color: Colors.blue, size: 22),
+            )
+          else if (!isApproved)
             IconButton(
               icon: const Icon(Icons.add_circle_outline, color: Colors.green, size: 22),
               tooltip: 'enrichApprove'.tr(),

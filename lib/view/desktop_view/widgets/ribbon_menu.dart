@@ -458,7 +458,7 @@ class SettingsTabbar extends StatelessWidget {
                   context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: 'users'));
                 }),
             RibbonButton(
-                text: 'Nastavení prezentace',
+                text: 'Prezentace',
                 icon: const Icon(
                   Icons.present_to_all,
                   color: Colors.deepPurple,

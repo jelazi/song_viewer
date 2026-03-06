@@ -40,7 +40,7 @@ class _PresentationSettingsBodyState extends State<PresentationSettingsBody> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Nastavení prezentace',
+                'Prezentace',
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,

@@ -590,7 +590,7 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
       // Open window immediately with computed content
       manager.openPresentationWindow(
         context,
-        title: currentSong.title,
+        title: _buildPresentationTitle(currentSong),
         pageContent: result.pageContent,
         fontSize: settingsState.presentationFontSize,
         textColor: settingsState.presentationFontColor,
