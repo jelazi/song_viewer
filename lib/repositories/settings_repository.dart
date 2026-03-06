@@ -1,13 +1,18 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'dart:convert';
+
+import 'package:default_project/model/qr_link.dart';
 import 'package:default_project/model/user.dart';
 import 'package:default_project/services/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import '../providers/firebase_provider.dart';
 import '../providers/hive_provider.dart';
 
 class SettingsRepository {
   HiveProvider hiveProvider;
+  FirebaseProvider firebaseProvider;
   bool isLargeScreen = false;
   double _previewFontTextSize = 20;
   double _previewFontChordSize = 20;
@@ -37,17 +42,17 @@ class SettingsRepository {
   bool _presentationShowTitle = true;
   bool _presentationAutoPageByParagraphs = false;
 
-  // QR code URLs
-  String _qrCurrentSongUrl = 'https://your-site.example/';
-  String _qrWebAppUrl = 'https://songsviewerweb.web.app/';
-  String _qrZizkoviUrl = 'https://www.zizkovi.online/';
+  // QR code URLs — dynamic list
+  List<QrLink> _qrLinks = QrLink.defaults;
 
   // AI enrichment API keys
   String _groqApiKey = '';
   String _youtubeApiKey = '';
+  String _geminiApiKey = '';
 
   SettingsRepository({
     required this.hiveProvider,
+    required this.firebaseProvider,
   });
 
   void getInfoApp() async {
@@ -119,12 +124,11 @@ class SettingsRepository {
   bool get presentationShowTitle => _presentationShowTitle;
   bool get presentationAutoPageByParagraphs => _presentationAutoPageByParagraphs;
 
-  String get qrCurrentSongUrl => _qrCurrentSongUrl;
-  String get qrWebAppUrl => _qrWebAppUrl;
-  String get qrZizkoviUrl => _qrZizkoviUrl;
+  List<QrLink> get qrLinks => List.unmodifiable(_qrLinks);
 
   String get groqApiKey => _groqApiKey;
   String get youtubeApiKey => _youtubeApiKey;
+  String get geminiApiKey => _geminiApiKey;
 
   Future<void> loadLocalSettings() async {
     _previewFontTextSize = await hiveProvider.getSettingsValue('previewFontTextSize') ?? 20;
@@ -154,14 +158,50 @@ class SettingsRepository {
     _presentationShowTitle = await hiveProvider.getSettingsValue('presentationShowTitle') ?? true;
     _presentationAutoPageByParagraphs = await hiveProvider.getSettingsValue('presentationAutoPageByParagraphs') ?? false;
 
-    // QR code URLs
-    _qrCurrentSongUrl = await hiveProvider.getSettingsValue('qrCurrentSongUrl') ?? 'https://your-site.example/';
-    _qrWebAppUrl = await hiveProvider.getSettingsValue('qrWebAppUrl') ?? 'https://songsviewerweb.web.app/';
-    _qrZizkoviUrl = await hiveProvider.getSettingsValue('qrZizkoviUrl') ?? 'https://www.zizkovi.online/';
+    // QR code URLs — dynamic list
+    final qrLinksJson = await hiveProvider.getSettingsValue('qrLinks');
+    if (qrLinksJson != null && qrLinksJson is String) {
+      try {
+        final decoded = jsonDecode(qrLinksJson) as List;
+        _qrLinks = decoded.map((e) => QrLink.fromJson(Map<String, dynamic>.from(e as Map))).toList();
+      } catch (_) {
+        _qrLinks = QrLink.defaults;
+      }
+    } else {
+      // Migrate from old individual keys
+      final oldCurrent = await hiveProvider.getSettingsValue('qrCurrentSongUrl');
+      final oldWebApp = await hiveProvider.getSettingsValue('qrWebAppUrl');
+      final oldZizkovi = await hiveProvider.getSettingsValue('qrZizkoviUrl');
+      if (oldCurrent != null || oldWebApp != null || oldZizkovi != null) {
+        _qrLinks = [
+          QrLink(label: 'Current Song', url: oldCurrent ?? 'https://your-site.example/'),
+          QrLink(label: 'Web App', url: oldWebApp ?? 'https://songsviewerweb.web.app/'),
+          QrLink(label: 'Žižkovi', url: oldZizkovi ?? 'https://www.zizkovi.online/'),
+        ];
+        _saveQrLinksToHive();
+      } else {
+        _qrLinks = QrLink.defaults;
+      }
+    }
+
+    // Try loading QR links from Firebase (overrides local if available)
+    try {
+      final firebaseLinks = await firebaseProvider.getQrLinks();
+      if (firebaseLinks != null && firebaseLinks.isNotEmpty) {
+        _qrLinks = firebaseLinks;
+        _saveQrLinksToHive();
+      } else {
+        // No links in Firebase — push local to Firebase
+        await firebaseProvider.setQrLinks(_qrLinks);
+      }
+    } catch (_) {
+      // Firebase unavailable, use local
+    }
 
     // AI enrichment API keys
     _groqApiKey = await hiveProvider.getSettingsValue('groqApiKey') ?? '';
     _youtubeApiKey = await hiveProvider.getSettingsValue('youtubeApiKey') ?? '';
+    _geminiApiKey = await hiveProvider.getSettingsValue('geminiApiKey') ?? '';
   }
 
   void setCurrentUser(User user) {
@@ -316,24 +356,6 @@ class SettingsRepository {
           hiveProvider.setSettingsValue('presentationAutoPageByParagraphs', value);
           break;
         }
-      case 'qrCurrentSongUrl':
-        {
-          _qrCurrentSongUrl = value;
-          hiveProvider.setSettingsValue('qrCurrentSongUrl', value);
-          break;
-        }
-      case 'qrWebAppUrl':
-        {
-          _qrWebAppUrl = value;
-          hiveProvider.setSettingsValue('qrWebAppUrl', value);
-          break;
-        }
-      case 'qrZizkoviUrl':
-        {
-          _qrZizkoviUrl = value;
-          hiveProvider.setSettingsValue('qrZizkoviUrl', value);
-          break;
-        }
       case 'groqApiKey':
         {
           _groqApiKey = value;
@@ -346,6 +368,50 @@ class SettingsRepository {
           hiveProvider.setSettingsValue('youtubeApiKey', value);
           break;
         }
+      case 'geminiApiKey':
+        {
+          _geminiApiKey = value;
+          hiveProvider.setSettingsValue('geminiApiKey', value);
+          break;
+        }
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // QR link CRUD
+  // ---------------------------------------------------------------------------
+
+  void addQrLink(QrLink link) {
+    _qrLinks = [..._qrLinks, link];
+    _saveQrLinksToHive();
+    firebaseProvider.setQrLinks(_qrLinks);
+  }
+
+  void updateQrLink(int index, QrLink link) {
+    if (index < 0 || index >= _qrLinks.length) return;
+    final updated = [..._qrLinks];
+    updated[index] = link;
+    _qrLinks = updated;
+    _saveQrLinksToHive();
+    firebaseProvider.setQrLinks(_qrLinks);
+  }
+
+  void removeQrLink(int index) {
+    if (index < 0 || index >= _qrLinks.length) return;
+    final updated = [..._qrLinks];
+    updated.removeAt(index);
+    _qrLinks = updated;
+    _saveQrLinksToHive();
+    firebaseProvider.setQrLinks(_qrLinks);
+  }
+
+  void setQrLinks(List<QrLink> links) {
+    _qrLinks = links;
+    _saveQrLinksToHive();
+  }
+
+  void _saveQrLinksToHive() {
+    final json = jsonEncode(_qrLinks.map((e) => e.toJson()).toList());
+    hiveProvider.setSettingsValue('qrLinks', json);
   }
 }

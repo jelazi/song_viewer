@@ -149,6 +149,9 @@ class _SongEnrichmentBodyState extends State<SongEnrichmentBody> {
                 subtitle: song.interpret != null && song.interpret!.isNotEmpty ? Text(song.interpret!, style: const TextStyle(fontSize: 10, color: Colors.grey)) : null,
                 leading: isSelected ? const Icon(Icons.auto_awesome, size: 16, color: AppColor.primaryColor) : null,
                 onTap: () {
+                  if (_selectedSong?.id != song.id) {
+                    context.read<SongEnrichmentBloc>().add(const ResetEnrichment());
+                  }
                   setState(() {
                     _selectedSong = song;
                   });

@@ -24,13 +24,12 @@ class SettingsState extends Equatable {
   final bool presentationShowPageNumber;
   final bool presentationShowTitle;
   final bool presentationAutoPageByParagraphs;
-  // QR code URLs
-  final String qrCurrentSongUrl;
-  final String qrWebAppUrl;
-  final String qrZizkoviUrl;
+  // QR code URLs — dynamic list
+  final List<QrLink> qrLinks;
   // AI enrichment API keys
   final String groqApiKey;
   final String youtubeApiKey;
+  final String geminiApiKey;
   const SettingsState({
     required this.previewFontTextSize,
     required this.previewFontChordSize,
@@ -53,11 +52,10 @@ class SettingsState extends Equatable {
     required this.presentationShowPageNumber,
     required this.presentationShowTitle,
     required this.presentationAutoPageByParagraphs,
-    required this.qrCurrentSongUrl,
-    required this.qrWebAppUrl,
-    required this.qrZizkoviUrl,
+    required this.qrLinks,
     required this.groqApiKey,
     required this.youtubeApiKey,
+    required this.geminiApiKey,
   });
 
   @override
@@ -83,11 +81,10 @@ class SettingsState extends Equatable {
         presentationShowPageNumber,
         presentationShowTitle,
         presentationAutoPageByParagraphs,
-        qrCurrentSongUrl,
-        qrWebAppUrl,
-        qrZizkoviUrl,
+        qrLinks,
         groqApiKey,
         youtubeApiKey,
+        geminiApiKey,
       ];
 
   SettingsState copyWith({
@@ -112,11 +109,10 @@ class SettingsState extends Equatable {
     bool? presentationShowPageNumber,
     bool? presentationShowTitle,
     bool? presentationAutoPageByParagraphs,
-    String? qrCurrentSongUrl,
-    String? qrWebAppUrl,
-    String? qrZizkoviUrl,
+    List<QrLink>? qrLinks,
     String? groqApiKey,
     String? youtubeApiKey,
+    String? geminiApiKey,
   }) {
     return SettingsState(
       previewFontTextSize: previewFontTextSize ?? this.previewFontTextSize,
@@ -140,11 +136,10 @@ class SettingsState extends Equatable {
       presentationShowPageNumber: presentationShowPageNumber ?? this.presentationShowPageNumber,
       presentationShowTitle: presentationShowTitle ?? this.presentationShowTitle,
       presentationAutoPageByParagraphs: presentationAutoPageByParagraphs ?? this.presentationAutoPageByParagraphs,
-      qrCurrentSongUrl: qrCurrentSongUrl ?? this.qrCurrentSongUrl,
-      qrWebAppUrl: qrWebAppUrl ?? this.qrWebAppUrl,
-      qrZizkoviUrl: qrZizkoviUrl ?? this.qrZizkoviUrl,
+      qrLinks: qrLinks ?? this.qrLinks,
       groqApiKey: groqApiKey ?? this.groqApiKey,
       youtubeApiKey: youtubeApiKey ?? this.youtubeApiKey,
+      geminiApiKey: geminiApiKey ?? this.geminiApiKey,
     );
   }
 }
@@ -172,10 +167,9 @@ class SettingsInitial extends SettingsState {
     required super.presentationShowPageNumber,
     required super.presentationShowTitle,
     required super.presentationAutoPageByParagraphs,
-    required super.qrCurrentSongUrl,
-    required super.qrWebAppUrl,
-    required super.qrZizkoviUrl,
+    required super.qrLinks,
     required super.groqApiKey,
     required super.youtubeApiKey,
+    required super.geminiApiKey,
   });
 }

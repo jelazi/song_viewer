@@ -12,9 +12,6 @@ import '../../../../blocs/export_blocs.dart';
 import '../../../../services/constants.dart';
 
 class QrCodeDialog extends StatefulWidget {
-  static const String defaultCurrentSongUrl = 'https://your-site.example/';
-  static const String defaultWebAppUrl = 'https://songsviewerweb.web.app/';
-
   const QrCodeDialog({super.key});
 
   static void show(BuildContext context) {
@@ -29,13 +26,15 @@ class QrCodeDialog extends StatefulWidget {
 }
 
 class _QrCodeDialogState extends State<QrCodeDialog> {
-  bool _showCurrentSong = true;
-  bool _showWebApp = false;
-  bool _showZizkovi = false;
+  // Track which index is expanded (-1 = none, 0 = first expanded by default)
+  int _expandedIndex = 0;
 
-  final GlobalKey _currentSongQrKey = GlobalKey();
-  final GlobalKey _webAppQrKey = GlobalKey();
-  final GlobalKey _zizkoviQrKey = GlobalKey();
+  // GlobalKeys for QR screenshot capture, keyed by index
+  final Map<int, GlobalKey> _qrKeys = {};
+
+  GlobalKey _getQrKey(int index) {
+    return _qrKeys.putIfAbsent(index, () => GlobalKey());
+  }
 
   Future<void> _launchUrl(String url) async {
     final uri = Uri.parse(url);
@@ -86,16 +85,16 @@ class _QrCodeDialogState extends State<QrCodeDialog> {
   }
 
   Widget _buildQrSection({
-    required String titleKey,
+    required String title,
     required String url,
     required bool isExpanded,
-    required ValueChanged<bool> onToggle,
+    required VoidCallback onToggle,
     required GlobalKey qrKey,
   }) {
     return Column(
       children: [
         InkWell(
-          onTap: () => onToggle(!isExpanded),
+          onTap: onToggle,
           borderRadius: BorderRadius.circular(8),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
@@ -108,7 +107,7 @@ class _QrCodeDialogState extends State<QrCodeDialog> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    titleKey.tr(),
+                    title,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -162,7 +161,7 @@ class _QrCodeDialogState extends State<QrCodeDialog> {
               const SizedBox(width: 8),
               Builder(
                 builder: (btnContext) => OutlinedButton.icon(
-                  onPressed: () => _shareQrCode(qrKey, titleKey.tr(), btnContext),
+                  onPressed: () => _shareQrCode(qrKey, title, btnContext),
                   icon: const Icon(Icons.qr_code, size: 16),
                   label: Text('shareQrCode'.tr(), style: const TextStyle(fontSize: 12)),
                   style: OutlinedButton.styleFrom(
@@ -181,68 +180,77 @@ class _QrCodeDialogState extends State<QrCodeDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      titlePadding: EdgeInsets.zero,
-      title: Container(
-        decoration: const BoxDecoration(
-          color: AppColor.primaryColor,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(8.0),
-            topRight: Radius.circular(8.0),
-          ),
-        ),
-        height: 60,
-        child: Center(
-          child: Text(
-            'qrCodeTitle'.tr(),
-            style: const TextStyle(fontSize: 20, color: Colors.white),
-            textAlign: TextAlign.center,
-          ),
-        ),
-      ),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(8.0)),
-      ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      content: SizedBox(
-        width: 300,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildQrSection(
-                titleKey: 'qrCurrentSong',
-                url: context.read<SettingsBloc>().state.qrCurrentSongUrl,
-                isExpanded: _showCurrentSong,
-                onToggle: (v) => setState(() => _showCurrentSong = v),
-                qrKey: _currentSongQrKey,
+    return BlocBuilder<SettingsBloc, SettingsState>(
+      builder: (context, state) {
+        final links = state.qrLinks;
+
+        return AlertDialog(
+          titlePadding: EdgeInsets.zero,
+          title: Container(
+            decoration: const BoxDecoration(
+              color: AppColor.primaryColor,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(8.0),
+                topRight: Radius.circular(8.0),
               ),
-              const Divider(color: AppColor.grey3Color),
-              _buildQrSection(
-                titleKey: 'qrWebApp',
-                url: context.read<SettingsBloc>().state.qrWebAppUrl,
-                isExpanded: _showWebApp,
-                onToggle: (v) => setState(() => _showWebApp = v),
-                qrKey: _webAppQrKey,
+            ),
+            height: 60,
+            child: Center(
+              child: Text(
+                'qrCodeTitle'.tr(),
+                style: const TextStyle(fontSize: 20, color: Colors.white),
+                textAlign: TextAlign.center,
               ),
-              const Divider(color: AppColor.grey3Color),
-              _buildQrSection(
-                titleKey: 'qrZizkovi',
-                url: context.read<SettingsBloc>().state.qrZizkoviUrl,
-                isExpanded: _showZizkovi,
-                onToggle: (v) => setState(() => _showZizkovi = v),
-                qrKey: _zizkoviQrKey,
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text('cancel'.tr()),
-        ),
-      ],
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(8.0)),
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          content: SizedBox(
+            width: 300,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (links.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(
+                        'qrNoLinks'.tr(),
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                    ),
+                  ...links.asMap().entries.expand((entry) {
+                    final index = entry.key;
+                    final link = entry.value;
+                    return [
+                      if (index > 0) const Divider(color: AppColor.grey3Color),
+                      _buildQrSection(
+                        title: link.label.isNotEmpty ? link.label : 'QR ${index + 1}',
+                        url: link.url,
+                        isExpanded: _expandedIndex == index,
+                        onToggle: () {
+                          setState(() {
+                            _expandedIndex = _expandedIndex == index ? -1 : index;
+                          });
+                        },
+                        qrKey: _getQrKey(index),
+                      ),
+                    ];
+                  }),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('cancel'.tr()),
+            ),
+          ],
+        );
+      },
     );
   }
 }

@@ -214,6 +214,10 @@
     "qrWebAppUrl": "Web application URL",
     "qrZizkovi": "Žížkovi Online",
     "qrZizkoviUrl": "Žížkovi Online URL",
+    "qrAddLink": "Add QR link",
+    "qrRemoveLink": "Remove",
+    "qrLabelHint": "Label",
+    "qrNoLinks": "No QR links configured",
     "general": "General",
     "currentSong": "Current song",
     "generalSettings": "General settings",
@@ -249,5 +253,6 @@
     "enrichSaved": "Changes saved to song successfully",
     "enrichGroqApiKey": "Groq API key (AI analysis)",
     "enrichYoutubeApiKey": "YouTube API key (video search)",
+    "enrichGeminiApiKey": "Gemini API key (Google AI, better identification)",
     "enrichApiKeysTitle": "AI Enrichment — API keys"
 }

@@ -5,6 +5,7 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:numberpicker/numberpicker.dart';
 
 import '../../../blocs/export_blocs.dart';
+import '../../../model/qr_link.dart';
 import '../widgets/dialogs/edit_dialog.dart';
 import '../widgets/settings_ui/settings_section.dart';
 import '../widgets/settings_ui/settings_tile.dart';
@@ -182,44 +183,29 @@ class _SettingsPageMobileState extends State<SettingsPageMobile> {
                 SettingsSection(
                   title: 'qrCodeTitle'.tr(),
                   tiles: [
+                    ...state.qrLinks.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final link = entry.value;
+                      return SettingsTile(
+                        title: link.label.isNotEmpty ? link.label : 'QR ${index + 1}',
+                        onPressed: (BuildContext context) {
+                          _showEditQrLinkDialog(
+                            context: context,
+                            index: index,
+                            link: link,
+                          );
+                        },
+                        iconData: Icons.qr_code,
+                        value: link.url,
+                      );
+                    }),
                     SettingsTile(
-                      title: 'qrCurrentSongUrl'.tr(),
+                      title: 'qrAddLink'.tr(),
                       onPressed: (BuildContext context) {
-                        _showEditUrlDialog(
-                          context: context,
-                          title: 'qrCurrentSongUrl'.tr(),
-                          currentValue: state.qrCurrentSongUrl,
-                          settingsKey: 'qrCurrentSongUrl',
-                        );
+                        _showAddQrLinkDialog(context);
                       },
-                      iconData: Icons.link,
-                      value: state.qrCurrentSongUrl,
-                    ),
-                    SettingsTile(
-                      title: 'qrWebAppUrl'.tr(),
-                      onPressed: (BuildContext context) {
-                        _showEditUrlDialog(
-                          context: context,
-                          title: 'qrWebAppUrl'.tr(),
-                          currentValue: state.qrWebAppUrl,
-                          settingsKey: 'qrWebAppUrl',
-                        );
-                      },
-                      iconData: Icons.link,
-                      value: state.qrWebAppUrl,
-                    ),
-                    SettingsTile(
-                      title: 'qrZizkoviUrl'.tr(),
-                      onPressed: (BuildContext context) {
-                        _showEditUrlDialog(
-                          context: context,
-                          title: 'qrZizkoviUrl'.tr(),
-                          currentValue: state.qrZizkoviUrl,
-                          settingsKey: 'qrZizkoviUrl',
-                        );
-                      },
-                      iconData: Icons.link,
-                      value: state.qrZizkoviUrl,
+                      iconData: Icons.add,
+                      value: '',
                     ),
                   ],
                 ),
@@ -287,29 +273,98 @@ class _SettingsPageMobileState extends State<SettingsPageMobile> {
     });
   }
 
-  void _showEditUrlDialog({
+  void _showEditQrLinkDialog({
     required BuildContext context,
-    required String title,
-    required String currentValue,
-    required String settingsKey,
+    required int index,
+    required QrLink link,
   }) {
-    final controller = TextEditingController(text: currentValue);
+    final labelController = TextEditingController(text: link.label);
+    final urlController = TextEditingController(text: link.url);
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (ctx) {
         return EditDialog(
-          title: title,
+          title: link.label.isNotEmpty ? link.label : 'QR ${index + 1}',
           okClick: () {
-            context.read<SettingsBloc>().add(ChangeSettingsValue(settingsKey, controller.text));
+            context.read<SettingsBloc>().add(
+                  UpdateQrLink(index, labelController.text, urlController.text),
+                );
           },
-          widgetContent: TextField(
-            controller: controller,
-            decoration: InputDecoration(
-              hintText: 'https://',
-              border: const OutlineInputBorder(),
-              labelText: 'URL',
-            ),
-            keyboardType: TextInputType.url,
+          widgetContent: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: labelController,
+                decoration: InputDecoration(
+                  labelText: 'qrLabelHint'.tr(),
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: urlController,
+                decoration: const InputDecoration(
+                  hintText: 'https://',
+                  border: OutlineInputBorder(),
+                  labelText: 'URL',
+                ),
+                keyboardType: TextInputType.url,
+              ),
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: () {
+                    context.read<SettingsBloc>().add(RemoveQrLink(index));
+                    Navigator.of(ctx).pop();
+                  },
+                  icon: const Icon(Icons.delete, color: Colors.red, size: 18),
+                  label: Text('qrRemoveLink'.tr(), style: const TextStyle(color: Colors.red)),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showAddQrLinkDialog(BuildContext context) {
+    final labelController = TextEditingController();
+    final urlController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return EditDialog(
+          title: 'qrAddLink'.tr(),
+          okClick: () {
+            if (urlController.text.isNotEmpty) {
+              context.read<SettingsBloc>().add(
+                    AddQrLink(labelController.text, urlController.text),
+                  );
+            }
+          },
+          widgetContent: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: labelController,
+                decoration: InputDecoration(
+                  labelText: 'qrLabelHint'.tr(),
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: urlController,
+                decoration: const InputDecoration(
+                  hintText: 'https://',
+                  border: OutlineInputBorder(),
+                  labelText: 'URL',
+                ),
+                keyboardType: TextInputType.url,
+              ),
+            ],
           ),
         );
       },

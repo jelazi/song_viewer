@@ -1,5 +1,80 @@
 # Development Log
 
+## 2026-03-07 - Multi-task improvements (Tasks 1-6)
+
+### What was done
+
+**Task 1: Dynamic QR codes with Firebase sync**
+- Replaced 3 fixed QR URL fields with a dynamic `List<QrLink>` (add/edit/remove URLs)
+- Created `QrLink` model class with label + url, JSON serialization, Equatable
+- Added Firebase RTDB sync: QR links are pushed to `qrLinks` node on changes
+- On startup, loads from Firebase (overrides local if available), otherwise pushes local to Firebase
+- All platforms (mobile, tablet, desktop) now listen to Firebase for real-time QR link sync
+- Added migration from old 3 fixed keys to new list format in Hive
+- Desktop: inline editable list with label + URL fields, add/delete buttons
+- Mobile/Tablet: tap to edit dialog with label + URL + delete option, add button
+- QR Code Dialog: dynamically renders QR sections based on the list
+- New BLoC events: `AddQrLink`, `UpdateQrLink`, `RemoveQrLink`, `SyncQrLinksFromFirebase`
+
+**Task 2: Clear AI analysis when switching songs**
+- `ResetEnrichment` event dispatched when selecting a different song in enrichment page
+
+**Task 3: Fix sheet music search returning no results**
+- Rewrote `searchSheetMusic()` — removed restrictive `type: "file"` GraphQL filter
+- Now searches with multiple queries (title alone + title+interpret)
+- Accepts broader external types (file, score, sheet, images, PDFs)
+- Deduplicates results by URL
+
+**Task 4: Show interpret + songbook number in presentation view**
+- Changed `_sendPageToWindow` to accept `Song` object instead of `String title`
+- New `_buildPresentationTitle(Song)` helper: builds `#indexSongBook title — interpret`
+- Updated all 7 call sites in desktop_home_page.dart + 3 in list_song.dart
+
+**Task 5: Better AI prompt for author/title identification**
+- Rewrote AI prompt in English with explicit rules and examples
+- Instructions for identifying original author vs cover, original title vs translation
+
+**Task 6: Multi-AI approach (Groq + Gemini)**
+- Added Google Gemini API (gemini-2.0-flash) as second AI alongside Groq
+- Both AIs run in parallel via `Future.wait()`
+- Results merged — non-null values from either AI are combined
+- Added `geminiApiKey` to Settings (repository, state, bloc, UI)
+
+### Files created
+- `lib/model/qr_link.dart` — QrLink model class
+
+### Files changed
+- `lib/providers/firebase_provider.dart` — added RTDB `qrLinks` node, stream, setQrLinks(), getQrLinks()
+- `lib/repositories/settings_repository.dart` — replaced 3 QR fields with List<QrLink>, added firebaseProvider, CRUD methods, migration, Firebase sync
+- `lib/blocs/settings_bloc/settings_bloc.dart` — new QR events, Firebase stream listener, geminiApiKey
+- `lib/blocs/settings_bloc/settings_event.dart` — AddQrLink, UpdateQrLink, RemoveQrLink, SyncQrLinksFromFirebase
+- `lib/blocs/settings_bloc/settings_state.dart` — replaced 3 QR fields with List<QrLink>, geminiApiKey
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/general_settings_body.dart` — dynamic QR list UI, Gemini API key field
+- `lib/view/mobile_view/widgets/dialogs/qr_code_dialog.dart` — dynamic list rendering
+- `lib/view/mobile_view/pages/settings_page.dart` — dynamic QR list with add/edit/delete
+- `lib/view/tablet_view/pages/settings_page_tablet.dart` — dynamic QR list with add/edit/delete
+- `lib/view/desktop_view/pages/desktop_home_page/desktop_home_page.dart` — Song-based presentation title
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/list_song.dart` — Song-based presentation title
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/song_enrichment_body.dart` — ResetEnrichment on song switch
+- `lib/services/ai_search_service.dart` — dual-AI, improved prompt, better sheet search
+- `lib/blocs/song_enrichment_bloc/song_enrichment_bloc.dart` — geminiApiKey parameter
+- `lib/main.part.dart` — pass firebaseProvider to SettingsRepository
+- `assets/lang/cs.json` — QR dynamic list + Gemini translations
+- `assets/lang/en.json` — QR dynamic list + Gemini translations
+- `test/unit_tests/repositories/settings_repository_test.dart` — added MockFirebaseProvider
+
+### Current state
+- All 6 tasks implemented and compiling (zero errors in lib/)
+- Pre-existing test mock issues remain (need `build_runner` regeneration)
+- QR links sync bidirectionally via Firebase RTDB
+- AI enrichment uses dual-AI for better accuracy
+
+### Known issues
+- Test mocks need regeneration (`flutter pub run build_runner build`)
+- Sheet music quality still depends on ProScholy having the song indexed
+
+---
+
 ## 2026-03-06 - AI Song Enrichment (Desktop)
 
 ### What was done

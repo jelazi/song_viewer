@@ -19,6 +19,7 @@ Future<AppRepositories> initProvidersRepositories() async {
 
   SettingsRepository settingsRepository = SettingsRepository(
     hiveProvider: hiveProvider,
+    firebaseProvider: firebaseProvider,
   );
 
   await settingsRepository.loadLocalSettings();

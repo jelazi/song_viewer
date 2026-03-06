@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io' show Platform;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:default_project/model/qr_link.dart';
 import 'package:default_project/model/update_playlist_data.dart';
 import 'package:default_project/model/update_songlist_data.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
@@ -29,6 +30,7 @@ class FirebaseProvider {
   late final DatabaseReference? _nativeSelectedSong = _isNativeRtdbSupported ? FirebaseDatabase.instance.ref().child('currentSong') : null;
   late final DatabaseReference? _nativeUpdateSongList = _isNativeRtdbSupported ? FirebaseDatabase.instance.ref().child('updateSongList') : null;
   late final DatabaseReference? _nativeUpdatePlaylist = _isNativeRtdbSupported ? FirebaseDatabase.instance.ref().child('updatePlaylist') : null;
+  late final DatabaseReference? _nativeQrLinks = _isNativeRtdbSupported ? FirebaseDatabase.instance.ref().child('qrLinks') : null;
 
   // REST/SSE provider for Windows
   FirebaseRtdbRestProvider? _rtdbRestProvider;
@@ -50,6 +52,11 @@ class FirebaseProvider {
 
   /// Stream of `updatePlaylist` data from Realtime Database. Works on all platforms.
   Stream<Map<String, dynamic>?> get updatePlaylistStream => _updatePlaylistController.stream;
+
+  final _qrLinksController = StreamController<List<QrLink>>.broadcast();
+
+  /// Stream of `qrLinks` data from Realtime Database. Works on all platforms.
+  Stream<List<QrLink>> get qrLinksStream => _qrLinksController.stream;
 
   FirebaseProvider() {
     inst.settings = const Settings(
@@ -102,6 +109,15 @@ class FirebaseProvider {
         }, onError: (e) {
           logger.e('Error listening to updatePlaylist: $e');
         });
+        _nativeQrLinks?.onValue.listen((DatabaseEvent event) {
+          final data = event.snapshot.value;
+          if (data != null && data is List) {
+            final links = data.whereType<Map>().map((e) => QrLink.fromJson(Map<String, dynamic>.from(e))).toList();
+            _qrLinksController.add(links);
+          }
+        }, onError: (e) {
+          logger.e('Error listening to qrLinks: $e');
+        });
       } else {
         // --- Windows: REST API + SSE listeners ---
         final databaseUrl = Firebase.app().options.databaseURL ?? 'https://songlist-7b702-default-rtdb.firebaseio.com';
@@ -126,7 +142,14 @@ class FirebaseProvider {
           _updatePlaylistController.add(data);
         });
 
-        logger.i('Firebase RTDB REST/SSE listeners started for currentSong + updateSongList + updatePlaylist');
+        _rtdbRestProvider!.listen('qrLinks').listen((data) {
+          if (data != null && data is Map && data.containsKey('links')) {
+            final list = (data['links'] as List?)?.whereType<Map>().map((e) => QrLink.fromJson(Map<String, dynamic>.from(e))).toList() ?? [];
+            _qrLinksController.add(list);
+          }
+        });
+
+        logger.i('Firebase RTDB REST/SSE listeners started for currentSong + updateSongList + updatePlaylist + qrLinks');
       }
     } catch (e) {
       logger.e('$e');
@@ -155,6 +178,39 @@ class FirebaseProvider {
     } catch (e) {
       logger.e('$e');
     }
+  }
+
+  Future<void> setQrLinks(List<QrLink> links) async {
+    try {
+      final data = links.map((e) => e.toJson()).toList();
+      if (_isNativeRtdbSupported) {
+        await _nativeQrLinks?.set(data);
+      } else {
+        await _rtdbRestProvider?.set('qrLinks', data);
+      }
+    } catch (e) {
+      logger.e('Error setting qrLinks: $e');
+    }
+  }
+
+  Future<List<QrLink>?> getQrLinks() async {
+    try {
+      if (_isNativeRtdbSupported) {
+        final snapshot = await _nativeQrLinks?.get();
+        final data = snapshot?.value;
+        if (data != null && data is List) {
+          return data.whereType<Map>().map((e) => QrLink.fromJson(Map<String, dynamic>.from(e))).toList();
+        }
+      } else {
+        final data = await _rtdbRestProvider?.get('qrLinks');
+        if (data != null && data is List) {
+          return data.whereType<Map>().map((e) => QrLink.fromJson(Map<String, dynamic>.from(e))).toList();
+        }
+      }
+    } catch (e) {
+      logger.e('Error getting qrLinks: $e');
+    }
+    return null;
   }
 
   Future<bool> addUserToFirebase(User user) async {

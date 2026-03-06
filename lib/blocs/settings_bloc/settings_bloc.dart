@@ -1,5 +1,8 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 
+import 'dart:async';
+
+import 'package:default_project/model/qr_link.dart';
 import 'package:default_project/repositories/settings_repository.dart';
 import 'package:default_project/repositories/songs_repository.dart';
 import 'package:default_project/services/enums.dart';
@@ -38,16 +41,36 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
           presentationShowPageNumber: true,
           presentationShowTitle: true,
           presentationAutoPageByParagraphs: false,
-          qrCurrentSongUrl: 'https://your-site.example/',
-          qrWebAppUrl: 'https://songsviewerweb.web.app/',
-          qrZizkoviUrl: 'https://www.zizkovi.online/',
+          qrLinks: [
+            QrLink(label: 'Current Song', url: 'https://your-site.example/'),
+            QrLink(label: 'Web App', url: 'https://songsviewerweb.web.app/'),
+            QrLink(label: 'Žižkovi', url: 'https://www.zizkovi.online/'),
+          ],
           groqApiKey: '',
           youtubeApiKey: '',
+          geminiApiKey: '',
         )) {
     on<_SettingsInitial>(_settingsInitial);
     on<ChangeSettingsValue>(_changeSettingsValue);
+    on<AddQrLink>(_addQrLink);
+    on<UpdateQrLink>(_updateQrLink);
+    on<RemoveQrLink>(_removeQrLink);
+    on<SyncQrLinksFromFirebase>(_syncQrLinksFromFirebase);
 
     add(_SettingsInitial());
+
+    // Listen to Firebase QR links changes
+    _qrLinksSubscription = settingsRepository.firebaseProvider.qrLinksStream.listen((links) {
+      add(SyncQrLinksFromFirebase(links));
+    });
+  }
+
+  StreamSubscription<List<QrLink>>? _qrLinksSubscription;
+
+  @override
+  Future<void> close() {
+    _qrLinksSubscription?.cancel();
+    return super.close();
   }
 
   void _settingsInitial(_SettingsInitial event, Emitter<SettingsState> emit) {
@@ -60,6 +83,26 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     final state = this.state;
     settingsRepository.changeSettingsValue(event.typeValue, event.value);
     debugPrint('[SettingsBloc] repo.presentationScreenIndex after change: ${settingsRepository.presentationScreenIndex}');
+    _emitAllValues(state, emit);
+  }
+
+  void _addQrLink(AddQrLink event, Emitter<SettingsState> emit) {
+    settingsRepository.addQrLink(QrLink(label: event.label, url: event.url));
+    _emitAllValues(state, emit);
+  }
+
+  void _updateQrLink(UpdateQrLink event, Emitter<SettingsState> emit) {
+    settingsRepository.updateQrLink(event.index, QrLink(label: event.label, url: event.url));
+    _emitAllValues(state, emit);
+  }
+
+  void _removeQrLink(RemoveQrLink event, Emitter<SettingsState> emit) {
+    settingsRepository.removeQrLink(event.index);
+    _emitAllValues(state, emit);
+  }
+
+  void _syncQrLinksFromFirebase(SyncQrLinksFromFirebase event, Emitter<SettingsState> emit) {
+    settingsRepository.setQrLinks(event.links);
     _emitAllValues(state, emit);
   }
 
@@ -89,11 +132,10 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       presentationShowPageNumber: settingsRepository.presentationShowPageNumber,
       presentationShowTitle: settingsRepository.presentationShowTitle,
       presentationAutoPageByParagraphs: settingsRepository.presentationAutoPageByParagraphs,
-      qrCurrentSongUrl: settingsRepository.qrCurrentSongUrl,
-      qrWebAppUrl: settingsRepository.qrWebAppUrl,
-      qrZizkoviUrl: settingsRepository.qrZizkoviUrl,
+      qrLinks: settingsRepository.qrLinks,
       groqApiKey: settingsRepository.groqApiKey,
       youtubeApiKey: settingsRepository.youtubeApiKey,
+      geminiApiKey: settingsRepository.geminiApiKey,
     ));
   }
 }

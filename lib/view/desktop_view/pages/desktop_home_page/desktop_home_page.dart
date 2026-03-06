@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../blocs/export_blocs.dart';
+import '../../../../model/song/song.dart';
 import '../../../../services/presentation_window_manager.dart';
 import '../../widgets/ribbon_menu.dart';
 import 'home_bodies/browse_sheets_body.dart';
@@ -175,7 +176,7 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
             page: presState.currentPage,
             autoPageByParagraphs: settingsState.presentationAutoPageByParagraphs,
           );
-          _sendPageToWindow(context, song.title, result);
+          _sendPageToWindow(context, song, result);
         }
       }
       return;
@@ -194,7 +195,7 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
           page: nextPage,
           autoPageByParagraphs: presState.autoPageByParagraphs,
         );
-        _sendPageToWindow(context, song.title, result);
+        _sendPageToWindow(context, song, result);
       }
     } else if (playlistBloc.state.hasNext) {
       // Last page of current song — show black screen or go to next song
@@ -233,7 +234,7 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
           page: 999, // will be clamped to last page
           autoPageByParagraphs: presState.autoPageByParagraphs,
         );
-        _sendPageToWindow(context, song.title, result);
+        _sendPageToWindow(context, song, result);
       }
       return;
     }
@@ -251,7 +252,7 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
           page: prevPage,
           autoPageByParagraphs: presState.autoPageByParagraphs,
         );
-        _sendPageToWindow(context, song.title, result);
+        _sendPageToWindow(context, song, result);
       }
     } else if (playlistBloc.state.hasPrevious) {
       // First page of current song — go to previous song
@@ -301,7 +302,7 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
           page: 0,
           autoPageByParagraphs: settingsState.presentationAutoPageByParagraphs,
         );
-        _sendPageToWindow(context, nextSong.title, result);
+        _sendPageToWindow(context, nextSong, result);
       }
     });
   }
@@ -350,19 +351,32 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
           page: lastPage,
           autoPageByParagraphs: settingsState.presentationAutoPageByParagraphs,
         );
-        _sendPageToWindow(context, prevSong.title, result);
+        _sendPageToWindow(context, prevSong, result);
       }
     });
   }
 
+  /// Build presentation title with interpret and songbook number
+  String _buildPresentationTitle(Song song) {
+    final parts = <String>[];
+    if (song.indexSongBook != null && song.indexSongBook! > 0) {
+      parts.add('#${song.indexSongBook}');
+    }
+    parts.add(song.title);
+    if (song.interpret != null && song.interpret!.isNotEmpty) {
+      parts.add('\u2014 ${song.interpret}');
+    }
+    return parts.join(' ');
+  }
+
   /// Send computed page content to the presentation window
-  void _sendPageToWindow(BuildContext context, String title, PageContentResult result) {
+  void _sendPageToWindow(BuildContext context, Song song, PageContentResult result) {
     final settingsState = context.read<SettingsBloc>().state;
     final manager = PresentationWindowManager();
 
     manager.sendPageToPresentation(
       context,
-      title: title,
+      title: _buildPresentationTitle(song),
       pageContent: result.pageContent,
       fontSize: settingsState.presentationFontSize,
       textColor: settingsState.presentationFontColor,
@@ -409,7 +423,7 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
         page: presState.currentPage,
         autoPageByParagraphs: settingsState.presentationAutoPageByParagraphs,
       );
-      _sendPageToWindow(context, song.title, result);
+      _sendPageToWindow(context, song, result);
     }
   }
 

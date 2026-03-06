@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../blocs/export_blocs.dart';
+import '../../../../../model/qr_link.dart';
 import '../../../../../services/constants.dart';
 import 'bracket_error_scanner.dart';
 
@@ -60,28 +61,140 @@ class GeneralSettingsBody extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildUrlField(
-            context: context,
-            label: 'qrCurrentSongUrl'.tr(),
-            value: state.qrCurrentSongUrl,
-            settingsKey: 'qrCurrentSongUrl',
-            icon: Icons.music_note,
-          ),
+          ...state.qrLinks.asMap().entries.map((entry) {
+            final index = entry.key;
+            final link = entry.value;
+            return Padding(
+              padding: EdgeInsets.only(top: index > 0 ? 12 : 0),
+              child: _buildQrLinkRow(context, index, link),
+            );
+          }),
           const SizedBox(height: 12),
-          _buildUrlField(
-            context: context,
-            label: 'qrWebAppUrl'.tr(),
-            value: state.qrWebAppUrl,
-            settingsKey: 'qrWebAppUrl',
-            icon: Icons.language,
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: () => _showAddQrLinkDialog(context),
+              icon: const Icon(Icons.add, size: 18),
+              label: Text('qrAddLink'.tr(), style: const TextStyle(fontSize: 13)),
+            ),
           ),
-          const SizedBox(height: 12),
-          _buildUrlField(
-            context: context,
-            label: 'qrZizkoviUrl'.tr(),
-            value: state.qrZizkoviUrl,
-            settingsKey: 'qrZizkoviUrl',
-            icon: Icons.home,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQrLinkRow(BuildContext context, int index, QrLink link) {
+    final labelController = TextEditingController(text: link.label);
+    final urlController = TextEditingController(text: link.url);
+
+    void save() {
+      context.read<SettingsBloc>().add(
+            UpdateQrLink(index, labelController.text, urlController.text),
+          );
+    }
+
+    return Row(
+      children: [
+        const Icon(Icons.qr_code, size: 18, color: AppColor.grey2Color),
+        const SizedBox(width: 8),
+        SizedBox(
+          width: 140,
+          child: TextField(
+            controller: labelController,
+            style: const TextStyle(fontSize: 13),
+            decoration: InputDecoration(
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(6),
+                borderSide: const BorderSide(color: AppColor.grey3Color),
+              ),
+              hintText: 'qrLabelHint'.tr(),
+              hintStyle: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            onSubmitted: (_) => save(),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: TextField(
+            controller: urlController,
+            style: const TextStyle(fontSize: 13),
+            decoration: InputDecoration(
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(6),
+                borderSide: const BorderSide(color: AppColor.grey3Color),
+              ),
+              hintText: 'https://',
+              hintStyle: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            keyboardType: TextInputType.url,
+            onSubmitted: (_) => save(),
+          ),
+        ),
+        const SizedBox(width: 4),
+        IconButton(
+          icon: const Icon(Icons.save, size: 18),
+          tooltip: 'save'.tr(),
+          onPressed: save,
+        ),
+        IconButton(
+          icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
+          tooltip: 'qrRemoveLink'.tr(),
+          onPressed: () {
+            context.read<SettingsBloc>().add(RemoveQrLink(index));
+          },
+        ),
+      ],
+    );
+  }
+
+  void _showAddQrLinkDialog(BuildContext context) {
+    final labelController = TextEditingController();
+    final urlController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('qrAddLink'.tr()),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: labelController,
+              decoration: InputDecoration(
+                labelText: 'qrLabelHint'.tr(),
+                border: const OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: urlController,
+              decoration: const InputDecoration(
+                labelText: 'URL',
+                hintText: 'https://',
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.url,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('cancel'.tr()),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (urlController.text.isNotEmpty) {
+                context.read<SettingsBloc>().add(
+                      AddQrLink(labelController.text, urlController.text),
+                    );
+                Navigator.pop(ctx);
+              }
+            },
+            child: Text('save'.tr()),
           ),
         ],
       ),
@@ -113,6 +226,15 @@ class GeneralSettingsBody extends StatelessWidget {
             value: state.youtubeApiKey,
             settingsKey: 'youtubeApiKey',
             icon: Icons.play_circle,
+            obscureText: true,
+          ),
+          const SizedBox(height: 12),
+          _buildUrlField(
+            context: context,
+            label: 'enrichGeminiApiKey'.tr(),
+            value: state.geminiApiKey,
+            settingsKey: 'geminiApiKey',
+            icon: Icons.auto_awesome,
             obscureText: true,
           ),
         ],

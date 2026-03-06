@@ -200,7 +200,7 @@ class _ListSongState extends State<ListSong> {
                               );
                               manager.sendPageToPresentation(
                                 context,
-                                title: song.title,
+                                title: _buildPresentationTitle(song),
                                 pageContent: result.pageContent,
                                 fontSize: settingsState.presentationFontSize,
                                 textColor: settingsState.presentationFontColor,
@@ -238,7 +238,7 @@ class _ListSongState extends State<ListSong> {
                                 // Presentation already open - just send the new song
                                 manager.sendPageToPresentation(
                                   context,
-                                  title: song.title,
+                                  title: _buildPresentationTitle(song),
                                   pageContent: result.pageContent,
                                   fontSize: settingsState.presentationFontSize,
                                   textColor: settingsState.presentationFontColor,
@@ -253,7 +253,7 @@ class _ListSongState extends State<ListSong> {
                                 // Open presentation window from this song
                                 manager.openPresentationWindow(
                                   context,
-                                  title: song.title,
+                                  title: _buildPresentationTitle(song),
                                   pageContent: result.pageContent,
                                   fontSize: settingsState.presentationFontSize,
                                   textColor: settingsState.presentationFontColor,
@@ -282,6 +282,18 @@ class _ListSongState extends State<ListSong> {
             ]));
       },
     );
+  }
+
+  String _buildPresentationTitle(Song song) {
+    final parts = <String>[];
+    if (song.indexSongBook != null && song.indexSongBook! > 0) {
+      parts.add('#${song.indexSongBook}');
+    }
+    parts.add(song.title);
+    if (song.interpret != null && song.interpret!.isNotEmpty) {
+      parts.add('\u2014 ${song.interpret}');
+    }
+    return parts.join(' ');
   }
 
   void _switchToSong(BuildContext context, Song song) {

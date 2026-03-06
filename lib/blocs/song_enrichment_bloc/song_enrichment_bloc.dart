@@ -44,12 +44,13 @@ class SongEnrichmentBloc extends Bloc<SongEnrichmentEvent, SongEnrichmentState> 
       return;
     }
 
-    // Step 1: AI Analysis
+    // Step 1: AI Analysis (uses Groq + optionally Gemini for better accuracy)
     final analysis = await aiSearchService.analyzeSong(
       apiKey: groqApiKey,
       songTitle: event.song.title,
       songLyrics: event.song.lyrics,
       currentInterpret: event.song.interpret,
+      geminiApiKey: settingsRepository.geminiApiKey,
     );
 
     if (analysis == null) {

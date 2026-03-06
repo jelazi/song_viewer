@@ -298,6 +298,10 @@
     "qrWebAppUrl": "URL webové aplikace",
     "qrZizkovi": "Žížkovi Online",
     "qrZizkoviUrl": "URL Žížkovi Online",
+    "qrAddLink": "Přidat QR odkaz",
+    "qrRemoveLink": "Odstranit",
+    "qrLabelHint": "Název",
+    "qrNoLinks": "Žádné QR odkazy nejsou nakonfigurovány",
     "currentSong": "Aktuální píseň",
     "generalSettings": "Obecná nastavení",
     "bracketScanTitle": "Kontrola závorek v písních",
@@ -332,5 +336,6 @@
     "enrichSaved": "Změny byly úspěšně uloženy k písni",
     "enrichGroqApiKey": "Groq API klíč (AI analýza)",
     "enrichYoutubeApiKey": "YouTube API klíč (vyhledávání videí)",
+    "enrichGeminiApiKey": "Gemini API klíč (Google AI, lepší identifikace)",
     "enrichApiKeysTitle": "AI Obohacení — API klíče"
 }
