@@ -82,10 +82,12 @@ class AiSearchService {
 
     final rejectionHint = StringBuffer();
     if (rejectedAuthors.isNotEmpty) {
-      rejectionHint.writeln('\nIMPORTANT: The user has REJECTED these author suggestions as incorrect: ${rejectedAuthors.join(', ')}. You MUST suggest a DIFFERENT author. Think harder about who really wrote this song.');
+      rejectionHint.writeln(
+          '\nIMPORTANT: The user has REJECTED these author suggestions as incorrect: ${rejectedAuthors.join(', ')}. You MUST suggest a DIFFERENT author. Think harder about who really wrote this song.');
     }
     if (rejectedTitles.isNotEmpty) {
-      rejectionHint.writeln('\nIMPORTANT: The user has REJECTED these original title suggestions as incorrect: ${rejectedTitles.join(', ')}. You MUST suggest a DIFFERENT original title. Consider other possibilities.');
+      rejectionHint.writeln(
+          '\nIMPORTANT: The user has REJECTED these original title suggestions as incorrect: ${rejectedTitles.join(', ')}. You MUST suggest a DIFFERENT original title. Consider other possibilities.');
     }
 
     final prompt = '''You are a music expert specializing in identifying songs, their original authors, and original titles.
