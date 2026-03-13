@@ -347,5 +347,9 @@
     "exportApiKeys": "Exportovat všechny API klíče",
     "exportApiKeysCopied": "API klíče zkopírovány do schránky",
     "enrichReject": "Odmítnout a zkusit znovu",
-    "enrichRejectYoutube": "Odmítnout výsledky a hledat znovu"
+    "enrichRejectYoutube": "Odmítnout výsledky a hledat znovu",
+    "copyPlaylist": "Kopírovat playlist",
+    "playlistCopied": "Playlist zkopírován do schránky",
+    "openPlaylist": "Otevřít playlist",
+    "noPlaylists": "Žádné uložené playlisty"
 }

@@ -4,6 +4,7 @@ import 'package:default_project/view/mobile_view/widgets/dialogs/edit_dialog.dar
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../blocs/export_blocs.dart';
 import '../../../services/constants.dart';
@@ -257,10 +258,34 @@ class _HomePageTabletState extends State<HomePageTablet> {
                               songNamesSubtitle,
                             ),
                             trailing: SizedBox(
-                              width: 100,
+                              width: 150,
                               height: 50,
                               child: Row(
                                 children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.copy, color: Colors.grey),
+                                    tooltip: 'copyPlaylist'.tr(),
+                                    onPressed: () {
+                                      final songs = context.read<PlaylistsBloc>().songsRepository.songs;
+                                      final buffer = StringBuffer();
+                                      buffer.writeln(playlist.name);
+                                      var songNum = 1;
+                                      for (final songId in playlist.listSongIds) {
+                                        try {
+                                          final song = songs.firstWhere((s) => s.id == songId);
+                                          buffer.writeln('$songNum. ${song.title}');
+                                          songNum++;
+                                        } catch (_) {}
+                                      }
+                                      Clipboard.setData(ClipboardData(text: buffer.toString().trim()));
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text('playlistCopied'.tr()),
+                                          duration: const Duration(seconds: 2),
+                                        ),
+                                      );
+                                    },
+                                  ),
                                   IconButton(
                                     icon: const Icon(Icons.edit, color: AppColor.primaryColor),
                                     onPressed: () {

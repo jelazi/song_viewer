@@ -264,5 +264,9 @@
     "exportApiKeys": "Export all API keys",
     "exportApiKeysCopied": "API keys copied to clipboard",
     "enrichReject": "Reject and try again",
-    "enrichRejectYoutube": "Reject results and search again"
+    "enrichRejectYoutube": "Reject results and search again",
+    "copyPlaylist": "Copy playlist",
+    "playlistCopied": "Playlist copied to clipboard",
+    "openPlaylist": "Open playlist",
+    "noPlaylists": "No saved playlists"
 }

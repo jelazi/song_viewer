@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../../blocs/export_blocs.dart';
 import '../../../../../model/playlist.dart';
@@ -97,6 +98,16 @@ class _PlaylistBodyState extends State<PlaylistBody> {
     } else {
       MyToast.showText(text: 'Chyba při ukládání', typeNotification: TypeNotification.error);
     }
+  }
+
+  void _copyPlaylistToClipboard(Playlist playlist, List<Song> songs) {
+    final buffer = StringBuffer();
+    buffer.writeln(playlist.name);
+    for (var i = 0; i < songs.length; i++) {
+      buffer.writeln('${i + 1}. ${songs[i].title}');
+    }
+    Clipboard.setData(ClipboardData(text: buffer.toString().trim()));
+    MyToast.showText(text: 'playlistCopied'.tr(), typeNotification: TypeNotification.info);
   }
 
   void _loadToPresentation(Playlist playlist) {
@@ -250,6 +261,23 @@ class _PlaylistBodyState extends State<PlaylistBody> {
             ),
             // Action buttons
             IconButton(
+              icon: const Icon(Icons.copy, size: 16, color: Colors.grey),
+              tooltip: 'copyPlaylist'.tr(),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+              onPressed: () {
+                final allSongs = context.read<HomePageBloc>().songsRepository.songs;
+                final songs = <Song>[];
+                for (final id in playlist.listSongIds) {
+                  try {
+                    final song = allSongs.firstWhere((s) => s.id == id);
+                    songs.add(song);
+                  } catch (_) {}
+                }
+                _copyPlaylistToClipboard(playlist, songs);
+              },
+            ),
+            IconButton(
               icon: const Icon(Icons.present_to_all, size: 16),
               tooltip: 'Načíst do prezentace',
               padding: EdgeInsets.zero,
@@ -348,6 +376,12 @@ class _PlaylistBodyState extends State<PlaylistBody> {
                   backgroundColor: AppColor.primaryColor,
                   foregroundColor: Colors.white,
                 ),
+              ),
+              const SizedBox(width: 8),
+              OutlinedButton.icon(
+                onPressed: () => _copyPlaylistToClipboard(_selectedPlaylist!, songs),
+                icon: const Icon(Icons.copy, size: 18),
+                label: Text('copyPlaylist'.tr()),
               ),
               const SizedBox(width: 8),
               OutlinedButton.icon(

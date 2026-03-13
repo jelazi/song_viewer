@@ -20,6 +20,7 @@ import '../mobile_view/pages/edit_pages/edit_lyrics.dart';
 import '../mobile_view/pages/edit_pages/edit_page.dart';
 import '../mobile_view/pages/home_page.dart';
 import '../mobile_view/pages/login_page.dart';
+import '../mobile_view/pages/playlists_page.dart';
 import '../mobile_view/pages/presentation_page.dart';
 import '../mobile_view/pages/preview_page.dart';
 import '../mobile_view/pages/settings_page.dart';
@@ -99,6 +100,9 @@ class AppRouter {
             ),
           );
         }
+      case '/playlistsPageMobile':
+        return MaterialPageRoute(builder: (_) => const PageResponsive(pageMobile: PlaylistsPageMobile(), pageTablet: PlaylistsPageMobile(), pageDesktop: PlaylistsPageMobile()));
+
       case '/editPlaylistPage':
         return MaterialPageRoute(builder: (_) => const PageResponsive(pageMobile: EditPlaylistTablet(), pageTablet: EditPlaylistTablet(), pageDesktop: EditPlaylistTablet()));
 

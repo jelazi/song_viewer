@@ -1,5 +1,55 @@
 # Development Log
 
+## 2026-03-13b - Mobile playlists + numbered copy format
+
+### What was done
+1. **Mobile playlists page**: New `PlaylistsPageMobile` with full playlist management — list of playlists, open, edit, copy, delete via popup menu. Accessible from mobile drawer.
+2. **Mobile drawer entry**: Added "Playlists" menu item with playlist icon in `home_drawer.dart`
+3. **Route**: Added `/playlistsPageMobile` route in `app_router.dart`
+4. **Numbered copy format**: Changed copy-to-clipboard format everywhere (desktop, tablet, mobile) to include numbered song titles:
+   ```
+   Název playlistu
+   1. Název písně
+   2. Název písně
+   3. Název písně
+   ```
+
+### Files changed
+- `lib/view/mobile_view/pages/playlists_page.dart` — NEW: mobile playlists page with list, popup menu (open/edit/copy/delete)
+- `lib/view/mobile_view/widgets/home_drawer.dart` — added playlists entry in drawer
+- `lib/view/router/app_router.dart` — added `/playlistsPageMobile` route
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/playlist_body.dart` — updated copy format to numbered
+- `lib/view/tablet_view/pages/home_page_tablet.dart` — updated copy format to numbered
+- `assets/lang/cs.json` — added `openPlaylist`, `noPlaylists`
+- `assets/lang/en.json` — same new keys
+
+### Current state
+- Zero compilation errors
+- Playlists work on all platforms: desktop, tablet, mobile
+- Copy format is numbered everywhere
+
+---
+
+## 2026-03-13 - Copy playlist to clipboard
+
+### What was done
+- Added "Copy playlist" button in **desktop** playlist view — both in playlist tile (left panel) and detail header (right panel)
+- Added "Copy playlist" button in **tablet** playlist list (home_page_tablet)
+- Copies playlist name on the first line, followed by each song title on a new line
+- Added translation keys `copyPlaylist` and `playlistCopied` in cs.json and en.json
+
+### Files changed
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/playlist_body.dart` — added `_copyPlaylistToClipboard()` method, copy button in detail header and playlist tile
+- `lib/view/tablet_view/pages/home_page_tablet.dart` — added copy button to playlist list tiles
+- `assets/lang/cs.json` — added `copyPlaylist`, `playlistCopied`
+- `assets/lang/en.json` — same new keys
+
+### Current state
+- Zero compilation errors
+- Copy to clipboard works on desktop (playlist detail view + tile) and tablet (playlist list)
+
+---
+
 ## 2026-03-06d - Reject AI suggestions + re-analyze
 
 ### What was done

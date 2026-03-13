@@ -105,6 +105,19 @@ class _HomeDrawerState extends State<HomeDrawer> {
             ),
             ListTile(
               title: Row(children: [
+                const Icon(Icons.playlist_play),
+                const SizedBox(
+                  width: 10,
+                ),
+                Text('playlists'.tr()),
+              ]),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/playlistsPageMobile');
+              },
+            ),
+            ListTile(
+              title: Row(children: [
                 const Icon(Icons.qr_code),
                 const SizedBox(
                   width: 10,
