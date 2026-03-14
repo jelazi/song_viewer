@@ -18,7 +18,6 @@ import 'package:default_project/services/presentation_window_manager.dart';
 import 'package:default_project/services/win32_fullscreen.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -28,17 +27,17 @@ import 'package:path_provider/path_provider.dart' as path_provider;
 import 'package:window_manager/window_manager.dart';
 
 import 'blocs/export_blocs.dart';
-import 'firebase_options.dart';
 import 'model/song/song.dart';
 import 'model/user.dart';
 import 'model/web_interpret.dart';
 import 'model/web_song.dart';
-import 'providers/firebase_provider.dart';
 import 'providers/hive_provider.dart';
+import 'providers/pocketbase_provider.dart';
 import 'repositories/web_repository.dart';
 import 'services/ai_search_service.dart';
 import 'view/desktop_view/widgets/my_toast.dart';
 import 'view/router/app_router.dart';
+import 'view/sync_screen.dart';
 
 part 'main.part.dart';
 
@@ -100,8 +99,10 @@ void main(List<String> args) async {
   await EasyLocalization.ensureInitialized();
   await initHiveFunction();
 
-  // Initialize providers and repositories locally
-  final repositories = await initProvidersRepositories();
+  // Phase 1: Initialize providers and check server state
+  final result = await initProvidersAndCheckSync();
+  final repositories = result.repositories;
+  final syncInfo = result.syncInfo;
 
   if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
     await windowManager.ensureInitialized();
@@ -115,7 +116,7 @@ void main(List<String> args) async {
     supportedLocales: const [Locale('cs'), Locale('en')],
     path: 'assets/lang',
     fallbackLocale: const Locale('cs'),
-    child: MyApp(repositories: repositories),
+    child: MyApp(repositories: repositories, syncInfo: syncInfo),
   ));
 } // Minimal presentation app WITHOUT plugins
 
@@ -601,10 +602,12 @@ class _PresentationAppState extends State<PresentationApp> {
 
 class MyApp extends StatefulWidget {
   final AppRepositories repositories;
+  final SyncInfo syncInfo;
 
   const MyApp({
     Key? key,
     required this.repositories,
+    required this.syncInfo,
   }) : super(key: key);
 
   @override
@@ -613,12 +616,41 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> with WindowListener {
   late final AppRouter _appRouter;
+  bool _syncComplete = false;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     _appRouter = AppRouter(settingsRepository: widget.repositories.settingsRepository);
     windowManager.addListener(this);
+
+    // If server has data and is authenticated, load data automatically
+    if (widget.syncInfo.isAuthenticated && !widget.syncInfo.isServerEmpty) {
+      _loadDataAndProceed();
+    } else if (!widget.syncInfo.isAuthenticated) {
+      // Not authenticated — skip sync, proceed with empty data
+      _syncComplete = true;
+    }
+  }
+
+  Future<void> _loadDataAndProceed() async {
+    setState(() => _isLoading = true);
+    await loadDataFromServer(widget.repositories);
+    setState(() {
+      _syncComplete = true;
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _handleDownloadFromServer() async {
+    await _loadDataAndProceed();
+  }
+
+  Future<void> _handleStartEmpty() async {
+    setState(() {
+      _syncComplete = true;
+    });
   }
 
   @override
@@ -651,6 +683,50 @@ class _MyAppState extends State<MyApp> with WindowListener {
     } else {
       myToastWidth = 400;
     }
+
+    // Show sync screen if server is empty and authenticated
+    if (!_syncComplete && widget.syncInfo.isAuthenticated && widget.syncInfo.isServerEmpty) {
+      return MaterialApp(
+        title: 'Songs viewer',
+        theme: ThemeData(
+          primarySwatch: getMaterialColor(AppColor.primaryColor),
+        ),
+        debugShowCheckedModeBanner: false,
+        supportedLocales: context.supportedLocales,
+        localizationsDelegates: context.localizationDelegates,
+        locale: context.locale,
+        home: SyncScreen(
+          syncInfo: widget.syncInfo,
+          onDownloadFromServer: _handleDownloadFromServer,
+          onStartEmpty: _handleStartEmpty,
+          isLoading: _isLoading,
+        ),
+      );
+    }
+
+    // Show loading screen while data is being loaded
+    if (!_syncComplete) {
+      return MaterialApp(
+        title: 'Songs viewer',
+        theme: ThemeData(
+          primarySwatch: getMaterialColor(AppColor.primaryColor),
+        ),
+        debugShowCheckedModeBanner: false,
+        home: const Scaffold(
+          body: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Loading...', style: TextStyle(fontSize: 16)),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return MultiBlocProvider(
       providers: [
         BlocProvider(

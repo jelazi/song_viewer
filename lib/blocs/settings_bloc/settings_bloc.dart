@@ -55,13 +55,13 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<AddQrLink>(_addQrLink);
     on<UpdateQrLink>(_updateQrLink);
     on<RemoveQrLink>(_removeQrLink);
-    on<SyncQrLinksFromFirebase>(_syncQrLinksFromFirebase);
+    on<SyncQrLinksFromServer>(_syncQrLinksFromServer);
 
     add(_SettingsInitial());
 
-    // Listen to Firebase QR links changes
-    _qrLinksSubscription = settingsRepository.firebaseProvider.qrLinksStream.listen((links) {
-      add(SyncQrLinksFromFirebase(links));
+    // Listen to PocketBase QR links changes
+    _qrLinksSubscription = settingsRepository.pocketBaseProvider.qrLinksStream.listen((links) {
+      add(SyncQrLinksFromServer(links));
     });
   }
 
@@ -101,7 +101,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     _emitAllValues(state, emit);
   }
 
-  void _syncQrLinksFromFirebase(SyncQrLinksFromFirebase event, Emitter<SettingsState> emit) {
+  void _syncQrLinksFromServer(SyncQrLinksFromServer event, Emitter<SettingsState> emit) {
     settingsRepository.setQrLinks(event.links);
     _emitAllValues(state, emit);
   }

@@ -1,7 +1,8 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:async';
+
 import 'package:default_project/model/user.dart';
-import 'package:default_project/providers/firebase_provider.dart';
 import 'package:default_project/providers/hive_provider.dart';
+import 'package:default_project/providers/pocketbase_provider.dart';
 import 'package:default_project/repositories/settings_repository.dart';
 import 'package:default_project/repositories/user_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,13 +11,9 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
 @GenerateMocks([
-  FirebaseProvider,
+  PocketBaseProvider,
   HiveProvider,
   SettingsRepository,
-  CollectionReference,
-  QuerySnapshot,
-  QueryDocumentSnapshot,
-  DocumentReference,
 ])
 import 'users_repository_test.mocks.dart';
 
@@ -32,33 +29,31 @@ void main() {
 
   group('UsersRepository', () {
     late UsersRepository usersRepository;
-    late MockFirebaseProvider mockFirebaseProvider;
+    late MockPocketBaseProvider mockPocketBaseProvider;
     late MockHiveProvider mockHiveProvider;
     late MockSettingsRepository mockSettingsRepository;
-    late MockCollectionReference<Map<String, dynamic>> mockUserCollection;
-    late MockQuerySnapshot<Map<String, dynamic>> mockQuerySnapshot;
-    late MockDocumentReference<Map<String, dynamic>> mockDocumentReference;
+    late StreamController<RealtimeChangeEvent<User>> userChangeController;
 
     setUp(() {
-      mockFirebaseProvider = MockFirebaseProvider();
+      mockPocketBaseProvider = MockPocketBaseProvider();
       mockHiveProvider = MockHiveProvider();
       mockSettingsRepository = MockSettingsRepository();
-      mockUserCollection = MockCollectionReference<Map<String, dynamic>>();
-      mockQuerySnapshot = MockQuerySnapshot<Map<String, dynamic>>();
-      mockDocumentReference = MockDocumentReference<Map<String, dynamic>>();
+      userChangeController = StreamController<RealtimeChangeEvent<User>>.broadcast();
 
-      // Setup default mock for userCollection
-      when(mockFirebaseProvider.userCollection).thenReturn(mockUserCollection);
+      // Setup default mock for PocketBase
+      when(mockPocketBaseProvider.getListAppUsers()).thenAnswer((_) async => []);
+      when(mockPocketBaseProvider.userChangeStream).thenAnswer((_) => userChangeController.stream);
 
       usersRepository = UsersRepository(
         hiveProvider: mockHiveProvider,
-        firebaseProvider: mockFirebaseProvider,
+        pocketBaseProvider: mockPocketBaseProvider,
         settingsRepository: mockSettingsRepository,
       );
     });
 
     tearDown(() {
       usersRepository.userController.close();
+      userChangeController.close();
     });
 
     group('Initialization', () {
@@ -75,21 +70,14 @@ void main() {
       });
     });
 
-    group('loadUsersFromFirebase', () {
+    group('loadUsersFromServer', () {
       test('should load users successfully', () async {
         final user1 = User('user1', 'pass1')..typeUser = TypeUser.viewer;
         final user2 = User('user2', 'pass2')..typeUser = TypeUser.admin;
 
-        final mockDoc1 = MockQueryDocumentSnapshot<Map<String, dynamic>>();
-        final mockDoc2 = MockQueryDocumentSnapshot<Map<String, dynamic>>();
+        when(mockPocketBaseProvider.getListAppUsers()).thenAnswer((_) async => [user1, user2]);
 
-        when(mockDoc1.data()).thenReturn(user1.toJson());
-        when(mockDoc2.data()).thenReturn(user2.toJson());
-
-        when(mockQuerySnapshot.docs).thenReturn([mockDoc1, mockDoc2]);
-        when(mockUserCollection.get()).thenAnswer((_) async => mockQuerySnapshot);
-
-        await usersRepository.loadUsersFromFirebase();
+        await usersRepository.loadUsersFromServer();
 
         expect(usersRepository.users.length, equals(2));
         expect(usersRepository.users[0].name, equals('user1'));
@@ -97,35 +85,30 @@ void main() {
       });
 
       test('should handle empty users list', () async {
-        when(mockQuerySnapshot.docs).thenReturn([]);
-        when(mockUserCollection.get()).thenAnswer((_) async => mockQuerySnapshot);
+        when(mockPocketBaseProvider.getListAppUsers()).thenAnswer((_) async => []);
 
-        await usersRepository.loadUsersFromFirebase();
+        await usersRepository.loadUsersFromServer();
 
         expect(usersRepository.users, isEmpty);
       });
 
       test('should handle errors gracefully', () async {
-        when(mockUserCollection.get()).thenThrow(Exception('Firebase error'));
+        when(mockPocketBaseProvider.getListAppUsers()).thenThrow(Exception('Server error'));
 
         // Should not throw
-        await usersRepository.loadUsersFromFirebase();
+        await usersRepository.loadUsersFromServer();
 
         expect(usersRepository.users, isEmpty);
       });
     });
 
-    group('updateListUsersFromFirebase', () {
+    group('updateListUsersFromServer', () {
       test('should update users list', () async {
         final user1 = User('user1', 'pass1')..typeUser = TypeUser.viewer;
 
-        final mockDoc1 = MockQueryDocumentSnapshot<Map<String, dynamic>>();
-        when(mockDoc1.data()).thenReturn(user1.toJson());
+        when(mockPocketBaseProvider.getListAppUsers()).thenAnswer((_) async => [user1]);
 
-        when(mockQuerySnapshot.docs).thenReturn([mockDoc1]);
-        when(mockUserCollection.get()).thenAnswer((_) async => mockQuerySnapshot);
-
-        await usersRepository.updateListUsersFromFirebase();
+        await usersRepository.updateListUsersFromServer();
 
         expect(usersRepository.users.length, equals(1));
         expect(usersRepository.users[0].name, equals('user1'));
@@ -136,21 +119,18 @@ void main() {
       test('should create user successfully', () async {
         final newUser = User('newuser', 'password')..typeUser = TypeUser.viewer;
 
-        when(mockUserCollection.doc(newUser.name)).thenReturn(mockDocumentReference);
-        when(mockDocumentReference.set(any)).thenAnswer((_) async => {});
+        when(mockPocketBaseProvider.addOrUpdateAppUser(newUser)).thenAnswer((_) async => true);
 
         final result = await usersRepository.createUser(newUser);
 
         expect(result, isTrue);
-        verify(mockUserCollection.doc(newUser.name)).called(1);
-        verify(mockDocumentReference.set(newUser.toJson())).called(1);
+        verify(mockPocketBaseProvider.addOrUpdateAppUser(newUser)).called(1);
       });
 
       test('should return false on error', () async {
         final newUser = User('newuser', 'password')..typeUser = TypeUser.viewer;
 
-        when(mockUserCollection.doc(newUser.name)).thenReturn(mockDocumentReference);
-        when(mockDocumentReference.set(any)).thenThrow(Exception('Firebase error'));
+        when(mockPocketBaseProvider.addOrUpdateAppUser(newUser)).thenThrow(Exception('Server error'));
 
         final result = await usersRepository.createUser(newUser);
 
@@ -162,21 +142,18 @@ void main() {
       test('should delete user successfully', () async {
         final user = User('user1', 'pass1')..typeUser = TypeUser.viewer;
 
-        when(mockUserCollection.doc(user.name)).thenReturn(mockDocumentReference);
-        when(mockDocumentReference.delete()).thenAnswer((_) async => {});
+        when(mockPocketBaseProvider.deleteAppUser(user)).thenAnswer((_) async => true);
 
         final result = await usersRepository.deleteUser(user);
 
         expect(result, isTrue);
-        verify(mockUserCollection.doc(user.name)).called(1);
-        verify(mockDocumentReference.delete()).called(1);
+        verify(mockPocketBaseProvider.deleteAppUser(user)).called(1);
       });
 
       test('should return false on error', () async {
         final user = User('user1', 'pass1')..typeUser = TypeUser.viewer;
 
-        when(mockUserCollection.doc(user.name)).thenReturn(mockDocumentReference);
-        when(mockDocumentReference.delete()).thenThrow(Exception('Firebase error'));
+        when(mockPocketBaseProvider.deleteAppUser(user)).thenThrow(Exception('Server error'));
 
         final result = await usersRepository.deleteUser(user);
 
@@ -188,21 +165,18 @@ void main() {
       test('should update user successfully', () async {
         final user = User('user1', 'newpass')..typeUser = TypeUser.admin;
 
-        when(mockUserCollection.doc(user.name)).thenReturn(mockDocumentReference);
-        when(mockDocumentReference.update(any)).thenAnswer((_) async => {});
+        when(mockPocketBaseProvider.addOrUpdateAppUser(user)).thenAnswer((_) async => true);
 
         final result = await usersRepository.updateUser(user);
 
         expect(result, isTrue);
-        verify(mockUserCollection.doc(user.name)).called(1);
-        verify(mockDocumentReference.update(user.toJson())).called(1);
+        verify(mockPocketBaseProvider.addOrUpdateAppUser(user)).called(1);
       });
 
       test('should return false on error', () async {
         final user = User('user1', 'newpass')..typeUser = TypeUser.admin;
 
-        when(mockUserCollection.doc(user.name)).thenReturn(mockDocumentReference);
-        when(mockDocumentReference.update(any)).thenThrow(Exception('Firebase error'));
+        when(mockPocketBaseProvider.addOrUpdateAppUser(user)).thenThrow(Exception('Server error'));
 
         final result = await usersRepository.updateUser(user);
 

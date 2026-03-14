@@ -10,7 +10,6 @@ import 'package:default_project/view/mobile_view/widgets/dialogs/dialogs_export.
 import 'package:default_project/view/mobile_view/widgets/dialogs/question_dialog.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -492,18 +491,11 @@ Future<void> _uploadSheetImageMobile(BuildContext context) async {
     }
     if (fileBytes == null) return;
 
-    final songId = context.read<EditSongBloc>().state.currentEditSong.id;
     final fileName = '${DateTime.now().millisecondsSinceEpoch}_${file.name}';
-    final storagePath = 'songs/$songId/sheets/$fileName';
 
-    final storageRef = FirebaseStorage.instance.ref().child(storagePath);
-    final metadata = SettableMetadata(
-      contentType: 'image/${file.extension ?? 'png'}',
-    );
-    await storageRef.putData(fileBytes, metadata);
-    final downloadUrl = await storageRef.getDownloadURL();
+    final downloadUrl = await context.read<EditSongBloc>().songsRepository.uploadFile(fileName, fileBytes);
 
-    if (context.mounted) {
+    if (context.mounted && downloadUrl != null) {
       context.read<EditSongBloc>().add(AddSheet(sheetUrl: downloadUrl));
     }
   } catch (e) {

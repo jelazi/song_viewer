@@ -7,12 +7,12 @@ import 'package:default_project/services/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
-import '../providers/firebase_provider.dart';
 import '../providers/hive_provider.dart';
+import '../providers/pocketbase_provider.dart';
 
 class SettingsRepository {
   HiveProvider hiveProvider;
-  FirebaseProvider firebaseProvider;
+  PocketBaseProvider pocketBaseProvider;
   bool isLargeScreen = false;
   double _previewFontTextSize = 20;
   double _previewFontChordSize = 20;
@@ -52,7 +52,7 @@ class SettingsRepository {
 
   SettingsRepository({
     required this.hiveProvider,
-    required this.firebaseProvider,
+    required this.pocketBaseProvider,
   });
 
   void getInfoApp() async {
@@ -184,18 +184,18 @@ class SettingsRepository {
       }
     }
 
-    // Try loading QR links from Firebase (overrides local if available)
+    // Try loading QR links from PocketBase (overrides local if available)
     try {
-      final firebaseLinks = await firebaseProvider.getQrLinks();
-      if (firebaseLinks != null && firebaseLinks.isNotEmpty) {
-        _qrLinks = firebaseLinks;
+      final serverLinks = await pocketBaseProvider.getQrLinks();
+      if (serverLinks != null && serverLinks.isNotEmpty) {
+        _qrLinks = serverLinks;
         _saveQrLinksToHive();
       } else {
-        // No links in Firebase — push local to Firebase
-        await firebaseProvider.setQrLinks(_qrLinks);
+        // No links on server — push local to PocketBase
+        await pocketBaseProvider.setQrLinks(_qrLinks);
       }
     } catch (_) {
-      // Firebase unavailable, use local
+      // PocketBase unavailable, use local
     }
 
     // AI enrichment API keys
@@ -384,7 +384,7 @@ class SettingsRepository {
   void addQrLink(QrLink link) {
     _qrLinks = [..._qrLinks, link];
     _saveQrLinksToHive();
-    firebaseProvider.setQrLinks(_qrLinks);
+    pocketBaseProvider.setQrLinks(_qrLinks);
   }
 
   void updateQrLink(int index, QrLink link) {
@@ -393,7 +393,7 @@ class SettingsRepository {
     updated[index] = link;
     _qrLinks = updated;
     _saveQrLinksToHive();
-    firebaseProvider.setQrLinks(_qrLinks);
+    pocketBaseProvider.setQrLinks(_qrLinks);
   }
 
   void removeQrLink(int index) {
@@ -402,7 +402,7 @@ class SettingsRepository {
     updated.removeAt(index);
     _qrLinks = updated;
     _saveQrLinksToHive();
-    firebaseProvider.setQrLinks(_qrLinks);
+    pocketBaseProvider.setQrLinks(_qrLinks);
   }
 
   void setQrLinks(List<QrLink> links) {

@@ -1265,7 +1265,7 @@ class HomeTabbar extends StatelessWidget {
                                                 final ids = List<String>.from(playlist.listSongIds);
                                                 final movedId = ids.removeAt(oldIdx);
                                                 ids.insert(newIdx, movedId);
-                                                // Update the playlist in Firebase
+                                                // Update the playlist on server
                                                 final updatedPlaylist = Playlist(
                                                   id: playlist.id,
                                                   name: playlist.name,

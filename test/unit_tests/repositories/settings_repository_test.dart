@@ -1,6 +1,6 @@
 import 'package:default_project/model/user.dart';
-import 'package:default_project/providers/firebase_provider.dart';
 import 'package:default_project/providers/hive_provider.dart';
+import 'package:default_project/providers/pocketbase_provider.dart';
 import 'package:default_project/repositories/settings_repository.dart';
 import 'package:default_project/services/enums.dart';
 import 'package:flutter/material.dart';
@@ -8,19 +8,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
-@GenerateMocks([HiveProvider, FirebaseProvider])
+@GenerateMocks([HiveProvider, PocketBaseProvider])
 import 'settings_repository_test.mocks.dart';
 
 void main() {
   group('SettingsRepository', () {
     late SettingsRepository settingsRepository;
     late MockHiveProvider mockHiveProvider;
-    late MockFirebaseProvider mockFirebaseProvider;
+    late MockPocketBaseProvider mockPocketBaseProvider;
 
     setUp(() {
       mockHiveProvider = MockHiveProvider();
-      mockFirebaseProvider = MockFirebaseProvider();
-      settingsRepository = SettingsRepository(hiveProvider: mockHiveProvider, firebaseProvider: mockFirebaseProvider);
+      mockPocketBaseProvider = MockPocketBaseProvider();
+      settingsRepository = SettingsRepository(hiveProvider: mockHiveProvider, pocketBaseProvider: mockPocketBaseProvider);
     });
 
     group('Load Settings', () {

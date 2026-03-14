@@ -72,7 +72,7 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
   void _updateSongData(UpdateSongData event, Emitter<HomePageState> emit) async {
     final state = this.state;
     if (event.updateSongRepository) {
-      await songsRepository.updateSongsFromFirebase();
+      await songsRepository.updateSongsFromServer();
     }
     emit(state.copyWith(
       listSong: List<Song>.from(songsRepository.songs),
@@ -160,7 +160,7 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
     final result = await songsRepository.deleteSong(event.song.id);
 
     if (result) {
-      await songsRepository.updateSongsFromFirebase();
+      await songsRepository.updateSongsFromServer();
       MyToast.showText(text: '${'songs'.tr()}: ${event.song.title} ${'deleted'.tr()}', typeNotification: TypeNotification.success);
       emit(state.copyWith(listSong: List<Song>.from(songsRepository.songs)));
     }

@@ -145,11 +145,6 @@ class PlaylistsBloc extends Bloc<PlaylistsEvent, PlaylistsState> {
       MyToast.showText(text: 'No song', typeNotification: TypeNotification.warning);
       return;
     }
-    final isChange = checkSongChange();
-    if (isChange.isEmpty) {
-      MyToast.showText(text: 'No change', typeNotification: TypeNotification.warning);
-      return;
-    }
     playlist.name = state.namePlaylist;
     playlist.listSongIds = state.currentSongs.map((e) => e.id).toList();
     final result = await playlistRepository.savePlaylist(playlist);

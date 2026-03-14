@@ -1,5 +1,275 @@
 # Development Log
 
+## 2026-03-14 - Fix playlist timestamp updates + cleanup
+
+### What was done
+Fixed issue where playlist saves (edit and create) did not update `playlists_updated` and `updated` timestamps in the `realtime_state` collection. Songs were already working correctly.
+
+### What was fixed
+- **Removed `checkSongChange()` guard in `playlists_bloc.dart`**: The `_savePlaylist` handler had a guard that compared current songs against the original playlist. This could silently prevent saves when the user edited only the name or when songs appeared unchanged (reference equality). Removed the guard — now saves always proceed if name is non-empty and songs exist.
+- **Cleaned up debug logging**: Removed all `debugPrint` and `logger.i` statements added during troubleshooting from `pocketbase_provider.dart`, `playlists_bloc.dart`, `edit_song_bloc.dart`, and `playlist_body.dart`.
+
+### Root cause
+The `checkSongChange()` method in `PlaylistsBloc._savePlaylist` was comparing the current state against the mutable `currentPlaylist` object. After the first save, the playlist object was already mutated in place, so subsequent saves would see no changes and short-circuit before calling the repository.
+
+### Current state
+- Songs and playlists both correctly update timestamps on save
+- All 10 playlist repository tests pass
+- Zero compilation errors
+- Realtime sync works end-to-end: save → timestamp update → global `updated` bump → listener triggers → diff & fetch
+
+---
+
+## 2026-03-13i - Global `updated` trigger in realtime_state
+
+### What was done
+Added a global `updated` timestamp to `realtime_state` that acts as a single trigger for all change detection. The listener now watches ONLY this one value — when it changes, the app loads and diffs all timestamp maps.
+
+**Flow:**
+1. CRUD operation happens → individual timestamp map updated (e.g. `songs_updated`) → global `updated` bumped
+2. Listener detects `updated` changed → calls `_triggerUpdateCheck()`
+3. `_triggerUpdateCheck()` loads all 4 timestamp maps from server, diffs each against local state
+4. Only maps that actually changed get processed (song/playlist/group/user diff handlers)
+5. Local `_lastUpdatedTimestamp` updated to match — no re-trigger
+
+**Changes in `pocketbase_provider.dart`:**
+- Added `_lastUpdatedTimestamp` field — tracks last known global timestamp
+- `_subscribeToRealtime()` now only processes `currentSong`, `qrLinks`, and `updated` keys (removed direct handling of `songs_updated`, `playlists_updated`, `groups_updated`, `users_updated`)
+- Added `_triggerUpdateCheck()` — loads all maps, diffs only changed ones
+- Added `_bumpUpdatedTimestamp()` — sets global `updated` to now
+- All `_updateXxxTimestamp()` / `_removeXxxTimestamp()` helpers now call `_bumpUpdatedTimestamp()`
+- `updateGroup()` and `addGroupsList()` also bump global updated
+- `_initializeTimestampMaps()` loads `updated` value, initializes if missing
+
+### Current state
+- Zero compilation errors, 51 repository tests pass
+- Single trigger model: listener → `updated` changed → diff all maps → fetch only changed records
+
+---
+
+## 2026-03-13h - Realtime via single realtime_state listener with timestamp maps
+
+### What was done
+Replaced individual collection subscriptions (songs, playlists, app_users) with a single `realtime_state` listener that uses timestamp maps for efficient change detection. Now only ONE realtime subscription exists — on the `realtime_state` collection.
+
+**How it works:**
+1. `realtime_state` collection holds records with keys: `songs_updated`, `playlists_updated`, `groups_updated`, `users_updated`
+2. Each record's `data` field contains a map: `{entityId: iso8601Timestamp}`
+3. App subscribes ONLY to `realtime_state` (single listener)
+4. When a timestamp map changes, the app diffs the local map vs the new server map
+5. For new/changed timestamps → fetches only that specific record from PB
+6. For missing IDs → emits delete event
+7. After every CRUD operation, the corresponding timestamp map is updated in `realtime_state`
+
+**Changes:**
+
+1. **PocketBaseProvider** (`pocketbase_provider.dart`):
+   - Added `_songTimestamps`, `_playlistTimestamps`, `_groupTimestamps`, `_userTimestamps` local maps
+   - Added `groupChangeStream` (new stream for group changes)
+   - Replaced `_subscribeToRealtime()`: removed individual songs/playlists/app_users subscriptions, enhanced realtime_state subscription with switch on key type
+   - Added `_initializeTimestampMaps()` — loads existing maps from server, builds initial maps if empty
+   - Added `_handleSongTimestampChange()`, `_handlePlaylistTimestampChange()`, `_handleGroupTimestampChange()`, `_handleUserTimestampChange()` — diff handlers
+   - Added `_updateXxxTimestamp()` / `_removeXxxTimestamp()` helpers per entity type
+   - Added `getSongByUuid()` and `getUserByName()` single-record fetch methods
+   - Modified ALL CRUD methods to update timestamp maps after operations
+   - Modified `dispose()` — only unsubscribes from `realtime_state`
+
+2. **SongsRepository** (`songs_repository.dart`):
+   - Added `groupChangeStream` listener in `_init()`
+   - Added `_handleGroupRealtimeEvent()` — updates `listAllGroups` on group create/update/delete
+
+3. **Tests**: Updated `songs_repository_test.dart` to mock `groupChangeStream`. Regenerated all mocks.
+
+### Files modified
+- `lib/providers/pocketbase_provider.dart` — single-listener architecture, timestamp maps, CRUD updates
+- `lib/repositories/songs_repository.dart` — group realtime handling
+- `test/unit_tests/repositories/songs_repository_test.dart` — mock groupChangeStream
+- `test/unit_tests/repositories/*.mocks.dart` — regenerated
+
+### Current state
+- Zero new compilation errors
+- 315 tests pass (3 pre-existing failures in web_repository_test and settings_repository_test)
+- Only ONE realtime subscription (realtime_state) instead of four (realtime_state + songs + playlists + app_users)
+- Timestamp maps are auto-initialized from server data on first connect
+- Repos keep same stream interfaces — no BLoC changes needed
+
+---
+
+## 2026-03-13g - Granular PocketBase realtime subscriptions
+
+### What was done
+Replaced the old "re-fetch everything" realtime approach with granular, per-record change events from PocketBase. Now when a song, playlist, or user is created/updated/deleted on the server, only that specific record is updated in memory — no full re-download needed.
+
+1. **RealtimeChangeEvent model** (`pocketbase_provider.dart`): New generic class carrying `action` (create/update/delete), parsed `record`, `recordId`, and `serverUpdated` timestamp from PocketBase.
+
+2. **PocketBaseProvider**: 
+   - Replaced `_updateSongListController` (void) → `_songChangeController` (RealtimeChangeEvent<Song>)
+   - Replaced `_updatePlaylistController` (void) → `_playlistChangeController` (RealtimeChangeEvent<Playlist>)
+   - Added `_userChangeController` (RealtimeChangeEvent<User>) — new realtime subscription for `app_users` collection
+   - Each subscription now parses the record directly from the event data, logs action + timestamp, and emits a typed event
+
+3. **SongsRepository**: `_handleSongRealtimeEvent()` — processes individual song create/update/delete events directly from the realtime event data, without re-fetching all songs from the server.
+
+4. **PlaylistRepository**: `_handlePlaylistRealtimeEvent()` — same granular approach for playlists.
+
+5. **UsersRepository**: Added `_init()` with `_handleUserRealtimeEvent()` and `isChangedUsersController` stream — now listens to realtime user changes and updates the local list granularly.
+
+6. **UsersBloc**: Now also listens to `usersRepository.isChangedUsers` stream for realtime user updates.
+
+7. **Tests updated**: All repository tests updated to mock new stream types (`RealtimeChangeEvent<T>` instead of `void`). Mocks regenerated with `build_runner`.
+
+### Files modified
+- `lib/providers/pocketbase_provider.dart` — RealtimeChangeEvent class, granular streams, app_users subscription
+- `lib/repositories/songs_repository.dart` — granular song event handling
+- `lib/repositories/playlist_repository.dart` — granular playlist event handling
+- `lib/repositories/user_repository.dart` — added _init(), granular user event handling, isChangedUsers stream
+- `lib/blocs/users_bloc/users_bloc.dart` — listen to realtime user changes
+- `test/unit_tests/repositories/songs_repository_test.dart` — updated to new stream types
+- `test/unit_tests/repositories/playlist_repository_test.dart` — updated to new stream types
+- `test/unit_tests/repositories/users_repository_test.dart` — updated to new stream types
+
+### Current state
+- Zero compilation errors
+- All 308 unit tests pass (8 integration test failures are pre-existing PatrolBinding issue)
+- Realtime changes from PocketBase now update individual records with logged timestamps
+- Songs, playlists, and users all have granular realtime subscriptions
+- `updateSongsFromServer()` and `updateListUsersFromServer()` still available as manual refresh fallbacks
+
+---
+
+## 2026-03-13f - Firebase migration script syntax fix
+
+### What was done
+Fixed a Python syntax error in `tools/firebase_to_pocketbase.py` caused by accidental pasted text from Firebase Console inside the import section.
+
+- Removed stray console text inserted after `import sys`
+- Restored valid Python imports so the script can run again
+
+### Current state
+- Script syntax is valid again
+- Firebase credentials are currently hardcoded in the script by local edit and should not be committed
+
+## 2026-03-13e - Firebase migration script: sheet files support
+
+### What was done
+Updated `tools/firebase_to_pocketbase.py` to also migrate sheet image/PDF files from Firebase Storage to PocketBase.
+
+- Added `download_file()` — downloads files from any URL (Firebase Storage etc.)
+- Added `multipart_upload()` — constructs multipart/form-data POST using only stdlib
+- Added `pb_upload_file()` — uploads file to PocketBase `uploads` collection, returns new public URL
+- Added `migrate_sheets()` — for each song, downloads all sheet files and re-uploads to PB, replacing old Firebase URLs with new PocketBase URLs
+- Shows progress: counts total sheets, logs per-song migration
+- Graceful fallback: if a download fails, keeps the original URL and warns
+- Skips URLs that already point to PocketBase
+- Final verification now also shows `uploads` collection record count
+
+### Current state
+- Migration script handles: songs, playlists, users, groups, + sheet files
+- All using only Python stdlib (no pip install needed)
+- Collections already imported to live PocketBase server (all 6 confirmed)
+- Server currently has 0 records — waiting for user to run migration
+
+## 2026-03-13c - Firebase to PocketBase migration
+
+### What was done
+Complete migration from Firebase (Firestore, RTDB, Auth, Storage) to PocketBase v0.36 self-hosted backend.
+
+1. **PocketBase provider** (`lib/providers/pocketbase_provider.dart`): Full CRUD for all collections (songs, playlists, app_users, groups, realtime_state, uploads). Realtime subscriptions via PB SDK. File upload replacing Firebase Storage. Config management (load/save/test/reconnect).
+
+2. **Collections JSON** (`pocketbase_collections.json`): Import-ready JSON with 6 collections for PB v0.36. Auth rules require authenticated user for all operations.
+
+3. **PB config** (`pocketbase_config.json`): Template config file for PB URL/email/password, gitignored. App reads from `~/.songviewer/pocketbase_config.json` with fallback to bundled asset.
+
+4. **All 4 repositories rewritten**: songs_repository, playlist_repository, user_repository, settings_repository — all use PocketBaseProvider instead of FirebaseProvider. Simplified sync (PB realtime handles notifications natively).
+
+5. **BLoC updates**: Renamed Firebase methods — `loadSongsFromFirebase()` → `loadSongsFromServer()`, `updateSongsFromFirebase()` → `updateSongsFromServer()`, `loadUsersFromFirebase()` → `loadUsersFromServer()`, etc. Renamed `SyncQrLinksFromFirebase` event to `SyncQrLinksFromServer`.
+
+6. **Sheet upload views**: 3 files (desktop, tablet, mobile edit pages) now use `songsRepository.uploadFile()` instead of `FirebaseStorage.instance`.
+
+7. **Smart sync system**: Two-phase initialization (`initProvidersAndCheckSync` + `loadDataFromServer`). `SyncInfo` class tracks server state. `SyncScreen` widget shows when server is empty — offers "Download from server" or "Start with empty database". Loading indicator during data fetch.
+
+8. **PocketBase settings UI**: Desktop — inline section in GeneralSettingsBody with URL/email/password fields, test connection, save, and status indicator. Mobile/tablet — settings section with tiles that open a dialog for PB configuration.
+
+9. **Firebase removed**: All Firebase packages removed from pubspec.yaml (firebase_core, cloud_firestore, firebase_storage, firebase_database, firebase_auth, firedart). Deleted firebase_provider.dart, firebase_rtdb_rest_provider.dart, firebase_options.dart.
+
+10. **README updated**: Full PocketBase setup guide including Coolify deployment, collection import, user creation.
+
+11. **Localization updated**: All Firebase references in cs.json/en.json changed to "server". Added sync/PB settings keys in both languages.
+
+### Files created
+- `lib/providers/pocketbase_provider.dart` — PocketBase provider (~640 lines)
+- `lib/view/sync_screen.dart` — Smart sync screen widget
+- `pocketbase_collections.json` — PB collections import file
+- `pocketbase_config.json` — PB config template (gitignored)
+
+### Files deleted
+- `lib/providers/firebase_provider.dart`
+- `lib/providers/firebase_rtdb_rest_provider.dart`
+- `lib/firebase_options.dart`
+
+### Files modified
+- `lib/main.dart` — PB init, SyncInfo, two-phase loading, sync screen
+- `lib/main.part.dart` — `initProvidersAndCheckSync()`, `loadDataFromServer()`, `SyncInfo` class
+- `lib/repositories/songs_repository.dart` — PocketBaseProvider
+- `lib/repositories/playlist_repository.dart` — PocketBaseProvider
+- `lib/repositories/user_repository.dart` — PocketBaseProvider
+- `lib/repositories/settings_repository.dart` — PocketBaseProvider
+- `lib/blocs/home_page_bloc/home_page_bloc.dart` — method renames
+- `lib/blocs/users_bloc/users_bloc.dart` — method renames
+- `lib/blocs/edit_blocs/edit_song_bloc/edit_song_bloc.dart` — method renames
+- `lib/blocs/settings_bloc/settings_bloc.dart` — SyncQrLinksFromServer
+- `lib/blocs/settings_bloc/settings_event.dart` — SyncQrLinksFromServer
+- `lib/blocs/presentation_playlist_bloc/presentation_playlist_event.dart` — comment update
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/general_settings_body.dart` — PB settings section
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/edit_parts_body/edit_sheets_body.dart` — PB file upload
+- `lib/view/desktop_view/widgets/ribbon_menu.dart` — comment update
+- `lib/view/mobile_view/pages/settings_page.dart` — PB settings section
+- `lib/view/mobile_view/pages/edit_pages/edit_page.dart` — PB file upload
+- `lib/view/tablet_view/pages/settings_page_tablet.dart` — PB settings section
+- `lib/view/tablet_view/pages/tablet_edit_pages/edit_page_tablet.dart` — PB file upload
+- `pubspec.yaml` — removed Firebase deps, added pocketbase SDK
+- `assets/lang/cs.json` — sync/PB keys, Firebase→server
+- `assets/lang/en.json` — sync/PB keys, Firebase→server
+- `README.md` — PB setup guide, Coolify deployment
+- `.gitignore` — pocketbase_config.json
+
+### Current state
+- All Firebase dependencies removed, PocketBase SDK integrated
+- Zero compilation errors across all modified files
+- App uses two-phase init: auth+check → sync screen if needed → load data
+- PB settings configurable from all platforms (desktop, mobile, tablet)
+- Collections JSON ready for PB v0.36 import
+- README has full setup guide
+
+### Known issues / pending
+- Not yet tested with a running PocketBase instance (needs deployment)
+- The `_hiveProvider` field in PlaylistRepository is unused (minor lint warning)
+- Some old UpdateSongListData/UpdatePlaylistData Hive adapters still registered but unused
+
+---
+
+## 2026-03-13d - Test files cleanup (Firebase → PocketBase)
+
+### What was done
+Updated all test files to remove Firebase dependencies and use PocketBase mocks.
+
+1. **Deleted** `test/unit_tests/providers/firebase_provider_test.dart` — no longer relevant
+2. **Updated** `test/unit_tests/all_tests.dart` — removed firebase_provider_test import
+3. **Updated** `test/unit_tests/repositories/settings_repository_test.dart` — MockFirebaseProvider → MockPocketBaseProvider
+4. **Updated** `test/unit_tests/repositories/songs_repository_test.dart` — full rewrite: PocketBaseProvider mocks, updated method names (getListSongs, addOrUpdateSong, createGroup, etc.), added updateSongListStream mock
+5. **Updated** `test/unit_tests/repositories/users_repository_test.dart` — full rewrite: removed Firestore mocks (CollectionReference, QuerySnapshot, etc.), uses MockPocketBaseProvider with getListAppUsers, addOrUpdateAppUser, deleteAppUser
+6. **Updated** `test/unit_tests/repositories/playlist_repository_test.dart` — full rewrite: PocketBaseProvider mocks, addOrUpdatePlaylist, updatePlaylistStream mock
+7. **Updated** `test/integration_tests/app_startup_test.dart` — uses `initProvidersAndCheckSync()` + `syncInfo` param
+8. **Updated** `test/unit_tests/README.md` — removed Firebase references, updated to PocketBase
+9. **Regenerated** all `.mocks.dart` files via `dart run build_runner build --delete-conflicting-outputs`
+
+### Current state
+- Zero Firebase-related errors across entire project
+- All generated mock files up to date with PocketBase types
+- Only remaining warnings: unused `_hiveProvider` in PlaylistRepository, unused declarations in .g.dart files (pre-existing)
+
+---
+
 ## 2026-03-13b - Mobile playlists + numbered copy format
 
 ### What was done

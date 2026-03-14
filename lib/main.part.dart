@@ -1,9 +1,28 @@
 part of 'main.dart';
 
-Future<AppRepositories> initProvidersRepositories() async {
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+/// Information about PocketBase server state after authentication
+class SyncInfo {
+  final bool isAuthenticated;
+  final int serverSongCount;
+  final int serverPlaylistCount;
+  final int serverUserCount;
+  final int serverGroupCount;
+
+  SyncInfo({
+    required this.isAuthenticated,
+    required this.serverSongCount,
+    required this.serverPlaylistCount,
+    required this.serverUserCount,
+    required this.serverGroupCount,
+  });
+
+  bool get isServerEmpty => serverSongCount == 0 && serverPlaylistCount == 0 && serverUserCount == 0 && serverGroupCount == 0;
+
+  int get totalServerItems => serverSongCount + serverPlaylistCount + serverUserCount + serverGroupCount;
+}
+
+/// Phase 1: Initialize providers & check server state (before showing UI)
+Future<({AppRepositories repositories, SyncInfo syncInfo})> initProvidersAndCheckSync() async {
   if (kIsWeb) {
     await Hive.initFlutter();
   } else {
@@ -11,48 +30,65 @@ Future<AppRepositories> initProvidersRepositories() async {
     Hive.init(directory.path);
   }
 
-  FirebaseProvider firebaseProvider = FirebaseProvider();
-  await firebaseProvider.authenticateUser();
+  // Initialize PocketBase provider
+  PocketBaseProvider pocketBaseProvider = PocketBaseProvider();
+  await pocketBaseProvider.loadConfig();
+  final isAuthenticated = await pocketBaseProvider.authenticate();
+
   HiveProvider hiveProvider = HiveProvider();
   await hiveProvider.initHiveBox();
   WebProvider webProvider = WebProvider();
 
   SettingsRepository settingsRepository = SettingsRepository(
     hiveProvider: hiveProvider,
-    firebaseProvider: firebaseProvider,
+    pocketBaseProvider: pocketBaseProvider,
   );
 
   await settingsRepository.loadLocalSettings();
   settingsRepository.getInfoApp();
 
   SongsRepository songsRepository = SongsRepository(
-    firebaseProvider: firebaseProvider,
+    pocketBaseProvider: pocketBaseProvider,
     hiveProvider: hiveProvider,
   );
-  await songsRepository.loadSongsFromFirebase();
-  await songsRepository.loadAllGroups();
 
   PlaylistRepository playlistRepository = PlaylistRepository(
     hiveProvider: hiveProvider,
-    firebaseProvider: firebaseProvider,
+    pocketBaseProvider: pocketBaseProvider,
   );
 
   UsersRepository usersRepository = UsersRepository(
     hiveProvider: hiveProvider,
-    firebaseProvider: firebaseProvider,
+    pocketBaseProvider: pocketBaseProvider,
     settingsRepository: settingsRepository,
   );
-  await usersRepository.loadUsersFromFirebase();
 
   WebRepository webRepository = WebRepository(
     webProvider: webProvider,
   );
 
-  await webRepository.testGetSong();
-  await usersRepository.loadUsersFromFirebase();
-  await usersRepository.loadCurrentUser();
+  // Check server data counts
+  int songCount = 0;
+  int playlistCount = 0;
+  int userCount = 0;
+  int groupCount = 0;
 
-  return AppRepositories(
+  if (isAuthenticated) {
+    songCount = await pocketBaseProvider.getServerSongCount();
+    playlistCount = await pocketBaseProvider.getServerPlaylistCount();
+    userCount = await pocketBaseProvider.getServerUserCount();
+    groupCount = await pocketBaseProvider.getServerGroupCount();
+  }
+
+  final syncInfo = SyncInfo(
+    isAuthenticated: isAuthenticated,
+    serverSongCount: songCount,
+    serverPlaylistCount: playlistCount,
+    serverUserCount: userCount,
+    serverGroupCount: groupCount,
+  );
+
+  final repositories = AppRepositories(
     settingsRepository: settingsRepository,
     playlistRepository: playlistRepository,
     usersRepository: usersRepository,
@@ -60,6 +96,34 @@ Future<AppRepositories> initProvidersRepositories() async {
     webRepository: webRepository,
     hiveProvider: hiveProvider,
   );
+
+  return (repositories: repositories, syncInfo: syncInfo);
+}
+
+/// Phase 2: Load data from server into repositories
+Future<void> loadDataFromServer(AppRepositories repositories) async {
+  await repositories.songsRepository.loadSongsFromServer();
+  await repositories.songsRepository.loadAllGroups();
+  await repositories.usersRepository.loadUsersFromServer();
+
+  await repositories.webRepository.testGetSong();
+  await repositories.usersRepository.loadUsersFromServer();
+  await repositories.usersRepository.loadCurrentUser();
+}
+
+/// Upload local JSON data to the PocketBase server
+Future<int> uploadJsonDataToServer(
+  PocketBaseProvider pocketBaseProvider,
+  String jsonData,
+) async {
+  try {
+    final List<dynamic> items = jsonDecode(jsonData);
+    final songs = items.map((e) => Song.fromJson(e as Map<String, dynamic>)).toList();
+    return await pocketBaseProvider.uploadAllSongs(songs);
+  } catch (e) {
+    logger.e('Error uploading JSON data: $e');
+    return 0;
+  }
 }
 
 Future<void> initHiveFunction() async {

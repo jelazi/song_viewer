@@ -4,11 +4,41 @@ import 'package:flutter/services.dart';
 
 import '../../../../../blocs/export_blocs.dart';
 import '../../../../../model/qr_link.dart';
+import '../../../../../providers/pocketbase_provider.dart';
 import '../../../../../services/constants.dart';
 import 'bracket_error_scanner.dart';
 
-class GeneralSettingsBody extends StatelessWidget {
+class GeneralSettingsBody extends StatefulWidget {
   const GeneralSettingsBody({super.key});
+
+  @override
+  State<GeneralSettingsBody> createState() => _GeneralSettingsBodyState();
+}
+
+class _GeneralSettingsBodyState extends State<GeneralSettingsBody> {
+  late TextEditingController _pbUrlController;
+  late TextEditingController _pbEmailController;
+  late TextEditingController _pbPasswordController;
+  bool _pbTestingConnection = false;
+  String? _pbConnectionResult;
+  bool _pbObscurePassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    final pbProvider = context.read<SettingsBloc>().settingsRepository.pocketBaseProvider;
+    _pbUrlController = TextEditingController(text: pbProvider.config?.pocketbaseUrl ?? '');
+    _pbEmailController = TextEditingController(text: pbProvider.config?.email ?? '');
+    _pbPasswordController = TextEditingController(text: pbProvider.config?.password ?? '');
+  }
+
+  @override
+  void dispose() {
+    _pbUrlController.dispose();
+    _pbEmailController.dispose();
+    _pbPasswordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +53,11 @@ class GeneralSettingsBody extends StatelessWidget {
                 'generalSettings'.tr(),
                 style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
+              const SizedBox(height: 24),
+              // PocketBase settings
+              _buildSectionTitle('pbSettingsTitle'.tr()),
+              const SizedBox(height: 8),
+              _buildPocketBaseSettings(context),
               const SizedBox(height: 24),
               // QR code URLs
               _buildSectionTitle('qrCodeTitle'.tr()),
@@ -269,6 +304,191 @@ class GeneralSettingsBody extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildPocketBaseSettings(BuildContext context) {
+    final pbProvider = context.read<SettingsBloc>().settingsRepository.pocketBaseProvider;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        border: Border.all(color: AppColor.grey3Color),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Connection status indicator
+          Row(
+            children: [
+              Icon(
+                pbProvider.isConnected ? Icons.cloud_done : Icons.cloud_off,
+                size: 18,
+                color: pbProvider.isConnected ? AppColor.alertSuccessColor : AppColor.alertErrorColor,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                pbProvider.isConnected ? 'pbConnectionSuccess'.tr() : 'pbConnectionFailed'.tr(),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: pbProvider.isConnected ? AppColor.alertSuccessDarkColor : AppColor.alertErrorDarkColor,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // URL field
+          Row(
+            children: [
+              const Icon(Icons.dns, size: 18, color: AppColor.grey2Color),
+              const SizedBox(width: 8),
+              SizedBox(width: 80, child: Text('pbUrl'.tr(), style: const TextStyle(fontSize: 13))),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: _pbUrlController,
+                  style: const TextStyle(fontSize: 13),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+                    hintText: 'http://127.0.0.1:8090',
+                    hintStyle: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  keyboardType: TextInputType.url,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // Email field
+          Row(
+            children: [
+              const Icon(Icons.email, size: 18, color: AppColor.grey2Color),
+              const SizedBox(width: 8),
+              SizedBox(width: 80, child: Text('pbEmail'.tr(), style: const TextStyle(fontSize: 13))),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: _pbEmailController,
+                  style: const TextStyle(fontSize: 13),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+                    hintText: 'admin@example.com',
+                    hintStyle: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // Password field
+          Row(
+            children: [
+              const Icon(Icons.lock, size: 18, color: AppColor.grey2Color),
+              const SizedBox(width: 8),
+              SizedBox(width: 80, child: Text('pbPassword'.tr(), style: const TextStyle(fontSize: 13))),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: _pbPasswordController,
+                  style: const TextStyle(fontSize: 13),
+                  obscureText: _pbObscurePassword,
+                  decoration: InputDecoration(
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+                    suffixIcon: IconButton(
+                      icon: Icon(_pbObscurePassword ? Icons.visibility : Icons.visibility_off, size: 18),
+                      onPressed: () => setState(() => _pbObscurePassword = !_pbObscurePassword),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Action buttons
+          Row(
+            children: [
+              ElevatedButton.icon(
+                onPressed: _pbTestingConnection ? null : () => _testPbConnection(context),
+                icon: _pbTestingConnection
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Icon(Icons.wifi_find, size: 16, color: Colors.white),
+                label: Text('pbTestConnection'.tr(), style: const TextStyle(fontSize: 13, color: Colors.white)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColor.primaryColor,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+              ),
+              const SizedBox(width: 12),
+              ElevatedButton.icon(
+                onPressed: () => _savePbSettings(context),
+                icon: const Icon(Icons.save, size: 16, color: Colors.white),
+                label: Text('pbSaveSettings'.tr(), style: const TextStyle(fontSize: 13, color: Colors.white)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColor.primaryColor,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+              ),
+            ],
+          ),
+          if (_pbConnectionResult != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              _pbConnectionResult!,
+              style: TextStyle(
+                fontSize: 12,
+                color: _pbConnectionResult == 'pbConnectionSuccess'.tr() ? AppColor.alertSuccessDarkColor : AppColor.alertErrorDarkColor,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<void> _testPbConnection(BuildContext context) async {
+    setState(() {
+      _pbTestingConnection = true;
+      _pbConnectionResult = null;
+    });
+    final pbProvider = context.read<SettingsBloc>().settingsRepository.pocketBaseProvider;
+    final testConfig = PocketBaseConfig(
+      pocketbaseUrl: _pbUrlController.text.trim(),
+      email: _pbEmailController.text.trim(),
+      password: _pbPasswordController.text,
+    );
+    final success = await pbProvider.testConnection(testConfig);
+    setState(() {
+      _pbTestingConnection = false;
+      _pbConnectionResult = success ? 'pbConnectionSuccess'.tr() : 'pbConnectionFailed'.tr();
+    });
+  }
+
+  Future<void> _savePbSettings(BuildContext context) async {
+    final pbProvider = context.read<SettingsBloc>().settingsRepository.pocketBaseProvider;
+    final newConfig = PocketBaseConfig(
+      pocketbaseUrl: _pbUrlController.text.trim(),
+      email: _pbEmailController.text.trim(),
+      password: _pbPasswordController.text,
+    );
+    final success = await pbProvider.reconnect(newConfig);
+    if (mounted) {
+      setState(() {
+        _pbConnectionResult = success ? 'pbConnectionSuccess'.tr() : 'pbConnectionFailed'.tr();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(success ? 'pbSettingsSaved'.tr() : 'pbConnectionFailed'.tr()),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   Widget _buildUrlField({

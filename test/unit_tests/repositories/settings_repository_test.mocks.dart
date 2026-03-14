@@ -3,15 +3,21 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i4;
+import 'dart:async' as _i5;
 
-import 'package:default_project/model/update_songlist_data.dart' as _i7;
-import 'package:default_project/model/user.dart' as _i5;
-import 'package:default_project/model/web_interpret.dart' as _i8;
-import 'package:default_project/model/web_song.dart' as _i6;
-import 'package:default_project/providers/hive_provider.dart' as _i3;
+import 'package:default_project/model/playlist.dart' as _i13;
+import 'package:default_project/model/qr_link.dart' as _i14;
+import 'package:default_project/model/song/song.dart' as _i12;
+import 'package:default_project/model/update_playlist_data.dart' as _i9;
+import 'package:default_project/model/update_songlist_data.dart' as _i8;
+import 'package:default_project/model/user.dart' as _i6;
+import 'package:default_project/model/web_interpret.dart' as _i10;
+import 'package:default_project/model/web_song.dart' as _i7;
+import 'package:default_project/providers/hive_provider.dart' as _i4;
+import 'package:default_project/providers/pocketbase_provider.dart' as _i11;
 import 'package:hive/hive.dart' as _i2;
 import 'package:mockito/mockito.dart' as _i1;
+import 'package:pocketbase/pocketbase.dart' as _i3;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -36,10 +42,20 @@ class _FakeBox_0<E> extends _i1.SmartFake implements _i2.Box<E> {
         );
 }
 
+class _FakePocketBase_1 extends _i1.SmartFake implements _i3.PocketBase {
+  _FakePocketBase_1(
+    Object parent,
+    Invocation parentInvocation,
+  ) : super(
+          parent,
+          parentInvocation,
+        );
+}
+
 /// A class which mocks [HiveProvider].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockHiveProvider extends _i1.Mock implements _i3.HiveProvider {
+class MockHiveProvider extends _i1.Mock implements _i4.HiveProvider {
   MockHiveProvider() {
     _i1.throwOnMissingStub(this);
   }
@@ -117,14 +133,14 @@ class MockHiveProvider extends _i1.Mock implements _i3.HiveProvider {
       );
 
   @override
-  _i4.Future<void> initHiveBox() => (super.noSuchMethod(
+  _i5.Future<void> initHiveBox() => (super.noSuchMethod(
         Invocation.method(
           #initHiveBox,
           [],
         ),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      ) as _i4.Future<void>);
+        returnValue: _i5.Future<void>.value(),
+        returnValueForMissingStub: _i5.Future<void>.value(),
+      ) as _i5.Future<void>);
 
   @override
   dynamic getSettingsValue(String? name) =>
@@ -175,7 +191,7 @@ class MockHiveProvider extends _i1.Mock implements _i3.HiveProvider {
       ) as int);
 
   @override
-  void setCurrentUser(_i5.User? user) => super.noSuchMethod(
+  void setCurrentUser(_i6.User? user) => super.noSuchMethod(
         Invocation.method(
           #setCurrentUser,
           [user],
@@ -186,7 +202,7 @@ class MockHiveProvider extends _i1.Mock implements _i3.HiveProvider {
   @override
   void setWebSong(
     String? key,
-    _i6.WebSong? value,
+    _i7.WebSong? value,
   ) =>
       super.noSuchMethod(
         Invocation.method(
@@ -202,7 +218,7 @@ class MockHiveProvider extends _i1.Mock implements _i3.HiveProvider {
   @override
   void setUpdateSongListData(
     String? key,
-    _i7.UpdateSongListData? value,
+    _i8.UpdateSongListData? value,
   ) =>
       super.noSuchMethod(
         Invocation.method(
@@ -216,22 +232,45 @@ class MockHiveProvider extends _i1.Mock implements _i3.HiveProvider {
       );
 
   @override
-  _i7.UpdateSongListData? getUpdateSongListData(String? key) =>
+  _i8.UpdateSongListData? getUpdateSongListData(String? key) =>
       (super.noSuchMethod(Invocation.method(
         #getUpdateSongListData,
         [key],
-      )) as _i7.UpdateSongListData?);
+      )) as _i8.UpdateSongListData?);
 
   @override
-  _i6.WebSong? getWebSong(String? key) => (super.noSuchMethod(Invocation.method(
+  void setUpdatePlaylistData(
+    String? key,
+    _i9.UpdatePlaylistData? value,
+  ) =>
+      super.noSuchMethod(
+        Invocation.method(
+          #setUpdatePlaylistData,
+          [
+            key,
+            value,
+          ],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  _i9.UpdatePlaylistData? getUpdatePlaylistData(String? key) =>
+      (super.noSuchMethod(Invocation.method(
+        #getUpdatePlaylistData,
+        [key],
+      )) as _i9.UpdatePlaylistData?);
+
+  @override
+  _i7.WebSong? getWebSong(String? key) => (super.noSuchMethod(Invocation.method(
         #getWebSong,
         [key],
-      )) as _i6.WebSong?);
+      )) as _i7.WebSong?);
 
   @override
   void setHistoryInterpretToWebBox(
     String? nameWeb,
-    _i8.WebInterpret? interpret,
+    _i10.WebInterpret? interpret,
   ) =>
       super.noSuchMethod(
         Invocation.method(
@@ -245,7 +284,7 @@ class MockHiveProvider extends _i1.Mock implements _i3.HiveProvider {
       );
 
   @override
-  _i8.WebInterpret? getInterpretFromWebBox(
+  _i10.WebInterpret? getInterpretFromWebBox(
     String? nameWeb,
     String? ref,
   ) =>
@@ -255,15 +294,444 @@ class MockHiveProvider extends _i1.Mock implements _i3.HiveProvider {
           nameWeb,
           ref,
         ],
-      )) as _i8.WebInterpret?);
+      )) as _i10.WebInterpret?);
 
   @override
-  List<_i8.WebInterpret> getInterpretsFromWebBox(String? nameWeb) =>
+  List<_i10.WebInterpret> getInterpretsFromWebBox(String? nameWeb) =>
       (super.noSuchMethod(
         Invocation.method(
           #getInterpretsFromWebBox,
           [nameWeb],
         ),
-        returnValue: <_i8.WebInterpret>[],
-      ) as List<_i8.WebInterpret>);
+        returnValue: <_i10.WebInterpret>[],
+      ) as List<_i10.WebInterpret>);
+}
+
+/// A class which mocks [PocketBaseProvider].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockPocketBaseProvider extends _i1.Mock
+    implements _i11.PocketBaseProvider {
+  MockPocketBaseProvider() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i5.Stream<Map<String, dynamic>?> get selectedSongStream =>
+      (super.noSuchMethod(
+        Invocation.getter(#selectedSongStream),
+        returnValue: _i5.Stream<Map<String, dynamic>?>.empty(),
+      ) as _i5.Stream<Map<String, dynamic>?>);
+
+  @override
+  _i5.Stream<_i11.RealtimeChangeEvent<_i12.Song>> get songChangeStream =>
+      (super.noSuchMethod(
+        Invocation.getter(#songChangeStream),
+        returnValue: _i5.Stream<_i11.RealtimeChangeEvent<_i12.Song>>.empty(),
+      ) as _i5.Stream<_i11.RealtimeChangeEvent<_i12.Song>>);
+
+  @override
+  _i5.Stream<_i11.RealtimeChangeEvent<_i13.Playlist>>
+      get playlistChangeStream => (super.noSuchMethod(
+            Invocation.getter(#playlistChangeStream),
+            returnValue:
+                _i5.Stream<_i11.RealtimeChangeEvent<_i13.Playlist>>.empty(),
+          ) as _i5.Stream<_i11.RealtimeChangeEvent<_i13.Playlist>>);
+
+  @override
+  _i5.Stream<_i11.RealtimeChangeEvent<_i6.User>> get userChangeStream =>
+      (super.noSuchMethod(
+        Invocation.getter(#userChangeStream),
+        returnValue: _i5.Stream<_i11.RealtimeChangeEvent<_i6.User>>.empty(),
+      ) as _i5.Stream<_i11.RealtimeChangeEvent<_i6.User>>);
+
+  @override
+  _i5.Stream<_i11.RealtimeChangeEvent<String>> get groupChangeStream =>
+      (super.noSuchMethod(
+        Invocation.getter(#groupChangeStream),
+        returnValue: _i5.Stream<_i11.RealtimeChangeEvent<String>>.empty(),
+      ) as _i5.Stream<_i11.RealtimeChangeEvent<String>>);
+
+  @override
+  _i5.Stream<List<_i14.QrLink>> get qrLinksStream => (super.noSuchMethod(
+        Invocation.getter(#qrLinksStream),
+        returnValue: _i5.Stream<List<_i14.QrLink>>.empty(),
+      ) as _i5.Stream<List<_i14.QrLink>>);
+
+  @override
+  bool get isConnected => (super.noSuchMethod(
+        Invocation.getter(#isConnected),
+        returnValue: false,
+      ) as bool);
+
+  @override
+  _i3.PocketBase get pb => (super.noSuchMethod(
+        Invocation.getter(#pb),
+        returnValue: _FakePocketBase_1(
+          this,
+          Invocation.getter(#pb),
+        ),
+      ) as _i3.PocketBase);
+
+  @override
+  _i5.Future<_i11.PocketBaseConfig?> loadConfig() => (super.noSuchMethod(
+        Invocation.method(
+          #loadConfig,
+          [],
+        ),
+        returnValue: _i5.Future<_i11.PocketBaseConfig?>.value(),
+      ) as _i5.Future<_i11.PocketBaseConfig?>);
+
+  @override
+  _i5.Future<void> saveConfig(_i11.PocketBaseConfig? config) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #saveConfig,
+          [config],
+        ),
+        returnValue: _i5.Future<void>.value(),
+        returnValueForMissingStub: _i5.Future<void>.value(),
+      ) as _i5.Future<void>);
+
+  @override
+  _i5.Future<bool> authenticate() => (super.noSuchMethod(
+        Invocation.method(
+          #authenticate,
+          [],
+        ),
+        returnValue: _i5.Future<bool>.value(false),
+      ) as _i5.Future<bool>);
+
+  @override
+  _i5.Future<bool> reconnect(_i11.PocketBaseConfig? newConfig) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #reconnect,
+          [newConfig],
+        ),
+        returnValue: _i5.Future<bool>.value(false),
+      ) as _i5.Future<bool>);
+
+  @override
+  _i5.Future<bool> testConnection(_i11.PocketBaseConfig? testConfig) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #testConnection,
+          [testConfig],
+        ),
+        returnValue: _i5.Future<bool>.value(false),
+      ) as _i5.Future<bool>);
+
+  @override
+  void saveNewSelectedSong(
+    String? id,
+    String? title,
+    String? interpret,
+    String? lyricsWithoutChords,
+    String? lyricsWithChords,
+  ) =>
+      super.noSuchMethod(
+        Invocation.method(
+          #saveNewSelectedSong,
+          [
+            id,
+            title,
+            interpret,
+            lyricsWithoutChords,
+            lyricsWithChords,
+          ],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void removeSelectedSong() => super.noSuchMethod(
+        Invocation.method(
+          #removeSelectedSong,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  _i5.Future<void> setQrLinks(List<_i14.QrLink>? links) => (super.noSuchMethod(
+        Invocation.method(
+          #setQrLinks,
+          [links],
+        ),
+        returnValue: _i5.Future<void>.value(),
+        returnValueForMissingStub: _i5.Future<void>.value(),
+      ) as _i5.Future<void>);
+
+  @override
+  _i5.Future<List<_i14.QrLink>?> getQrLinks() => (super.noSuchMethod(
+        Invocation.method(
+          #getQrLinks,
+          [],
+        ),
+        returnValue: _i5.Future<List<_i14.QrLink>?>.value(),
+      ) as _i5.Future<List<_i14.QrLink>?>);
+
+  @override
+  _i5.Future<_i12.Song?> getSongByUuid(String? uuid) => (super.noSuchMethod(
+        Invocation.method(
+          #getSongByUuid,
+          [uuid],
+        ),
+        returnValue: _i5.Future<_i12.Song?>.value(),
+      ) as _i5.Future<_i12.Song?>);
+
+  @override
+  _i5.Future<_i6.User?> getUserByName(String? name) => (super.noSuchMethod(
+        Invocation.method(
+          #getUserByName,
+          [name],
+        ),
+        returnValue: _i5.Future<_i6.User?>.value(),
+      ) as _i5.Future<_i6.User?>);
+
+  @override
+  _i5.Future<List<_i12.Song>> getListSongs() => (super.noSuchMethod(
+        Invocation.method(
+          #getListSongs,
+          [],
+        ),
+        returnValue: _i5.Future<List<_i12.Song>>.value(<_i12.Song>[]),
+      ) as _i5.Future<List<_i12.Song>>);
+
+  @override
+  _i5.Future<bool> addOrUpdateSong(_i12.Song? song) => (super.noSuchMethod(
+        Invocation.method(
+          #addOrUpdateSong,
+          [song],
+        ),
+        returnValue: _i5.Future<bool>.value(false),
+      ) as _i5.Future<bool>);
+
+  @override
+  _i5.Future<bool> deleteSong(String? songUuid) => (super.noSuchMethod(
+        Invocation.method(
+          #deleteSong,
+          [songUuid],
+        ),
+        returnValue: _i5.Future<bool>.value(false),
+      ) as _i5.Future<bool>);
+
+  @override
+  _i5.Future<List<_i13.Playlist>> getListPlaylists() => (super.noSuchMethod(
+        Invocation.method(
+          #getListPlaylists,
+          [],
+        ),
+        returnValue: _i5.Future<List<_i13.Playlist>>.value(<_i13.Playlist>[]),
+      ) as _i5.Future<List<_i13.Playlist>>);
+
+  @override
+  _i5.Future<_i13.Playlist?> getPlaylist(String? playlistUuid) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getPlaylist,
+          [playlistUuid],
+        ),
+        returnValue: _i5.Future<_i13.Playlist?>.value(),
+      ) as _i5.Future<_i13.Playlist?>);
+
+  @override
+  _i5.Future<bool> addOrUpdatePlaylist(_i13.Playlist? playlist) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #addOrUpdatePlaylist,
+          [playlist],
+        ),
+        returnValue: _i5.Future<bool>.value(false),
+      ) as _i5.Future<bool>);
+
+  @override
+  _i5.Future<bool> deletePlaylist(_i13.Playlist? playlist) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #deletePlaylist,
+          [playlist],
+        ),
+        returnValue: _i5.Future<bool>.value(false),
+      ) as _i5.Future<bool>);
+
+  @override
+  _i5.Future<List<_i6.User>> getListAppUsers() => (super.noSuchMethod(
+        Invocation.method(
+          #getListAppUsers,
+          [],
+        ),
+        returnValue: _i5.Future<List<_i6.User>>.value(<_i6.User>[]),
+      ) as _i5.Future<List<_i6.User>>);
+
+  @override
+  _i5.Future<bool> addOrUpdateAppUser(_i6.User? user) => (super.noSuchMethod(
+        Invocation.method(
+          #addOrUpdateAppUser,
+          [user],
+        ),
+        returnValue: _i5.Future<bool>.value(false),
+      ) as _i5.Future<bool>);
+
+  @override
+  _i5.Future<bool> deleteAppUser(_i6.User? user) => (super.noSuchMethod(
+        Invocation.method(
+          #deleteAppUser,
+          [user],
+        ),
+        returnValue: _i5.Future<bool>.value(false),
+      ) as _i5.Future<bool>);
+
+  @override
+  _i5.Future<List<String>> getListGroups() => (super.noSuchMethod(
+        Invocation.method(
+          #getListGroups,
+          [],
+        ),
+        returnValue: _i5.Future<List<String>>.value(<String>[]),
+      ) as _i5.Future<List<String>>);
+
+  @override
+  _i5.Future<bool> createGroup(String? groupName) => (super.noSuchMethod(
+        Invocation.method(
+          #createGroup,
+          [groupName],
+        ),
+        returnValue: _i5.Future<bool>.value(false),
+      ) as _i5.Future<bool>);
+
+  @override
+  _i5.Future<bool> deleteGroup(String? groupName) => (super.noSuchMethod(
+        Invocation.method(
+          #deleteGroup,
+          [groupName],
+        ),
+        returnValue: _i5.Future<bool>.value(false),
+      ) as _i5.Future<bool>);
+
+  @override
+  _i5.Future<bool> updateGroup(
+    String? oldName,
+    String? newName,
+  ) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #updateGroup,
+          [
+            oldName,
+            newName,
+          ],
+        ),
+        returnValue: _i5.Future<bool>.value(false),
+      ) as _i5.Future<bool>);
+
+  @override
+  _i5.Future<bool> addGroupsList(List<String>? groups) => (super.noSuchMethod(
+        Invocation.method(
+          #addGroupsList,
+          [groups],
+        ),
+        returnValue: _i5.Future<bool>.value(false),
+      ) as _i5.Future<bool>);
+
+  @override
+  _i5.Future<String?> uploadFile(
+    String? fileName,
+    List<int>? fileBytes, {
+    String? contentType,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #uploadFile,
+          [
+            fileName,
+            fileBytes,
+          ],
+          {#contentType: contentType},
+        ),
+        returnValue: _i5.Future<String?>.value(),
+      ) as _i5.Future<String?>);
+
+  @override
+  _i5.Future<int> getServerSongCount() => (super.noSuchMethod(
+        Invocation.method(
+          #getServerSongCount,
+          [],
+        ),
+        returnValue: _i5.Future<int>.value(0),
+      ) as _i5.Future<int>);
+
+  @override
+  _i5.Future<int> getServerPlaylistCount() => (super.noSuchMethod(
+        Invocation.method(
+          #getServerPlaylistCount,
+          [],
+        ),
+        returnValue: _i5.Future<int>.value(0),
+      ) as _i5.Future<int>);
+
+  @override
+  _i5.Future<int> getServerUserCount() => (super.noSuchMethod(
+        Invocation.method(
+          #getServerUserCount,
+          [],
+        ),
+        returnValue: _i5.Future<int>.value(0),
+      ) as _i5.Future<int>);
+
+  @override
+  _i5.Future<int> getServerGroupCount() => (super.noSuchMethod(
+        Invocation.method(
+          #getServerGroupCount,
+          [],
+        ),
+        returnValue: _i5.Future<int>.value(0),
+      ) as _i5.Future<int>);
+
+  @override
+  _i5.Future<int> uploadAllSongs(List<_i12.Song>? songs) => (super.noSuchMethod(
+        Invocation.method(
+          #uploadAllSongs,
+          [songs],
+        ),
+        returnValue: _i5.Future<int>.value(0),
+      ) as _i5.Future<int>);
+
+  @override
+  _i5.Future<int> uploadAllPlaylists(List<_i13.Playlist>? playlists) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #uploadAllPlaylists,
+          [playlists],
+        ),
+        returnValue: _i5.Future<int>.value(0),
+      ) as _i5.Future<int>);
+
+  @override
+  _i5.Future<int> uploadAllUsers(List<_i6.User>? users) => (super.noSuchMethod(
+        Invocation.method(
+          #uploadAllUsers,
+          [users],
+        ),
+        returnValue: _i5.Future<int>.value(0),
+      ) as _i5.Future<int>);
+
+  @override
+  _i5.Future<int> uploadAllGroups(List<String>? groups) => (super.noSuchMethod(
+        Invocation.method(
+          #uploadAllGroups,
+          [groups],
+        ),
+        returnValue: _i5.Future<int>.value(0),
+      ) as _i5.Future<int>);
+
+  @override
+  void dispose() => super.noSuchMethod(
+        Invocation.method(
+          #dispose,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
 }

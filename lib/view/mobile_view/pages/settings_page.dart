@@ -1,3 +1,5 @@
+import 'package:default_project/providers/pocketbase_provider.dart';
+import 'package:default_project/services/constants.dart';
 import 'package:default_project/view/mobile_view/widgets/settings_ui/settings_list.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -209,6 +211,36 @@ class _SettingsPageMobileState extends State<SettingsPageMobile> {
                     ),
                   ],
                 ),
+                SettingsSection(
+                  title: 'pbSettingsTitle'.tr(),
+                  tiles: [
+                    SettingsTile(
+                      title: 'pbUrl'.tr(),
+                      onPressed: (BuildContext context) {
+                        _showPbSettingsDialog(context);
+                      },
+                      iconData: Icons.dns,
+                      value: context.read<SettingsBloc>().settingsRepository.pocketBaseProvider.config?.pocketbaseUrl ?? '',
+                    ),
+                    SettingsTile(
+                      title: 'pbEmail'.tr(),
+                      onPressed: (BuildContext context) {
+                        _showPbSettingsDialog(context);
+                      },
+                      iconData: Icons.email,
+                      value: context.read<SettingsBloc>().settingsRepository.pocketBaseProvider.config?.email ?? '',
+                    ),
+                    SettingsTile(
+                      title: 'serverStatus'.tr(),
+                      onPressed: (BuildContext context) {
+                        _showPbSettingsDialog(context);
+                      },
+                      iconData: context.read<SettingsBloc>().settingsRepository.pocketBaseProvider.isConnected ? Icons.cloud_done : Icons.cloud_off,
+                      value: context.read<SettingsBloc>().settingsRepository.pocketBaseProvider.isConnected ? 'pbConnectionSuccess'.tr() : 'pbConnectionFailed'.tr(),
+                      iconColor: context.read<SettingsBloc>().settingsRepository.pocketBaseProvider.isConnected ? AppColor.alertSuccessColor : AppColor.alertErrorColor,
+                    ),
+                  ],
+                ),
               ],
             );
           },
@@ -366,6 +398,110 @@ class _SettingsPageMobileState extends State<SettingsPageMobile> {
               ),
             ],
           ),
+        );
+      },
+    );
+  }
+
+  void _showPbSettingsDialog(BuildContext context) {
+    final pbProvider = context.read<SettingsBloc>().settingsRepository.pocketBaseProvider;
+    final urlController = TextEditingController(text: pbProvider.config?.pocketbaseUrl ?? '');
+    final emailController = TextEditingController(text: pbProvider.config?.email ?? '');
+    final passwordController = TextEditingController(text: pbProvider.config?.password ?? '');
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            return AlertDialog(
+              title: Text('pbSettingsTitle'.tr()),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: urlController,
+                      decoration: InputDecoration(
+                        labelText: 'pbUrl'.tr(),
+                        hintText: 'http://127.0.0.1:8090',
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.dns),
+                      ),
+                      keyboardType: TextInputType.url,
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: emailController,
+                      decoration: InputDecoration(
+                        labelText: 'pbEmail'.tr(),
+                        hintText: 'admin@example.com',
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.email),
+                      ),
+                      keyboardType: TextInputType.emailAddress,
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: passwordController,
+                      decoration: InputDecoration(
+                        labelText: 'pbPassword'.tr(),
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.lock),
+                      ),
+                      obscureText: true,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: Text('cancel'.tr()),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    final testConfig = PocketBaseConfig(
+                      pocketbaseUrl: urlController.text.trim(),
+                      email: emailController.text.trim(),
+                      password: passwordController.text,
+                    );
+                    final success = await pbProvider.testConnection(testConfig);
+                    if (ctx.mounted) {
+                      ScaffoldMessenger.of(ctx).showSnackBar(
+                        SnackBar(
+                          content: Text(success ? 'pbConnectionSuccess'.tr() : 'pbConnectionFailed'.tr()),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  },
+                  child: Text('pbTestConnection'.tr()),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    final newConfig = PocketBaseConfig(
+                      pocketbaseUrl: urlController.text.trim(),
+                      email: emailController.text.trim(),
+                      password: passwordController.text,
+                    );
+                    final success = await pbProvider.reconnect(newConfig);
+                    if (ctx.mounted) {
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(success ? 'pbSettingsSaved'.tr() : 'pbConnectionFailed'.tr()),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                      setState(() {}); // Refresh settings page
+                    }
+                  },
+                  child: Text('pbSaveSettings'.tr()),
+                ),
+              ],
+            );
+          },
         );
       },
     );

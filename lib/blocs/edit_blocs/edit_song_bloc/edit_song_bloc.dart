@@ -508,7 +508,7 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
           song.generateId();
         }
         await songsRepository.updateSong(song);
-        await songsRepository.updateSongsFromFirebase();
+        await songsRepository.updateSongsFromServer();
       }
       emit(state.copyWith(currentEditSong: song, selectedChord: -1, isCurrentSongModified: false, listModifications: const []));
     } else if (event.typeApp == 'tablet') {
@@ -535,7 +535,7 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
         song = song.copyWith(groups: state.currentGroups);
       }
       await songsRepository.updateSong(song);
-      await songsRepository.updateSongsFromFirebase();
+      await songsRepository.updateSongsFromServer();
     }
   }
 

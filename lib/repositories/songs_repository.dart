@@ -6,23 +6,13 @@ import 'package:collection/collection.dart';
 import 'package:logger_pkg/logger_pkg.dart';
 
 import '../model/song/song.dart';
-import '../model/update_songlist_data.dart';
-import '../providers/firebase_provider.dart';
 import '../providers/hive_provider.dart';
+import '../providers/pocketbase_provider.dart';
 import '../services/auxiliary_functions.dart';
-
-Map<String, dynamic> _deepCastMap(Map data) {
-  return data.map((key, value) {
-    if (value is Map) {
-      return MapEntry(key.toString(), _deepCastMap(value));
-    }
-    return MapEntry(key.toString(), value);
-  });
-}
 
 class SongsRepository {
   final HiveProvider _hiveProvider;
-  final FirebaseProvider _firebaseProvider;
+  final PocketBaseProvider _pocketBaseProvider;
 
   final selectSongController = StreamController<String>.broadcast();
   Stream<String> get selectSongData => selectSongController.stream.asBroadcastStream();
@@ -30,7 +20,6 @@ class SongsRepository {
   final isChangedListSongController = StreamController<int>.broadcast();
   Stream<int> get isChangedListSong => isChangedListSongController.stream.asBroadcastStream();
   int isChangedListSongValue = 0;
-  late UpdateSongListData updateSongListData;
 
   final _songs = <Song>[];
   String selectedSongId = '';
@@ -47,58 +36,91 @@ class SongsRepository {
 
   SongsRepository({
     required HiveProvider hiveProvider,
-    required FirebaseProvider firebaseProvider,
+    required PocketBaseProvider pocketBaseProvider,
   })  : _hiveProvider = hiveProvider,
-        _firebaseProvider = firebaseProvider {
+        _pocketBaseProvider = pocketBaseProvider {
     _init();
   }
 
   void _init() {
-    updateSongListData = _hiveProvider.getUpdateSongListData('updateSongListData') ?? UpdateSongListData(DateTime(1900), {});
-
-    // Listen to selected song changes (works on all platforms including Windows)
-    _firebaseProvider.selectedSongStream.listen((data) {
+    // Listen to selected song changes via PocketBase realtime
+    _pocketBaseProvider.selectedSongStream.listen((data) {
       if (data != null && data['song'] != null) {
         selectSongController.sink.add(data['song'].toString());
         selectedSongId = data['song'].toString();
       }
     });
 
-    // Listen to song list update notifications (works on all platforms including Windows)
-    _firebaseProvider.updateSongListStream.listen((data) {
-      if (data != null) {
-        try {
-          final castedData = _deepCastMap(data);
-          final newUpdateSongListData = UpdateSongListData.fromJson(castedData);
-          if (newUpdateSongListData.lastUpdate.isAfter(updateSongListData.lastUpdate)) {
-            updateDataByUpdateSongListData(newUpdateSongListData);
-          }
-        } catch (e) {
-          logger.e('Error update song list from firebase: $e');
-        }
-      }
+    // Listen to song change events via realtime_state timestamp comparison
+    _pocketBaseProvider.songChangeStream.listen((event) {
+      _handleSongRealtimeEvent(event);
+    });
+
+    // Listen to group change events via realtime_state timestamp comparison
+    _pocketBaseProvider.groupChangeStream.listen((event) {
+      _handleGroupRealtimeEvent(event);
     });
   }
 
-  void updateDataByUpdateSongListData(UpdateSongListData newUpdateSongListData) {
-    updateSongListData = newUpdateSongListData;
-    _hiveProvider.setUpdateSongListData('updateSongListData', updateSongListData);
-    updateSongsFromFirebase();
+  void _handleSongRealtimeEvent(RealtimeChangeEvent<Song> event) {
+    if (event.isDelete) {
+      _songs.removeWhere((s) => s.id == event.recordId);
+      logger.i('Realtime: song deleted id=${event.recordId}');
+    } else if (event.isCreate && event.record != null) {
+      final existing = _songs.firstWhereOrNull((s) => s.id == event.record!.id);
+      if (existing == null) {
+        _songs.add(event.record!);
+        logger.i('Realtime: song created id=${event.record!.id} updated=${event.serverUpdated}');
+      }
+    } else if (event.isUpdate && event.record != null) {
+      final index = _songs.indexWhere((s) => s.id == event.record!.id);
+      if (index >= 0) {
+        _songs[index] = event.record!;
+        logger.i('Realtime: song updated id=${event.record!.id} updated=${event.serverUpdated}');
+      } else {
+        _songs.add(event.record!);
+        logger.i('Realtime: song updated (new) id=${event.record!.id} updated=${event.serverUpdated}');
+      }
+    }
+    isChangedListSongController.sink.add(isChangedListSongValue++);
   }
 
-  Future<void> loadSongsFromFirebase() async {
-    final newSongs = await _firebaseProvider.getListSongsFromFirestore();
+  void _handleGroupRealtimeEvent(RealtimeChangeEvent<String> event) {
+    if (event.isDelete) {
+      listAllGroups.remove(event.recordId);
+      logger.i('Realtime: group deleted name=${event.recordId}');
+    } else if (event.isCreate && event.record != null) {
+      if (!listAllGroups.contains(event.record)) {
+        listAllGroups.add(event.record!);
+        listAllGroups.sort();
+        logger.i('Realtime: group created name=${event.record}');
+      }
+    } else if (event.isUpdate && event.record != null) {
+      // For groups, updates mean the name might have changed — handled by delete + create
+      if (!listAllGroups.contains(event.record)) {
+        listAllGroups.add(event.record!);
+        listAllGroups.sort();
+        logger.i('Realtime: group updated name=${event.record}');
+      }
+    }
+    isChangedListSongController.sink.add(isChangedListSongValue++);
+  }
+
+  Future<void> loadSongsFromServer() async {
+    final newSongs = await _pocketBaseProvider.getListSongs();
     for (Song song in newSongs) {
       if (_songs.firstWhereOrNull((val) => val.id == song.id) == null) {
         _songs.add(song);
       } else {
-        //TODO: update song from firebase;
+        int index = _songs.indexWhere((element) => element.id == song.id);
+        _songs.removeWhere((element) => element.id == song.id);
+        _songs.insert(index, song);
       }
     }
   }
 
-  Future<void> updateSongsFromFirebase() async {
-    final newSongs = await _firebaseProvider.getListSongsFromFirestore();
+  Future<void> updateSongsFromServer() async {
+    final newSongs = await _pocketBaseProvider.getListSongs();
     for (Song song in newSongs) {
       if (_songs.firstWhereOrNull((val) => val.id == song.id) == null) {
         _songs.add(song);
@@ -116,12 +138,12 @@ class SongsRepository {
   }
 
   Future<void> loadAllGroups() async {
-    listAllGroups = await _firebaseProvider.getListSongGroupFromFirestore();
+    listAllGroups = await _pocketBaseProvider.getListGroups();
   }
 
   Future<bool> deleteSong(String id) async {
     try {
-      final result = await _firebaseProvider.deleteSong(id);
+      final result = await _pocketBaseProvider.deleteSong(id);
       if (result == false) {
         return false;
       }
@@ -135,17 +157,11 @@ class SongsRepository {
   void selectSong(String songId, String title, String interpret, String lyricsWithoutChords, String lyricsWithChords) {
     if (selectedSongId == songId) {
       selectedSongId = '';
-      _firebaseProvider.removeSelectedSong();
+      _pocketBaseProvider.removeSelectedSong();
       return;
     }
     selectedSongId = songId;
-    // Saved song (has ID) → send only id, title, interpret (no lyrics)
-    // Web/unsaved song (empty ID) → send full lyrics with and without chords
-    if (songId.isNotEmpty) {
-      _firebaseProvider.saveNewSelectedSong(songId, title, interpret, '', '');
-    } else {
-      _firebaseProvider.saveNewSelectedSong(songId, title, interpret, lyricsWithoutChords, lyricsWithChords);
-    }
+    _pocketBaseProvider.saveNewSelectedSong(songId, title, interpret, lyricsWithoutChords, lyricsWithChords);
   }
 
   List<Song> getSongByFilter(String filterSong) {
@@ -192,23 +208,8 @@ class SongsRepository {
     return false;
   }
 
-  UpdateSongListData removeUpdateDataOlderThanThreeDays(UpdateSongListData updateSongListData) {
-    final newMapIdSongs = <String, DateTime>{};
-    updateSongListData.mapIdSongs.forEach((key, value) {
-      if (value.isAfter(DateTime.now().subtract(const Duration(days: 3)))) {
-        newMapIdSongs[key] = value;
-      }
-    });
-    return UpdateSongListData(updateSongListData.lastUpdate, newMapIdSongs);
-  }
-
   Future<void> updateSong(Song song) async {
-    await _firebaseProvider.addSongToFirebase(song);
-    updateSongListData.lastUpdate = DateTime.now();
-    updateSongListData.mapIdSongs[song.id] = DateTime.now();
-    updateSongListData = removeUpdateDataOlderThanThreeDays(updateSongListData);
-    _hiveProvider.setUpdateSongListData('updateSongListData', updateSongListData);
-    await _firebaseProvider.setUpdateSongList(updateSongListData);
+    await _pocketBaseProvider.addOrUpdateSong(song);
     _songs.removeWhere((element) => element.id == song.id);
     _songs.add(song.copyWith());
   }
@@ -229,32 +230,37 @@ class SongsRepository {
   }
 
   Future<void> createGroup(String group) async {
-    final result = await _firebaseProvider.createNewGroup(group);
+    final result = await _pocketBaseProvider.createGroup(group);
     if (result) {
       listAllGroups = [];
-      listAllGroups = await _firebaseProvider.getListSongGroupFromFirestore();
+      listAllGroups = await _pocketBaseProvider.getListGroups();
     } else {
       logger.e('Error create group');
     }
   }
 
   Future<void> deleteGroup(String group) async {
-    final result = await _firebaseProvider.deleteGroup(group);
+    final result = await _pocketBaseProvider.deleteGroup(group);
     if (result) {
       listAllGroups = [];
-      listAllGroups = await _firebaseProvider.getListSongGroupFromFirestore();
+      listAllGroups = await _pocketBaseProvider.getListGroups();
     } else {
       logger.e('Error delete group');
     }
   }
 
   Future<void> updateGroup(String oldGroup, String newGroup) async {
-    final result = await _firebaseProvider.updateGroup(oldGroup, newGroup);
+    final result = await _pocketBaseProvider.updateGroup(oldGroup, newGroup);
     if (result) {
       listAllGroups = [];
-      listAllGroups = await _firebaseProvider.getListSongGroupFromFirestore();
+      listAllGroups = await _pocketBaseProvider.getListGroups();
     } else {
       logger.e('Error update group');
     }
+  }
+
+  /// Upload a file (e.g., sheet music image) and return the public URL.
+  Future<String?> uploadFile(String fileName, List<int> fileBytes) async {
+    return _pocketBaseProvider.uploadFile(fileName, fileBytes);
   }
 }

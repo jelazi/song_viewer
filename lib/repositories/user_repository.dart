@@ -5,35 +5,66 @@ import 'package:default_project/repositories/settings_repository.dart';
 import 'package:logger_pkg/logger_pkg.dart';
 
 import '../model/user.dart';
-import '../providers/firebase_provider.dart';
 import '../providers/hive_provider.dart';
+import '../providers/pocketbase_provider.dart';
 
 class UsersRepository {
   final HiveProvider _hiveProvider;
-  final FirebaseProvider _firebaseProvider;
+  final PocketBaseProvider _pocketBaseProvider;
   final SettingsRepository settingsRepository;
   TypeUser currentTypeUser = TypeUser.none;
 
   final userController = StreamController<TypeUser>.broadcast();
   Stream<TypeUser> get userStream => userController.stream.asBroadcastStream();
 
+  final isChangedUsersController = StreamController<int>.broadcast();
+  Stream<int> get isChangedUsers => isChangedUsersController.stream.asBroadcastStream();
+  int _isChangedUsersValue = 0;
+
   List<User> users = <User>[];
 
   UsersRepository({
     required HiveProvider hiveProvider,
-    required FirebaseProvider firebaseProvider,
+    required PocketBaseProvider pocketBaseProvider,
     required this.settingsRepository,
   })  : _hiveProvider = hiveProvider,
-        _firebaseProvider = firebaseProvider;
+        _pocketBaseProvider = pocketBaseProvider {
+    _init();
+  }
 
-  Future<void> loadUsersFromFirebase() async {
-    try {
-      final _users = await _firebaseProvider.userCollection.get();
-      users = <User>[];
-      for (var user in _users.docs) {
-        final userObject = User.fromJson(user.data());
-        users.add(userObject);
+  void _init() {
+    // Listen to granular user change events via PocketBase realtime
+    _pocketBaseProvider.userChangeStream.listen((event) {
+      _handleUserRealtimeEvent(event);
+    });
+  }
+
+  void _handleUserRealtimeEvent(RealtimeChangeEvent<User> event) {
+    if (event.isDelete) {
+      users.removeWhere((u) => u.name == event.recordId);
+      logger.i('Realtime: user deleted name=${event.recordId}');
+    } else if (event.isCreate && event.record != null) {
+      final existing = users.firstWhereOrNull((u) => u.name == event.record!.name);
+      if (existing == null) {
+        users.add(event.record!);
+        logger.i('Realtime: user created name=${event.record!.name} updated=${event.serverUpdated}');
       }
+    } else if (event.isUpdate && event.record != null) {
+      final index = users.indexWhere((u) => u.name == event.record!.name);
+      if (index >= 0) {
+        users[index] = event.record!;
+        logger.i('Realtime: user updated name=${event.record!.name} updated=${event.serverUpdated}');
+      } else {
+        users.add(event.record!);
+        logger.i('Realtime: user updated (new) name=${event.record!.name} updated=${event.serverUpdated}');
+      }
+    }
+    isChangedUsersController.sink.add(_isChangedUsersValue++);
+  }
+
+  Future<void> loadUsersFromServer() async {
+    try {
+      users = await _pocketBaseProvider.getListAppUsers();
     } catch (e) {
       logger.e(e);
     }
@@ -45,14 +76,9 @@ class UsersRepository {
     userController.sink.add(TypeUser.none);
   }
 
-  Future<void> updateListUsersFromFirebase() async {
+  Future<void> updateListUsersFromServer() async {
     try {
-      final _users = await _firebaseProvider.userCollection.get();
-      users = <User>[];
-      for (var user in _users.docs) {
-        final userObject = User.fromJson(user.data());
-        users.add(userObject);
-      }
+      users = await _pocketBaseProvider.getListAppUsers();
     } catch (e) {
       logger.e(e);
     }
@@ -60,8 +86,7 @@ class UsersRepository {
 
   Future<bool> createUser(User newUser) async {
     try {
-      await _firebaseProvider.userCollection.doc(newUser.name).set(newUser.toJson());
-      return true;
+      return await _pocketBaseProvider.addOrUpdateAppUser(newUser);
     } catch (e) {
       logger.e(e);
       return false;
@@ -70,8 +95,7 @@ class UsersRepository {
 
   Future<bool> deleteUser(User user) async {
     try {
-      await _firebaseProvider.userCollection.doc(user.name).delete();
-      return true;
+      return await _pocketBaseProvider.deleteAppUser(user);
     } catch (e) {
       logger.e(e);
       return false;
@@ -80,8 +104,7 @@ class UsersRepository {
 
   Future<bool> updateUser(User newUser) async {
     try {
-      await _firebaseProvider.userCollection.doc(newUser.name).update(newUser.toJson());
-      return true;
+      return await _pocketBaseProvider.addOrUpdateAppUser(newUser);
     } catch (e) {
       logger.e(e);
       return false;

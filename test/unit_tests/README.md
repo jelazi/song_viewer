@@ -7,7 +7,6 @@ Tento adresář obsahuje unit testy pro všechny vrstvy aplikace Songs Viewer.
 ```
 unit_tests/
 ├── providers/          # Testy pro poskytovatele dat
-│   ├── firebase_provider_test.dart
 │   ├── hive_provider_test.dart
 │   └── web_provider_test.dart
 ├── repositories/       # Testy pro repozitáře
@@ -50,7 +49,7 @@ flutter test test/unit_tests/blocs/
 ### Spuštění konkrétního testovacího souboru
 
 ```bash
-flutter test test/unit_tests/providers/firebase_provider_test.dart
+flutter test test/unit_tests/providers/hive_provider_test.dart
 ```
 
 ### Spuštění s coverage
@@ -102,13 +101,12 @@ flutter test test/unit_tests/
 - **flutter_test**: Základní testovací framework pro Flutter
 - **mockito**: Knihovna pro vytváření mock objektů
 - **build_runner**: Generování kódu pro mockito
-- **fake_cloud_firestore**: Fake implementace Cloud Firestore pro testy
-- **firebase_auth_mocks**: Mock objekty pro Firebase Authentication
+- **pocketbase**: PocketBase SDK pro komunikaci se serverem
 
 ### Testovací vzory
 
 #### 1. Provider testy
-- Testují přímou interakci s datovými zdroji (Firebase, Hive, Web API)
+- Testují přímou interakci s datovými zdroji (PocketBase, Hive, Web API)
 - Používají mock objekty pro izolaci závislostí
 - Kontrolují správné volání API a zpracování odpovědí
 
@@ -168,7 +166,7 @@ flutter clean
 flutter pub get
 ```
 
-### Chyby při inicializaci Firebase v testech
+### Chyby při inicializaci PocketBase v testech
 
 Ujistěte se, že používáte `TestWidgetsFlutterBinding.ensureInitialized()` v `setUp()`.
 

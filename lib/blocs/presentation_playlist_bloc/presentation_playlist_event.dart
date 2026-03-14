@@ -71,7 +71,7 @@ class ClearPresentationSelection extends PresentationPlaylistEvent {
   const ClearPresentationSelection();
 }
 
-/// Save the current presentation playlist to Firebase
+/// Save the current presentation playlist to server
 class SavePresentationPlaylist extends PresentationPlaylistEvent {
   final String name;
   final String? playlistId;
@@ -82,7 +82,7 @@ class SavePresentationPlaylist extends PresentationPlaylistEvent {
   List<Object?> get props => [name, playlistId];
 }
 
-/// Load a playlist from Firebase into the presentation playlist
+/// Load a playlist from server into the presentation playlist
 class LoadPresentationPlaylist extends PresentationPlaylistEvent {
   final Playlist playlist;
 

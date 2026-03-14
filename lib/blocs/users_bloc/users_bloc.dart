@@ -30,11 +30,16 @@ class UsersBloc extends Bloc<UsersEvent, UsersState> {
     usersRepository.userStream.listen((event) {
       add(UpdateUsers());
     });
+
+    // Listen to realtime user changes from PocketBase
+    usersRepository.isChangedUsers.listen((_) {
+      add(UpdateUsers());
+    });
   }
 
   void _initializeUsers(_InitializeUsers event, Emitter<UsersState> emit) async {
     final state = this.state;
-    await usersRepository.loadUsersFromFirebase();
+    await usersRepository.loadUsersFromServer();
     User? currentUser = usersRepository.getCurrentUser();
     emit(state.copyWith(
       users: usersRepository.users,
@@ -44,7 +49,7 @@ class UsersBloc extends Bloc<UsersEvent, UsersState> {
 
   void _updateUsers(UpdateUsers event, Emitter<UsersState> emit) async {
     final state = this.state;
-    await usersRepository.updateListUsersFromFirebase();
+    await usersRepository.updateListUsersFromServer();
 
     emit(state.copyWith(
       users: usersRepository.users,
@@ -75,21 +80,21 @@ class UsersBloc extends Bloc<UsersEvent, UsersState> {
   void _addUser(AddUser event, Emitter<UsersState> emit) async {
     final state = this.state;
     await usersRepository.createUser(event.user);
-    await usersRepository.updateListUsersFromFirebase();
+    await usersRepository.updateListUsersFromServer();
     emit(state.copyWith(users: List.from(usersRepository.users)));
   }
 
   void _deleteUser(DeleteUser event, Emitter<UsersState> emit) async {
     final state = this.state;
     await usersRepository.deleteUser(event.user);
-    await usersRepository.updateListUsersFromFirebase();
+    await usersRepository.updateListUsersFromServer();
     emit(state.copyWith(users: List.from(usersRepository.users)));
   }
 
   void _updateUser(UpdateUser event, Emitter<UsersState> emit) async {
     final state = this.state;
     await usersRepository.updateUser(event.user);
-    await usersRepository.updateListUsersFromFirebase();
+    await usersRepository.updateListUsersFromServer();
     emit(state.copyWith(users: List.from(usersRepository.users)));
   }
 }

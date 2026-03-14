@@ -1,54 +1,63 @@
+import 'dart:async';
+
 import 'package:default_project/model/playlist.dart';
 import 'package:default_project/model/song/song.dart';
-import 'package:default_project/providers/firebase_provider.dart';
 import 'package:default_project/providers/hive_provider.dart';
+import 'package:default_project/providers/pocketbase_provider.dart';
 import 'package:default_project/repositories/playlist_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
-@GenerateMocks([FirebaseProvider, HiveProvider])
+@GenerateMocks([PocketBaseProvider, HiveProvider])
 import 'playlist_repository_test.mocks.dart';
 
 void main() {
   group('PlaylistRepository', () {
     late PlaylistRepository playlistRepository;
-    late MockFirebaseProvider mockFirebaseProvider;
+    late MockPocketBaseProvider mockPocketBaseProvider;
     late MockHiveProvider mockHiveProvider;
+    late StreamController<RealtimeChangeEvent<Playlist>> playlistChangeController;
 
     setUp(() {
-      mockFirebaseProvider = MockFirebaseProvider();
+      mockPocketBaseProvider = MockPocketBaseProvider();
       mockHiveProvider = MockHiveProvider();
+      playlistChangeController = StreamController<RealtimeChangeEvent<Playlist>>.broadcast();
 
       // Mock default behavior
-      when(mockFirebaseProvider.getListPlaylistsFromFirestore()).thenAnswer((_) async => []);
+      when(mockPocketBaseProvider.getListPlaylists()).thenAnswer((_) async => []);
+      when(mockPocketBaseProvider.playlistChangeStream).thenAnswer((_) => playlistChangeController.stream);
 
       playlistRepository = PlaylistRepository(
         hiveProvider: mockHiveProvider,
-        firebaseProvider: mockFirebaseProvider,
+        pocketBaseProvider: mockPocketBaseProvider,
       );
     });
 
+    tearDown(() {
+      playlistChangeController.close();
+    });
+
     group('Initialization', () {
-      test('should load playlists from Firebase on init', () async {
+      test('should load playlists from server on init', () async {
         final testPlaylists = [
           Playlist(id: '1', name: 'Playlist 1'),
           Playlist(id: '2', name: 'Playlist 2'),
         ];
 
-        when(mockFirebaseProvider.getListPlaylistsFromFirestore()).thenAnswer((_) async => testPlaylists);
+        when(mockPocketBaseProvider.getListPlaylists()).thenAnswer((_) async => testPlaylists);
+        when(mockPocketBaseProvider.playlistChangeStream).thenAnswer((_) => playlistChangeController.stream);
 
         playlistRepository = PlaylistRepository(
           hiveProvider: mockHiveProvider,
-          firebaseProvider: mockFirebaseProvider,
+          pocketBaseProvider: mockPocketBaseProvider,
         );
 
         // Wait for async init
         await Future.delayed(const Duration(milliseconds: 100));
 
-        // Verify that getListPlaylistsFromFirestore was called at least once
-        // (may be called in setUp as well)
-        verify(mockFirebaseProvider.getListPlaylistsFromFirestore()).called(greaterThanOrEqualTo(1));
+        // Verify that getListPlaylists was called at least once
+        verify(mockPocketBaseProvider.getListPlaylists()).called(greaterThanOrEqualTo(1));
       });
     });
 
@@ -73,19 +82,19 @@ void main() {
       test('should successfully save new playlist', () async {
         final playlist = Playlist(id: '1', name: 'Test Playlist');
 
-        when(mockFirebaseProvider.addPlaylistToFirebase(playlist)).thenAnswer((_) async => true);
+        when(mockPocketBaseProvider.addOrUpdatePlaylist(playlist)).thenAnswer((_) async => true);
 
         final result = await playlistRepository.savePlaylist(playlist);
 
         expect(result, isTrue);
         expect(playlistRepository.playlists, contains(playlist));
-        verify(mockFirebaseProvider.addPlaylistToFirebase(playlist)).called(1);
+        verify(mockPocketBaseProvider.addOrUpdatePlaylist(playlist)).called(1);
       });
 
-      test('should return false when Firebase fails', () async {
+      test('should return false when server fails', () async {
         final playlist = Playlist(id: '1', name: 'Test Playlist');
 
-        when(mockFirebaseProvider.addPlaylistToFirebase(playlist)).thenAnswer((_) async => false);
+        when(mockPocketBaseProvider.addOrUpdatePlaylist(playlist)).thenAnswer((_) async => false);
 
         final result = await playlistRepository.savePlaylist(playlist);
 
@@ -96,7 +105,7 @@ void main() {
       test('should update existing playlist', () async {
         final playlist = Playlist(id: '1', name: 'Original Name');
 
-        when(mockFirebaseProvider.addPlaylistToFirebase(any)).thenAnswer((_) async => true);
+        when(mockPocketBaseProvider.addOrUpdatePlaylist(any)).thenAnswer((_) async => true);
 
         // First add playlist
         await playlistRepository.savePlaylist(playlist);
@@ -114,7 +123,7 @@ void main() {
         final playlist = Playlist(id: '1', name: 'Test Playlist');
         final song = Song(id: 'song1', title: 'Test Song', lyrics: 'lyrics');
 
-        when(mockFirebaseProvider.addPlaylistToFirebase(playlist)).thenAnswer((_) async => true);
+        when(mockPocketBaseProvider.addOrUpdatePlaylist(playlist)).thenAnswer((_) async => true);
 
         playlist.addSong(song);
         final result = await playlistRepository.savePlaylist(playlist);
@@ -128,8 +137,8 @@ void main() {
       test('should successfully delete playlist', () async {
         final playlist = Playlist(id: '1', name: 'Test Playlist');
 
-        when(mockFirebaseProvider.addPlaylistToFirebase(playlist)).thenAnswer((_) async => true);
-        when(mockFirebaseProvider.deletePlaylist(playlist)).thenAnswer((_) async => true);
+        when(mockPocketBaseProvider.addOrUpdatePlaylist(playlist)).thenAnswer((_) async => true);
+        when(mockPocketBaseProvider.deletePlaylist(playlist)).thenAnswer((_) async => true);
 
         // First add playlist
         await playlistRepository.savePlaylist(playlist);
@@ -140,14 +149,14 @@ void main() {
 
         expect(result, isTrue);
         expect(playlistRepository.playlists, isNot(contains(playlist)));
-        verify(mockFirebaseProvider.deletePlaylist(playlist)).called(1);
+        verify(mockPocketBaseProvider.deletePlaylist(playlist)).called(1);
       });
 
-      test('should return false when Firebase delete fails', () async {
+      test('should return false when server delete fails', () async {
         final playlist = Playlist(id: '1', name: 'Test Playlist');
 
-        when(mockFirebaseProvider.addPlaylistToFirebase(playlist)).thenAnswer((_) async => true);
-        when(mockFirebaseProvider.deletePlaylist(playlist)).thenAnswer((_) async => false);
+        when(mockPocketBaseProvider.addOrUpdatePlaylist(playlist)).thenAnswer((_) async => true);
+        when(mockPocketBaseProvider.deletePlaylist(playlist)).thenAnswer((_) async => false);
 
         // First add playlist
         await playlistRepository.savePlaylist(playlist);
@@ -162,7 +171,7 @@ void main() {
       test('should handle deleting non-existent playlist', () async {
         final playlist = Playlist(id: '999', name: 'Non-existent');
 
-        when(mockFirebaseProvider.deletePlaylist(playlist)).thenAnswer((_) async => true);
+        when(mockPocketBaseProvider.deletePlaylist(playlist)).thenAnswer((_) async => true);
 
         final result = await playlistRepository.deletePlaylist(playlist);
 

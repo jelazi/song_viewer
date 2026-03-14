@@ -7,7 +7,6 @@ list(APPEND FLUTTER_PLUGIN_LIST
   desktop_multi_window
   firebase_auth
   firebase_core
-  firebase_storage
   screen_retriever_windows
   share_plus
   url_launcher_windows

@@ -4,7 +4,6 @@ import 'dart:typed_data';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../../blocs/export_blocs.dart';
@@ -301,40 +300,29 @@ class _EditSheetsBodyState extends State<EditSheetsBody> {
       }
       if (fileBytes == null) return;
 
-      final songId = context.read<EditSongBloc>().state.currentEditSong.id;
       final fileName = '${DateTime.now().millisecondsSinceEpoch}_${file.name}';
-      final storagePath = 'songs/$songId/sheets/$fileName';
 
       setState(() {
         _isUploading = true;
         _uploadStatus = 'Nahrávám...';
       });
 
-      final storageRef = FirebaseStorage.instance.ref().child(storagePath);
-      final metadata = SettableMetadata(
-        contentType: 'image/${file.extension ?? 'png'}',
-      );
-      final uploadTask = storageRef.putData(fileBytes, metadata);
+      final downloadUrl = await context.read<EditSongBloc>().songsRepository.uploadFile(fileName, fileBytes);
 
-      uploadTask.snapshotEvents.listen((event) {
-        final progress = (event.bytesTransferred / event.totalBytes * 100).toStringAsFixed(0);
-        if (mounted) {
-          setState(() {
-            _uploadStatus = 'Nahrávám... $progress%';
-          });
-        }
-      });
-
-      await uploadTask;
-
-      final downloadUrl = await storageRef.getDownloadURL();
-
-      if (mounted) {
+      if (mounted && downloadUrl != null) {
         context.read<EditSongBloc>().add(AddSheet(sheetUrl: downloadUrl));
         setState(() {
           _isUploading = false;
           _uploadStatus = '';
         });
+      } else if (mounted) {
+        setState(() {
+          _isUploading = false;
+          _uploadStatus = '';
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Chyba nahrávání'), backgroundColor: Colors.red),
+        );
       }
     } catch (e) {
       if (mounted) {

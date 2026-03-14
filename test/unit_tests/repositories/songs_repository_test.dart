@@ -2,48 +2,52 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:default_project/model/song/song.dart';
-import 'package:default_project/providers/firebase_provider.dart';
 import 'package:default_project/providers/hive_provider.dart';
+import 'package:default_project/providers/pocketbase_provider.dart';
 import 'package:default_project/repositories/songs_repository.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
-@GenerateMocks([FirebaseProvider, HiveProvider, DatabaseReference])
+@GenerateMocks([PocketBaseProvider, HiveProvider])
 import 'songs_repository_test.mocks.dart';
 
 void main() {
   group('SongsRepository', () {
     late SongsRepository songsRepository;
-    late MockFirebaseProvider mockFirebaseProvider;
+    late MockPocketBaseProvider mockPocketBaseProvider;
     late MockHiveProvider mockHiveProvider;
-    late MockDatabaseReference mockSelectedSong;
-    late StreamController<DatabaseEvent> selectedSongController;
+    late StreamController<Map<String, dynamic>?> selectedSongController;
+    late StreamController<RealtimeChangeEvent<Song>> songChangeController;
+    late StreamController<RealtimeChangeEvent<String>> groupChangeController;
 
     setUp(() {
-      mockFirebaseProvider = MockFirebaseProvider();
+      mockPocketBaseProvider = MockPocketBaseProvider();
       mockHiveProvider = MockHiveProvider();
-      mockSelectedSong = MockDatabaseReference();
-      selectedSongController = StreamController<DatabaseEvent>.broadcast();
+      selectedSongController = StreamController<Map<String, dynamic>?>.broadcast();
+      songChangeController = StreamController<RealtimeChangeEvent<Song>>.broadcast();
+      groupChangeController = StreamController<RealtimeChangeEvent<String>>.broadcast();
 
-      // Mock selectedSong stream
-      when(mockFirebaseProvider.selectedSong).thenReturn(mockSelectedSong);
-      when(mockSelectedSong.onValue).thenAnswer((_) => selectedSongController.stream);
+      // Mock PocketBase streams
+      when(mockPocketBaseProvider.selectedSongStream).thenAnswer((_) => selectedSongController.stream);
+      when(mockPocketBaseProvider.songChangeStream).thenAnswer((_) => songChangeController.stream);
+      when(mockPocketBaseProvider.groupChangeStream).thenAnswer((_) => groupChangeController.stream);
 
-      // Mock default Firebase responses
-      when(mockFirebaseProvider.getListSongsFromFirestore()).thenAnswer((_) async => []);
-      when(mockFirebaseProvider.getListSongGroupFromFirestore()).thenAnswer((_) async => []);
-      when(mockFirebaseProvider.addSongToFirebase(any)).thenAnswer((_) async => true);
+      // Mock default PocketBase responses
+      when(mockPocketBaseProvider.getListSongs()).thenAnswer((_) async => []);
+      when(mockPocketBaseProvider.getListGroups()).thenAnswer((_) async => []);
+      when(mockPocketBaseProvider.addOrUpdateSong(any)).thenAnswer((_) async => true);
 
       songsRepository = SongsRepository(
         hiveProvider: mockHiveProvider,
-        firebaseProvider: mockFirebaseProvider,
+        pocketBaseProvider: mockPocketBaseProvider,
       );
     });
 
     tearDown(() {
       selectedSongController.close();
+      songChangeController.close();
+      groupChangeController.close();
     });
 
     group('Initialization', () {
@@ -61,27 +65,27 @@ void main() {
     });
 
     group('Load Songs', () {
-      test('should load songs from Firebase', () async {
+      test('should load songs from server', () async {
         final testSongs = [
           Song(id: '1', title: 'Song 1', lyrics: 'Lyrics 1'),
           Song(id: '2', title: 'Song 2', lyrics: 'Lyrics 2'),
         ];
 
-        when(mockFirebaseProvider.getListSongsFromFirestore()).thenAnswer((_) async => testSongs);
+        when(mockPocketBaseProvider.getListSongs()).thenAnswer((_) async => testSongs);
 
-        await songsRepository.loadSongsFromFirebase();
+        await songsRepository.loadSongsFromServer();
 
         expect(songsRepository.songs.length, equals(2));
-        verify(mockFirebaseProvider.getListSongsFromFirestore()).called(1);
+        verify(mockPocketBaseProvider.getListSongs()).called(1);
       });
 
       test('should not add duplicate songs', () async {
         final song = Song(id: '1', title: 'Song 1', lyrics: 'Lyrics 1');
 
-        when(mockFirebaseProvider.getListSongsFromFirestore()).thenAnswer((_) async => [song]);
+        when(mockPocketBaseProvider.getListSongs()).thenAnswer((_) async => [song]);
 
-        await songsRepository.loadSongsFromFirebase();
-        await songsRepository.loadSongsFromFirebase();
+        await songsRepository.loadSongsFromServer();
+        await songsRepository.loadSongsFromServer();
 
         expect(songsRepository.songs.length, equals(1));
       });
@@ -91,20 +95,20 @@ void main() {
       test('should delete song successfully', () async {
         final song = Song(id: '1', title: 'Song 1', lyrics: 'Lyrics 1');
 
-        when(mockFirebaseProvider.getListSongsFromFirestore()).thenAnswer((_) async => [song]);
-        await songsRepository.loadSongsFromFirebase();
+        when(mockPocketBaseProvider.getListSongs()).thenAnswer((_) async => [song]);
+        await songsRepository.loadSongsFromServer();
 
-        when(mockFirebaseProvider.deleteSong('1')).thenAnswer((_) async => true);
+        when(mockPocketBaseProvider.deleteSong('1')).thenAnswer((_) async => true);
 
         final result = await songsRepository.deleteSong('1');
 
         expect(result, isTrue);
         expect(songsRepository.songs, isEmpty);
-        verify(mockFirebaseProvider.deleteSong('1')).called(1);
+        verify(mockPocketBaseProvider.deleteSong('1')).called(1);
       });
 
-      test('should return false when Firebase delete fails', () async {
-        when(mockFirebaseProvider.deleteSong('1')).thenAnswer((_) async => false);
+      test('should return false when server delete fails', () async {
+        when(mockPocketBaseProvider.deleteSong('1')).thenAnswer((_) async => false);
 
         final result = await songsRepository.deleteSong('1');
 
@@ -116,8 +120,8 @@ void main() {
       test('should get song by id', () async {
         final song = Song(id: '1', title: 'Song 1', lyrics: 'Lyrics 1');
 
-        when(mockFirebaseProvider.getListSongsFromFirestore()).thenAnswer((_) async => [song]);
-        await songsRepository.loadSongsFromFirebase();
+        when(mockPocketBaseProvider.getListSongs()).thenAnswer((_) async => [song]);
+        await songsRepository.loadSongsFromServer();
 
         final result = songsRepository.getSongById('1');
 
@@ -162,27 +166,15 @@ void main() {
 
     group('JSON Export', () {
       test('should return valid JSON string for songs list', () async {
-        // Arrange
-        final song1 = Song(
-          id: '1',
-          title: 'Test Song 1',
-          lyrics: 'Lyrics 1',
-        );
-        final song2 = Song(
-          id: '2',
-          title: 'Test Song 2',
-          lyrics: 'Lyrics 2',
-        );
+        final song1 = Song(id: '1', title: 'Test Song 1', lyrics: 'Lyrics 1');
+        final song2 = Song(id: '2', title: 'Test Song 2', lyrics: 'Lyrics 2');
 
-        when(mockFirebaseProvider.getListSongsFromFirestore()).thenAnswer((_) async => [song1, song2]);
+        when(mockPocketBaseProvider.getListSongs()).thenAnswer((_) async => [song1, song2]);
 
-        // Load songs
-        await songsRepository.loadSongsFromFirebase();
+        await songsRepository.loadSongsFromServer();
 
-        // Act
         final result = songsRepository.getListSongToJson();
 
-        // Assert
         expect(() => jsonDecode(result), returnsNormally);
         final decoded = jsonDecode(result) as List<dynamic>;
         expect(decoded.length, equals(2));
@@ -193,10 +185,8 @@ void main() {
       });
 
       test('should return valid JSON for empty songs list', () {
-        // Act
         final result = songsRepository.getListSongToJson();
 
-        // Assert
         expect(() => jsonDecode(result), returnsNormally);
         final decoded = jsonDecode(result) as List<dynamic>;
         expect(decoded, isEmpty);
@@ -204,26 +194,26 @@ void main() {
     });
 
     group('Groups', () {
-      test('should load groups from Firebase', () async {
+      test('should load groups from server', () async {
         final testGroups = ['Group 1', 'Group 2', 'Group 3'];
 
-        when(mockFirebaseProvider.getListSongGroupFromFirestore()).thenAnswer((_) async => testGroups);
+        when(mockPocketBaseProvider.getListGroups()).thenAnswer((_) async => testGroups);
 
         await songsRepository.loadAllGroups();
 
         expect(songsRepository.listAllGroups.length, equals(3));
-        verify(mockFirebaseProvider.getListSongGroupFromFirestore()).called(1);
+        verify(mockPocketBaseProvider.getListGroups()).called(1);
       });
 
       test('should create new group', () async {
-        when(mockFirebaseProvider.createNewGroup('New Group')).thenAnswer((_) async => true);
-        when(mockFirebaseProvider.getListSongGroupFromFirestore()).thenAnswer((_) async => ['New Group']);
+        when(mockPocketBaseProvider.createGroup('New Group')).thenAnswer((_) async => true);
+        when(mockPocketBaseProvider.getListGroups()).thenAnswer((_) async => ['New Group']);
 
         await songsRepository.createGroup('New Group');
 
         expect(songsRepository.listAllGroups, contains('New Group'));
-        verify(mockFirebaseProvider.createNewGroup('New Group')).called(1);
-        verify(mockFirebaseProvider.getListSongGroupFromFirestore()).called(1);
+        verify(mockPocketBaseProvider.createGroup('New Group')).called(1);
+        verify(mockPocketBaseProvider.getListGroups()).called(1);
       });
     });
   });

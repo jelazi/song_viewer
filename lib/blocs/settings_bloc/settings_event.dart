@@ -41,9 +41,9 @@ class RemoveQrLink extends SettingsEvent {
   List<Object> get props => [index];
 }
 
-class SyncQrLinksFromFirebase extends SettingsEvent {
+class SyncQrLinksFromServer extends SettingsEvent {
   final List<QrLink> links;
-  const SyncQrLinksFromFirebase(this.links);
+  const SyncQrLinksFromServer(this.links);
   @override
   List<Object> get props => [links];
 }

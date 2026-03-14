@@ -1,0 +1,252 @@
+[
+    {
+        "name": "songs",
+        "type": "base",
+        "fields": [
+            {
+                "name": "title",
+                "type": "text",
+                "required": true
+            },
+            {
+                "name": "lyrics",
+                "type": "text",
+                "required": false
+            },
+            {
+                "name": "originalLyrics",
+                "type": "text",
+                "required": false
+            },
+            {
+                "name": "indexSongBook",
+                "type": "number",
+                "required": false,
+                "onlyInt": true
+            },
+            {
+                "name": "interpret",
+                "type": "text",
+                "required": false
+            },
+            {
+                "name": "typeTranspose",
+                "type": "select",
+                "required": false,
+                "maxSelect": 1,
+                "values": [
+                    "czech",
+                    "german"
+                ]
+            },
+            {
+                "name": "songBar",
+                "type": "number",
+                "required": false,
+                "onlyInt": true
+            },
+            {
+                "name": "bmp",
+                "type": "number",
+                "required": false,
+                "onlyInt": true
+            },
+            {
+                "name": "sheets",
+                "type": "json",
+                "required": false,
+                "maxSize": 2000000
+            },
+            {
+                "name": "groups",
+                "type": "json",
+                "required": false,
+                "maxSize": 2000000
+            },
+            {
+                "name": "tags",
+                "type": "json",
+                "required": false,
+                "maxSize": 2000000
+            },
+            {
+                "name": "notes",
+                "type": "json",
+                "required": false,
+                "maxSize": 2000000
+            },
+            {
+                "name": "youtubeVideos",
+                "type": "json",
+                "required": false,
+                "maxSize": 2000000
+            },
+            {
+                "name": "songUuid",
+                "type": "text",
+                "required": true
+            }
+        ],
+        "indexes": [
+            "CREATE UNIQUE INDEX idx_songUuid ON songs (songUuid)",
+            "CREATE INDEX idx_title ON songs (title)"
+        ],
+        "listRule": "@request.auth.id != ''",
+        "viewRule": "@request.auth.id != ''",
+        "createRule": "@request.auth.id != ''",
+        "updateRule": "@request.auth.id != ''",
+        "deleteRule": "@request.auth.id != ''"
+    },
+    {
+        "name": "playlists",
+        "type": "base",
+        "fields": [
+            {
+                "name": "name",
+                "type": "text",
+                "required": true
+            },
+            {
+                "name": "listSongIds",
+                "type": "json",
+                "required": false,
+                "maxSize": 2000000
+            },
+            {
+                "name": "playlistUuid",
+                "type": "text",
+                "required": true
+            }
+        ],
+        "indexes": [
+            "CREATE UNIQUE INDEX idx_playlistUuid ON playlists (playlistUuid)"
+        ],
+        "listRule": "@request.auth.id != ''",
+        "viewRule": "@request.auth.id != ''",
+        "createRule": "@request.auth.id != ''",
+        "updateRule": "@request.auth.id != ''",
+        "deleteRule": "@request.auth.id != ''"
+    },
+    {
+        "name": "app_users",
+        "type": "base",
+        "fields": [
+            {
+                "name": "name",
+                "type": "text",
+                "required": true
+            },
+            {
+                "name": "appPassword",
+                "type": "text",
+                "required": false
+            },
+            {
+                "name": "typeUser",
+                "type": "select",
+                "required": false,
+                "maxSelect": 1,
+                "values": [
+                    "none",
+                    "viewer",
+                    "editor",
+                    "admin",
+                    "superuser"
+                ]
+            },
+            {
+                "name": "allowedGroup",
+                "type": "json",
+                "required": false,
+                "maxSize": 2000000
+            }
+        ],
+        "indexes": [
+            "CREATE UNIQUE INDEX idx_appUserName ON app_users (name)"
+        ],
+        "listRule": "@request.auth.id != ''",
+        "viewRule": "@request.auth.id != ''",
+        "createRule": "@request.auth.id != ''",
+        "updateRule": "@request.auth.id != ''",
+        "deleteRule": "@request.auth.id != ''"
+    },
+    {
+        "name": "groups",
+        "type": "base",
+        "fields": [
+            {
+                "name": "name",
+                "type": "text",
+                "required": true
+            }
+        ],
+        "indexes": [
+            "CREATE UNIQUE INDEX idx_groupName ON groups (name)"
+        ],
+        "listRule": "@request.auth.id != ''",
+        "viewRule": "@request.auth.id != ''",
+        "createRule": "@request.auth.id != ''",
+        "updateRule": "@request.auth.id != ''",
+        "deleteRule": "@request.auth.id != ''"
+    },
+    {
+        "name": "realtime_state",
+        "type": "base",
+        "fields": [
+            {
+                "name": "key",
+                "type": "text",
+                "required": true
+            },
+            {
+                "name": "data",
+                "type": "json",
+                "required": false,
+                "maxSize": 2000000
+            }
+        ],
+        "indexes": [
+            "CREATE UNIQUE INDEX idx_realtimeKey ON realtime_state (key)"
+        ],
+        "listRule": "@request.auth.id != ''",
+        "viewRule": "@request.auth.id != ''",
+        "createRule": "@request.auth.id != ''",
+        "updateRule": "@request.auth.id != ''",
+        "deleteRule": "@request.auth.id != ''"
+    },
+    {
+        "name": "uploads",
+        "type": "base",
+        "fields": [
+            {
+                "name": "name",
+                "type": "text",
+                "required": false
+            },
+            {
+                "name": "file",
+                "type": "file",
+                "required": true,
+                "maxSelect": 1,
+                "maxSize": 10485760,
+                "mimeTypes": [
+                    "image/png",
+                    "image/jpeg",
+                    "image/gif",
+                    "image/webp",
+                    "application/pdf"
+                ],
+                "thumbs": [
+                    "200x200"
+                ],
+                "protected": false
+            }
+        ],
+        "indexes": [],
+        "listRule": "@request.auth.id != ''",
+        "viewRule": "",
+        "createRule": "@request.auth.id != ''",
+        "updateRule": "@request.auth.id != ''",
+        "deleteRule": "@request.auth.id != ''"
+    }
+]

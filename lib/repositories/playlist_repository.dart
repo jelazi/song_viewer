@@ -1,28 +1,17 @@
 import 'dart:async';
 
+import 'package:collection/collection.dart';
 import 'package:logger_pkg/logger_pkg.dart';
 
 import '../model/playlist.dart';
-import '../model/update_playlist_data.dart';
-import '../providers/firebase_provider.dart';
 import '../providers/hive_provider.dart';
-
-Map<String, dynamic> _deepCastMap(Map data) {
-  return data.map((key, value) {
-    if (value is Map) {
-      return MapEntry(key.toString(), _deepCastMap(value));
-    }
-    return MapEntry(key.toString(), value);
-  });
-}
+import '../providers/pocketbase_provider.dart';
 
 class PlaylistRepository {
   final HiveProvider _hiveProvider;
-  final FirebaseProvider _firebaseProvider;
+  final PocketBaseProvider _pocketBaseProvider;
 
   var _playlists = <Playlist>[];
-
-  late UpdatePlaylistData updatePlaylistData;
 
   final isChangedPlaylistController = StreamController<int>.broadcast();
   Stream<int> get isChangedPlaylist => isChangedPlaylistController.stream.asBroadcastStream();
@@ -30,9 +19,9 @@ class PlaylistRepository {
 
   PlaylistRepository({
     required HiveProvider hiveProvider,
-    required FirebaseProvider firebaseProvider,
+    required PocketBaseProvider pocketBaseProvider,
   })  : _hiveProvider = hiveProvider,
-        _firebaseProvider = firebaseProvider {
+        _pocketBaseProvider = pocketBaseProvider {
     _init();
   }
 
@@ -41,75 +30,39 @@ class PlaylistRepository {
   }
 
   void _init() async {
-    updatePlaylistData = _hiveProvider.getUpdatePlaylistData('updatePlaylistData') ?? UpdatePlaylistData(DateTime(1900), {});
+    _playlists = await _pocketBaseProvider.getListPlaylists();
 
-    _playlists = await _firebaseProvider.getListPlaylistsFromFirestore();
-
-    // Listen to playlist update notifications from RTDB
-    _firebaseProvider.updatePlaylistStream.listen((data) {
-      if (data != null) {
-        try {
-          final castedData = _deepCastMap(data);
-          final newUpdatePlaylistData = UpdatePlaylistData.fromJson(castedData);
-          if (newUpdatePlaylistData.lastUpdate.isAfter(updatePlaylistData.lastUpdate)) {
-            _updatePlaylistsFromFirebase(newUpdatePlaylistData);
-          }
-        } catch (e) {
-          logger.e('Error update playlist from firebase: $e');
-        }
-      }
+    // Listen to granular playlist change events via PocketBase realtime
+    _pocketBaseProvider.playlistChangeStream.listen((event) {
+      _handlePlaylistRealtimeEvent(event);
     });
   }
 
-  void _updatePlaylistsFromFirebase(UpdatePlaylistData newUpdatePlaylistData) async {
-    // Find playlist IDs that are new or updated compared to what we already know
-    final changedIds = <String>[];
-    for (final entry in newUpdatePlaylistData.mapIdPlaylists.entries) {
-      final oldTimestamp = updatePlaylistData.mapIdPlaylists[entry.key];
-      if (oldTimestamp == null || entry.value.isAfter(oldTimestamp)) {
-        changedIds.add(entry.key);
+  void _handlePlaylistRealtimeEvent(RealtimeChangeEvent<Playlist> event) {
+    if (event.isDelete) {
+      _playlists.removeWhere((p) => p.id == event.recordId);
+      logger.i('Realtime: playlist deleted id=${event.recordId}');
+    } else if (event.isCreate && event.record != null) {
+      final existing = _playlists.firstWhereOrNull((p) => p.id == event.record!.id);
+      if (existing == null) {
+        _playlists.add(event.record!);
+        logger.i('Realtime: playlist created id=${event.record!.id} updated=${event.serverUpdated}');
       }
-    }
-
-    updatePlaylistData = newUpdatePlaylistData;
-    _hiveProvider.setUpdatePlaylistData('updatePlaylistData', updatePlaylistData);
-
-    // Fetch only the changed playlists individually
-    for (final id in changedIds) {
-      final playlist = await _firebaseProvider.getPlaylistFromFirestore(id);
-      if (playlist != null) {
-        // Update or add
-        _playlists.removeWhere((p) => p.id == id);
-        _playlists.add(playlist);
+    } else if (event.isUpdate && event.record != null) {
+      final index = _playlists.indexWhere((p) => p.id == event.record!.id);
+      if (index >= 0) {
+        _playlists[index] = event.record!;
+        logger.i('Realtime: playlist updated id=${event.record!.id} updated=${event.serverUpdated}');
       } else {
-        // Playlist was deleted
-        _playlists.removeWhere((p) => p.id == id);
+        _playlists.add(event.record!);
+        logger.i('Realtime: playlist updated (new) id=${event.record!.id} updated=${event.serverUpdated}');
       }
     }
-
     isChangedPlaylistController.sink.add(_isChangedPlaylistValue++);
   }
 
-  Future<void> _notifyPlaylistUpdate(String playlistId) async {
-    updatePlaylistData.lastUpdate = DateTime.now();
-    updatePlaylistData.mapIdPlaylists[playlistId] = DateTime.now();
-    updatePlaylistData = removeUpdateDataOlderThanThreeDays(updatePlaylistData);
-    _hiveProvider.setUpdatePlaylistData('updatePlaylistData', updatePlaylistData);
-    await _firebaseProvider.setUpdatePlaylist(updatePlaylistData);
-  }
-
-  UpdatePlaylistData removeUpdateDataOlderThanThreeDays(UpdatePlaylistData data) {
-    final newMap = <String, DateTime>{};
-    data.mapIdPlaylists.forEach((key, value) {
-      if (value.isAfter(DateTime.now().subtract(const Duration(days: 3)))) {
-        newMap[key] = value;
-      }
-    });
-    return UpdatePlaylistData(data.lastUpdate, newMap);
-  }
-
   Future<bool> savePlaylist(Playlist playlist) async {
-    final result = await _firebaseProvider.addPlaylistToFirebase(playlist);
+    final result = await _pocketBaseProvider.addOrUpdatePlaylist(playlist);
     if (result == false) {
       return false;
     }
@@ -117,17 +70,15 @@ class PlaylistRepository {
       _playlists.removeWhere((element) => element.id == playlist.id);
     }
     _playlists.add(playlist);
-    await _notifyPlaylistUpdate(playlist.id ?? '');
     return true;
   }
 
   Future<bool> deletePlaylist(Playlist playlist) async {
-    final result = await _firebaseProvider.deletePlaylist(playlist);
+    final result = await _pocketBaseProvider.deletePlaylist(playlist);
     if (result == false) {
       return false;
     }
     _playlists.removeWhere((element) => element.id == playlist.id);
-    await _notifyPlaylistUpdate(playlist.id ?? '');
     return true;
   }
 }

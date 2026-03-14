@@ -118,3 +118,4 @@ app.*.symbols
 !/dev/ci/**/Gemfile.lock
 lib/firebase_options.dart
 *.g.dart
+pocketbase_config.json

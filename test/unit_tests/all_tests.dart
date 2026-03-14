@@ -6,7 +6,7 @@
 //   flutter test --coverage test/unit_tests/all_tests.dart
 
 // Provider tests
-import 'providers/firebase_provider_test.dart' as firebase_provider_tests;
+// firebase_provider_test removed — Firebase replaced by PocketBase
 import 'providers/hive_provider_test.dart' as hive_provider_tests;
 import 'providers/web_provider_test.dart' as web_provider_tests;
 // Repository tests
@@ -17,7 +17,6 @@ import 'repositories/web_repository_test.dart' as web_repository_tests;
 
 void main() {
   // Provider tests
-  firebase_provider_tests.main();
   hive_provider_tests.main();
   web_provider_tests.main();
 
