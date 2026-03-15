@@ -1,5 +1,71 @@
 # Development Log
 
+## 2026-03-15 - macOS Pod deployment target stabilization
+
+### What was done
+Resolved recurring CocoaPods deployment target mismatch warnings during macOS builds.
+
+### What was fixed
+- Updated `macos/Podfile` `post_install` hook to enforce `MACOSX_DEPLOYMENT_TARGET = 10.15` for all Pod targets.
+- Re-ran `pod install` so generated `Pods.xcodeproj` no longer contains `10.11` targets.
+
+### Current state
+- `flutter build macos --debug` succeeds.
+- Warning `MACOSX_DEPLOYMENT_TARGET is set to 10.11` is gone.
+- Remaining warnings are from third-party dependencies (`patrol`, `CocoaAsyncSocket`) and do not block build.
+
+---
+
+## 2026-03-15 - Startup warning cleanup (macOS Pod target + stale Hive user)
+
+### What was done
+Cleaned up two non-critical startup warnings seen after enabling Hive cache-first loading.
+
+### What was fixed
+- **User warning from stale Hive session**: In `UsersRepository.checkUser()`, warnings are now suppressed when validation is triggered from Hive boot (`isFromHive: true`).
+- **Auto-clean invalid cached user**: When cached user does not exist or password is invalid, `currentUser` in Hive is cleared to avoid repeated warnings on next start.
+- **macOS CocoaPods deployment target warning**: Updated `macos/Podfile` post-install hook to force `MACOSX_DEPLOYMENT_TARGET = 10.13` for all pod targets, preventing Xcode warning about pods defaulting to 10.11.
+
+### Current state
+- Hive cache-first startup still works as expected.
+- Startup logs are cleaner (fewer false-positive warnings).
+- `desktop_multi_window` engine-handle warning remains separate and appears to be non-blocking (app starts and works).
+
+---
+
+## 2026-03-15 - Hive cache-first loading for songs and groups
+
+### What was done
+Implemented offline-first caching: songs and groups are now stored in Hive and loaded from cache on startup. PocketBase is only queried when the server `updated` timestamp differs from the cached one.
+
+### Changes
+- **HiveProvider**: Added `songsCacheBox` with methods `saveSongsCache()`, `loadSongsCache()`, `getLastSyncTimestamp()`, `saveGroupsCache()`, `loadGroupsCache()`
+- **PocketBaseProvider**: Added public `getServerUpdatedTimestamp()` method to fetch the global `updated` value from `realtime_state`
+- **SongsRepository**:
+  - Added `loadSongsFromCache()` / `loadGroupsFromCache()` for instant Hive loading
+  - Added `isServerDataNewer()` — compares Hive timestamp vs PocketBase `updated` timestamp
+  - Added `_saveSongsToCache()` — persists songs + server timestamp to Hive
+  - All CRUD operations (create, update, delete song/group) and realtime handlers now persist to Hive cache
+- **main.part.dart**: `loadDataFromServer()` now uses cache-first flow:
+  1. Load songs & groups from Hive (instant)
+  2. Compare timestamps — only sync from PB if server is newer
+  3. If no cache exists, full sync from PB as before
+
+### Flow
+1. App starts → load songs from Hive cache (instant UI)
+2. Fetch `updated` timestamp from PocketBase
+3. If timestamp differs from cached value → full sync from PB → save to Hive with new timestamp
+4. If same → skip PB fetch, use cached data
+5. Realtime updates during session also persist to Hive
+
+### Current state
+- Zero compilation errors (169 pre-existing info warnings)
+- Cache persists across app restarts
+- First launch still fetches everything from PB (no cache yet)
+- Subsequent launches are instant from cache unless PB has changes
+
+---
+
 ## 2026-03-14 - Fix playlist timestamp updates + cleanup
 
 ### What was done

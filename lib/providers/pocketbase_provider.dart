@@ -858,6 +858,23 @@ class PocketBaseProvider {
   PocketBase get pb => _pb;
 
   // ---------------------------------------------------------------------------
+  // Server updated timestamp (for cache invalidation)
+  // ---------------------------------------------------------------------------
+
+  /// Returns the current global 'updated' timestamp from PocketBase.
+  /// Used to compare against local Hive cache to decide if sync is needed.
+  Future<String?> getServerUpdatedTimestamp() async {
+    try {
+      final data = await _getRealtimeState('updated');
+      if (data is String && data.isNotEmpty) return data;
+      return data?.toString();
+    } catch (e) {
+      logger.e('Error getting server updated timestamp: $e');
+      return null;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // Sync helpers — get record counts for smart sync
   // ---------------------------------------------------------------------------
 

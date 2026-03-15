@@ -100,15 +100,42 @@ Future<({AppRepositories repositories, SyncInfo syncInfo})> initProvidersAndChec
   return (repositories: repositories, syncInfo: syncInfo);
 }
 
-/// Phase 2: Load data from server into repositories
+/// Phase 2: Load data — cache-first with PocketBase sync when needed
 Future<void> loadDataFromServer(AppRepositories repositories) async {
-  await repositories.songsRepository.loadSongsFromServer();
-  await repositories.songsRepository.loadAllGroups();
-  await repositories.usersRepository.loadUsersFromServer();
+  // 1. Load songs & groups from Hive cache first (instant)
+  final hasCachedSongs = repositories.songsRepository.loadSongsFromCache();
+  final hasCachedGroups = repositories.songsRepository.loadGroupsFromCache();
 
-  await repositories.webRepository.testGetSong();
+  if (hasCachedSongs) {
+    logger.i('Songs loaded from Hive cache');
+  }
+  if (hasCachedGroups) {
+    logger.i('Groups loaded from Hive cache');
+  }
+
+  // 2. Check if PocketBase has newer data than our cache
+  final needsSync = await repositories.songsRepository.isServerDataNewer();
+
+  if (needsSync) {
+    logger.i('Server data is newer — syncing from PocketBase');
+    await repositories.songsRepository.loadSongsFromServer();
+    await repositories.songsRepository.loadAllGroups();
+  } else {
+    logger.i('Cache is up-to-date — skipping PocketBase sync');
+    // If there was no cache at all, we still need to fetch
+    if (!hasCachedSongs) {
+      await repositories.songsRepository.loadSongsFromServer();
+    }
+    if (!hasCachedGroups) {
+      await repositories.songsRepository.loadAllGroups();
+    }
+  }
+
+  // 3. Load users (not cached — typically small dataset)
   await repositories.usersRepository.loadUsersFromServer();
   await repositories.usersRepository.loadCurrentUser();
+
+  await repositories.webRepository.testGetSong();
 }
 
 /// Upload local JSON data to the PocketBase server

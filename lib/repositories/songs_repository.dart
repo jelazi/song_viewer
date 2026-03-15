@@ -82,6 +82,7 @@ class SongsRepository {
         logger.i('Realtime: song updated (new) id=${event.record!.id} updated=${event.serverUpdated}');
       }
     }
+    _saveSongsToCache();
     isChangedListSongController.sink.add(isChangedListSongValue++);
   }
 
@@ -103,7 +104,72 @@ class SongsRepository {
         logger.i('Realtime: group updated name=${event.record}');
       }
     }
+    _hiveProvider.saveGroupsCache(listAllGroups);
     isChangedListSongController.sink.add(isChangedListSongValue++);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Hive cache-first loading
+  // ---------------------------------------------------------------------------
+
+  /// Load songs from Hive cache. Returns true if cache had data.
+  bool loadSongsFromCache() {
+    final cachedSongs = _hiveProvider.loadSongsCache();
+    if (cachedSongs != null && cachedSongs.isNotEmpty) {
+      _songs.clear();
+      for (final json in cachedSongs) {
+        try {
+          _songs.add(Song.fromJson(json));
+        } catch (e) {
+          logger.w('Error parsing cached song: $e');
+        }
+      }
+      logger.i('Loaded ${_songs.length} songs from Hive cache');
+      return true;
+    }
+    return false;
+  }
+
+  /// Load groups from Hive cache. Returns true if cache had data.
+  bool loadGroupsFromCache() {
+    final cachedGroups = _hiveProvider.loadGroupsCache();
+    if (cachedGroups != null && cachedGroups.isNotEmpty) {
+      listAllGroups = cachedGroups;
+      logger.i('Loaded ${listAllGroups.length} groups from Hive cache');
+      return true;
+    }
+    return false;
+  }
+
+  /// Check if PocketBase has newer data than our cache.
+  /// Returns true if sync from PB is needed.
+  Future<bool> isServerDataNewer() async {
+    final localTimestamp = _hiveProvider.getLastSyncTimestamp();
+    if (localTimestamp == null || localTimestamp.isEmpty) {
+      logger.i('No local sync timestamp — full sync needed');
+      return true;
+    }
+    final serverTimestamp = await _pocketBaseProvider.getServerUpdatedTimestamp();
+    if (serverTimestamp == null || serverTimestamp.isEmpty) {
+      logger.i('Could not get server timestamp — skipping sync');
+      return false;
+    }
+    final needsSync = localTimestamp != serverTimestamp;
+    logger.i('Cache check: local=$localTimestamp, server=$serverTimestamp, needsSync=$needsSync');
+    return needsSync;
+  }
+
+  /// Save current in-memory songs to Hive cache with the server timestamp.
+  Future<void> _saveSongsToCache() async {
+    try {
+      final serverTimestamp = await _pocketBaseProvider.getServerUpdatedTimestamp();
+      final timestamp = serverTimestamp ?? DateTime.now().toUtc().toIso8601String();
+      final songsJson = _songs.map((s) => s.toJson()).toList();
+      _hiveProvider.saveSongsCache(songsJson, timestamp);
+      logger.i('Saved ${_songs.length} songs to Hive cache with timestamp=$timestamp');
+    } catch (e) {
+      logger.e('Error saving songs to cache: $e');
+    }
   }
 
   Future<void> loadSongsFromServer() async {
@@ -117,6 +183,7 @@ class SongsRepository {
         _songs.insert(index, song);
       }
     }
+    await _saveSongsToCache();
   }
 
   Future<void> updateSongsFromServer() async {
@@ -134,11 +201,13 @@ class SongsRepository {
         }
       }
     }
+    await _saveSongsToCache();
     isChangedListSongController.sink.add(isChangedListSongValue++);
   }
 
   Future<void> loadAllGroups() async {
     listAllGroups = await _pocketBaseProvider.getListGroups();
+    _hiveProvider.saveGroupsCache(listAllGroups);
   }
 
   Future<bool> deleteSong(String id) async {
@@ -148,6 +217,7 @@ class SongsRepository {
         return false;
       }
       _songs.removeWhere((element) => element.id == id);
+      await _saveSongsToCache();
       return true;
     } catch (e) {
       return false;
@@ -212,6 +282,7 @@ class SongsRepository {
     await _pocketBaseProvider.addOrUpdateSong(song);
     _songs.removeWhere((element) => element.id == song.id);
     _songs.add(song.copyWith());
+    await _saveSongsToCache();
   }
 
   void changeTransposeChord(Song song, int transpose) {
@@ -234,6 +305,7 @@ class SongsRepository {
     if (result) {
       listAllGroups = [];
       listAllGroups = await _pocketBaseProvider.getListGroups();
+      _hiveProvider.saveGroupsCache(listAllGroups);
     } else {
       logger.e('Error create group');
     }
@@ -244,6 +316,7 @@ class SongsRepository {
     if (result) {
       listAllGroups = [];
       listAllGroups = await _pocketBaseProvider.getListGroups();
+      _hiveProvider.saveGroupsCache(listAllGroups);
     } else {
       logger.e('Error delete group');
     }
@@ -254,6 +327,7 @@ class SongsRepository {
     if (result) {
       listAllGroups = [];
       listAllGroups = await _pocketBaseProvider.getListGroups();
+      _hiveProvider.saveGroupsCache(listAllGroups);
     } else {
       logger.e('Error update group');
     }

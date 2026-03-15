@@ -128,11 +128,17 @@ class UsersRepository {
     final userWithPassword = users.firstWhereOrNull((element) => element.name == username && element.password == password);
 
     if (user == null) {
-      logger.w('User $username does not exist');
+      if (!isFromHive) {
+        logger.w('User $username does not exist');
+      }
+      _hiveProvider.setCurrentUser(null);
       return 'userName';
     }
     if (userWithPassword == null) {
-      logger.w('User $username has wrong password');
+      if (!isFromHive) {
+        logger.w('User $username has wrong password');
+      }
+      _hiveProvider.setCurrentUser(null);
       return 'usersPassword';
     }
     if (!isFromHive) {

@@ -14,11 +14,13 @@ class HiveProvider {
   late Box transposeBox;
   late Box webSongBox;
   late Box interpretWebBox;
+  late Box songsCacheBox;
   Future<void> initHiveBox() async {
     settingsBox = await _openBoxSafe('settingsBox');
     transposeBox = await _openBoxSafe('transposeBox');
     webSongBox = await _openBoxSafe('webSongBox');
     interpretWebBox = await _openBoxSafe('interpretWebBox');
+    songsCacheBox = await _openBoxSafe('songsCacheBox');
   }
 
   /// Opens a Hive box, removing stale lock files on failure and retrying once.
@@ -112,6 +114,59 @@ class HiveProvider {
     } else {
       interpretWebBox.put(nameWeb, [interpret]);
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Songs cache (Hive-based offline storage)
+  // ---------------------------------------------------------------------------
+
+  void saveSongsCache(List<Map<String, dynamic>> songsJson, String syncTimestamp) {
+    songsCacheBox.put('songs', songsJson);
+    songsCacheBox.put('lastSyncTimestamp', syncTimestamp);
+  }
+
+  List<Map<String, dynamic>>? loadSongsCache() {
+    final data = songsCacheBox.get('songs');
+    if (data is List) {
+      return data.map((e) => _deepCastMap(e as Map)).toList();
+    }
+    return null;
+  }
+
+  /// Recursively casts Hive's `_Map<dynamic, dynamic>` to `Map<String, dynamic>`.
+  Map<String, dynamic> _deepCastMap(Map map) {
+    return map.map((key, value) {
+      if (value is Map) {
+        return MapEntry(key.toString(), _deepCastMap(value));
+      } else if (value is List) {
+        return MapEntry(key.toString(), _deepCastList(value));
+      }
+      return MapEntry(key.toString(), value);
+    });
+  }
+
+  List<dynamic> _deepCastList(List list) {
+    return list.map((e) {
+      if (e is Map) return _deepCastMap(e);
+      if (e is List) return _deepCastList(e);
+      return e;
+    }).toList();
+  }
+
+  String? getLastSyncTimestamp() {
+    return songsCacheBox.get('lastSyncTimestamp') as String?;
+  }
+
+  void saveGroupsCache(List<String> groups) {
+    songsCacheBox.put('groups', groups);
+  }
+
+  List<String>? loadGroupsCache() {
+    final data = songsCacheBox.get('groups');
+    if (data is List) {
+      return data.map((e) => e.toString()).toList();
+    }
+    return null;
   }
 
   WebInterpret? getInterpretFromWebBox(String nameWeb, String ref) {
