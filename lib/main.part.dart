@@ -135,6 +135,20 @@ Future<void> loadDataFromServer(AppRepositories repositories) async {
   await repositories.usersRepository.loadUsersFromServer();
   await repositories.usersRepository.loadCurrentUser();
 
+  // 4. Load chord diagrams — cache-first with PB sync
+  final chordService = repositories.songsRepository.chordService;
+  final hasCachedChords = chordService.loadFromCache();
+  if (hasCachedChords) {
+    logger.i('Chord diagrams loaded from Hive cache');
+  }
+  final needsChordSync = await chordService.isServerDataNewer();
+  if (needsChordSync) {
+    logger.i('Server chord data is newer — syncing from PocketBase');
+    await chordService.syncFromServer();
+  } else if (!hasCachedChords) {
+    await chordService.syncFromServer();
+  }
+
   await repositories.webRepository.testGetSong();
 }
 

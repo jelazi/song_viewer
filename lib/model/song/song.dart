@@ -31,6 +31,10 @@ class Song {
 
   List<YoutubeVideo>? youtubeVideos;
 
+  /// Per-song chord diagram overrides.
+  /// Key = chord name (e.g. "Am"), Value = list of position strings.
+  Map<String, List<String>>? chordOverrides;
+
   Song({
     required this.id,
     required this.title,
@@ -46,6 +50,7 @@ class Song {
     this.tags,
     this.notes,
     this.youtubeVideos,
+    this.chordOverrides,
   });
 
   Song.empty()
@@ -61,7 +66,8 @@ class Song {
         groups = [],
         tags = [],
         notes = [],
-        youtubeVideos = [];
+        youtubeVideos = [],
+        chordOverrides = {};
 
   Song copyWith({
     String? id,
@@ -78,6 +84,7 @@ class Song {
     List<String>? tags,
     List<Note>? notes,
     List<YoutubeVideo>? youtubeVideos,
+    Map<String, List<String>>? chordOverrides,
   }) {
     return Song(
       id: id ?? this.id,
@@ -94,6 +101,7 @@ class Song {
       tags: tags ?? this.tags,
       notes: notes ?? this.notes,
       youtubeVideos: youtubeVideos ?? this.youtubeVideos,
+      chordOverrides: chordOverrides ?? this.chordOverrides,
     );
   }
 
@@ -226,6 +234,10 @@ class Song {
     }
     if (youtubeVideos != otherSong.youtubeVideos) {
       listModified.add('youtubeVideos');
+    }
+    final mapEq = const MapEquality<String, List<String>>(values: ListEquality<String>());
+    if (!mapEq.equals(chordOverrides ?? {}, otherSong.chordOverrides ?? {})) {
+      listModified.add('chordOverrides');
     }
     return listModified;
   }

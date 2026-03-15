@@ -9,10 +9,12 @@ import '../model/song/song.dart';
 import '../providers/hive_provider.dart';
 import '../providers/pocketbase_provider.dart';
 import '../services/auxiliary_functions.dart';
+import '../services/chord_service.dart';
 
 class SongsRepository {
   final HiveProvider _hiveProvider;
   final PocketBaseProvider _pocketBaseProvider;
+  late final ChordService chordService;
 
   final selectSongController = StreamController<String>.broadcast();
   Stream<String> get selectSongData => selectSongController.stream.asBroadcastStream();
@@ -39,6 +41,7 @@ class SongsRepository {
     required PocketBaseProvider pocketBaseProvider,
   })  : _hiveProvider = hiveProvider,
         _pocketBaseProvider = pocketBaseProvider {
+    chordService = ChordService(pocketBaseProvider, hiveProvider);
     _init();
   }
 

@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:logger_pkg/logger_pkg.dart';
 import 'package:pocketbase/pocketbase.dart';
 
+import '../model/chord/chord_diagram.dart';
 import '../model/note.dart';
 import '../model/playlist.dart';
 import '../model/qr_link.dart';
@@ -829,6 +830,85 @@ class PocketBaseProvider {
   }
 
   // ---------------------------------------------------------------------------
+  // Chord Diagrams CRUD
+  // ---------------------------------------------------------------------------
+
+  Future<List<ChordDiagram>> getAllChordDiagrams() async {
+    try {
+      final records = await _pb.collection('chord_diagrams').getFullList(sort: 'name');
+      return records.map((r) {
+        final posData = r.get<dynamic>('positions');
+        List<String> positions = [];
+        if (posData is List) {
+          positions = posData.map((e) => e.toString()).toList();
+        }
+        return ChordDiagram(name: r.getStringValue('name'), positions: positions);
+      }).toList();
+    } catch (e) {
+      logger.e('Error getting chord diagrams: $e');
+      return [];
+    }
+  }
+
+  Future<ChordDiagram?> getChordDiagram(String chordName) async {
+    try {
+      final results = await _pb.collection('chord_diagrams').getFullList(
+            filter: 'name = "${_escapeFilter(chordName)}"',
+          );
+      if (results.isNotEmpty) {
+        final r = results.first;
+        final posData = r.get<dynamic>('positions');
+        List<String> positions = [];
+        if (posData is List) {
+          positions = posData.map((e) => e.toString()).toList();
+        }
+        return ChordDiagram(name: r.getStringValue('name'), positions: positions);
+      }
+      return null;
+    } catch (e) {
+      logger.e('Error getting chord diagram: $e');
+      return null;
+    }
+  }
+
+  Future<bool> addOrUpdateChordDiagram(ChordDiagram diagram) async {
+    try {
+      final existing = await _pb.collection('chord_diagrams').getFullList(
+            filter: 'name = "${_escapeFilter(diagram.name)}"',
+          );
+      final body = {
+        'name': diagram.name,
+        'positions': diagram.positions,
+      };
+      if (existing.isNotEmpty) {
+        await _pb.collection('chord_diagrams').update(existing.first.id, body: body);
+      } else {
+        await _pb.collection('chord_diagrams').create(body: body);
+      }
+      return true;
+    } catch (e) {
+      logger.e('Error saving chord diagram: $e');
+      return false;
+    }
+  }
+
+  Future<bool> deleteChordDiagram(String chordName) async {
+    try {
+      final existing = await _pb.collection('chord_diagrams').getFullList(
+            filter: 'name = "${_escapeFilter(chordName)}"',
+          );
+      if (existing.isNotEmpty) {
+        await _pb.collection('chord_diagrams').delete(existing.first.id);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      logger.e('Error deleting chord diagram: $e');
+      return false;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // File upload (replaces Firebase Storage)
   // ---------------------------------------------------------------------------
 
@@ -1004,6 +1084,14 @@ class PocketBaseProvider {
       song.youtubeVideos = ytData.whereType<Map>().map((e) => YoutubeVideo.fromJson(Map<String, dynamic>.from(e))).toList();
     }
 
+    final chordOverridesData = r.get<dynamic>('chordOverrides');
+    if (chordOverridesData is Map) {
+      song.chordOverrides = chordOverridesData.map((key, value) {
+        final positions = (value is List) ? value.map((e) => e.toString()).toList() : <String>[];
+        return MapEntry(key.toString(), positions);
+      });
+    }
+
     return song;
   }
 
@@ -1023,6 +1111,7 @@ class PocketBaseProvider {
       'tags': song.tags ?? [],
       'notes': song.notes?.map((e) => e.toJson()).toList() ?? [],
       'youtubeVideos': song.youtubeVideos?.map((e) => e.toJson()).toList() ?? [],
+      'chordOverrides': song.chordOverrides ?? {},
     };
   }
 

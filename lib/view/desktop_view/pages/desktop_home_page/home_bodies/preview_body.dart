@@ -7,11 +7,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
 import '../../../../../blocs/export_blocs.dart';
-import '../../../../../model/chord/chords_positions.dart';
 import '../../../../../services/enums.dart';
 import '../../../../mobile_view/widgets/chords_lyric/flutter_chord.dart';
 import '../../../../mobile_view/widgets/chords_lyric/guitar_tabs.dart';
 import '../../../../mobile_view/widgets/my_floating_button.dart';
+import '../../../widgets/chord_editor_dialog.dart';
 
 class PreviewBody extends StatefulWidget {
   final VoidCallback? onRequestFocus;
@@ -319,7 +319,14 @@ class _PreviewBodyState extends State<PreviewBody> {
       overlayChord!.remove();
       overlayChord = null;
     }
-    if (ChordsPositions.getPositionsChordsByName(chord.chordText).isEmpty) {
+
+    final bloc = context.read<PreviewChordBloc>();
+    final chordService = bloc.songsRepository.chordService;
+    final song = bloc.state.data.song;
+    final positions = chordService.resolveChordPositions(chord.chordText, song: song);
+
+    if (positions.isEmpty) {
+      _openChordEditor(chord.chordText, context);
       return;
     }
 
@@ -329,14 +336,39 @@ class _PreviewBodyState extends State<PreviewBody> {
       builder: (context) => Positioned(
         top: max(pos.dy - 130, 0),
         left: max(pos.dx - 60, 0),
-        child: TabWidget(
-          name: chord.chordText,
-          tabs: ChordsPositions.getPositionsChordsByName(chord.chordText),
-          size: 3,
+        child: GestureDetector(
+          onSecondaryTap: () {
+            _openChordEditor(chord.chordText, context);
+          },
+          child: TabWidget(
+            name: chord.chordText,
+            tabs: positions,
+            size: 3,
+          ),
         ),
       ),
     );
     overlayState.insert(overlayChord!);
+  }
+
+  void _openChordEditor(String chordName, BuildContext context) {
+    disableAllOverlay();
+    final bloc = context.read<PreviewChordBloc>();
+    final chordService = bloc.songsRepository.chordService;
+    final song = bloc.state.data.song;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => ChordEditorDialog(
+        chordName: chordName,
+        chordService: chordService,
+        song: song,
+        onSongUpdated: (updatedSong) {
+          bloc.songsRepository.updateSong(updatedSong);
+          bloc.add(ChangeCurrentSong(song: updatedSong));
+        },
+      ),
+    );
   }
 
   void disableAllOverlay() {

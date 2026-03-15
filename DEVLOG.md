@@ -1,5 +1,130 @@
 # Development Log
 
+## 2026-03-15 - Fix chord editor overflow + open editor for missing chords
+
+### What was done
+1. **Fixed RenderFlex overflow** in `ChordEditorDialog` — Column at line 183 overflowed by 18px on small screens
+2. **Open chord editor for chords without diagrams** — tapping a chord that has no diagram now opens `ChordEditorDialog` directly instead of silently returning
+
+### Changes
+- **chord_editor_dialog.dart**: Wrapped content below header/Divider in `Flexible(SingleChildScrollView(Column(...)))` so dialog is scrollable
+- **preview_page.dart** (mobile): `openChordImage` calls `_openChordEditor` when `positions.isEmpty`
+- **preview_page_tablet.dart** (tablet): same fix
+- **playlist_tablet.dart**: same fix
+- **preview_body.dart** (desktop): same fix
+
+### Current state
+- Build succeeds, 0 errors (only info-level deprecation warnings)
+- Chord editor dialog no longer overflows on smaller screens
+- Chords without existing diagrams can now be created from any page (mobile/tablet/desktop)
+
+---
+
+## 2026-03-15 - Chord editor on mobile/tablet + mobile playlist single column
+
+### What was done
+1. **Chord editor on long-press** — mobile and tablet now open `ChordEditorDialog` when user long-presses on a chord name or on the chord overlay popup
+2. **Mobile playlist: single column layout** — on phones (width < 600), playlist song view shows full lyrics in one scrollable column instead of two-column layout, with prev/next song buttons
+
+### Changes
+- **LyricsRenderer**: Added optional `onLongPressChord` callback, wired to both `GestureDetector` blocks
+- **preview_page.dart** (mobile): Long-press on chord overlay popup opens `ChordEditorDialog`
+- **preview_page_tablet.dart** (tablet): Same long-press → chord editor behavior
+- **playlist_tablet.dart**: 
+  - Added `_isMobile()` helper (Android/iOS + width < 600)
+  - Added `_getSingleColumnRenderer()` — renders full lyrics in single scrollable column
+  - Mobile: hides column navigation arrows, shows prev/next song buttons (skip_previous/skip_next)
+  - Long-press on chord overlay opens `ChordEditorDialog`
+
+### Current state
+- Build succeeds, 0 errors
+- Chord editor accessible everywhere: desktop (right-click), mobile/tablet (long-press)
+- Mobile playlist songs are single-column scrollable with song navigation
+
+---
+
+## 2026-03-15 - Chord editor bugfixes + Hive cache for chord diagrams
+
+### What was done
+1. **Fixed Row overflow** in `ChordEditorDialog` save buttons — replaced `Row` with `Wrap`
+2. **Fixed shift direction** in `ChordEditorWidget` — UP arrow now moves to higher frets (was inverted)
+3. **Hive cache-first loading** for chord diagrams — same pattern as songs
+
+### Changes
+- **ChordEditorDialog**: Save buttons use `Wrap` instead of `Row` to prevent overflow
+- **ChordEditorWidget**: Arrow UP = higher frets, arrow DOWN = lower frets; tooltips updated to "Vyšší pražce" / "Nižší pražce"
+- **HiveProvider**: Added `saveChordDiagramsCache()`, `loadChordDiagramsCache()`, `getChordDiagramsSyncTimestamp()`
+- **ChordService**: Rewritten for Hive-first loading — `loadFromCache()` → `isServerDataNewer()` → `syncFromServer()`. Accepts `HiveProvider`. Save/delete also persist to Hive cache.
+- **SongsRepository**: Passes `hiveProvider` to `ChordService` constructor
+- **main.part.dart**: Phase 2 uses cache-first flow for chords (same as songs)
+
+### Current state
+- Build succeeds, 0 errors
+- Chord diagrams load instantly from Hive, sync with PB only when server timestamp differs
+
+---
+
+## 2026-03-15 - Chord editor: support for higher frets with fretboard shifting
+
+### What was done
+Updated `ChordEditorWidget` to support chords played higher up the guitar neck (up to fret 15).
+
+### Changes
+- **ChordEditorWidget** (`lib/view/desktop_view/widgets/chord_editor_widget.dart`):
+  - Shows 5 frets at a time but supports actual fret values up to 15
+  - Auto-calculates `startFret` from placed dots (same algorithm as `guitar_tabs.dart` renderer)
+  - ▲/▼ shift buttons on the right side to manually scroll the visible fret range
+  - Fret numbers displayed on the left side of the fretboard
+  - Thick nut bar shown only when `startFret == 1`, otherwise thin line
+  - Range indicator (e.g. "3–7") between shift buttons
+
+### Current state
+- `flutter analyze` passes with 0 errors, 0 warnings
+- Editor properly handles high-fret chords (e.g. F# barré at fret 7-9)
+- Consistent with the existing `guitar_tabs.dart` renderer behavior
+
+---
+
+## 2026-03-15 - Chord management: PB collection, per-song overrides, desktop editor
+
+### What was done
+Implemented a full chord management feature set with three parts:
+1. **PocketBase `chord_diagrams` collection** — stores default chord diagrams (name + list of position strings) server-side
+2. **Per-song chord overrides** — each song can optionally override specific chord diagrams via `chordOverrides` field
+3. **Desktop chord editor** — interactive clickable fretboard for creating/editing chord fingering diagrams
+
+### Changes
+- **PB schema** (`pocketbase_collections.json`): Added `chord_diagrams` collection (name text, positions json, unique index on name); added `chordOverrides` json field to songs collection
+- **ChordDiagram model** (`lib/model/chord/chord_diagram.dart`): New data class with `name` and `positions` fields, JSON serialization via `json_serializable`
+- **PocketBaseProvider** (`lib/providers/pocketbase_provider.dart`): Added CRUD methods for `chord_diagrams` (`getAllChordDiagrams`, `getChordDiagram`, `addOrUpdateChordDiagram`, `deleteChordDiagram`); updated `_recordToSong`/`_songToBody` for `chordOverrides` serialization
+- **Song model** (`lib/model/song/song.dart`): Added `Map<String, List<String>>? chordOverrides` field with full `copyWith`/equality support
+- **ChordService** (`lib/services/chord_service.dart`): New service with in-memory PB cache; implements fallback chain: song overrides → PB cache → hardcoded `ChordsPositions` → empty
+- **SongsRepository**: Added `ChordService` as owned field, initialized in constructor
+- **main.part.dart**: Added `chordService.loadChordDiagrams()` call in Phase 2
+- **ChordEditorWidget** (`lib/view/desktop_view/widgets/chord_editor_widget.dart`): Interactive 6-string × 5-fret fretboard with CustomPainter; click to place/remove finger dots; 0th fret toggles open/muted
+- **ChordEditorDialog** (`lib/view/desktop_view/widgets/chord_editor_dialog.dart`): Full CRUD dialog — navigate positions, add/edit/delete, save to song or default library, remove song override, source indicator chip
+- **All 5 preview views** updated to use `ChordService.resolveChordPositions()` instead of hardcoded `ChordsPositions`; desktop preview adds right-click to open chord editor
+
+### Fallback chain
+1. `song.chordOverrides[chordName]` — per-song override
+2. PocketBase `chord_diagrams` collection cache — server default
+3. `ChordsPositions.getPositionsChordsByName()` — hardcoded fallback
+4. Empty list — nothing displayed
+
+### Current state
+- `flutter analyze` passes with 0 errors, 0 warnings (184 pre-existing info-level issues)
+- All chord display code uses the new fallback chain
+- Desktop right-click on chord opens editor dialog
+- PB `chord_diagrams` collection schema is defined in JSON but needs to be created on server (import or manual creation)
+- Hardcoded chords in `ChordsPositions` are still used as final fallback
+
+### Pending / Next steps
+- Import updated `pocketbase_collections.json` to PB server to create `chord_diagrams` collection and `chordOverrides` field on songs
+- Optionally: seed PB `chord_diagrams` with data from hardcoded `ChordsPositions`
+- Test the full flow end-to-end (create chord in editor → save to PB → verify fallback chain)
+
+---
+
 ## 2026-03-15 - macOS Pod deployment target stabilization
 
 ### What was done

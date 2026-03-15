@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 import '../../../../../blocs/export_blocs.dart';
-import '../../../../../model/chord/chords_positions.dart';
 import '../../../../mobile_view/widgets/chords_lyric/chord_lyrics_line.dart';
 import '../../../../mobile_view/widgets/chords_lyric/guitar_tabs.dart';
 import '../../../../mobile_view/widgets/chords_lyric/lyrics_renderer.dart';
@@ -101,7 +100,11 @@ class _WebBodyState extends State<WebBody> {
       overlayChord!.remove();
       overlayChord = null;
     }
-    if (ChordsPositions.getPositionsChordsByName(chord.chordText).isEmpty) {
+
+    final chordService = context.read<PreviewChordBloc>().songsRepository.chordService;
+    final positions = chordService.resolveChordPositions(chord.chordText);
+
+    if (positions.isEmpty) {
       return;
     }
 
@@ -113,7 +116,7 @@ class _WebBodyState extends State<WebBody> {
         left: max(pos.dx - 60, 0),
         child: TabWidget(
           name: chord.chordText,
-          tabs: ChordsPositions.getPositionsChordsByName(chord.chordText),
+          tabs: positions,
           size: 3,
         ),
       ),

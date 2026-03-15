@@ -12,6 +12,7 @@ class LyricsRenderer extends StatefulWidget {
   final TextStyle chordStyle;
   final bool showChord;
   final Function onTapChord;
+  final Function? onLongPressChord;
   ScrollController scrollController;
 
   /// Transpose Increment for the Chords,
@@ -34,6 +35,7 @@ class LyricsRenderer extends StatefulWidget {
     required this.textStyle,
     required this.chordStyle,
     required this.onTapChord,
+    this.onLongPressChord,
     required this.isVisibleNote,
     required this.scrollController,
     required this.baseFontSize,
@@ -121,6 +123,7 @@ class _LyricsRendererState extends State<LyricsRenderer> {
                                   Offset pos = details.globalPosition;
                                   widget.onTapChord(chord, pos);
                                 },
+                                onLongPress: widget.onLongPressChord != null ? () => widget.onLongPressChord!(chord) : null,
                                 child: RichText(
                                   softWrap: true,
                                   text: TextSpan(
@@ -157,6 +160,7 @@ class _LyricsRendererState extends State<LyricsRenderer> {
                                   Offset pos = details.globalPosition;
                                   widget.onTapChord(chord, pos);
                                 },
+                                onLongPress: widget.onLongPressChord != null ? () => widget.onLongPressChord!(chord) : null,
                                 child: RichText(
                                   softWrap: true,
                                   text: TextSpan(

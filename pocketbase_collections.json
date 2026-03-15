@@ -85,6 +85,12 @@
                 "name": "songUuid",
                 "type": "text",
                 "required": true
+            },
+            {
+                "name": "chordOverrides",
+                "type": "json",
+                "required": false,
+                "maxSize": 2000000
             }
         ],
         "indexes": [
@@ -245,6 +251,31 @@
         "indexes": [],
         "listRule": "@request.auth.id != ''",
         "viewRule": "",
+        "createRule": "@request.auth.id != ''",
+        "updateRule": "@request.auth.id != ''",
+        "deleteRule": "@request.auth.id != ''"
+    },
+    {
+        "name": "chord_diagrams",
+        "type": "base",
+        "fields": [
+            {
+                "name": "name",
+                "type": "text",
+                "required": true
+            },
+            {
+                "name": "positions",
+                "type": "json",
+                "required": false,
+                "maxSize": 2000000
+            }
+        ],
+        "indexes": [
+            "CREATE UNIQUE INDEX idx_chordName ON chord_diagrams (name)"
+        ],
+        "listRule": "@request.auth.id != ''",
+        "viewRule": "@request.auth.id != ''",
         "createRule": "@request.auth.id != ''",
         "updateRule": "@request.auth.id != ''",
         "deleteRule": "@request.auth.id != ''"

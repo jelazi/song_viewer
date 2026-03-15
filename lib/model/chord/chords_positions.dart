@@ -134,6 +134,19 @@ class ChordsPositions {
     ),
   ];
 
+  /// Returns all unique chord names available in the hardcoded patterns.
+  static List<String> getAllChordNames() {
+    final Set<String> names = {};
+    for (final pattern in _listPatterns) {
+      for (final tag in pattern.tags) {
+        for (final name in pattern.names) {
+          names.add(name + tag);
+        }
+      }
+    }
+    return names.toList()..sort();
+  }
+
   static List<String> getPositionsChordsByName(String name) {
     List<String> positionChord = [];
     for (GuitarChordPattern pattern in _listPatterns) {

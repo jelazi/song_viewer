@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 Column createTab(String name, int size, String tab, Color color) {
@@ -8,46 +9,11 @@ Column createTab(String name, int size, String tab, Color color) {
     children: [
       Text(
         name,
-        style: TextStyle(
-            fontSize: [
-              15.0,
-              18.0,
-              18.0,
-              24.0,
-              24.0,
-              24.0,
-              24.0,
-              24.0,
-              24.0,
-              28.0
-            ][size - 1],
-            fontWeight: FontWeight.bold),
+        style: TextStyle(fontSize: [15.0, 18.0, 18.0, 24.0, 24.0, 24.0, 24.0, 24.0, 24.0, 28.0][size - 1], fontWeight: FontWeight.bold),
       ),
       SizedBox(
-        height: [
-          30,
-          45.0,
-          50.0,
-          70.0,
-          90.0,
-          110.0,
-          130.0,
-          130.0,
-          150.0,
-          160.0
-        ][size - 1] as double?,
-        width: [
-          35,
-          55.0,
-          72.0,
-          90.0,
-          107.0,
-          127.0,
-          145.0,
-          166.0,
-          180.0,
-          197.0
-        ][size - 1] as double?,
+        height: [30, 45.0, 50.0, 70.0, 90.0, 110.0, 130.0, 130.0, 150.0, 160.0][size - 1] as double?,
+        width: [35, 55.0, 72.0, 90.0, 107.0, 127.0, 145.0, 166.0, 180.0, 197.0][size - 1] as double?,
         child: CustomPaint(
           painter: _MyPainter(tab, '', size: size, color: color),
         ),
@@ -69,15 +35,8 @@ class FlutterGuitarTab extends StatelessWidget {
   /// The color of the tab. Defaults to `Colors.black`.
   final Color color;
 
-  FlutterGuitarTab(
-      {this.name = '',
-      required this.tab,
-      this.size = 9,
-      this.color = Colors.black,
-      Key? key})
-      : super(key: key) {
-    assert(
-        size <= 10 && size >= 1, 'Size has to be between 1 and 10 inclusive.');
+  FlutterGuitarTab({this.name = '', required this.tab, this.size = 9, this.color = Colors.black, Key? key}) : super(key: key) {
+    assert(size <= 10 && size >= 1, 'Size has to be between 1 and 10 inclusive.');
   }
 
   @override
@@ -88,46 +47,11 @@ class FlutterGuitarTab extends StatelessWidget {
       children: [
         Text(
           name,
-          style: TextStyle(
-              fontSize: [
-                15.0,
-                18.0,
-                18.0,
-                24.0,
-                24.0,
-                24.0,
-                24.0,
-                24.0,
-                24.0,
-                28.0
-              ][size - 1],
-              fontWeight: FontWeight.bold),
+          style: TextStyle(fontSize: [15.0, 18.0, 18.0, 24.0, 24.0, 24.0, 24.0, 24.0, 24.0, 28.0][size - 1], fontWeight: FontWeight.bold),
         ),
         SizedBox(
-          height: [
-            30,
-            45.0,
-            50.0,
-            70.0,
-            90.0,
-            110.0,
-            130.0,
-            130.0,
-            150.0,
-            160.0
-          ][size - 1] as double?,
-          width: [
-            35,
-            55.0,
-            72.0,
-            90.0,
-            107.0,
-            127.0,
-            145.0,
-            166.0,
-            180.0,
-            197.0
-          ][size - 1] as double?,
+          height: [30, 45.0, 50.0, 70.0, 90.0, 110.0, 130.0, 130.0, 150.0, 160.0][size - 1] as double?,
+          width: [35, 55.0, 72.0, 90.0, 107.0, 127.0, 145.0, 166.0, 180.0, 197.0][size - 1] as double?,
           child: CustomPaint(
             painter: _MyPainter(tab, '', size: size, color: color),
           ),
@@ -154,13 +78,7 @@ class TabWidget extends StatefulWidget {
   /// The color of the tab. Defaults to `Colors.black`.
   final Color color;
 
-  const TabWidget(
-      {required this.name,
-      required this.tabs,
-      this.size = 9,
-      this.color = Colors.black,
-      Key? key})
-      : super(key: key);
+  const TabWidget({required this.name, required this.tabs, this.size = 9, this.color = Colors.black, Key? key}) : super(key: key);
 
   @override
   // ignore: no_logic_in_create_state
@@ -168,14 +86,10 @@ class TabWidget extends StatefulWidget {
 }
 
 class _Renderer {
-  final Function(
-      dynamic x, dynamic y, String? text, String? font, dynamic size)? text;
-  final Function(dynamic x, dynamic y, dynamic r, bool fill,
-      [dynamic lineWidth])? circle;
-  final Function(
-      dynamic x1, dynamic y1, dynamic x2, dynamic y2, dynamic lineWidth)? rect;
-  final Function(dynamic startX, dynamic startY, dynamic endX, dynamic endY,
-      dynamic lineWidth)? line;
+  final Function(dynamic x, dynamic y, String? text, String? font, dynamic size)? text;
+  final Function(dynamic x, dynamic y, dynamic r, bool fill, [dynamic lineWidth])? circle;
+  final Function(dynamic x1, dynamic y1, dynamic x2, dynamic y2, dynamic lineWidth)? rect;
+  final Function(dynamic startX, dynamic startY, dynamic endX, dynamic endY, dynamic lineWidth)? line;
 
   _Renderer({this.text, this.circle, this.line, this.rect});
 }
@@ -213,7 +127,7 @@ class _TabWidgetState extends State<TabWidget> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               IconButton(
-                  icon: const Icon(Icons.chevron_left),
+                  icon: const Icon(Icons.chevron_left, color: Colors.black87),
                   onPressed: () {
                     setState(() {
                       index = (index - 1) % length as int;
@@ -221,7 +135,7 @@ class _TabWidgetState extends State<TabWidget> {
                   }),
               Text('${index + 1} / $length'),
               IconButton(
-                  icon: const Icon(Icons.chevron_right),
+                  icon: const Icon(Icons.chevron_right, color: Colors.black87),
                   onPressed: () {
                     setState(() {
                       index = (index + 1) % length as int;
@@ -250,8 +164,7 @@ class _MyPainter extends CustomPainter {
   final dynamic yOffset;
   final int size;
 
-  _MyPainter(String positions, String fingers,
-      {required this.size, required Color color})
+  _MyPainter(String positions, String fingers, {required this.size, required Color color})
       : yOffset = [10, 15, 20, 20, 20, 20, 30, 33, 35, 40][size - 1],
         myPaint = Paint()
           ..color = color
@@ -263,48 +176,27 @@ class _MyPainter extends CustomPainter {
 
     renderer = _Renderer(
       text: (dynamic x, dynamic y, String? text, String? font, dynamic size) {
-        TextSpan span = TextSpan(
-            style: TextStyle(
-                color: color,
-                fontSize: size,
-                fontFamily: font,
-                fontWeight: FontWeight.bold),
-            text: text);
-        TextPainter tp =
-            TextPainter(text: span, textDirection: TextDirection.ltr);
+        TextSpan span = TextSpan(style: TextStyle(color: color, fontSize: size, fontFamily: font, fontWeight: FontWeight.bold), text: text);
+        TextPainter tp = TextPainter(text: span, textDirection: TextDirection.ltr);
         tp.layout();
         tp.paint(
           currentCanvas,
           Offset(x, y),
         );
       },
-      circle: (dynamic x, dynamic y, dynamic r, bool fill,
-          [dynamic lineWidth]) {
+      circle: (dynamic x, dynamic y, dynamic r, bool fill, [dynamic lineWidth]) {
         if (fill) {
-          currentCanvas.drawCircle(
-              Offset(x.toDouble(), y.toDouble() - yOffset.toDouble()),
-              r,
-              myPaint..style = PaintingStyle.fill);
+          currentCanvas.drawCircle(Offset(x.toDouble(), y.toDouble() - yOffset.toDouble()), r, myPaint..style = PaintingStyle.fill);
         } else {
-          currentCanvas.drawCircle(
-              Offset(x.toDouble(), y.toDouble() - yOffset.toDouble()),
-              r,
-              myPaint..style = PaintingStyle.stroke);
+          currentCanvas.drawCircle(Offset(x.toDouble(), y.toDouble() - yOffset.toDouble()), r, myPaint..style = PaintingStyle.stroke);
         }
       },
-      rect:
-          (dynamic x1, dynamic y1, dynamic x2, dynamic y2, dynamic lineWidth) {
-        currentCanvas.drawRect(
-            Rect.fromLTWH(x1.toDouble(), y1.toDouble() - yOffset.toDouble(),
-                x2.toDouble(), y2.toDouble()),
-            myPaint..style = PaintingStyle.fill);
+      rect: (dynamic x1, dynamic y1, dynamic x2, dynamic y2, dynamic lineWidth) {
+        currentCanvas.drawRect(Rect.fromLTWH(x1.toDouble(), y1.toDouble() - yOffset.toDouble(), x2.toDouble(), y2.toDouble()), myPaint..style = PaintingStyle.fill);
       },
-      line: (dynamic startX, dynamic startY, dynamic endX, dynamic endY,
-          dynamic lineWidth) {
+      line: (dynamic startX, dynamic startY, dynamic endX, dynamic endY, dynamic lineWidth) {
         currentCanvas.drawLine(
-            Offset(startX.toDouble(), startY.toDouble() - yOffset.toDouble()),
-            Offset(endX.toDouble(), endY.toDouble() - yOffset.toDouble()),
-            myPaint..strokeWidth = lineWidth);
+            Offset(startX.toDouble(), startY.toDouble() - yOffset.toDouble()), Offset(endX.toDouble(), endY.toDouble() - yOffset.toDouble()), myPaint..strokeWidth = lineWidth);
       },
     );
   }
@@ -366,19 +258,14 @@ class _MyPainter extends CustomPainter {
     for (int i = 0; i < positions.length; i++) {
       var pos = positions[i];
       var x = info['boxStartX'] + i * info['cellWidth'];
-      var y = info['nameFontSize'] +
-          info['nameFontPaddingBottom'] +
-          info['dotRadius'] -
-          2;
+      var y = info['nameFontSize'] + info['nameFontPaddingBottom'] + info['dotRadius'] - 2;
       if (startFret! > 1) {
         y += info['nutSize'];
       }
       if (pos == null) {
-        drawCross(
-            info, x, y, info['muteStringRadius'], info['muteStringLineWidth']);
+        drawCross(info, x, y, info['muteStringRadius'], info['muteStringLineWidth']);
       } else if (pos == 0) {
-        r!.circle!(
-            x, y, info['openStringRadius'], false, info['openStringLineWidth']);
+        r!.circle!(x, y, info['openStringRadius'], false, info['openStringLineWidth']);
       }
     }
   }
@@ -391,9 +278,7 @@ class _MyPainter extends CustomPainter {
         var relativePos = pos - startFret! + 1;
         var x = info['boxStartX'] + i * info['cellWidth'];
         if (relativePos <= 5) {
-          var y = info['boxStartY'] +
-              relativePos * info['cellHeight'] -
-              (info['cellHeight'] / 2);
+          var y = info['boxStartY'] + relativePos * info['cellHeight'] - (info['cellHeight'] / 2);
           r!.circle!(x, y, info['dotRadius'], true);
         }
       }
@@ -405,40 +290,27 @@ class _MyPainter extends CustomPainter {
     var width = (stringCount! - 1) * info['cellWidth'];
     for (var i = 0; i <= stringCount! - 1; i++) {
       var x = info['boxStartX'] + i * info['cellWidth'];
-      r!.line!(
-          x,
-          info['boxStartY'],
-          x,
-          info['boxStartY'] + fretCount * info['cellHeight'],
-          info['lineWidth']);
+      r!.line!(x, info['boxStartY'], x, info['boxStartY'] + fretCount * info['cellHeight'], info['lineWidth']);
     }
 
     for (var i = 0; i <= fretCount; i++) {
       var y = info['boxStartY'] + i * info['cellHeight'];
-      r!.line!(info['boxStartX'], y, info['boxStartX'] + width, y,
-          info['lineWidth']);
+      r!.line!(info['boxStartX'], y, info['boxStartX'] + width, y, info['lineWidth']);
     }
   }
 
   drawNut(info) {
     var r = renderer;
     if (startFret == 1) {
-      r!.rect!(info['boxStartX'], info['boxStartY'] - info['nutSize'],
-          info['boxWidth'], info['nutSize'], info['lineWidth']);
+      r!.rect!(info['boxStartX'], info['boxStartY'] - info['nutSize'], info['boxWidth'], info['nutSize'], info['lineWidth']);
     } else {
-      r!.text!(
-          info['boxStartX'] - info['fretFontSize'] * 2,
-          info['boxStartX'] - (info['fretFontSize'] / 2),
-          startFret.toString(),
-          info['font'],
-          info['fretFontSize']);
+      r!.text!(info['boxStartX'] - info['fretFontSize'] * 2, info['boxStartX'] - (info['fretFontSize'] / 2), startFret.toString(), info['font'], info['fretFontSize']);
     }
   }
 
   drawName(info) {
     var r = renderer!;
-    r.text!(info['width'] / 2.0, info['nameFontSize'] + info['lineWidth'] * 3,
-        name, info['font'], info['nameFontSize']);
+    r.text!(info['width'] / 2.0, info['nameFontSize'] + info['lineWidth'] * 3, name, info['font'], info['nameFontSize']);
   }
 
   //It's better to specify this explicitly. Trying to scale in a nice way to doesn't works so well.
@@ -475,19 +347,9 @@ class _MyPainter extends CustomPainter {
     info['boxWidth'] = (stringCount! - 1) * info['cellWidth'];
     info['boxHeight'] = (fretCount) * info['cellHeight'];
     info['width'] = info['boxWidth'] + 4 * info['cellWidth'];
-    info['height'] = info['nameFontSize'] +
-        info['nameFontPaddingBottom'] +
-        info['dotWidth'] +
-        info['nutSize'] +
-        info['boxHeight'] +
-        info['fingerFontSize'] +
-        4;
+    info['height'] = info['nameFontSize'] + info['nameFontPaddingBottom'] + info['dotWidth'] + info['nutSize'] + info['boxHeight'] + info['fingerFontSize'] + 4;
     info['boxStartX'] = ((info['width'] - info['boxWidth']) / 2).toInt();
-    info['boxStartY'] = (info['nameFontSize'] +
-            info['nameFontPaddingBottom'] +
-            info['nutSize'] +
-            info['dotWidth'])
-        .toInt();
+    info['boxStartY'] = (info['nameFontSize'] + info['nameFontPaddingBottom'] + info['nutSize'] + info['dotWidth']).toInt();
     return info;
   }
 
@@ -519,13 +381,10 @@ class _MyPainter extends CustomPainter {
       }
       for (var fret in bars.keys) {
         if (bars[fret].length > 0) {
-          var xStart =
-              info['boxStartX'] + bars[fret]['index'] * info['cellWidth'];
+          var xStart = info['boxStartX'] + bars[fret]['index'] * info['cellWidth'];
           var xEnd = xStart + bars[fret]['length'] * info['cellWidth'];
           var relativePos = fret - startFret + 1;
-          var y = info['boxStartY'] +
-              relativePos * info['cellHeight'] -
-              (info['cellHeight'] / 2);
+          var y = info['boxStartY'] + relativePos * info['cellHeight'] - (info['cellHeight'] / 2);
           //console.log('y: ' + y + ', barWidth: ' + info.barWidth);
           r!.line!(xStart, y, xEnd, y, info['barWidth']);
         }
@@ -558,9 +417,7 @@ class _MyPainter extends CustomPainter {
         var xStart = info['boxStartX'] + startIndex * info['cellWidth'];
         var xEnd = (positions.length - 1) * info['cellWidth'];
         var relativePos = barFret - startFret! + 1;
-        var y = info['boxStartY'] +
-            relativePos * info['cellHeight'] -
-            (info['cellHeight'] / 2);
+        var y = info['boxStartY'] + relativePos * info['cellHeight'] - (info['cellHeight'] / 2);
         r!.line!(xStart, y, xEnd, y, info['dotRadius']);
       }
     }
@@ -588,11 +445,7 @@ class _MyPainter extends CustomPainter {
     for (var i in fingerings) {
       var finger = i;
       var x = info['boxStartX'] + i! * info['cellWidth'];
-      var y = info['boxStartY'] +
-          info['boxHeight'] +
-          fontSize +
-          info['lineWidth'] +
-          1;
+      var y = info['boxStartY'] + info['boxHeight'] + fontSize + info['lineWidth'] + 1;
       if (finger != null) {
         r!.text!(x, y, finger.toString(), info['font'], fontSize);
       }

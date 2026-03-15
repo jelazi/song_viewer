@@ -5,6 +5,7 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i5;
 
+import 'package:default_project/model/chord/chord_diagram.dart' as _i15;
 import 'package:default_project/model/playlist.dart' as _i13;
 import 'package:default_project/model/qr_link.dart' as _i14;
 import 'package:default_project/model/song/song.dart' as _i12;
@@ -128,6 +129,24 @@ class MockHiveProvider extends _i1.Mock implements _i4.HiveProvider {
         Invocation.setter(
           #interpretWebBox,
           _interpretWebBox,
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  _i2.Box<dynamic> get songsCacheBox => (super.noSuchMethod(
+        Invocation.getter(#songsCacheBox),
+        returnValue: _FakeBox_0<dynamic>(
+          this,
+          Invocation.getter(#songsCacheBox),
+        ),
+      ) as _i2.Box<dynamic>);
+
+  @override
+  set songsCacheBox(_i2.Box<dynamic>? _songsCacheBox) => super.noSuchMethod(
+        Invocation.setter(
+          #songsCacheBox,
+          _songsCacheBox,
         ),
         returnValueForMissingStub: null,
       );
@@ -279,6 +298,31 @@ class MockHiveProvider extends _i1.Mock implements _i4.HiveProvider {
             nameWeb,
             interpret,
           ],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void saveSongsCache(
+    List<Map<String, dynamic>>? songsJson,
+    String? syncTimestamp,
+  ) =>
+      super.noSuchMethod(
+        Invocation.method(
+          #saveSongsCache,
+          [
+            songsJson,
+            syncTimestamp,
+          ],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void saveGroupsCache(List<String>? groups) => super.noSuchMethod(
+        Invocation.method(
+          #saveGroupsCache,
+          [groups],
         ),
         returnValueForMissingStub: null,
       );
@@ -636,6 +680,46 @@ class MockPocketBaseProvider extends _i1.Mock
       ) as _i5.Future<bool>);
 
   @override
+  _i5.Future<List<_i15.ChordDiagram>> getAllChordDiagrams() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getAllChordDiagrams,
+          [],
+        ),
+        returnValue:
+            _i5.Future<List<_i15.ChordDiagram>>.value(<_i15.ChordDiagram>[]),
+      ) as _i5.Future<List<_i15.ChordDiagram>>);
+
+  @override
+  _i5.Future<_i15.ChordDiagram?> getChordDiagram(String? chordName) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getChordDiagram,
+          [chordName],
+        ),
+        returnValue: _i5.Future<_i15.ChordDiagram?>.value(),
+      ) as _i5.Future<_i15.ChordDiagram?>);
+
+  @override
+  _i5.Future<bool> addOrUpdateChordDiagram(_i15.ChordDiagram? diagram) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #addOrUpdateChordDiagram,
+          [diagram],
+        ),
+        returnValue: _i5.Future<bool>.value(false),
+      ) as _i5.Future<bool>);
+
+  @override
+  _i5.Future<bool> deleteChordDiagram(String? chordName) => (super.noSuchMethod(
+        Invocation.method(
+          #deleteChordDiagram,
+          [chordName],
+        ),
+        returnValue: _i5.Future<bool>.value(false),
+      ) as _i5.Future<bool>);
+
+  @override
   _i5.Future<String?> uploadFile(
     String? fileName,
     List<int>? fileBytes, {
@@ -649,6 +733,15 @@ class MockPocketBaseProvider extends _i1.Mock
             fileBytes,
           ],
           {#contentType: contentType},
+        ),
+        returnValue: _i5.Future<String?>.value(),
+      ) as _i5.Future<String?>);
+
+  @override
+  _i5.Future<String?> getServerUpdatedTimestamp() => (super.noSuchMethod(
+        Invocation.method(
+          #getServerUpdatedTimestamp,
+          [],
         ),
         returnValue: _i5.Future<String?>.value(),
       ) as _i5.Future<String?>);

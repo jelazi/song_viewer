@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 
 import 'package:default_project/view/mobile_view/widgets/chords_lyric/lyrics_renderer.dart';
@@ -7,9 +8,9 @@ import 'package:flutter/rendering.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 import '../../../blocs/export_blocs.dart';
-import '../../../model/chord/chords_positions.dart';
 import '../../../services/constants.dart';
 import '../../../services/enums.dart';
+import '../../desktop_view/widgets/chord_editor_dialog.dart';
 import '../../mobile_view/widgets/chords_lyric/chord_lyrics_line.dart';
 import '../../mobile_view/widgets/chords_lyric/guitar_tabs.dart';
 
@@ -162,7 +163,7 @@ class _PlaylistTabletState extends State<PlaylistTablet> {
                           ),
                           Container(
                             height: MediaQuery.of(context).size.height - 120,
-                            child: _getLyricsTwoColumnsRenderer(state, scrollController),
+                            child: _isMobile(context) ? _getSingleColumnRenderer(state, scrollController) : _getLyricsTwoColumnsRenderer(state, scrollController),
                           ),
                         ])),
                     Visibility(
@@ -177,7 +178,8 @@ class _PlaylistTabletState extends State<PlaylistTablet> {
                                       color: AppColor.primaryColor,
                                     ))))),
                     Visibility(
-                        visible: state.lyricWithColumns(true, true, TypeLyric.translate, state.currentSong).length > 2 || state.indexCurrentSongInPlaylist != 0,
+                        visible:
+                            !_isMobile(context) && (state.lyricWithColumns(true, true, TypeLyric.translate, state.currentSong).length > 2 || state.indexCurrentSongInPlaylist != 0),
                         child: Align(
                             alignment: Alignment.bottomLeft,
                             child: Padding(
@@ -197,8 +199,9 @@ class _PlaylistTabletState extends State<PlaylistTablet> {
                                   child: Icon(Icons.turn_left, color: state.currentColumn > 0 || state.indexCurrentSongInPlaylist != 0 ? AppColor.whiteColor : AppColor.grey2Color),
                                 )))),
                     Visibility(
-                        visible: state.lyricWithColumns(true, true, TypeLyric.translate, state.currentSong).length > 2 ||
-                            state.indexCurrentSongInPlaylist != state.currentSongs.length - 1,
+                        visible: !_isMobile(context) &&
+                            (state.lyricWithColumns(true, true, TypeLyric.translate, state.currentSong).length > 2 ||
+                                state.indexCurrentSongInPlaylist != state.currentSongs.length - 1),
                         child: Align(
                             alignment: Alignment.bottomRight,
                             child: Padding(
@@ -223,7 +226,44 @@ class _PlaylistTabletState extends State<PlaylistTablet> {
                                               state.indexCurrentSongInPlaylist != state.currentSongs.length - 1
                                           ? AppColor.whiteColor
                                           : AppColor.grey2Color),
-                                ))))
+                                )))),
+                    // Mobile: prev/next song arrows
+                    if (_isMobile(context)) ...[
+                      if (state.indexCurrentSongInPlaylist > 0)
+                        Align(
+                          alignment: Alignment.bottomLeft,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: ElevatedButton(
+                              style: ButtonStyle(
+                                backgroundColor: WidgetStateProperty.all<Color>(AppColor.primaryColor.withOpacity(0.7)),
+                              ),
+                              onPressed: () {
+                                context.read<PlaylistsBloc>().add(ChangeCurrentColumnPlaylist(column: -1));
+                              },
+                              child: const Icon(Icons.skip_previous, color: AppColor.whiteColor),
+                            ),
+                          ),
+                        ),
+                      if (state.indexCurrentSongInPlaylist < state.currentSongs.length - 1)
+                        Align(
+                          alignment: Alignment.bottomRight,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: ElevatedButton(
+                              style: ButtonStyle(
+                                backgroundColor: WidgetStateProperty.all<Color>(AppColor.primaryColor.withOpacity(0.7)),
+                              ),
+                              onPressed: () {
+                                // Jump past all columns to trigger next song
+                                final cols = state.lyricWithColumns(true, true, TypeLyric.translate, state.currentSong).length;
+                                context.read<PlaylistsBloc>().add(ChangeCurrentColumnPlaylist(column: cols + 1));
+                              },
+                              child: const Icon(Icons.skip_next, color: AppColor.whiteColor),
+                            ),
+                          ),
+                        ),
+                    ],
                   ]));
             })));
   }
@@ -321,7 +361,12 @@ class _PlaylistTabletState extends State<PlaylistTablet> {
       overlayChord!.remove();
       overlayChord = null;
     }
-    if (ChordsPositions.getPositionsChordsByName(chord.chordText).isEmpty) {
+
+    final chordService = context.read<PlaylistsBloc>().songsRepository.chordService;
+    final positions = chordService.resolveChordPositions(chord.chordText);
+
+    if (positions.isEmpty) {
+      _openChordEditor(chord.chordText, context);
       return;
     }
 
@@ -330,14 +375,63 @@ class _PlaylistTabletState extends State<PlaylistTablet> {
       builder: (context) => Positioned(
         top: max(pos.dy - 130, 0),
         left: max(pos.dx - 60, 0),
-        child: TabWidget(
-          name: chord.chordText,
-          tabs: ChordsPositions.getPositionsChordsByName(chord.chordText),
-          size: 3,
+        child: GestureDetector(
+          onLongPress: () {
+            _openChordEditor(chord.chordText, context);
+          },
+          child: TabWidget(
+            name: chord.chordText,
+            tabs: positions,
+            size: 3,
+          ),
         ),
       ),
     );
     overlayState.insert(overlayChord!);
+  }
+
+  void _openChordEditor(String chordName, BuildContext context) {
+    disableAllOverlay();
+    final bloc = context.read<PlaylistsBloc>();
+    final chordService = bloc.songsRepository.chordService;
+    final song = bloc.state.currentSong;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => ChordEditorDialog(
+        chordName: chordName,
+        chordService: chordService,
+        song: song,
+      ),
+    );
+  }
+
+  bool _isMobile(BuildContext context) {
+    return (Platform.isAndroid || Platform.isIOS) && MediaQuery.of(context).size.width < 600;
+  }
+
+  Widget _getSingleColumnRenderer(PlaylistsState state, ScrollController scrollController) {
+    final lyrics = state.currentSong.lyrics;
+    if (lyrics.isEmpty) {
+      return Center(child: Text('empty'.tr()));
+    }
+    return LyricsRenderer(
+      scrollController: scrollController,
+      lyrics: lyrics,
+      textStyle: state.textStyle,
+      chordStyle: state.chordStyle,
+      appBarStatus: state.appBarStatus,
+      onTapChord: (Chord chord, Offset pos) {
+        openChordImage(chord, pos, context);
+      },
+      onLongPressChord: (Chord chord) {
+        _openChordEditor(chord.chordText, context);
+      },
+      transposeIncrement: state.transposeIncrement,
+      scrollSpeed: state.scrollSpeed,
+      isVisibleNote: true,
+      baseFontSize: state.textStyle.fontSize ?? 20,
+    );
   }
 
   void disableAllOverlay() {

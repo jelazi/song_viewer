@@ -6,21 +6,22 @@
 import 'dart:async' as _i8;
 import 'dart:ui' as _i6;
 
+import 'package:default_project/model/chord/chord_diagram.dart' as _i12;
 import 'package:default_project/model/playlist.dart' as _i10;
 import 'package:default_project/model/qr_link.dart' as _i11;
 import 'package:default_project/model/song/song.dart' as _i9;
-import 'package:default_project/model/update_playlist_data.dart' as _i14;
-import 'package:default_project/model/update_songlist_data.dart' as _i13;
+import 'package:default_project/model/update_playlist_data.dart' as _i15;
+import 'package:default_project/model/update_songlist_data.dart' as _i14;
 import 'package:default_project/model/user.dart' as _i7;
-import 'package:default_project/model/web_interpret.dart' as _i15;
-import 'package:default_project/model/web_song.dart' as _i12;
+import 'package:default_project/model/web_interpret.dart' as _i16;
+import 'package:default_project/model/web_song.dart' as _i13;
 import 'package:default_project/providers/hive_provider.dart' as _i4;
 import 'package:default_project/providers/pocketbase_provider.dart' as _i5;
-import 'package:default_project/repositories/settings_repository.dart' as _i16;
-import 'package:default_project/services/enums.dart' as _i18;
+import 'package:default_project/repositories/settings_repository.dart' as _i17;
+import 'package:default_project/services/enums.dart' as _i19;
 import 'package:hive/hive.dart' as _i3;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:mockito/src/dummies.dart' as _i17;
+import 'package:mockito/src/dummies.dart' as _i18;
 import 'package:pocketbase/pocketbase.dart' as _i2;
 
 // ignore_for_file: type=lint
@@ -425,6 +426,46 @@ class MockPocketBaseProvider extends _i1.Mock
       ) as _i8.Future<bool>);
 
   @override
+  _i8.Future<List<_i12.ChordDiagram>> getAllChordDiagrams() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getAllChordDiagrams,
+          [],
+        ),
+        returnValue:
+            _i8.Future<List<_i12.ChordDiagram>>.value(<_i12.ChordDiagram>[]),
+      ) as _i8.Future<List<_i12.ChordDiagram>>);
+
+  @override
+  _i8.Future<_i12.ChordDiagram?> getChordDiagram(String? chordName) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getChordDiagram,
+          [chordName],
+        ),
+        returnValue: _i8.Future<_i12.ChordDiagram?>.value(),
+      ) as _i8.Future<_i12.ChordDiagram?>);
+
+  @override
+  _i8.Future<bool> addOrUpdateChordDiagram(_i12.ChordDiagram? diagram) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #addOrUpdateChordDiagram,
+          [diagram],
+        ),
+        returnValue: _i8.Future<bool>.value(false),
+      ) as _i8.Future<bool>);
+
+  @override
+  _i8.Future<bool> deleteChordDiagram(String? chordName) => (super.noSuchMethod(
+        Invocation.method(
+          #deleteChordDiagram,
+          [chordName],
+        ),
+        returnValue: _i8.Future<bool>.value(false),
+      ) as _i8.Future<bool>);
+
+  @override
   _i8.Future<String?> uploadFile(
     String? fileName,
     List<int>? fileBytes, {
@@ -438,6 +479,15 @@ class MockPocketBaseProvider extends _i1.Mock
             fileBytes,
           ],
           {#contentType: contentType},
+        ),
+        returnValue: _i8.Future<String?>.value(),
+      ) as _i8.Future<String?>);
+
+  @override
+  _i8.Future<String?> getServerUpdatedTimestamp() => (super.noSuchMethod(
+        Invocation.method(
+          #getServerUpdatedTimestamp,
+          [],
         ),
         returnValue: _i8.Future<String?>.value(),
       ) as _i8.Future<String?>);
@@ -606,6 +656,24 @@ class MockHiveProvider extends _i1.Mock implements _i4.HiveProvider {
       );
 
   @override
+  _i3.Box<dynamic> get songsCacheBox => (super.noSuchMethod(
+        Invocation.getter(#songsCacheBox),
+        returnValue: _FakeBox_1<dynamic>(
+          this,
+          Invocation.getter(#songsCacheBox),
+        ),
+      ) as _i3.Box<dynamic>);
+
+  @override
+  set songsCacheBox(_i3.Box<dynamic>? _songsCacheBox) => super.noSuchMethod(
+        Invocation.setter(
+          #songsCacheBox,
+          _songsCacheBox,
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
   _i8.Future<void> initHiveBox() => (super.noSuchMethod(
         Invocation.method(
           #initHiveBox,
@@ -675,7 +743,7 @@ class MockHiveProvider extends _i1.Mock implements _i4.HiveProvider {
   @override
   void setWebSong(
     String? key,
-    _i12.WebSong? value,
+    _i13.WebSong? value,
   ) =>
       super.noSuchMethod(
         Invocation.method(
@@ -691,7 +759,7 @@ class MockHiveProvider extends _i1.Mock implements _i4.HiveProvider {
   @override
   void setUpdateSongListData(
     String? key,
-    _i13.UpdateSongListData? value,
+    _i14.UpdateSongListData? value,
   ) =>
       super.noSuchMethod(
         Invocation.method(
@@ -705,16 +773,16 @@ class MockHiveProvider extends _i1.Mock implements _i4.HiveProvider {
       );
 
   @override
-  _i13.UpdateSongListData? getUpdateSongListData(String? key) =>
+  _i14.UpdateSongListData? getUpdateSongListData(String? key) =>
       (super.noSuchMethod(Invocation.method(
         #getUpdateSongListData,
         [key],
-      )) as _i13.UpdateSongListData?);
+      )) as _i14.UpdateSongListData?);
 
   @override
   void setUpdatePlaylistData(
     String? key,
-    _i14.UpdatePlaylistData? value,
+    _i15.UpdatePlaylistData? value,
   ) =>
       super.noSuchMethod(
         Invocation.method(
@@ -728,23 +796,23 @@ class MockHiveProvider extends _i1.Mock implements _i4.HiveProvider {
       );
 
   @override
-  _i14.UpdatePlaylistData? getUpdatePlaylistData(String? key) =>
+  _i15.UpdatePlaylistData? getUpdatePlaylistData(String? key) =>
       (super.noSuchMethod(Invocation.method(
         #getUpdatePlaylistData,
         [key],
-      )) as _i14.UpdatePlaylistData?);
+      )) as _i15.UpdatePlaylistData?);
 
   @override
-  _i12.WebSong? getWebSong(String? key) =>
+  _i13.WebSong? getWebSong(String? key) =>
       (super.noSuchMethod(Invocation.method(
         #getWebSong,
         [key],
-      )) as _i12.WebSong?);
+      )) as _i13.WebSong?);
 
   @override
   void setHistoryInterpretToWebBox(
     String? nameWeb,
-    _i15.WebInterpret? interpret,
+    _i16.WebInterpret? interpret,
   ) =>
       super.noSuchMethod(
         Invocation.method(
@@ -758,7 +826,32 @@ class MockHiveProvider extends _i1.Mock implements _i4.HiveProvider {
       );
 
   @override
-  _i15.WebInterpret? getInterpretFromWebBox(
+  void saveSongsCache(
+    List<Map<String, dynamic>>? songsJson,
+    String? syncTimestamp,
+  ) =>
+      super.noSuchMethod(
+        Invocation.method(
+          #saveSongsCache,
+          [
+            songsJson,
+            syncTimestamp,
+          ],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void saveGroupsCache(List<String>? groups) => super.noSuchMethod(
+        Invocation.method(
+          #saveGroupsCache,
+          [groups],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  _i16.WebInterpret? getInterpretFromWebBox(
     String? nameWeb,
     String? ref,
   ) =>
@@ -768,24 +861,24 @@ class MockHiveProvider extends _i1.Mock implements _i4.HiveProvider {
           nameWeb,
           ref,
         ],
-      )) as _i15.WebInterpret?);
+      )) as _i16.WebInterpret?);
 
   @override
-  List<_i15.WebInterpret> getInterpretsFromWebBox(String? nameWeb) =>
+  List<_i16.WebInterpret> getInterpretsFromWebBox(String? nameWeb) =>
       (super.noSuchMethod(
         Invocation.method(
           #getInterpretsFromWebBox,
           [nameWeb],
         ),
-        returnValue: <_i15.WebInterpret>[],
-      ) as List<_i15.WebInterpret>);
+        returnValue: <_i16.WebInterpret>[],
+      ) as List<_i16.WebInterpret>);
 }
 
 /// A class which mocks [SettingsRepository].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockSettingsRepository extends _i1.Mock
-    implements _i16.SettingsRepository {
+    implements _i17.SettingsRepository {
   MockSettingsRepository() {
     _i1.throwOnMissingStub(this);
   }
@@ -845,7 +938,7 @@ class MockSettingsRepository extends _i1.Mock
   @override
   String get version => (super.noSuchMethod(
         Invocation.getter(#version),
-        returnValue: _i17.dummyValue<String>(
+        returnValue: _i18.dummyValue<String>(
           this,
           Invocation.getter(#version),
         ),
@@ -863,7 +956,7 @@ class MockSettingsRepository extends _i1.Mock
   @override
   String get buildNumber => (super.noSuchMethod(
         Invocation.getter(#buildNumber),
-        returnValue: _i17.dummyValue<String>(
+        returnValue: _i18.dummyValue<String>(
           this,
           Invocation.getter(#buildNumber),
         ),
@@ -966,10 +1059,10 @@ class MockSettingsRepository extends _i1.Mock
       ) as _i7.User);
 
   @override
-  _i18.TypeClickCard get typeClickCard => (super.noSuchMethod(
+  _i19.TypeClickCard get typeClickCard => (super.noSuchMethod(
         Invocation.getter(#typeClickCard),
-        returnValue: _i18.TypeClickCard.none,
-      ) as _i18.TypeClickCard);
+        returnValue: _i19.TypeClickCard.none,
+      ) as _i19.TypeClickCard);
 
   @override
   int get presentationScreenIndex => (super.noSuchMethod(
@@ -1043,7 +1136,7 @@ class MockSettingsRepository extends _i1.Mock
   @override
   String get groqApiKey => (super.noSuchMethod(
         Invocation.getter(#groqApiKey),
-        returnValue: _i17.dummyValue<String>(
+        returnValue: _i18.dummyValue<String>(
           this,
           Invocation.getter(#groqApiKey),
         ),
@@ -1052,7 +1145,7 @@ class MockSettingsRepository extends _i1.Mock
   @override
   String get youtubeApiKey => (super.noSuchMethod(
         Invocation.getter(#youtubeApiKey),
-        returnValue: _i17.dummyValue<String>(
+        returnValue: _i18.dummyValue<String>(
           this,
           Invocation.getter(#youtubeApiKey),
         ),
@@ -1061,7 +1154,7 @@ class MockSettingsRepository extends _i1.Mock
   @override
   String get geminiApiKey => (super.noSuchMethod(
         Invocation.getter(#geminiApiKey),
-        returnValue: _i17.dummyValue<String>(
+        returnValue: _i18.dummyValue<String>(
           this,
           Invocation.getter(#geminiApiKey),
         ),
@@ -1096,7 +1189,7 @@ class MockSettingsRepository extends _i1.Mock
       );
 
   @override
-  void changeTypeClickCard(_i18.TypeClickCard? typeClickCard) =>
+  void changeTypeClickCard(_i19.TypeClickCard? typeClickCard) =>
       super.noSuchMethod(
         Invocation.method(
           #changeTypeClickCard,

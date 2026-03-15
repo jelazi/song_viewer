@@ -169,6 +169,40 @@ class HiveProvider {
     return null;
   }
 
+  // ---------------------------------------------------------------------------
+  // Chord diagrams cache
+  // ---------------------------------------------------------------------------
+
+  void saveChordDiagramsCache(Map<String, List<String>> diagrams, String syncTimestamp) {
+    // Convert Map<String, List<String>> to a JSON-safe format for Hive
+    final data = diagrams.map((key, value) => MapEntry(key, List<String>.from(value)));
+    songsCacheBox.put('chordDiagrams', data);
+    songsCacheBox.put('chordDiagramsSyncTimestamp', syncTimestamp);
+  }
+
+  Map<String, List<String>>? loadChordDiagramsCache() {
+    final data = songsCacheBox.get('chordDiagrams');
+    if (data is Map) {
+      return data.map((key, value) {
+        final positions = (value is List) ? value.map((e) => e.toString()).toList() : <String>[];
+        return MapEntry(key.toString(), positions);
+      });
+    }
+    return null;
+  }
+
+  String? getChordDiagramsSyncTimestamp() {
+    return songsCacheBox.get('chordDiagramsSyncTimestamp') as String?;
+  }
+
+  bool isChordsSeedDone() {
+    return songsCacheBox.get('chordsSeedDone') == true;
+  }
+
+  void setChordsSeedDone() {
+    songsCacheBox.put('chordsSeedDone', true);
+  }
+
   WebInterpret? getInterpretFromWebBox(String nameWeb, String ref) {
     final webInterprets = interpretWebBox.get(nameWeb);
     if (webInterprets != null && webInterprets is Map) {
