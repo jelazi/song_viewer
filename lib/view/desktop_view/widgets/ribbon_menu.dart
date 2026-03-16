@@ -488,6 +488,17 @@ class SettingsTabbar extends StatelessWidget {
                 onPressed: () {
                   QrCodeDialog.show(context);
                 }),
+            const RibbonSpacer(),
+            RibbonButton(
+                text: 'Záloha a obnova',
+                icon: const Icon(
+                  Icons.backup,
+                  color: Colors.brown,
+                ),
+                isEnabled: true,
+                onPressed: () {
+                  context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: 'backup_restore'));
+                }),
           ],
         ));
   }

@@ -30,6 +30,7 @@ class _ChordEditorDialogState extends State<ChordEditorDialog> {
   late List<String> _positions;
   int _currentIndex = 0;
   bool _isEditing = false;
+  bool _isAddingNew = false;
   String _editingPosition = '0 0 0 0 0 0';
   String? _source; // 'song', 'pb', 'hardcoded'
 
@@ -66,6 +67,7 @@ class _ChordEditorDialogState extends State<ChordEditorDialog> {
   void _addNewPosition() {
     setState(() {
       _isEditing = true;
+      _isAddingNew = true;
       _editingPosition = '0 0 0 0 0 0';
     });
   }
@@ -74,6 +76,7 @@ class _ChordEditorDialogState extends State<ChordEditorDialog> {
     if (_positions.isEmpty) return;
     setState(() {
       _isEditing = true;
+      _isAddingNew = false;
       _editingPosition = _positions[_currentIndex];
     });
   }
@@ -93,31 +96,21 @@ class _ChordEditorDialogState extends State<ChordEditorDialog> {
 
   void _saveEditedPosition() {
     setState(() {
-      if (_currentIndex < _positions.length) {
-        // Check if we're adding or editing
-        if (_isEditing && !_positions.contains(_editingPosition)) {
-          if (_currentIndex >= 0 && _currentIndex < _positions.length && _positions[_currentIndex] == _editingPosition) {
-            // Was editing existing, already updated
-          } else {
-            _positions.add(_editingPosition);
-            _currentIndex = _positions.length - 1;
-          }
-        }
-        // If editing existing, replace it
-        if (_currentIndex < _positions.length) {
-          _positions[_currentIndex] = _editingPosition;
-        }
-      } else {
+      if (_isAddingNew) {
         _positions.add(_editingPosition);
         _currentIndex = _positions.length - 1;
+      } else {
+        _positions[_currentIndex] = _editingPosition;
       }
       _isEditing = false;
+      _isAddingNew = false;
     });
   }
 
   void _cancelEditing() {
     setState(() {
       _isEditing = false;
+      _isAddingNew = false;
     });
   }
 

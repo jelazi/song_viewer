@@ -1,5 +1,60 @@
 # Development Log
 
+## 2026-03-16 - Full backup & restore for desktop
+
+### What was done
+Implemented a complete backup and restore feature for the desktop app. Backs up **everything** in the application: songs, playlists, groups, users, chord diagrams, all settings, and downloaded sheet/image files.
+
+### Changes
+- **BackupService** (`lib/services/backup_service.dart`): New service that handles:
+  - **Export**: Collects all data (songs, playlists, groups, users, chord diagrams, settings, QR links, API keys) into a single `backup.json`. Downloads all sheet/image files from PocketBase into a `files/` subfolder. Creates a timestamped backup folder.
+  - **Import**: Reads `backup.json`, re-uploads files to PocketBase (gets new URLs), remaps sheet URLs in songs, restores all collections (songs, playlists, groups, users, chord diagrams), restores all settings including colors, presentation settings, QR links, and API keys. Shows confirmation dialog before overwriting.
+  - **Preview**: Reads a backup folder and shows counts of items before restoring.
+
+- **BackupRestoreBody** (`lib/view/desktop_view/pages/desktop_home_page/home_bodies/backup_restore_body.dart`): Desktop UI with:
+  - Export section — pick folder → creates timestamped subfolder with backup
+  - Import section — pick backup folder → preview counts → confirm → restore
+  - Progress indicator with live status messages
+  - Result card showing success/error with item counts table
+
+- **desktop_home_page.dart**: Added `case 'backup_restore'` → `BackupRestoreBody()`
+- **ribbon_menu.dart**: Added "Záloha a obnova" button in SettingsTabbar (brown backup icon)
+
+### Backup format
+```
+SongsViewer_backup_YYYYMMDD_HHMM/
+  backup.json          — all structured data (version, songs, playlists, groups, users, chordDiagrams, settings, fileMapping)
+  files/               — downloaded sheet images (file_0001.png, etc.)
+```
+
+### Current state
+- Build succeeds, 0 errors, 0 warnings (only pre-existing info-level deprecation warnings)
+- Accessible from desktop Settings tab → "Záloha a obnova" button
+- Exports everything including binary files (sheets/images)
+- Import re-uploads files to PocketBase and remaps URLs
+
+---
+
+## 2026-03-16 - Fix chord editor: edit replaces instead of adding duplicate
+
+### What was done
+Fixed bug where editing an existing chord position and saving it to the library would add a new position instead of replacing the edited one.
+
+### What was fixed
+- **chord_editor_dialog.dart**: Added `_isAddingNew` flag to distinguish between "add new" and "edit existing" operations
+  - `_addNewPosition()` sets `_isAddingNew = true` → position is appended to list
+  - `_editCurrentPosition()` sets `_isAddingNew = false` → position replaces at current index
+  - `_saveEditedPosition()` simplified: checks `_isAddingNew` to decide add vs replace
+  - `_cancelEditing()` also resets the flag
+- Removed convoluted previous logic that incorrectly used `_positions.contains()` check, which always resulted in `add()` when the position was modified
+
+### Current state
+- Build succeeds, 0 errors
+- Editing a chord position now correctly replaces it in-place
+- Adding a new chord position still appends to the list as expected
+
+---
+
 ## 2026-03-15 - Fix chord editor overflow + open editor for missing chords
 
 ### What was done

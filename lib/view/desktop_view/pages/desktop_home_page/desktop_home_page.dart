@@ -7,6 +7,7 @@ import '../../../../blocs/export_blocs.dart';
 import '../../../../model/song/song.dart';
 import '../../../../services/presentation_window_manager.dart';
 import '../../widgets/ribbon_menu.dart';
+import 'home_bodies/backup_restore_body.dart';
 import 'home_bodies/browse_sheets_body.dart';
 import 'home_bodies/browse_youtube_body.dart';
 import 'home_bodies/edit_parts_body/edit_body.dart';
@@ -504,6 +505,9 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
                         onRequestFocus: () => _focusNode.requestFocus(),
                         contentOverride: const BrowseSheetsBody(),
                       );
+                      break;
+                    case 'backup_restore':
+                      homeBody = const BackupRestoreBody();
                       break;
                     default:
                       return PreviewBody(onRequestFocus: () => _focusNode.requestFocus());
