@@ -43,19 +43,19 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
       builder: (context, state) {
+        final isPreviewBody = state.bodyName == 'preview' || state.bodyName == 'browse_youtube' || state.bodyName == 'browse_sheets';
+        final isSettingsBody = state.bodyName == 'groups' ||
+            state.bodyName == 'users' ||
+            state.bodyName == 'presentation_settings' ||
+            state.bodyName == 'general_settings' ||
+            state.bodyName == 'backup_restore';
         if (state.bodyName == 'edit') {
           _tabController = TabController(length: 2, vsync: this);
-        } else if (state.bodyName == 'preview' || state.bodyName == 'browse_youtube' || state.bodyName == 'browse_sheets') {
+        } else if (isPreviewBody) {
           _tabController = TabController(length: 2, vsync: this);
         } else if (state.bodyName == 'web') {
           _tabController = TabController(length: 2, vsync: this);
-        } else if (state.bodyName == 'groups') {
-          _tabController = TabController(length: 2, vsync: this, initialIndex: 1);
-        } else if (state.bodyName == 'users') {
-          _tabController = TabController(length: 2, vsync: this, initialIndex: 1);
-        } else if (state.bodyName == 'presentation_settings') {
-          _tabController = TabController(length: 2, vsync: this, initialIndex: 1);
-        } else if (state.bodyName == 'general_settings') {
+        } else if (isSettingsBody) {
           _tabController = TabController(length: 2, vsync: this, initialIndex: 1);
         } else if (state.bodyName == 'playlist') {
           _tabController = TabController(length: 2, vsync: this);
@@ -83,7 +83,7 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
                     children: [
                       SizedBox(
                         height: 30,
-                        child: state.bodyName == 'preview' || state.bodyName == 'browse_youtube' || state.bodyName == 'browse_sheets'
+                        child: isPreviewBody
                             ? TabBar(
                                 isScrollable: true,
                                 tabAlignment: TabAlignment.start,
@@ -158,7 +158,7 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
                                                       Tab(text: 'settings'.tr()),
                                                     ],
                                                   )
-                                                : state.bodyName == 'general_settings'
+                                                : state.bodyName == 'general_settings' || state.bodyName == 'backup_restore'
                                                     ? TabBar(
                                                         isScrollable: true,
                                                         tabAlignment: TabAlignment.start,
@@ -199,7 +199,7 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
                       ),
                       SizedBox(
                         height: 60,
-                        child: state.bodyName == 'preview' || state.bodyName == 'browse_youtube' || state.bodyName == 'browse_sheets'
+                        child: isPreviewBody
                             ? TabBarView(
                                 controller: _tabController,
                                 children: const [
@@ -247,7 +247,7 @@ class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
                                                       SettingsTabbar(),
                                                     ],
                                                   )
-                                                : state.bodyName == 'general_settings'
+                                                : state.bodyName == 'general_settings' || state.bodyName == 'backup_restore'
                                                     ? TabBarView(
                                                         controller: _tabController,
                                                         children: const [
