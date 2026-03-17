@@ -362,8 +362,10 @@ class _PlaylistTabletState extends State<PlaylistTablet> {
       overlayChord = null;
     }
 
-    final chordService = context.read<PlaylistsBloc>().songsRepository.chordService;
-    final positions = chordService.resolveChordPositions(chord.chordText);
+    final bloc = context.read<PlaylistsBloc>();
+    final chordService = bloc.songsRepository.chordService;
+    final song = bloc.state.currentSong;
+    final positions = chordService.resolveChordPositions(chord.chordText, song: song);
 
     if (positions.isEmpty) {
       _openChordEditor(chord.chordText, context);

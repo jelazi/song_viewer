@@ -1,5 +1,47 @@
 # Development Log
 
+## 2026-03-17 - Fix chord editor save to persist current edited position
+
+### What was done
+Updated chord save logic in `ChordEditorDialog` so both save actions persist the currently edited fingering from the dialog, not only previously committed list values.
+
+### What was fixed
+- **chord_editor_dialog.dart**: Added `_positionsForSave()` helper that builds the final list to save.
+- **_saveToSong()** now saves `positionsToSave` from `_positionsForSave()`.
+- **_saveToDefaultLibrary()** now saves `positionsToSave` from `_positionsForSave()`.
+
+### Root cause
+Save methods used `_positions` directly, which can lag behind when the user is actively editing a position in the dialog.
+
+### Current state
+- Saving to song uses the latest edited position.
+- Saving to default library uses the latest edited position.
+- Existing edit/add flows remain unchanged.
+
+## 2026-03-17 - Fix chordOverrides priority in song views (Domov test)
+
+### What was done
+Fixed chord rendering in views where chord lookup was called without the current song, which caused song-level `chordOverrides` to be ignored.
+
+### What was fixed
+- **playlist_tablet.dart**: `openChordImage()` now passes `bloc.state.currentSong` into `resolveChordPositions(..., song: song)`
+- **web_body.dart**: `openChordImage()` now passes `bloc.state.currentSong` into `resolveChordPositions(..., song: song)`
+- **web_body.dart**: corrected song source to `bloc.state.data.song` (PreviewChordState has no `currentSong` getter)
+- **chord_service.dart**: added transposition-aware matching for song `chordOverrides` so overrides saved under a transformed chord name are still found and used before `chord_diagrams`
+- **chord_service.dart**: added normalized chord-name matching (`trim` + case-insensitive) for song overrides and chord library lookups
+
+### Root cause
+`ChordService.resolveChordPositions()` correctly prioritizes `song.chordOverrides`, but two call sites used `resolveChordPositions(chordName)` without `song`, so fallback went to `chord_diagrams`/hardcoded chords.
+
+### Current state
+- Song-specific chord override now has higher priority than `chord_diagrams` in tablet playlist and desktop web preview
+- Song-specific override can now be resolved even when chord was saved under a transposed equivalent name
+- Behavior matches existing mobile/tablet/desktop preview pages that already passed the song
+
+### Pending / Next steps
+- Verify manually on song **Domov** in both affected views
+- Optional: audit all future call sites to always pass `song` when available
+
 ## 2026-03-16 - Full backup & restore for desktop
 
 ### What was done

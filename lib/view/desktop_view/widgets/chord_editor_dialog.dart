@@ -114,10 +114,25 @@ class _ChordEditorDialogState extends State<ChordEditorDialog> {
     });
   }
 
+  List<String> _positionsForSave() {
+    final positionsToSave = List<String>.from(_positions);
+
+    if (_isEditing) {
+      if (_isAddingNew) {
+        positionsToSave.add(_editingPosition);
+      } else if (positionsToSave.isNotEmpty && _currentIndex >= 0 && _currentIndex < positionsToSave.length) {
+        positionsToSave[_currentIndex] = _editingPosition;
+      }
+    }
+
+    return positionsToSave;
+  }
+
   Future<void> _saveToSong() async {
     if (widget.song == null || widget.onSongUpdated == null) return;
+    final positionsToSave = _positionsForSave();
     final overrides = Map<String, List<String>>.from(widget.song!.chordOverrides ?? {});
-    overrides[widget.chordName] = List.from(_positions);
+    overrides[widget.chordName] = positionsToSave;
     final updatedSong = widget.song!.copyWith(chordOverrides: overrides);
     widget.onSongUpdated!(updatedSong);
     if (mounted) {
@@ -128,9 +143,10 @@ class _ChordEditorDialogState extends State<ChordEditorDialog> {
   }
 
   Future<void> _saveToDefaultLibrary() async {
+    final positionsToSave = _positionsForSave();
     final diagram = ChordDiagram(
       name: widget.chordName,
-      positions: List.from(_positions),
+      positions: positionsToSave,
     );
     final success = await widget.chordService.saveChordDiagram(diagram);
     if (mounted) {
@@ -259,7 +275,11 @@ class _ChordEditorDialogState extends State<ChordEditorDialog> {
                           ChordEditorWidget(
                             key: ValueKey('view_${_positions[_currentIndex]}'),
                             initialPosition: _positions[_currentIndex],
-                            onPositionChanged: (_) {},
+                            onPositionChanged: (pos) {
+                              setState(() {
+                                _positions[_currentIndex] = pos;
+                              });
+                            },
                           ),
                         ],
                         const SizedBox(height: 12),

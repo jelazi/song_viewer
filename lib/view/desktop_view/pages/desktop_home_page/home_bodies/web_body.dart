@@ -101,8 +101,10 @@ class _WebBodyState extends State<WebBody> {
       overlayChord = null;
     }
 
-    final chordService = context.read<PreviewChordBloc>().songsRepository.chordService;
-    final positions = chordService.resolveChordPositions(chord.chordText);
+    final bloc = context.read<PreviewChordBloc>();
+    final chordService = bloc.songsRepository.chordService;
+    final song = bloc.state.data.song;
+    final positions = chordService.resolveChordPositions(chord.chordText, song: song);
 
     if (positions.isEmpty) {
       return;
