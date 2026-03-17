@@ -75,7 +75,7 @@ class _PlaylistBodyState extends State<PlaylistBody> {
       return;
     }
     if (_editSongs.isEmpty) {
-      MyToast.showText(text: 'Playlist neobsahuje žádné písně', typeNotification: TypeNotification.warning);
+      MyToast.showText(text: 'playlistNoSongs'.tr(), typeNotification: TypeNotification.warning);
       return;
     }
 
@@ -87,7 +87,7 @@ class _PlaylistBodyState extends State<PlaylistBody> {
 
     final result = await context.read<PlaylistsBloc>().playlistRepository.savePlaylist(playlist);
     if (result) {
-      MyToast.showText(text: 'Playlist uložen', typeNotification: TypeNotification.success);
+      MyToast.showText(text: 'playlistSaved'.tr(), typeNotification: TypeNotification.success);
       context.read<PlaylistsBloc>().add(const RefreshPlaylists());
       setState(() {
         _isEditing = false;
@@ -96,7 +96,7 @@ class _PlaylistBodyState extends State<PlaylistBody> {
         _editSongs = [];
       });
     } else {
-      MyToast.showText(text: 'Chyba při ukládání', typeNotification: TypeNotification.error);
+      MyToast.showText(text: 'saveError'.tr(), typeNotification: TypeNotification.error);
     }
   }
 
@@ -114,19 +114,19 @@ class _PlaylistBodyState extends State<PlaylistBody> {
     context.read<PresentationPlaylistBloc>().add(
           LoadPresentationPlaylist(playlist: playlist),
         );
-    MyToast.showText(text: 'Playlist "${playlist.name}" načten do prezentace', typeNotification: TypeNotification.success);
+    MyToast.showText(text: 'playlistLoadedToPresentation'.tr(args: [playlist.name]), typeNotification: TypeNotification.success);
   }
 
   Future<void> _deletePlaylist(Playlist playlist) async {
     final result = await context.read<PlaylistsBloc>().playlistRepository.deletePlaylist(playlist);
     if (result) {
-      MyToast.showText(text: 'Playlist smazán', typeNotification: TypeNotification.success);
+      MyToast.showText(text: 'playlistDeleted'.tr(), typeNotification: TypeNotification.success);
       context.read<PlaylistsBloc>().add(const RefreshPlaylists());
       if (_selectedPlaylist?.id == playlist.id) {
         _cancelEdit();
       }
     } else {
-      MyToast.showText(text: 'Chyba při mazání', typeNotification: TypeNotification.error);
+      MyToast.showText(text: 'deleteError'.tr(), typeNotification: TypeNotification.error);
     }
   }
 
@@ -184,7 +184,7 @@ class _PlaylistBodyState extends State<PlaylistBody> {
                 const SizedBox(width: 8),
                 IconButton(
                   icon: const Icon(Icons.add, size: 20, color: Colors.green),
-                  tooltip: 'Nový playlist',
+                  tooltip: 'newPlaylist'.tr(),
                   onPressed: _startNewPlaylist,
                 ),
               ],
@@ -195,7 +195,7 @@ class _PlaylistBodyState extends State<PlaylistBody> {
             child: playlists.isEmpty
                 ? Center(
                     child: Text(
-                      'Žádné uložené playlisty',
+                      'noSavedPlaylists'.tr(),
                       style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
                     ),
                   )
@@ -253,7 +253,7 @@ class _PlaylistBodyState extends State<PlaylistBody> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
-                    '${playlist.listSongIds.length} písní',
+                    'nSongs'.tr(args: [playlist.listSongIds.length.toString()]),
                     style: const TextStyle(fontSize: 11, color: Colors.grey),
                   ),
                 ],
@@ -279,14 +279,14 @@ class _PlaylistBodyState extends State<PlaylistBody> {
             ),
             IconButton(
               icon: const Icon(Icons.present_to_all, size: 16),
-              tooltip: 'Načíst do prezentace',
+              tooltip: 'loadToPresentation'.tr(),
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
               onPressed: () => _loadToPresentation(playlist),
             ),
             IconButton(
               icon: const Icon(Icons.edit, size: 16, color: Colors.blue),
-              tooltip: 'Editovat',
+              tooltip: 'editBtnLabel'.tr(),
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
               onPressed: () => _editPlaylist(playlist),
@@ -313,14 +313,14 @@ class _PlaylistBodyState extends State<PlaylistBody> {
             Icon(Icons.playlist_play, size: 64, color: Colors.grey.shade300),
             const SizedBox(height: 16),
             Text(
-              'Vyberte playlist ze seznamu nebo vytvořte nový',
+              'selectPlaylistOrCreate'.tr(),
               style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: _startNewPlaylist,
               icon: const Icon(Icons.add, size: 18),
-              label: const Text('Nový playlist'),
+              label: Text('newPlaylist'.tr()),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColor.primaryColor,
                 foregroundColor: Colors.white,
@@ -362,7 +362,7 @@ class _PlaylistBodyState extends State<PlaylistBody> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${songs.length} písní',
+                      'nSongs'.tr(args: [songs.length.toString()]),
                       style: const TextStyle(fontSize: 13, color: Colors.grey),
                     ),
                   ],
@@ -371,7 +371,7 @@ class _PlaylistBodyState extends State<PlaylistBody> {
               ElevatedButton.icon(
                 onPressed: () => _loadToPresentation(_selectedPlaylist!),
                 icon: const Icon(Icons.present_to_all, size: 18),
-                label: const Text('Načíst do prezentace'),
+                label: Text('loadToPresentation'.tr()),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColor.primaryColor,
                   foregroundColor: Colors.white,
@@ -387,7 +387,7 @@ class _PlaylistBodyState extends State<PlaylistBody> {
               OutlinedButton.icon(
                 onPressed: () => _editPlaylist(_selectedPlaylist!),
                 icon: const Icon(Icons.edit, size: 18),
-                label: const Text('Editovat'),
+                label: Text('editBtnLabel'.tr()),
               ),
             ],
           ),
@@ -395,7 +395,7 @@ class _PlaylistBodyState extends State<PlaylistBody> {
         // Song list (read-only)
         Expanded(
           child: songs.isEmpty
-              ? const Center(child: Text('Playlist neobsahuje žádné písně', style: TextStyle(color: Colors.grey)))
+              ? Center(child: Text('playlistNoSongs'.tr(), style: TextStyle(color: Colors.grey)))
               : ListView.builder(
                   padding: const EdgeInsets.all(8),
                   itemCount: songs.length,
@@ -454,7 +454,7 @@ class _PlaylistBodyState extends State<PlaylistBody> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          _isCreatingNew ? 'Nový playlist' : 'Editace playlistu',
+                          _isCreatingNew ? 'newPlaylist'.tr() : 'editPlaylistHeader'.tr(),
                           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                         ),
                       ],
@@ -474,13 +474,13 @@ class _PlaylistBodyState extends State<PlaylistBody> {
                       ),
                     ),
                     Text(
-                      '${_editSongs.length} písní',
+                      'nSongs'.tr(args: [_editSongs.length.toString()]),
                       style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                     ElevatedButton.icon(
                       onPressed: _savePlaylist,
                       icon: const Icon(Icons.save, size: 16),
-                      label: const Text('Uložit', style: TextStyle(fontSize: 12)),
+                      label: Text('saveBtn'.tr(), style: TextStyle(fontSize: 12)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
                         foregroundColor: Colors.white,
@@ -492,7 +492,7 @@ class _PlaylistBodyState extends State<PlaylistBody> {
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       ),
-                      child: const Text('Zrušit', style: TextStyle(fontSize: 12)),
+                      child: Text('cancel'.tr(), style: TextStyle(fontSize: 12)),
                     ),
                   ],
                 ),
@@ -506,7 +506,7 @@ class _PlaylistBodyState extends State<PlaylistBody> {
                           children: [
                             Icon(Icons.playlist_add, size: 48, color: Colors.grey.shade300),
                             const SizedBox(height: 8),
-                            Text('Přidejte písně ze seznamu vpravo', style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
+                            Text('addSongsFromListHint'.tr(), style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
                           ],
                         ),
                       )
@@ -547,7 +547,7 @@ class _PlaylistBodyState extends State<PlaylistBody> {
                                   song.interpret != null && song.interpret!.isNotEmpty ? Text(song.interpret!, style: const TextStyle(fontSize: 11, color: Colors.grey)) : null,
                               trailing: IconButton(
                                 icon: const Icon(Icons.remove_circle_outline, size: 18, color: Colors.red),
-                                tooltip: 'Odebrat',
+                                tooltip: 'removeTooltip'.tr(),
                                 onPressed: () {
                                   setState(() {
                                     _editSongs.removeAt(index);

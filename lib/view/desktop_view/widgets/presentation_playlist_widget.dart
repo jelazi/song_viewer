@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -60,7 +61,7 @@ class PresentationPlaylistWidget extends StatelessWidget {
           const SizedBox(width: 6),
           Flexible(
             child: Text(
-              'Prezentační playlist',
+              'presentationPlaylistTitle'.tr(),
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
@@ -78,7 +79,7 @@ class PresentationPlaylistWidget extends StatelessWidget {
           if (state.isNotEmpty) ...[
             IconButton(
               icon: const Icon(Icons.clear_all, size: 16),
-              tooltip: 'Vymazat vše',
+              tooltip: 'deleteAll'.tr(),
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),
               onPressed: () {
@@ -128,14 +129,14 @@ class PresentationPlaylistWidget extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Přetáhni sem písně',
+                  'dragSongsHere'.tr(),
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                       ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'pro vytvoření prezentačního playlistu',
+                  'toCreatePlaylist'.tr(),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
                       ),
@@ -297,7 +298,7 @@ class PresentationPlaylistWidget extends StatelessWidget {
                   size: 16,
                   color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                 ),
-                tooltip: 'Odstranit',
+                tooltip: 'removeBtn'.tr(),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
                 onPressed: () {

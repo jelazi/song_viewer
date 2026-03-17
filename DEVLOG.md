@@ -1,5 +1,56 @@
 # Development Log
 
+## 2026-03-17 - Full app localization of hardcoded Czech strings
+
+### What was done
+Systematically replaced all hardcoded Czech strings across the entire app with `easy_localization` `.tr()` calls. Added ~140 new localization keys to both `cs.json` and `en.json`.
+
+### Files modified (26 Dart files + 2 JSON files)
+- **assets/lang/cs.json** — ~140 new Czech keys added
+- **assets/lang/en.json** — ~140 new English translations added
+- **presentation_settings_body.dart** — ~33 replacements
+- **backup_restore_body.dart** — ~24 replacements (special `_countsTable` pattern: keys stored, `.tr()` at render)
+- **backup_service.dart** — ~24 replacements (including `savingBackupJson`, fixed `const` removal)
+- **ribbon_menu.dart** — ~25 replacements (fixed `const` on InputDecoration, Center, Padding)
+- **playlist_body.dart** — ~22 replacements
+- **chord_editor_dialog.dart** — ~12 replacements (fixed `const` on Padding)
+- **bracket_error_scanner.dart** — 9 replacements
+- **presentation_window_manager.dart** — 1 replacement
+- **presentation_page_desktop.dart** — 3 replacements
+- **chord_editor_widget.dart** — 2 replacements
+- **presentation_playlist_widget.dart** — 5 replacements
+- **browse_youtube_body.dart** — 2 replacements
+- **browse_sheets_body.dart** — 2 replacements
+- **edit_youtube_body.dart** — 6 replacements (including `validYoutubeLink`/`invalidYoutubeLink`)
+- **edit_sheets_body.dart** — 5 replacements (including `uploading`, `uploadError`, `uploadErrorDetail`)
+- **edit_lyrics_preview_column.dart** — 1 replacement
+- **song_enrichment_body.dart** — 2 replacements (interpolation with `.tr(args: [...])`)
+- **song_enrichment_bloc.dart** — 4 replacements (including `songKaraokeQuery`)
+- **edit_page.dart (mobile)** — 4 replacements
+- **youtube_video_page.dart (mobile)** — 1 replacement
+- **edit_page_tablet.dart** — 5 replacements (including `uploadErrorDetail`)
+- **youtube_video_page_tablet.dart** — 1 replacement
+- **list_web_song.dart** — 2 replacements (`authorsLabel`, `songsLabel`)
+
+### Key patterns used
+- Simple: `'key'.tr()` — for static strings
+- Interpolation: `'key'.tr(args: [value])` — for strings with `{}`  placeholders
+- `const` removal: Always removed `const` from parent widgets when adding `.tr()` (runtime value)
+- Non-Czech labels (e.g. "YouTube URL", URL hints) left as-is per requirement
+
+### What was NOT localized (intentional)
+- `'Žižkovi'` — proper noun (organization name) in QrLink defaults (3 occurrences)
+- Technical strings: URLs, variable names, enum values, search queries to external APIs
+- `auxiliary_functions.dart` — character mapping dictionary (technical, not UI)
+
+### Current state
+- All hardcoded Czech UI strings are now localized
+- No compile errors introduced (verified with full project error check)
+- Pre-existing warnings remain: unused `_hiveProvider`, unused `.g.dart` declarations
+
+### Known issues
+- None related to localization
+
 ## 2026-03-17 - Fix chord editor save to persist current edited position
 
 ### What was done

@@ -52,7 +52,7 @@ class _BrowseSheetsBodyState extends State<BrowseSheetsBody> {
                   const SizedBox(width: 8),
                   IconButton(
                     icon: const Icon(Icons.close, size: 18),
-                    tooltip: 'Zavřít',
+                    tooltip: 'closeTooltip'.tr(),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                     onPressed: () {
@@ -98,14 +98,14 @@ class _BrowseSheetsBodyState extends State<BrowseSheetsBody> {
               ),
             // Main image view
             if (sheets.isEmpty)
-              const Expanded(
+              Expanded(
                 child: Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.music_off, size: 48, color: Colors.grey),
                       SizedBox(height: 8),
-                      Text('Žádné noty', style: TextStyle(color: Colors.grey)),
+                      Text('noSheetsAvailable'.tr(), style: TextStyle(color: Colors.grey)),
                     ],
                   ),
                 ),

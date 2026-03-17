@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:window_manager/window_manager.dart';
@@ -69,10 +70,10 @@ class _PresentationPageDesktopState extends State<PresentationPageDesktop> {
         body: BlocBuilder<PresentationBloc, PresentationState>(
           builder: (context, state) {
             if (state.currentSong == null) {
-              return const Center(
+              return Center(
                 child: Text(
-                  'Žádná píseň není vybrána',
-                  style: TextStyle(color: Colors.white, fontSize: 24),
+                  'noSongSelectedPresentation'.tr(),
+                  style: const TextStyle(color: Colors.white, fontSize: 24),
                 ),
               );
             }
@@ -189,7 +190,7 @@ class _PresentationPageDesktopState extends State<PresentationPageDesktop> {
                 Navigator.of(context).pop();
               }
             },
-            tooltip: 'Zavřít prezentaci (ESC)',
+            tooltip: 'closePresentationEsc'.tr(),
           ),
         ),
       ],

@@ -291,13 +291,13 @@ class _SongEnrichmentBodyState extends State<SongEnrichmentBody> {
         children: [
           _buildCurrentInfoRow(Icons.person, 'enrichAuthor'.tr(), hasInterpret ? song.interpret! : '-', hasInterpret),
           _buildCurrentInfoRow(Icons.numbers, 'enrichSongbookIndex'.tr(), hasIndex ? '#${song.indexSongBook}' : '-', hasIndex),
-          _buildCurrentInfoRow(Icons.play_circle, 'enrichYoutube'.tr(), hasYoutube ? '${song.youtubeVideos!.length} videí' : '-', hasYoutube),
+          _buildCurrentInfoRow(Icons.play_circle, 'enrichYoutube'.tr(), hasYoutube ? 'nVideos'.tr(args: [song.youtubeVideos!.length.toString()]) : '-', hasYoutube),
           if (hasYoutube)
             ...song.youtubeVideos!.map((v) => Padding(
                   padding: const EdgeInsets.only(left: 32),
                   child: Text(v.name, style: const TextStyle(fontSize: 11, color: Colors.grey)),
                 )),
-          _buildCurrentInfoRow(Icons.music_note, 'enrichSheetMusic'.tr(), hasSheets ? '${song.sheets!.length} not' : '-', hasSheets),
+          _buildCurrentInfoRow(Icons.music_note, 'enrichSheetMusic'.tr(), hasSheets ? 'nSheets'.tr(args: [song.sheets!.length.toString()]) : '-', hasSheets),
           _buildCurrentInfoRow(Icons.label, 'enrichTags'.tr(), hasTags ? song.tags!.join(', ') : '-', hasTags),
         ],
       ),

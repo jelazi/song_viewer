@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
@@ -24,7 +25,7 @@ class _BackupRestoreBodyState extends State<BackupRestoreBody> {
 
   Future<void> _doExport() async {
     final dir = await FilePicker.platform.getDirectoryPath(
-      dialogTitle: 'Vyberte složku pro zálohu',
+      dialogTitle: 'selectBackupFolder'.tr(),
     );
     if (dir == null) return;
 
@@ -39,7 +40,7 @@ class _BackupRestoreBodyState extends State<BackupRestoreBody> {
 
     setState(() {
       _isRunning = true;
-      _status = 'Zahajuji zálohu...';
+      _status = 'startingBackup'.tr();
       _lastResult = null;
     });
 
@@ -61,7 +62,7 @@ class _BackupRestoreBodyState extends State<BackupRestoreBody> {
 
   Future<void> _selectRestoreDir() async {
     final dir = await FilePicker.platform.getDirectoryPath(
-      dialogTitle: 'Vyberte složku se zálohou (obsahující backup.json)',
+      dialogTitle: 'selectBackupSourceFolder'.tr(),
     );
     if (dir == null) return;
 
@@ -70,7 +71,7 @@ class _BackupRestoreBodyState extends State<BackupRestoreBody> {
 
     setState(() {
       _isRunning = true;
-      _status = 'Kontroluji zálohu...';
+      _status = 'checkingBackup'.tr();
       _restorePreview = null;
       _selectedRestoreDir = dir;
     });
@@ -92,20 +93,19 @@ class _BackupRestoreBodyState extends State<BackupRestoreBody> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Potvrdit obnovu'),
-        content: const Text(
-          'Tato akce přepíše všechna stávající data (písně, playlisty, skupiny, uživatele, akordy, nastavení).\n\n'
-          'Jste si jisti?',
+        title: Text('confirmRestore'.tr()),
+        content: Text(
+          'confirmRestoreMessage'.tr(),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Zrušit'),
+            child: Text('cancel'.tr()),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Obnovit', style: TextStyle(color: Colors.white)),
+            child: Text('restoreBtn'.tr(), style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -117,7 +117,7 @@ class _BackupRestoreBodyState extends State<BackupRestoreBody> {
 
     setState(() {
       _isRunning = true;
-      _status = 'Zahajuji obnovu...';
+      _status = 'startingRestore'.tr();
       _lastResult = null;
     });
 
@@ -159,14 +159,14 @@ class _BackupRestoreBodyState extends State<BackupRestoreBody> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Záloha a obnova',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          Text(
+            'backupAndRestore'.tr(),
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Zálohuje vše: písně, playlisty, skupiny, uživatele, akordové diagramy, nastavení a přiložené soubory (noty).',
-            style: TextStyle(color: Colors.grey),
+          Text(
+            'backupDescription'.tr(),
+            style: const TextStyle(color: Colors.grey),
           ),
           const SizedBox(height: 24),
           const Divider(),
@@ -177,22 +177,22 @@ class _BackupRestoreBodyState extends State<BackupRestoreBody> {
             children: [
               const Icon(Icons.upload_file, color: Colors.blue, size: 28),
               const SizedBox(width: 12),
-              const Text(
-                'Vytvořit zálohu',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              Text(
+                'createBackup'.tr(),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
               ),
               const Spacer(),
               ElevatedButton.icon(
                 onPressed: _isRunning ? null : _doExport,
                 icon: const Icon(Icons.save),
-                label: const Text('Exportovat'),
+                label: Text('exportBtn'.tr()),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Vyberte složku, kam se uloží záloha. Vytvoří se podsložka s datem a časem.',
-            style: TextStyle(fontSize: 12, color: Colors.grey),
+          Text(
+            'backupExportFolderHint'.tr(),
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
 
           const SizedBox(height: 24),
@@ -204,22 +204,22 @@ class _BackupRestoreBodyState extends State<BackupRestoreBody> {
             children: [
               const Icon(Icons.download, color: Colors.orange, size: 28),
               const SizedBox(width: 12),
-              const Text(
-                'Obnovit ze zálohy',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              Text(
+                'restoreFromBackup'.tr(),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
               ),
               const Spacer(),
               OutlinedButton.icon(
                 onPressed: _isRunning ? null : _selectRestoreDir,
                 icon: const Icon(Icons.folder_open),
-                label: const Text('Vybrat složku'),
+                label: Text('selectFolderBtn'.tr()),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Vyberte složku zálohy (obsahující backup.json a podsložku files).',
-            style: TextStyle(fontSize: 12, color: Colors.grey),
+          Text(
+            'backupImportFolderHint'.tr(),
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
 
           // Restore preview
@@ -278,7 +278,7 @@ class _BackupRestoreBodyState extends State<BackupRestoreBody> {
               onPressed: _isRunning ? null : _doRestore,
               style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
               icon: const Icon(Icons.restore, color: Colors.white),
-              label: const Text('Obnovit tuto zálohu', style: TextStyle(color: Colors.white)),
+              label: Text('restoreThisBackup'.tr(), style: const TextStyle(color: Colors.white)),
             ),
           ],
         ),
@@ -324,12 +324,12 @@ class _BackupRestoreBodyState extends State<BackupRestoreBody> {
 
   Widget _countsTable(Map<String, int> counts) {
     const labels = {
-      'songs': 'Písně',
-      'playlists': 'Playlisty',
-      'groups': 'Skupiny',
-      'users': 'Uživatelé',
-      'chordDiagrams': 'Akordové diagramy',
-      'files': 'Soubory (noty/obrázky)',
+      'songs': 'statSongs',
+      'playlists': 'statPlaylists',
+      'groups': 'statGroups',
+      'users': 'statUsers',
+      'chordDiagrams': 'statChordDiagrams',
+      'files': 'statFiles',
     };
 
     return Table(
@@ -343,7 +343,7 @@ class _BackupRestoreBodyState extends State<BackupRestoreBody> {
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 8),
-              child: Text(labels[e.key] ?? e.key, style: const TextStyle(color: Colors.grey)),
+              child: Text((labels[e.key] ?? e.key).tr(), style: const TextStyle(color: Colors.grey)),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 8),

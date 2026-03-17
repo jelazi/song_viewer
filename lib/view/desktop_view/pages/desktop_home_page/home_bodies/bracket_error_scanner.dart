@@ -44,28 +44,28 @@ class _BracketErrorScannerState extends State<BracketErrorScanner> {
       if (char == '[') {
         openBrackets++;
         if (openBrackets > 1) {
-          errors.add('Dvojitá otevírací závorka "[" na pozici $i');
+          errors.add('bracketDoubleOpen'.tr(args: [i.toString()]));
           openBrackets = 1; // reset to track next
         }
       } else if (char == ']') {
         if (openBrackets == 0) {
-          errors.add('Uzavírací závorka "]" bez otevírací na pozici $i');
+          errors.add('bracketCloseWithoutOpen'.tr(args: [i.toString()]));
         } else {
           openBrackets--;
         }
         // Check for consecutive closing brackets
         if (i + 1 < line.length && line[i + 1] == ']') {
-          errors.add('Dvojitá uzavírací závorka "]]" na pozici $i');
+          errors.add('bracketDoubleClose'.tr(args: [i.toString()]));
         }
       } else if (char == '{') {
         openCurly++;
         if (openCurly > 1) {
-          errors.add('Dvojitá otevírací závorka "{" na pozici $i');
+          errors.add('bracketDoubleCurlyOpen'.tr(args: [i.toString()]));
           openCurly = 1;
         }
       } else if (char == '}') {
         if (openCurly == 0) {
-          errors.add('Uzavírací závorka "}" bez otevírací na pozici $i');
+          errors.add('bracketCurlyCloseWithoutOpen'.tr(args: [i.toString()]));
         } else {
           openCurly--;
         }
@@ -73,10 +73,10 @@ class _BracketErrorScannerState extends State<BracketErrorScanner> {
     }
 
     if (openBrackets > 0) {
-      errors.add('Neuzavřená závorka "[" - chybí "]"');
+      errors.add('bracketUnclosedSquare'.tr());
     }
     if (openCurly > 0) {
-      errors.add('Neuzavřená závorka "{" - chybí "}"');
+      errors.add('bracketUnclosedCurly'.tr());
     }
 
     return errors;
@@ -220,7 +220,7 @@ class _BracketErrorScannerState extends State<BracketErrorScanner> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Opraveno: ${song.title}'),
+        content: Text('fixedSong'.tr(args: [song.title])),
         duration: const Duration(seconds: 2),
       ),
     );
@@ -254,7 +254,7 @@ class _BracketErrorScannerState extends State<BracketErrorScanner> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Opraveno ${songsToFix.length} písní'),
+        content: Text('fixedNSongs'.tr(args: [songsToFix.length.toString()])),
         duration: const Duration(seconds: 2),
       ),
     );

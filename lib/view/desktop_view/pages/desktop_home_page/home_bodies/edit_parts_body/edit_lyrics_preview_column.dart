@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../../blocs/export_blocs.dart';
@@ -54,9 +55,9 @@ class EditLyricsPreviewColumn extends StatelessWidget {
               // Lyrics content
               Expanded(
                 child: lyrics.isEmpty
-                    ? const Center(
+                    ? Center(
                         child: Text(
-                          'Žádný text',
+                          'noLyrics'.tr(),
                           style: TextStyle(fontSize: 11, color: AppColor.grey2Color),
                         ),
                       )

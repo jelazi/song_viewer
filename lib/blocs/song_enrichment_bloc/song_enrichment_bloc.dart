@@ -2,6 +2,7 @@ import 'package:default_project/model/song/song.dart';
 import 'package:default_project/model/youtube_video.dart';
 import 'package:default_project/repositories/settings_repository.dart';
 import 'package:default_project/services/ai_search_service.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -41,7 +42,7 @@ class SongEnrichmentBloc extends Bloc<SongEnrichmentEvent, SongEnrichmentState> 
     if (groqApiKey.isEmpty) {
       emit(state.copyWith(
         status: EnrichmentStatus.error,
-        errorMessage: 'Groq API klíč není nastaven. Nastavte ho v Obecná nastavení.',
+        errorMessage: 'groqApiKeyNotSet'.tr(),
       ));
       return;
     }
@@ -58,7 +59,7 @@ class SongEnrichmentBloc extends Bloc<SongEnrichmentEvent, SongEnrichmentState> 
     if (analysis == null) {
       emit(state.copyWith(
         status: EnrichmentStatus.error,
-        errorMessage: 'AI analýza selhala. Zkontrolujte API klíč a připojení.',
+        errorMessage: 'aiAnalysisFailed'.tr(),
       ));
       return;
     }
@@ -289,7 +290,7 @@ class SongEnrichmentBloc extends Bloc<SongEnrichmentEvent, SongEnrichmentState> 
     if (analysis == null) {
       emit(state.copyWith(
         status: EnrichmentStatus.error,
-        errorMessage: 'Opakovaná AI analýza selhala.',
+        errorMessage: 'aiRetryFailed'.tr(),
       ));
       return;
     }
@@ -323,7 +324,7 @@ class SongEnrichmentBloc extends Bloc<SongEnrichmentEvent, SongEnrichmentState> 
 
     // Use the song title + interpret as an alternative query set
     final altQueries = <String>[
-      '${state.song!.title} píseň karaoke',
+      'songKaraokeQuery'.tr(args: [state.song!.title]),
       '${state.song!.title} ${state.analysis?.author ?? ''} live',
       '${state.analysis?.originalTitle ?? state.song!.title} worship',
       '${state.analysis?.originalTitle ?? state.song!.title} lyrics',

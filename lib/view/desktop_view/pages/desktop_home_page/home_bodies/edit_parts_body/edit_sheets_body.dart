@@ -186,7 +186,7 @@ class _EditSheetsBodyState extends State<EditSheetsBody> {
                                         const Icon(Icons.broken_image, size: 48, color: Colors.grey),
                                         const SizedBox(height: 4),
                                         Text(
-                                          'Chyba načítání',
+                                          'loadError'.tr(),
                                           style: TextStyle(fontSize: 10, color: Colors.grey[600]),
                                           textAlign: TextAlign.center,
                                         ),
@@ -256,8 +256,8 @@ class _EditSheetsBodyState extends State<EditSheetsBody> {
             width: 400,
             child: TextField(
               controller: urlController,
-              decoration: const InputDecoration(
-                labelText: 'URL obrázku not',
+              decoration: InputDecoration(
+                labelText: 'sheetImageUrl'.tr(),
                 border: OutlineInputBorder(),
                 hintText: 'https://...',
               ),
@@ -304,7 +304,7 @@ class _EditSheetsBodyState extends State<EditSheetsBody> {
 
       setState(() {
         _isUploading = true;
-        _uploadStatus = 'Nahrávám...';
+        _uploadStatus = 'uploading'.tr();
       });
 
       final downloadUrl = await context.read<EditSongBloc>().songsRepository.uploadFile(fileName, fileBytes);
@@ -321,7 +321,7 @@ class _EditSheetsBodyState extends State<EditSheetsBody> {
           _uploadStatus = '';
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Chyba nahrávání'), backgroundColor: Colors.red),
+          SnackBar(content: Text('uploadError'.tr()), backgroundColor: Colors.red),
         );
       }
     } catch (e) {
@@ -331,7 +331,7 @@ class _EditSheetsBodyState extends State<EditSheetsBody> {
           _uploadStatus = '';
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Chyba nahrávání: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('uploadErrorDetail'.tr(args: [e.toString()])), backgroundColor: Colors.red),
         );
       }
     }

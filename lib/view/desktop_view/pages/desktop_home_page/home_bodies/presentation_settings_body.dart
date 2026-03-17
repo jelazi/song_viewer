@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:screen_retriever/screen_retriever.dart';
@@ -40,7 +41,7 @@ class _PresentationSettingsBodyState extends State<PresentationSettingsBody> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Prezentace',
+                'presentationTitle'.tr(),
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -48,24 +49,24 @@ class _PresentationSettingsBodyState extends State<PresentationSettingsBody> {
               ),
               const SizedBox(height: 20),
               // Screen selection
-              _buildSectionTitle('Výběr obrazovky'),
+              _buildSectionTitle('screenSelection'.tr()),
               const SizedBox(height: 8),
               _buildScreenSelector(state),
               const SizedBox(height: 20),
               // Lines per page
-              _buildSectionTitle('Počet řádků na stránku'),
+              _buildSectionTitle('linesPerPage'.tr()),
               const SizedBox(height: 8),
               _buildLinesPerPageSelector(state),
               const SizedBox(height: 12),
               _buildAutoPageByParagraphsToggle(state),
               const SizedBox(height: 20),
               // Font size
-              _buildSectionTitle('Velikost písma'),
+              _buildSectionTitle('presSettingsFontSize'.tr()),
               const SizedBox(height: 8),
               _buildFontSizeSelector(state),
               const SizedBox(height: 8),
               Text(
-                'Maximální velikost písma v prezentaci. Pokud se řádek nevejde na obrazovku, bude zalomen.',
+                'presSettingsFontSizeHint'.tr(),
                 style: TextStyle(
                   fontSize: 11,
                   color: Colors.grey[600],
@@ -74,27 +75,27 @@ class _PresentationSettingsBodyState extends State<PresentationSettingsBody> {
               ),
               const SizedBox(height: 20),
               // Font color
-              _buildSectionTitle('Barva písma'),
+              _buildSectionTitle('fontColor'.tr()),
               const SizedBox(height: 8),
               _buildFontColorSelector(state),
               const SizedBox(height: 20),
               // Show chords
-              _buildSectionTitle('Zobrazení akordů'),
+              _buildSectionTitle('showChords'.tr()),
               const SizedBox(height: 8),
               _buildShowChordsToggle(state),
               const SizedBox(height: 20),
               // Black screen settings
-              _buildSectionTitle('Černá obrazovka'),
+              _buildSectionTitle('blackScreen'.tr()),
               const SizedBox(height: 8),
               _buildBlackScreenSettings(state),
               const SizedBox(height: 20),
               // Display options
-              _buildSectionTitle('Zobrazení informací'),
+              _buildSectionTitle('displayInfo'.tr()),
               const SizedBox(height: 8),
               _buildDisplayOptions(state),
               const SizedBox(height: 20),
               // Preview
-              _buildSectionTitle('Náhled'),
+              _buildSectionTitle('previewSection'.tr()),
               const SizedBox(height: 8),
               _buildPreview(state),
             ],
@@ -130,21 +131,21 @@ class _PresentationSettingsBodyState extends State<PresentationSettingsBody> {
               const Icon(Icons.monitor, size: 20),
               const SizedBox(width: 8),
               Text(
-                'Dostupné obrazovky: ${_displays.length}',
+                'availableScreens'.tr(args: [_displays.length.toString()]),
                 style: const TextStyle(fontSize: 13),
               ),
               const Spacer(),
               IconButton(
                 icon: const Icon(Icons.refresh, size: 18),
-                tooltip: 'Obnovit seznam obrazovek',
+                tooltip: 'refreshScreenList'.tr(),
                 onPressed: _loadDisplays,
               ),
             ],
           ),
           const SizedBox(height: 8),
           if (_displays.isEmpty)
-            const Text(
-              'Načítání...',
+            Text(
+              'loading'.tr(),
               style: TextStyle(fontSize: 12, color: Colors.grey),
             )
           else
@@ -179,7 +180,7 @@ class _PresentationSettingsBodyState extends State<PresentationSettingsBody> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'Obrazovka ${index + 1}',
+                        'screenN'.tr(args: [(index + 1).toString()]),
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
@@ -201,9 +202,9 @@ class _PresentationSettingsBodyState extends State<PresentationSettingsBody> {
                             color: AppColor.primaryColor.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: const Text(
-                            'Hlavní',
-                            style: TextStyle(fontSize: 10),
+                          child: Text(
+                            'primaryScreen'.tr(),
+                            style: const TextStyle(fontSize: 10),
                           ),
                         ),
                     ],
@@ -228,7 +229,7 @@ class _PresentationSettingsBodyState extends State<PresentationSettingsBody> {
           const Icon(Icons.format_list_numbered, size: 20),
           const SizedBox(width: 8),
           Text(
-            'Řádků: ${state.presentationLinesPerPage}',
+            'linesCount'.tr(args: [state.presentationLinesPerPage.toString()]),
             style: const TextStyle(fontSize: 13),
           ),
           const Spacer(),
@@ -287,12 +288,12 @@ class _PresentationSettingsBodyState extends State<PresentationSettingsBody> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Rozdělit stránky podle odstavců',
+                Text(
+                  'splitPagesByParagraphs'.tr(),
                   style: TextStyle(fontSize: 13),
                 ),
                 Text(
-                  'Stránky budou rozděleny podle prázdných řádků v textu',
+                  'splitPagesByParagraphsHint'.tr(),
                   style: TextStyle(
                     fontSize: 11,
                     color: Colors.grey[600],
@@ -382,8 +383,8 @@ class _PresentationSettingsBodyState extends State<PresentationSettingsBody> {
         children: [
           const Icon(Icons.color_lens, size: 20),
           const SizedBox(width: 8),
-          const Text(
-            'Barva písma:',
+          Text(
+            'fontColorLabel'.tr(),
             style: TextStyle(fontSize: 13),
           ),
           const SizedBox(width: 12),
@@ -436,7 +437,7 @@ class _PresentationSettingsBodyState extends State<PresentationSettingsBody> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Vyberte barvu písma'),
+          title: Text('selectFontColor'.tr()),
           content: SingleChildScrollView(
             child: ColorPicker(
               pickerColor: pickerColor,
@@ -450,7 +451,7 @@ class _PresentationSettingsBodyState extends State<PresentationSettingsBody> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Zrušit'),
+              child: Text('cancel'.tr()),
             ),
             ElevatedButton(
               onPressed: () {
@@ -459,7 +460,7 @@ class _PresentationSettingsBodyState extends State<PresentationSettingsBody> {
                     );
                 Navigator.pop(context);
               },
-              child: const Text('OK'),
+              child: Text('ok'.tr()),
             ),
           ],
         );
@@ -478,8 +479,8 @@ class _PresentationSettingsBodyState extends State<PresentationSettingsBody> {
         children: [
           const Icon(Icons.music_note, size: 20),
           const SizedBox(width: 8),
-          const Text(
-            'Zobrazit akordy v prezentaci',
+          Text(
+            'showChordsInPresentation'.tr(),
             style: TextStyle(fontSize: 13),
           ),
           const Spacer(),
@@ -509,9 +510,9 @@ class _PresentationSettingsBodyState extends State<PresentationSettingsBody> {
             children: [
               const Icon(Icons.brightness_1, size: 20),
               const SizedBox(width: 8),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Černá stránka na začátku písně',
+                  'blackPageAtStart'.tr(),
                   style: TextStyle(fontSize: 13),
                 ),
               ),
@@ -530,9 +531,9 @@ class _PresentationSettingsBodyState extends State<PresentationSettingsBody> {
             children: [
               const Icon(Icons.brightness_1, size: 20),
               const SizedBox(width: 8),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Černá stránka na konci písně / mezi písněmi',
+                  'blackPageAtEnd'.tr(),
                   style: TextStyle(fontSize: 13),
                 ),
               ),
@@ -550,7 +551,7 @@ class _PresentationSettingsBodyState extends State<PresentationSettingsBody> {
             Padding(
               padding: const EdgeInsets.only(left: 28, top: 4),
               child: Text(
-                'Mezi písněmi se zobrazí pouze jedna černá stránka',
+                'blackPageBetweenSongs'.tr(),
                 style: TextStyle(
                   fontSize: 11,
                   color: Colors.grey[600],
@@ -576,9 +577,9 @@ class _PresentationSettingsBodyState extends State<PresentationSettingsBody> {
             children: [
               const Icon(Icons.title, size: 20),
               const SizedBox(width: 8),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Zobrazit název písně',
+                  'showSongTitle'.tr(),
                   style: TextStyle(fontSize: 13),
                 ),
               ),
@@ -597,9 +598,9 @@ class _PresentationSettingsBodyState extends State<PresentationSettingsBody> {
             children: [
               const Icon(Icons.numbers, size: 20),
               const SizedBox(width: 8),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Zobrazit číslo stránky',
+                  'showPageNumber'.tr(),
                   style: TextStyle(fontSize: 13),
                 ),
               ),
@@ -632,7 +633,7 @@ class _PresentationSettingsBodyState extends State<PresentationSettingsBody> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Ukázkový text písně',
+            'previewSampleTitle'.tr(),
             style: TextStyle(
               color: state.presentationFontColor,
               fontSize: (state.presentationFontSize * 0.6).clamp(12.0, 36.0),
@@ -653,7 +654,7 @@ class _PresentationSettingsBodyState extends State<PresentationSettingsBody> {
               maxLines: 1,
             ),
           Text(
-            'Toto je ukázkový řádek textu',
+            'previewSampleLine1'.tr(),
             style: TextStyle(
               color: state.presentationFontColor,
               fontSize: (state.presentationFontSize * 0.5).clamp(10.0, 30.0),
@@ -672,7 +673,7 @@ class _PresentationSettingsBodyState extends State<PresentationSettingsBody> {
               maxLines: 1,
             ),
           Text(
-            'Druhý řádek textu písně',
+            'previewSampleLine2'.tr(),
             style: TextStyle(
               color: state.presentationFontColor,
               fontSize: (state.presentationFontSize * 0.5).clamp(10.0, 30.0),
@@ -682,7 +683,7 @@ class _PresentationSettingsBodyState extends State<PresentationSettingsBody> {
           ),
           const Spacer(),
           Text(
-            'Řádků na stránku: ${state.presentationLinesPerPage} | Velikost písma: ${state.presentationFontSize.toInt()} px',
+            'previewFooter'.tr(args: [state.presentationLinesPerPage.toString(), state.presentationFontSize.toInt().toString()]),
             style: TextStyle(
               color: state.presentationFontColor.withValues(alpha: 0.5),
               fontSize: 10,

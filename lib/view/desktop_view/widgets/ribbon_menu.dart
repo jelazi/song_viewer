@@ -458,7 +458,7 @@ class SettingsTabbar extends StatelessWidget {
                   context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: 'users'));
                 }),
             RibbonButton(
-                text: 'Prezentace',
+                text: 'presentationBtn'.tr(),
                 icon: const Icon(
                   Icons.present_to_all,
                   color: Colors.deepPurple,
@@ -490,7 +490,7 @@ class SettingsTabbar extends StatelessWidget {
                 }),
             const RibbonSpacer(),
             RibbonButton(
-                text: 'Záloha a obnova',
+                text: 'backupAndRestore'.tr(),
                 icon: const Icon(
                   Icons.backup,
                   color: Colors.brown,
@@ -945,7 +945,7 @@ class HomeTabbar extends StatelessWidget {
               children: [
                 // Presentation button - only enabled if playlist is not empty
                 RibbonButton(
-                    text: isOpen ? 'Zavřít prezentaci' : 'Prezentace (F5)',
+                    text: isOpen ? 'closePresentationBtn'.tr() : 'presentationF5'.tr(),
                     isEnabled: isOpen || playlistState.isNotEmpty,
                     icon: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -967,7 +967,7 @@ class HomeTabbar extends StatelessWidget {
                     }),
                 // Add songs to playlist dialog button
                 RibbonButton(
-                    text: 'Přidat do playlistu',
+                    text: 'addToPlaylist'.tr(),
                     isEnabled: true,
                     icon: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -980,7 +980,7 @@ class HomeTabbar extends StatelessWidget {
                     }),
                 // Save playlist button
                 RibbonButton(
-                    text: 'Uložit playlist',
+                    text: 'savePlaylist'.tr(),
                     isEnabled: playlistState.isNotEmpty,
                     icon: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -995,7 +995,7 @@ class HomeTabbar extends StatelessWidget {
                     }),
                 // Load playlist button
                 RibbonButton(
-                    text: 'Načíst playlist',
+                    text: 'loadPlaylist'.tr(),
                     isEnabled: true,
                     icon: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -1083,7 +1083,7 @@ class HomeTabbar extends StatelessWidget {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Uložit prezentační playlist'),
+          title: Text('savePresentationPlaylist'.tr()),
           content: SizedBox(
             width: 350,
             child: Column(
@@ -1092,17 +1092,17 @@ class HomeTabbar extends StatelessWidget {
                 TextField(
                   controller: nameController,
                   autofocus: true,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'Název playlistu',
-                    hintText: 'Zadejte název...',
+                  decoration: InputDecoration(
+                    border: const OutlineInputBorder(),
+                    labelText: 'playlistNameLabel'.tr(),
+                    hintText: 'enterPlaylistNameHint'.tr(),
                   ),
                 ),
                 const SizedBox(height: 12),
                 BlocBuilder<PresentationPlaylistBloc, PresentationPlaylistState>(
                   builder: (context, state) {
                     return Text(
-                      'Počet písní: ${state.songCount}',
+                      'songCountN'.tr(args: [state.songCount.toString()]),
                       style: const TextStyle(fontSize: 13, color: Colors.grey),
                     );
                   },
@@ -1113,7 +1113,7 @@ class HomeTabbar extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Zrušit'),
+              child: Text('cancel'.tr()),
             ),
             ElevatedButton(
               onPressed: () {
@@ -1125,14 +1125,14 @@ class HomeTabbar extends StatelessWidget {
                   Navigator.pop(dialogContext);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Playlist "$name" uložen'),
+                      content: Text('playlistNameSaved'.tr(args: [name])),
                       backgroundColor: Colors.green,
                       duration: const Duration(seconds: 2),
                     ),
                   );
                 }
               },
-              child: const Text('Uložit'),
+              child: Text('saveBtn'.tr()),
             ),
           ],
         );
@@ -1169,15 +1169,15 @@ class HomeTabbar extends StatelessWidget {
                 final playlists = playlistsState.playlists;
 
                 return AlertDialog(
-                  title: const Text('Načíst playlist'),
+                  title: Text('loadPlaylist'.tr()),
                   content: SizedBox(
                     width: 500,
                     height: 500,
                     child: playlists.isEmpty
-                        ? const Center(
+                        ? Center(
                             child: Text(
-                              'Žádné uložené playlisty',
-                              style: TextStyle(color: Colors.grey),
+                              'noSavedPlaylists'.tr(),
+                              style: const TextStyle(color: Colors.grey),
                             ),
                           )
                         : ListView.builder(
@@ -1216,7 +1216,7 @@ class HomeTabbar extends StatelessWidget {
                                               children: [
                                                 Text(playlist.name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
                                                 Text(
-                                                  '${playlist.listSongIds.length} písní',
+                                                  'nSongs'.tr(args: [playlist.listSongIds.length.toString()]),
                                                   style: const TextStyle(fontSize: 11, color: Colors.grey),
                                                 ),
                                               ],
@@ -1224,7 +1224,7 @@ class HomeTabbar extends StatelessWidget {
                                           ),
                                           IconButton(
                                             icon: const Icon(Icons.download, size: 20),
-                                            tooltip: 'Načíst do prezentace',
+                                            tooltip: 'loadToPresentation'.tr(),
                                             onPressed: () {
                                               context.read<PresentationPlaylistBloc>().add(
                                                     LoadPresentationPlaylist(playlist: playlist),
@@ -1232,7 +1232,7 @@ class HomeTabbar extends StatelessWidget {
                                               Navigator.pop(dialogContext);
                                               ScaffoldMessenger.of(context).showSnackBar(
                                                 SnackBar(
-                                                  content: Text('Playlist "${playlist.name}" načten'),
+                                                  content: Text('playlistNameLoaded'.tr(args: [playlist.name])),
                                                   backgroundColor: Colors.green,
                                                   duration: const Duration(seconds: 2),
                                                 ),
@@ -1241,7 +1241,7 @@ class HomeTabbar extends StatelessWidget {
                                           ),
                                           IconButton(
                                             icon: const Icon(Icons.delete, size: 20, color: Colors.red),
-                                            tooltip: 'Smazat playlist',
+                                            tooltip: 'deletePlaylistTooltip'.tr(),
                                             onPressed: () {
                                               playlistsBloc.add(DeletePlaylist(playlist: playlist));
                                               if (isExpanded) {
@@ -1264,9 +1264,9 @@ class HomeTabbar extends StatelessWidget {
                                         border: const Border(bottom: BorderSide(color: Colors.black12)),
                                       ),
                                       child: songs.isEmpty
-                                          ? const Padding(
-                                              padding: EdgeInsets.all(12),
-                                              child: Text('Žádné písně', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                                          ? Padding(
+                                              padding: const EdgeInsets.all(12),
+                                              child: Text('noSongsInPlaylist'.tr(), style: const TextStyle(color: Colors.grey, fontSize: 12)),
                                             )
                                           : ReorderableListView.builder(
                                               shrinkWrap: true,
@@ -1300,7 +1300,7 @@ class HomeTabbar extends StatelessWidget {
                                                       : null,
                                                   trailing: IconButton(
                                                     icon: const Icon(Icons.remove_circle_outline, size: 18, color: Colors.red),
-                                                    tooltip: 'Odebrat z playlistu',
+                                                    tooltip: 'removeFromPlaylist'.tr(),
                                                     onPressed: () {
                                                       final ids = List<String>.from(playlist.listSongIds);
                                                       ids.removeAt(songIndex);
@@ -1325,7 +1325,7 @@ class HomeTabbar extends StatelessWidget {
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(dialogContext),
-                      child: const Text('Zavřít'),
+                      child: Text('closeBtn'.tr()),
                     ),
                   ],
                 );
@@ -1352,7 +1352,7 @@ class HomeTabbar extends StatelessWidget {
                 filter.isEmpty ? allSongs : allSongs.where((s) => s.title.toLowerCase().contains(filter) || (s.interpret?.toLowerCase().contains(filter) ?? false)).toList();
 
             return AlertDialog(
-              title: const Text('Přidat písně do prezentačního playlistu'),
+              title: Text('addSongsToPlaylist'.tr()),
               content: SizedBox(
                 width: 400,
                 height: 500,
@@ -1360,10 +1360,10 @@ class HomeTabbar extends StatelessWidget {
                   children: [
                     TextField(
                       controller: searchController,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        labelText: 'Hledat...',
-                        prefixIcon: Icon(Icons.search),
+                      decoration: InputDecoration(
+                        border: const OutlineInputBorder(),
+                        labelText: 'searchHint'.tr(),
+                        prefixIcon: const Icon(Icons.search),
                       ),
                       onChanged: (_) => setDialogState(() {}),
                     ),
@@ -1385,7 +1385,7 @@ class HomeTabbar extends StatelessWidget {
                                     );
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text('${song.title} přidána'),
+                                    content: Text('songAdded'.tr(args: [song.title])),
                                     duration: const Duration(milliseconds: 800),
                                   ),
                                 );
@@ -1406,7 +1406,7 @@ class HomeTabbar extends StatelessWidget {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext),
-                  child: const Text('Zavřít'),
+                  child: Text('closeBtn'.tr()),
                 ),
               ],
             );

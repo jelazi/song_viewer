@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../../../model/chord/chord_diagram.dart';
@@ -137,7 +138,7 @@ class _ChordEditorDialogState extends State<ChordEditorDialog> {
     widget.onSongUpdated!(updatedSong);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Akord ${widget.chordName} uložen do písně')),
+        SnackBar(content: Text('chordSavedToSong'.tr(args: [widget.chordName]))),
       );
     }
   }
@@ -152,7 +153,7 @@ class _ChordEditorDialogState extends State<ChordEditorDialog> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(success ? 'Akord ${widget.chordName} uložen do knihovny' : 'Chyba při ukládání akordu'),
+          content: Text(success ? 'chordSavedToLibrary'.tr(args: [widget.chordName]) : 'chordSaveError'.tr()),
         ),
       );
     }
@@ -172,13 +173,13 @@ class _ChordEditorDialogState extends State<ChordEditorDialog> {
   String _sourceLabel() {
     switch (_source) {
       case 'song':
-        return 'Píseň';
+        return 'sourceSong'.tr();
       case 'pb':
-        return 'Knihovna';
+        return 'sourceLibrary'.tr();
       case 'hardcoded':
-        return 'Výchozí';
+        return 'sourceDefault'.tr();
       default:
-        return 'Žádný';
+        return 'sourceNone'.tr();
     }
   }
 
@@ -200,7 +201,7 @@ class _ChordEditorDialogState extends State<ChordEditorDialog> {
                     widget.chordName,
                     style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
-                  Chip(label: Text('Zdroj: ${_sourceLabel()}')),
+                  Chip(label: Text('sourceLabel'.tr(args: [_sourceLabel()]))),
                   IconButton(
                     icon: const Icon(Icons.close),
                     onPressed: () => Navigator.of(context).pop(),
@@ -215,7 +216,7 @@ class _ChordEditorDialogState extends State<ChordEditorDialog> {
                     children: [
                       if (_isEditing) ...[
                         // Editor mode
-                        const Text('Klikněte na pražec/strunu pro umístění prstu', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                        Text('clickFretToPlace'.tr(), style: TextStyle(fontSize: 12, color: Colors.grey)),
                         const SizedBox(height: 8),
                         ChordEditorWidget(
                           initialPosition: _editingPosition,
@@ -230,22 +231,22 @@ class _ChordEditorDialogState extends State<ChordEditorDialog> {
                             TextButton.icon(
                               onPressed: _cancelEditing,
                               icon: const Icon(Icons.cancel),
-                              label: const Text('Zrušit'),
+                              label: Text('cancel'.tr()),
                             ),
                             const SizedBox(width: 16),
                             ElevatedButton.icon(
                               onPressed: _saveEditedPosition,
                               icon: const Icon(Icons.check),
-                              label: const Text('Potvrdit'),
+                              label: Text('confirmBtn'.tr()),
                             ),
                           ],
                         ),
                       ] else ...[
                         // View mode
                         if (_positions.isEmpty)
-                          const Padding(
-                            padding: EdgeInsets.all(24),
-                            child: Text('Žádný diagram pro tento akord'),
+                          Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Text('noDiagramForChord'.tr()),
                           )
                         else ...[
                           // Navigation
@@ -292,19 +293,19 @@ class _ChordEditorDialogState extends State<ChordEditorDialog> {
                             OutlinedButton.icon(
                               onPressed: _addNewPosition,
                               icon: const Icon(Icons.add, size: 18),
-                              label: const Text('Nový'),
+                              label: Text('newBtn'.tr()),
                             ),
                             if (_positions.isNotEmpty)
                               OutlinedButton.icon(
                                 onPressed: _editCurrentPosition,
                                 icon: const Icon(Icons.edit, size: 18),
-                                label: const Text('Upravit'),
+                                label: Text('editBtn'.tr()),
                               ),
                             if (_positions.isNotEmpty)
                               OutlinedButton.icon(
                                 onPressed: _deleteCurrentPosition,
                                 icon: const Icon(Icons.delete, size: 18),
-                                label: const Text('Smazat'),
+                                label: Text('deleteBtn'.tr()),
                                 style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
                               ),
                           ],
@@ -323,12 +324,12 @@ class _ChordEditorDialogState extends State<ChordEditorDialog> {
                                 ElevatedButton.icon(
                                   onPressed: _saveToSong,
                                   icon: const Icon(Icons.music_note, size: 18),
-                                  label: const Text('Uložit do písně'),
+                                  label: Text('saveToSong'.tr()),
                                 ),
                               ElevatedButton.icon(
                                 onPressed: _saveToDefaultLibrary,
                                 icon: const Icon(Icons.library_music, size: 18),
-                                label: const Text('Uložit do knihovny'),
+                                label: Text('saveToLibrary'.tr()),
                               ),
                             ],
                           ),
@@ -337,7 +338,7 @@ class _ChordEditorDialogState extends State<ChordEditorDialog> {
                             TextButton.icon(
                               onPressed: _removeSongOverride,
                               icon: const Icon(Icons.remove_circle_outline, size: 18),
-                              label: const Text('Odebrat přepsání v písni'),
+                              label: Text('removeSongOverride'.tr()),
                               style: TextButton.styleFrom(foregroundColor: Colors.orange),
                             ),
                           ],

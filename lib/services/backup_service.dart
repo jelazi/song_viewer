@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:logger_pkg/logger_pkg.dart';
 import 'package:path/path.dart' as p;
@@ -66,23 +67,23 @@ class BackupService {
       }
 
       // --- Collect all data ---
-      onProgress('Načítání písní...');
+      onProgress('backupLoadingSongs'.tr());
       final songs = songsRepository.songs;
 
-      onProgress('Načítání playlistů...');
+      onProgress('backupLoadingPlaylists'.tr());
       final playlists = playlistRepository.playlists;
 
-      onProgress('Načítání skupin...');
+      onProgress('backupLoadingGroups'.tr());
       final groups = songsRepository.listAllGroups;
 
-      onProgress('Načítání uživatelů...');
+      onProgress('backupLoadingUsers'.tr());
       final users = usersRepository.users;
 
-      onProgress('Načítání akordových diagramů...');
+      onProgress('backupLoadingChordDiagrams'.tr());
       final chordCache = songsRepository.chordService.pbChordCache;
       final chordDiagrams = chordCache.entries.map((e) => ChordDiagram(name: e.key, positions: e.value)).toList();
 
-      onProgress('Načítání nastavení...');
+      onProgress('backupLoadingSettings'.tr());
       final settings = _exportSettings();
 
       // --- Download sheet files ---
@@ -98,7 +99,7 @@ class BackupService {
         for (final sheetUrl in song.sheets!) {
           if (sheetUrl.isEmpty || fileMapping.containsKey(sheetUrl)) continue;
           fileIndex++;
-          onProgress('Stahování souboru $fileIndex...');
+          onProgress('backupDownloadingFile'.tr(args: [fileIndex.toString()]));
           final localName = await _downloadFile(sheetUrl, filesDir, fileIndex);
           if (localName != null) {
             fileMapping[sheetUrl] = localName;
@@ -119,7 +120,7 @@ class BackupService {
         'fileMapping': fileMapping,
       };
 
-      onProgress('Ukládání backup.json...');
+      onProgress('savingBackupJson'.tr());
       final jsonFile = File(p.join(directoryPath, 'backup.json'));
       await jsonFile.writeAsString(
         const JsonEncoder.withIndent('  ').convert(backupData),
@@ -134,15 +135,15 @@ class BackupService {
         'files': fileMapping.length,
       };
 
-      onProgress('Hotovo!');
+      onProgress('backupDone'.tr());
       return BackupResult(
         success: true,
-        message: 'Záloha úspěšně vytvořena',
+        message: 'backupSuccess'.tr(),
         counts: counts,
       );
     } catch (e) {
       logger.e('Backup export error: $e');
-      return BackupResult(success: false, message: 'Chyba při exportu: $e');
+      return BackupResult(success: false, message: 'backupExportError'.tr(args: [e.toString()]));
     }
   }
 
@@ -208,9 +209,9 @@ class BackupService {
     try {
       final jsonFile = File(p.join(directoryPath, 'backup.json'));
       if (!jsonFile.existsSync()) {
-        return const BackupResult(
+        return BackupResult(
           success: false,
-          message: 'Soubor backup.json nenalezen ve složce',
+          message: 'backupJsonNotFound'.tr(),
         );
       }
       final content = await jsonFile.readAsString();
@@ -229,11 +230,11 @@ class BackupService {
 
       return BackupResult(
         success: true,
-        message: 'Záloha z $createdAt',
+        message: 'backupFrom'.tr(args: [createdAt]),
         counts: counts,
       );
     } catch (e) {
-      return BackupResult(success: false, message: 'Chyba při čtení zálohy: $e');
+      return BackupResult(success: false, message: 'backupReadError'.tr(args: [e.toString()]));
     }
   }
 
@@ -245,9 +246,9 @@ class BackupService {
     try {
       final jsonFile = File(p.join(directoryPath, 'backup.json'));
       if (!jsonFile.existsSync()) {
-        return const BackupResult(
+        return BackupResult(
           success: false,
-          message: 'Soubor backup.json nenalezen ve složce',
+          message: 'backupJsonNotFound'.tr(),
         );
       }
 
@@ -270,7 +271,7 @@ class BackupService {
           if (!localFile.existsSync()) continue;
 
           uploaded++;
-          onProgress('Nahrávání souboru $uploaded / ${fileMapping.length}...');
+          onProgress('backupUploadingFile'.tr(args: [uploaded.toString(), fileMapping.length.toString()]));
           final bytes = await localFile.readAsBytes();
           final newUrl = await pocketBaseProvider.uploadFile(localName, bytes);
           if (newUrl != null) {
@@ -282,7 +283,7 @@ class BackupService {
 
       // --- Songs ---
       final songsJson = data['songs'] as List? ?? [];
-      onProgress('Obnovování ${songsJson.length} písní...');
+      onProgress('backupRestoringSongs'.tr(args: [songsJson.length.toString()]));
       int songCount = 0;
       for (final sj in songsJson) {
         final song = Song.fromJson(Map<String, dynamic>.from(sj as Map));
@@ -295,14 +296,14 @@ class BackupService {
         await pocketBaseProvider.addOrUpdateSong(song);
         songCount++;
         if (songCount % 20 == 0) {
-          onProgress('Obnovování písní $songCount / ${songsJson.length}...');
+          onProgress('backupRestoringSongsProgress'.tr(args: [songCount.toString(), songsJson.length.toString()]));
         }
       }
       counts['songs'] = songCount;
 
       // --- Playlists ---
       final playlistsJson = data['playlists'] as List? ?? [];
-      onProgress('Obnovování ${playlistsJson.length} playlistů...');
+      onProgress('backupRestoringPlaylists'.tr(args: [playlistsJson.length.toString()]));
       int playlistCount = 0;
       for (final pj in playlistsJson) {
         final playlist = Playlist.fromJson(Map<String, dynamic>.from(pj as Map));
@@ -313,7 +314,7 @@ class BackupService {
 
       // --- Groups ---
       final groupsList = (data['groups'] as List?)?.cast<String>() ?? [];
-      onProgress('Obnovování ${groupsList.length} skupin...');
+      onProgress('backupRestoringGroups'.tr(args: [groupsList.length.toString()]));
       for (final group in groupsList) {
         await pocketBaseProvider.createGroup(group);
       }
@@ -321,7 +322,7 @@ class BackupService {
 
       // --- Users ---
       final usersJson = data['users'] as List? ?? [];
-      onProgress('Obnovování ${usersJson.length} uživatelů...');
+      onProgress('backupRestoringUsers'.tr(args: [usersJson.length.toString()]));
       for (final uj in usersJson) {
         final user = User.fromJson(Map<String, dynamic>.from(uj as Map));
         await pocketBaseProvider.addOrUpdateAppUser(user);
@@ -330,7 +331,7 @@ class BackupService {
 
       // --- Chord diagrams ---
       final chordsJson = data['chordDiagrams'] as List? ?? [];
-      onProgress('Obnovování ${chordsJson.length} akordových diagramů...');
+      onProgress('backupRestoringChordDiagrams'.tr(args: [chordsJson.length.toString()]));
       for (final cj in chordsJson) {
         final diagram = ChordDiagram.fromJson(Map<String, dynamic>.from(cj as Map));
         await songsRepository.chordService.saveChordDiagram(diagram);
@@ -340,23 +341,23 @@ class BackupService {
       // --- Settings ---
       final settingsMap = data['settings'] as Map<String, dynamic>?;
       if (settingsMap != null) {
-        onProgress('Obnovování nastavení...');
+        onProgress('backupRestoringSettings'.tr());
         _importSettings(settingsMap);
       }
 
       // --- Reload app data ---
-      onProgress('Synchronizace dat...');
+      onProgress('backupSyncingData'.tr());
       await songsRepository.updateSongsFromServer();
 
-      onProgress('Hotovo!');
+      onProgress('backupDone'.tr());
       return BackupResult(
         success: true,
-        message: 'Záloha úspěšně obnovena',
+        message: 'backupRestoreSuccess'.tr(),
         counts: counts,
       );
     } catch (e) {
       logger.e('Backup import error: $e');
-      return BackupResult(success: false, message: 'Chyba při obnově: $e');
+      return BackupResult(success: false, message: 'backupRestoreError'.tr(args: [e.toString()]));
     }
   }
 

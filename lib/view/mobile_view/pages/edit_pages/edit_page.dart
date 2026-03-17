@@ -303,7 +303,7 @@ void _showAddYoutubeDialogMobile(BuildContext context) {
           children: [
             TextField(
               controller: nameController,
-              decoration: const InputDecoration(labelText: 'N\u00e1zev videa', border: OutlineInputBorder()),
+              decoration: InputDecoration(labelText: 'videoNameLabel'.tr(), border: OutlineInputBorder()),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -335,11 +335,11 @@ void _showEditYoutubeDialogMobile(BuildContext context, int index, YoutubeVideo 
     context: context,
     builder: (dialogContext) {
       return AlertDialog(
-        title: const Text('Upravit YouTube video'),
+        title: Text('editYoutubeVideo'.tr()),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: nameController, decoration: const InputDecoration(labelText: 'N\u00e1zev videa', border: OutlineInputBorder())),
+            TextField(controller: nameController, decoration: InputDecoration(labelText: 'videoNameLabel'.tr(), border: OutlineInputBorder())),
             const SizedBox(height: 12),
             TextField(controller: urlController, decoration: const InputDecoration(labelText: 'YouTube URL', border: OutlineInputBorder())),
           ],
@@ -501,7 +501,7 @@ Future<void> _uploadSheetImageMobile(BuildContext context) async {
   } catch (e) {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Chyba nahrávání: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text('uploadErrorDetail'.tr(args: [e.toString()])), backgroundColor: Colors.red),
       );
     }
   }

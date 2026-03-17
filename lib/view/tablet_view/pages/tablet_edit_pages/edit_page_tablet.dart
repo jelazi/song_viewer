@@ -329,9 +329,9 @@ void _showAddYoutubeDialog(BuildContext context) {
             children: [
               TextField(
                 controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Název videa',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: 'videoNameLabel'.tr(),
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 12),
@@ -378,7 +378,7 @@ void _showEditYoutubeDialog(BuildContext context, int index, YoutubeVideo video)
     context: context,
     builder: (dialogContext) {
       return AlertDialog(
-        title: const Text('Upravit YouTube video'),
+        title: Text('editYoutubeVideo'.tr()),
         content: SizedBox(
           width: 400,
           child: Column(
@@ -386,9 +386,9 @@ void _showEditYoutubeDialog(BuildContext context, int index, YoutubeVideo video)
             children: [
               TextField(
                 controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Název videa',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: 'videoNameLabel'.tr(),
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 12),
@@ -526,8 +526,8 @@ void _showAddSheetDialog(BuildContext context) {
           width: 400,
           child: TextField(
             controller: urlController,
-            decoration: const InputDecoration(
-              labelText: 'URL obrázku not',
+            decoration: InputDecoration(
+              labelText: 'sheetImageUrl'.tr(),
               border: OutlineInputBorder(),
               hintText: 'https://...',
             ),
@@ -578,7 +578,7 @@ Future<void> _uploadSheetImage(BuildContext context) async {
   } catch (e) {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Chyba nahrávání: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text('uploadErrorDetail'.tr(args: [e.toString()])), backgroundColor: Colors.red),
       );
     }
   }

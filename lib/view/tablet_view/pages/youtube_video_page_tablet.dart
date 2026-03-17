@@ -131,7 +131,7 @@ class _YoutubeVideoPageTabletState extends State<YoutubeVideoPageTablet> {
                                       ElevatedButton.icon(
                                         onPressed: () => _openInBrowser(_getYoutubeUrl(videos[_currentIndex].path)),
                                         icon: const Icon(Icons.open_in_browser),
-                                        label: const Text('Otevřít v prohlížeči'),
+                                        label: Text('openInBrowser'.tr()),
                                       ),
                                     ],
                                   ),

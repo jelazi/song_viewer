@@ -134,7 +134,7 @@ class _EditYoutubeBodyState extends State<EditYoutubeBody> {
                                 children: [
                                   // Test/Play button - open in browser
                                   Tooltip(
-                                    message: 'Přehrát v prohlížeči',
+                                    message: 'playInBrowser'.tr(),
                                     child: IconButton(
                                       icon: Icon(
                                         Icons.open_in_browser,
@@ -191,10 +191,10 @@ class _EditYoutubeBodyState extends State<EditYoutubeBody> {
               children: [
                 TextField(
                   controller: nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Název videa',
+                  decoration: InputDecoration(
+                    labelText: 'videoNameLabel'.tr(),
                     border: OutlineInputBorder(),
-                    hintText: 'např. Živá verze, Karaoke...',
+                    hintText: 'videoNameHint'.tr(),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -243,7 +243,7 @@ class _EditYoutubeBodyState extends State<EditYoutubeBody> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Upravit YouTube video'),
+          title: Text('editYoutubeVideo'.tr()),
           content: SizedBox(
             width: 400,
             child: Column(
@@ -251,8 +251,8 @@ class _EditYoutubeBodyState extends State<EditYoutubeBody> {
               children: [
                 TextField(
                   controller: nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Název videa',
+                  decoration: InputDecoration(
+                    labelText: 'videoNameLabel'.tr(),
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -314,7 +314,7 @@ class _EditYoutubeBodyState extends State<EditYoutubeBody> {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                isValid ? 'Platný YouTube odkaz (ID: $videoId)' : 'Neplatný YouTube odkaz',
+                isValid ? 'validYoutubeLink'.tr(args: [videoId]) : 'invalidYoutubeLink'.tr(),
                 style: TextStyle(
                   fontSize: 12,
                   color: isValid ? Colors.green : Colors.red,

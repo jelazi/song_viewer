@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 /// Interactive guitar chord editor widget for desktop.
@@ -343,7 +344,7 @@ class _ChordEditorWidgetState extends State<ChordEditorWidget> {
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
                 onPressed: _startFret + widget.visibleFrets - 1 < widget.maxFret ? _shiftUp : null,
-                tooltip: 'Vyšší pražce',
+                tooltip: 'higherFrets'.tr(),
               ),
               Text(
                 '$_startFret–${_startFret + widget.visibleFrets - 1}',
@@ -354,7 +355,7 @@ class _ChordEditorWidgetState extends State<ChordEditorWidget> {
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
                 onPressed: _startFret > 1 ? _shiftDown : null,
-                tooltip: 'Nižší pražce',
+                tooltip: 'lowerFrets'.tr(),
               ),
             ],
           ),

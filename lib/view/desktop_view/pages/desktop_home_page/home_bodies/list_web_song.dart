@@ -629,9 +629,9 @@ class _ListWebSongState extends State<ListWebSong> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             if (state.filteredInterprets.isNotEmpty) ...[
-                              const Padding(
-                                padding: EdgeInsets.only(top: 5, bottom: 3),
-                                child: Text('Autoři', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColor.grey1Color)),
+                              Padding(
+                                padding: const EdgeInsets.only(top: 5, bottom: 3),
+                                child: Text('authorsLabel'.tr(), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColor.grey1Color)),
                               ),
                               ...state.filteredInterprets.map((interpret) => MouseRegion(
                                     cursor: SystemMouseCursors.click,
@@ -659,9 +659,9 @@ class _ListWebSongState extends State<ListWebSong> {
                                   ))
                             ],
                             if (state.filteredSongs.isNotEmpty) ...[
-                              const Padding(
-                                padding: EdgeInsets.only(top: 8, bottom: 3),
-                                child: Text('Písně', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColor.grey1Color)),
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8, bottom: 3),
+                                child: Text('songsLabel'.tr(), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColor.grey1Color)),
                               ),
                               ...state.filteredSongs.map((song) => MouseRegion(
                                     cursor: SystemMouseCursors.click,
