@@ -1,5 +1,29 @@
 # Development Log
 
+## 2026-03-27 - Fix iPad song loading failure
+
+### What was done
+Fixed multiple issues that could prevent songs from loading on iPad (and other platforms).
+
+### What was fixed
+- **main.part.dart**: Removed `webRepository.testGetSong()` call from `loadDataFromServer()` — this was leftover test code that made live web requests on every app start and could throw unhandled exceptions (empty list access, index out of bounds, network errors), blocking the entire loading flow
+- **main.part.dart**: Wrapped user loading and chord diagram loading in individual try-catch blocks so a failure in one step doesn't prevent the rest from completing
+- **main.dart**: Added try-catch to `_loadDataAndProceed()` so the app never gets stuck on the loading screen if any part of data loading fails — it now always proceeds to `_syncComplete = true`
+- **main.dart**: Added `mounted` check before `setState` after async loading
+- **main.dart**: Guarded `windowManager.addListener/removeListener/destroy` calls with desktop platform checks (`Platform.isLinux || Platform.isWindows || Platform.isMacOS`) to prevent potential issues on iOS/iPad
+
+### Root cause
+The `testGetSong()` method in `WebRepository` contained unguarded `.first` and `[5]` accesses on web results that could throw `RangeError` or network exceptions. Since `_loadDataAndProceed()` had no error handling, any exception would prevent `_syncComplete` from becoming `true`, leaving the app permanently stuck on the "Loading..." screen.
+
+### Current state
+- Song loading is resilient — individual step failures are caught and logged without blocking the app
+- Desktop-only `windowManager` APIs are properly guarded for mobile platforms
+- Test web request code removed from startup flow
+
+### Pending / Next steps
+- Consider adding a user-facing error notification when loading partially fails
+- Consider adding retry logic for failed server synchronization
+
 ## 2026-03-17 - Full app localization of hardcoded Czech strings
 
 ### What was done

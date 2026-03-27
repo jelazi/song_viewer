@@ -132,24 +132,30 @@ Future<void> loadDataFromServer(AppRepositories repositories) async {
   }
 
   // 3. Load users (not cached — typically small dataset)
-  await repositories.usersRepository.loadUsersFromServer();
-  await repositories.usersRepository.loadCurrentUser();
+  try {
+    await repositories.usersRepository.loadUsersFromServer();
+    await repositories.usersRepository.loadCurrentUser();
+  } catch (e) {
+    logger.e('Error loading users: $e');
+  }
 
   // 4. Load chord diagrams — cache-first with PB sync
-  final chordService = repositories.songsRepository.chordService;
-  final hasCachedChords = chordService.loadFromCache();
-  if (hasCachedChords) {
-    logger.i('Chord diagrams loaded from Hive cache');
+  try {
+    final chordService = repositories.songsRepository.chordService;
+    final hasCachedChords = chordService.loadFromCache();
+    if (hasCachedChords) {
+      logger.i('Chord diagrams loaded from Hive cache');
+    }
+    final needsChordSync = await chordService.isServerDataNewer();
+    if (needsChordSync) {
+      logger.i('Server chord data is newer — syncing from PocketBase');
+      await chordService.syncFromServer();
+    } else if (!hasCachedChords) {
+      await chordService.syncFromServer();
+    }
+  } catch (e) {
+    logger.e('Error loading chord diagrams: $e');
   }
-  final needsChordSync = await chordService.isServerDataNewer();
-  if (needsChordSync) {
-    logger.i('Server chord data is newer — syncing from PocketBase');
-    await chordService.syncFromServer();
-  } else if (!hasCachedChords) {
-    await chordService.syncFromServer();
-  }
-
-  await repositories.webRepository.testGetSong();
 }
 
 /// Upload local JSON data to the PocketBase server

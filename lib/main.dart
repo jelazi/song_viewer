@@ -623,7 +623,9 @@ class _MyAppState extends State<MyApp> with WindowListener {
   void initState() {
     super.initState();
     _appRouter = AppRouter(settingsRepository: widget.repositories.settingsRepository);
-    windowManager.addListener(this);
+    if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
+      windowManager.addListener(this);
+    }
 
     // If server has data and is authenticated, load data automatically
     if (widget.syncInfo.isAuthenticated && !widget.syncInfo.isServerEmpty) {
@@ -636,11 +638,17 @@ class _MyAppState extends State<MyApp> with WindowListener {
 
   Future<void> _loadDataAndProceed() async {
     setState(() => _isLoading = true);
-    await loadDataFromServer(widget.repositories);
-    setState(() {
-      _syncComplete = true;
-      _isLoading = false;
-    });
+    try {
+      await loadDataFromServer(widget.repositories);
+    } catch (e) {
+      logger.e('Error loading data from server: $e');
+    }
+    if (mounted) {
+      setState(() {
+        _syncComplete = true;
+        _isLoading = false;
+      });
+    }
   }
 
   Future<void> _handleDownloadFromServer() async {
@@ -655,7 +663,9 @@ class _MyAppState extends State<MyApp> with WindowListener {
 
   @override
   void dispose() {
-    windowManager.removeListener(this);
+    if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
+      windowManager.removeListener(this);
+    }
     super.dispose();
   }
 
@@ -671,7 +681,9 @@ class _MyAppState extends State<MyApp> with WindowListener {
     }
 
     // Now destroy the main window
-    await windowManager.destroy();
+    if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
+      await windowManager.destroy();
+    }
   }
 
   @override
