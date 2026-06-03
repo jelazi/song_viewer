@@ -169,6 +169,42 @@ class WebRepository {
     return interprets;
   }
 
+  /// Search songs directly on PisnickyAkordy using MeiliSearch.
+  Future<List<WebSong>> findSongsPisnickyAkordy(String searchText) async {
+    List<WebSong> songs = [];
+    try {
+      final response = await webProvider.searchPisnickyAkordy(searchText);
+      if (response.statusCode == 200 && response.data is Map) {
+        final data = response.data as Map;
+        final hits = data['hits'];
+        if (hits is List) {
+          for (final hit in hits) {
+            if (hit is Map) {
+              final type = hit['type'];
+              // Only include songs, skip interprets
+              if (type == 'song' || type == 'pisen') {
+                final title = hit['title'] ?? hit['name'] ?? '';
+                final ref = hit['url'] ?? hit['ref'] ?? '';
+                final interpret = hit['interpret'] ?? hit['artist'] ?? '';
+                if (title.isNotEmpty && ref.isNotEmpty) {
+                  songs.add(WebSong(
+                    title: title.toString(),
+                    ref: ref.toString(),
+                    interpret: interpret.toString(),
+                    server: 'pisnicky-akordy.cz',
+                  ));
+                }
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {
+      logger.e('Error searching PisnickyAkordy songs: $e');
+    }
+    return songs;
+  }
+
   Map<String, String> parseSearchByFirstLetterFromPisnickyAkordy(String htmlText, String firstLetter) {
     Map<String, String> map = {};
     BeautifulSoup bs = BeautifulSoup(htmlText);

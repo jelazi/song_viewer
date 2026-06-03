@@ -54,6 +54,11 @@ class _HomePageMobileState extends State<HomePageMobile> {
   Widget build(BuildContext context) {
     selectLargeScreen(MediaQuery.of(context).size);
     return BlocBuilder<HomePageBloc, HomePageState>(
+      buildWhen: (previous, current) =>
+          previous.listSong != current.listSong ||
+          previous.selectedSongId != current.selectedSongId ||
+          previous.isEditIconVisible != current.isEditIconVisible ||
+          previous.listExpandedSongs != current.listExpandedSongs,
       builder: (context, state) {
         return Scaffold(
           drawer: const HomeDrawer(),
@@ -138,16 +143,21 @@ class _HomePageMobileState extends State<HomePageMobile> {
                 );
               })),
               SliverList(
-                delegate: SliverChildListDelegate(
-                  state.listSong
-                      .map((song) => SongCard(
-                            song: song,
-                            index: state.listSong.indexOf(song),
-                            isSelectedSong: state.selectedSongId == song.id,
-                            isEditIconVisible: state.isEditIconVisible,
-                            isExpanded: state.listExpandedSongs.contains(song.id),
-                          ))
-                      .toList(),
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final song = state.listSong[index];
+                    return RepaintBoundary(
+                      child: SongCard(
+                        key: ValueKey(song.id),
+                        song: song,
+                        index: index,
+                        isSelectedSong: state.selectedSongId == song.id,
+                        isEditIconVisible: state.isEditIconVisible,
+                        isExpanded: state.listExpandedSongs.contains(song.id),
+                      ),
+                    );
+                  },
+                  childCount: state.listSong.length,
                 ),
               )
             ]),

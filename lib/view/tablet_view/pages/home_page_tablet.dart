@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../blocs/export_blocs.dart';
+import '../../../model/web_song.dart';
 import '../../../services/constants.dart';
 import '../../mobile_view/widgets/dialogs/qr_code_dialog.dart';
 import '../widgets/filter_field_tablet.dart';
@@ -71,6 +72,14 @@ class _HomePageTabletState extends State<HomePageTablet> {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<HomePageBloc, HomePageState>(
+      buildWhen: (previous, current) =>
+          previous.listSong != current.listSong ||
+          previous.selectedSongId != current.selectedSongId ||
+          previous.isEditIconVisible != current.isEditIconVisible ||
+          previous.listExpandedSongs != current.listExpandedSongs ||
+          previous.selectedPage != current.selectedPage ||
+          previous.listAllGroups != current.listAllGroups ||
+          previous.listSelectedGroups != current.listSelectedGroups,
       builder: (context, state) {
         return Scaffold(
           resizeToAvoidBottomInset: false,
@@ -164,9 +173,7 @@ class _HomePageTabletState extends State<HomePageTablet> {
                       ),
                       state.selectedPage == 'preview'
                           ? getPreviewFilterItems(context)
-                          : state.selectedPage == 'web'
-                              ? getWebSiteDropDown()
-                              : Container(),
+                          : Container(),
                     ],
                   )),
               SizedBox(
@@ -188,6 +195,8 @@ class _HomePageTabletState extends State<HomePageTablet> {
   }
 
   Widget getPlaylistsBody() => Container(child: BlocBuilder<PlaylistsBloc, PlaylistsState>(
+        buildWhen: (previous, current) =>
+            previous.playlists != current.playlists,
         builder: (context, state) {
           return Column(
             children: [
@@ -218,24 +227,26 @@ class _HomePageTabletState extends State<HomePageTablet> {
               ),
               const Divider(color: AppColor.grey3Color, thickness: 1, indent: 20, endIndent: 20),
               Expanded(
-                child: ListView(
-                  shrinkWrap: true,
-                  children: state.playlists.map((playlist) {
+                child: ListView.builder(
+                  itemCount: state.playlists.length,
+                  itemBuilder: (context, index) {
+                    final playlist = state.playlists[index];
                     String songNamesSubtitle = '';
                     if (playlist.listSongIds.isNotEmpty) {
-                      var index = 0;
+                      final songs = context.read<PlaylistsBloc>().songsRepository.songs;
+                      final nameParts = <String>[];
                       for (var songId in playlist.listSongIds) {
-                        final songName = context.read<PlaylistsBloc>().songsRepository.songs.firstWhere((element) => element.id == songId).title;
-                        if (songName.isNotEmpty) {
-                          songNamesSubtitle = songNamesSubtitle + songName;
-                        }
-                        if (index < playlist.listSongIds.length - 1) {
-                          songNamesSubtitle = songNamesSubtitle + ', ';
-                        }
-                        index++;
+                        try {
+                          final songName = songs.firstWhere((element) => element.id == songId).title;
+                          if (songName.isNotEmpty) {
+                            nameParts.add(songName);
+                          }
+                        } catch (_) {}
                       }
+                      songNamesSubtitle = nameParts.join(', ');
                     }
                     return GestureDetector(
+                      key: ValueKey('playlist_${playlist.id}'),
                       onTap: () {
                         context.read<PlaylistsBloc>().add(OpenPlaylist(playlist: playlist, forEdit: false));
                         Navigator.of(context).pushNamed('/playlistPage');
@@ -304,7 +315,7 @@ class _HomePageTabletState extends State<HomePageTablet> {
                             ),
                           )),
                     );
-                  }).toList(),
+                  },
                 ),
               ),
             ],
@@ -320,104 +331,15 @@ class _HomePageTabletState extends State<HomePageTablet> {
 
   Widget getWebBody(HomePageState state) {
     return BlocBuilder<WebBloc, WebState>(
-      builder: (context, state) {
+      builder: (context, wState) {
         return Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 15.0, bottom: 20),
-              child: FilterFieldTablet(
-                filter: _filterInterpretPisnickyAkordy,
-                clearFilter: () => context.read<WebBloc>().add(const FilterInterprets(filter: '')),
-                onSearch: (value) => context.read<WebBloc>().add(FilterInterprets(
-                      filter: value,
-                    )),
-                hintText: state.searchWeb == 2
-                    ? 'filterSongOrInterpret'.tr()
-                    : state.searchWeb == 3
-                        ? 'filterSong'.tr()
-                        : 'filterInterpret'.tr(),
-              ),
-            ),
+            _buildWebSearchBar(context, wState),
+            const SizedBox(height: 12),
+            _buildWebSearchTypeToggle(context, wState),
+            const SizedBox(height: 12),
             Expanded(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Flexible(
-                    flex: 2,
-                    child: state.searchWebInterprets
-                        ? const SizedBox(width: 40, height: 40, child: CircularProgressIndicator())
-                        : Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              SizedBox(
-                                  height: MediaQuery.of(context).size.height / 2 - 100,
-                                  child: SingleChildScrollView(
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.start,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: state.filteredInterprets.map((interpret) => WebInterpretCard(interpret: interpret)).toList(),
-                                    ),
-                                  )),
-                              Visibility(
-                                visible: state.historyInterprets.isNotEmpty,
-                                child: Container(
-                                  height: 40,
-                                  padding: EdgeInsets.zero,
-                                  child: const Divider(
-                                    color: AppColor.grey1Color,
-                                    thickness: 2,
-                                  ),
-                                ),
-                              ),
-                              Visibility(
-                                  visible: state.historyInterprets.isNotEmpty, child: Text('history'.tr(), style: const TextStyle(fontSize: 16, color: AppColor.grey1Color))),
-                              SizedBox(
-                                height: MediaQuery.of(context).size.height / 2 - 100,
-                                child: SingleChildScrollView(child: Column(children: state.historyInterprets.map((interpret) => WebInterpretCard(interpret: interpret)).toList())),
-                              )
-                            ],
-                          ),
-                  ),
-                  Flexible(
-                    flex: 3,
-                    child: state.searchWebSongs
-                        ? const SizedBox(
-                            width: 40,
-                            height: 40,
-                            child: CircularProgressIndicator(),
-                          )
-                        : SizedBox(
-                            height: MediaQuery.of(context).size.height - 135,
-                            child: Column(
-                              children: [
-                                Text(
-                                  state.currentInterpret.title.isNotEmpty
-                                      ? state.currentInterpret.title
-                                      : state.songs.isNotEmpty && (state.searchWeb == 2 || state.searchWeb == 3)
-                                          ? 'searchResults'.tr()
-                                          : '',
-                                  style: const TextStyle(fontSize: 16, color: AppColor.grey1Color),
-                                ),
-                                SizedBox(
-                                  height: MediaQuery.of(context).size.height - 160,
-                                  child: ListView(
-                                    shrinkWrap: true,
-                                    children: state.songs
-                                        .map((song) => SongCardTabletWeb(
-                                              song: song,
-                                              index: state.songs.indexOf(song),
-                                            ))
-                                        .toList(),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                  ),
-                ],
-              ),
+              child: _buildWebResults(context, wState),
             ),
           ],
         );
@@ -425,17 +347,365 @@ class _HomePageTabletState extends State<HomePageTablet> {
     );
   }
 
+  Widget _buildWebSearchBar(BuildContext context, WebState wState) {
+    final label = switch (wState.searchWeb) {
+      2 => 'filterSongOrInterpret'.tr(),
+      3 => 'filterSong'.tr(),
+      _ => wState.searchType == 0 ? 'filterSong'.tr() : 'filterInterpret'.tr(),
+    };
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              height: 44,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColor.grey3Color),
+              ),
+              child: TextField(
+                controller: _filterInterpretPisnickyAkordy,
+                decoration: InputDecoration(
+                  hintText: label,
+                  prefixIcon: const Icon(Icons.search, color: AppColor.grey1Color),
+                  suffixIcon: _filterInterpretPisnickyAkordy.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear, size: 18),
+                          onPressed: () {
+                            _filterInterpretPisnickyAkordy.clear();
+                            context.read<WebBloc>().add(const FilterInterprets(filter: ''));
+                          },
+                        )
+                      : null,
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                ),
+                onSubmitted: (value) {
+                  if (wState.searchType == 0) {
+                    context.read<WebBloc>().add(FilterInterprets(filter: value));
+                  } else {
+                    context.read<WebBloc>().add(FilterInterprets(filter: value));
+                  }
+                },
+                onChanged: (value) {
+                  context.read<WebBloc>().add(FilterInterprets(filter: value));
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWebSearchTypeToggle(BuildContext context, WebState wState) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              // Website segmented tabs
+              Expanded(
+                child: SizedBox(
+                  height: 36,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _listSearchWeb.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 6),
+                    itemBuilder: (context, index) {
+                      final isSelected = wState.searchWeb == index;
+                      return buildWebsiteChip(index, isSelected, wState);
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          // Search type toggle (show for sites that support both)
+          if (wState.searchWeb == 0 || wState.searchWeb == 1 || wState.searchWeb == 2)
+            Row(
+              children: [
+                _buildToggleChip(
+                  label: 'interpret'.tr(),
+                  icon: Icons.person,
+                  isSelected: wState.searchType == 1,
+                  onTap: () {
+                    if (wState.searchType != 1) {
+                      context.read<WebBloc>().add(const ChangeSearchType(searchType: 1));
+                      _filterInterpretPisnickyAkordy.clear();
+                    }
+                  },
+                ),
+                const SizedBox(width: 8),
+                _buildToggleChip(
+                  label: 'song'.tr(),
+                  icon: Icons.music_note,
+                  isSelected: wState.searchType == 0,
+                  onTap: () {
+                    if (wState.searchType != 0) {
+                      context.read<WebBloc>().add(const ChangeSearchType(searchType: 0));
+                      _filterInterpretPisnickyAkordy.clear();
+                    }
+                  },
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildWebsiteChip(int index, bool isSelected, WebState wState) {
+    final names = ['Velký zpěvník', 'Písničky-akordy', 'ProScholy', 'Worship Leader'];
+    final icons = [Icons.library_music, Icons.music_note, Icons.church, Icons.mic];
+    return GestureDetector(
+      onTap: () {
+        _filterInterpretPisnickyAkordy.clear();
+        _filterSongVelkyZpevnik.clear();
+        _filterInterpretVelkyZpevnik.clear();
+        _filterSongPisnickyAkordy.clear();
+        context.read<WebBloc>().add(ChangeSearchWeb(searchWeb: index));
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColor.primaryColor : Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: isSelected ? AppColor.primaryColor : AppColor.grey3Color,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icons[index], size: 16, color: isSelected ? Colors.white : AppColor.grey1Color),
+            const SizedBox(width: 6),
+            Text(
+              names[index],
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                color: isSelected ? Colors.white : AppColor.grey1Color,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildToggleChip({
+    required String label,
+    required IconData icon,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColor.primaryColor.withValues(alpha: 0.1) : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? AppColor.primaryColor : AppColor.grey3Color,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: isSelected ? AppColor.primaryColor : AppColor.grey1Color),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                color: isSelected ? AppColor.primaryColor : AppColor.grey1Color,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWebResults(BuildContext context, WebState wState) {
+    if (wState.searchWebInterprets || wState.isSearching) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final hasInterprets = wState.filteredInterprets.isNotEmpty;
+    final hasHistory = wState.historyInterprets.isNotEmpty;
+    final isSongMode = wState.searchType == 0;
+    final songsToShow = isSongMode ? wState.filteredSongs : wState.songs;
+
+    // Song mode: show full-width songs, no interpret panel
+    if (isSongMode || wState.searchWeb == 3) {
+      return wState.searchWebSongs
+          ? const Center(child: CircularProgressIndicator())
+          : _buildSongList(context, wState, songsToShow.isEmpty ? wState.songs : songsToShow);
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Left panel: interprets
+        Expanded(
+          flex: 2,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (hasInterprets) ...[
+                Padding(
+                  padding: const EdgeInsets.only(left: 12, bottom: 8),
+                  child: Text(
+                    'interpret'.tr().toUpperCase(),
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColor.grey1Color, letterSpacing: 1.2),
+                  ),
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    itemCount: wState.filteredInterprets.length,
+                    itemBuilder: (context, index) {
+                      return WebInterpretCard(interpret: wState.filteredInterprets[index]);
+                    },
+                  ),
+                ),
+              ],
+              if (hasHistory && !hasInterprets) ...[
+                Padding(
+                  padding: const EdgeInsets.only(left: 12, top: 8, bottom: 8),
+                  child: Row(
+                    children: [
+                      Icon(Icons.history, size: 14, color: AppColor.grey1Color),
+                      const SizedBox(width: 4),
+                      Text(
+                        'history'.tr().toUpperCase(),
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColor.grey1Color, letterSpacing: 1.2),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    itemCount: wState.historyInterprets.length,
+                    itemBuilder: (context, index) {
+                      return WebInterpretCard(interpret: wState.historyInterprets[index]);
+                    },
+                  ),
+                ),
+              ],
+              if (!hasInterprets && !hasHistory)
+                Expanded(
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.search, size: 48, color: AppColor.grey3Color),
+                        const SizedBox(height: 8),
+                        Text('searchForSongOrInterpret'.tr(), style: TextStyle(color: AppColor.grey1Color)),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const VerticalDivider(width: 1, thickness: 1, color: AppColor.grey3Color),
+        // Right panel: songs
+        Expanded(
+          flex: 3,
+          child: wState.searchWebSongs
+              ? const Center(child: CircularProgressIndicator())
+              : _buildSongList(context, wState, songsToShow),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSongList(BuildContext context, WebState wState, List<WebSong> songs) {
+    if (songs.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.music_note, size: 48, color: AppColor.grey3Color),
+              const SizedBox(height: 8),
+              Text('searchResults'.tr(), style: TextStyle(color: AppColor.grey1Color, fontSize: 16)),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 12, bottom: 8),
+          child: Row(
+            children: [
+              Text(
+                wState.currentInterpret.title.isNotEmpty ? wState.currentInterpret.title : 'searchResults'.tr(),
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColor.grey1Color),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColor.primaryColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '${songs.length}',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColor.primaryColor),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            itemCount: songs.length,
+            itemBuilder: (context, index) {
+              return SongCardTabletWeb(
+                song: songs[index],
+                index: index,
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget getPreviewBody(HomePageState state) {
-    return ListView(
+    return ListView.builder(
       shrinkWrap: true,
-      children: state.listSong
-          .map((song) => SongCardTablet(
-                song: song,
-                index: state.listSong.indexOf(song),
-                isEditIconVisible: state.isEditIconVisible,
-                isSelectedSong: state.selectedSongId == song.id,
-              ))
-          .toList(),
+      itemCount: state.listSong.length,
+      itemBuilder: (context, index) {
+        final song = state.listSong[index];
+        return RepaintBoundary(
+          child: SongCardTablet(
+            key: ValueKey(song.id),
+            song: song,
+            index: index,
+            isEditIconVisible: state.isEditIconVisible,
+            isSelectedSong: state.selectedSongId == song.id,
+          ),
+        );
+      },
     );
   }
 
@@ -584,81 +854,6 @@ class _HomePageTabletState extends State<HomePageTablet> {
     );
   }
 
-  Widget getWebSiteDropDown() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 20.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(
-              left: 10.0,
-            ),
-            child: Text('selectWebSite'.tr(), style: const TextStyle(fontSize: 16)),
-          ),
-          Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: AppColor.grey3Color),
-              borderRadius: BorderRadius.circular(5),
-            ),
-            margin: const EdgeInsets.all(8),
-            width: 250,
-            height: 40,
-            child: BlocBuilder<WebBloc, WebState>(
-              builder: (context, state) {
-                return DropdownButton<String>(
-                  underline: const SizedBox(),
-                  value: _listSearchWeb[state.searchWeb],
-                  padding: const EdgeInsets.only(left: 8),
-                  items: [
-                    DropdownMenuItem(
-                      value: _listSearchWeb[0],
-                      child: SizedBox(
-                        width: 200,
-                        child: Text(_listSearchWeb[0]),
-                      ),
-                    ),
-                    DropdownMenuItem(
-                      value: _listSearchWeb[1],
-                      child: SizedBox(
-                        width: 200,
-                        child: Text(_listSearchWeb[1]),
-                      ),
-                    ),
-                    DropdownMenuItem(
-                      value: _listSearchWeb[2],
-                      child: SizedBox(
-                        width: 200,
-                        child: Text(_listSearchWeb[2]),
-                      ),
-                    ),
-                    DropdownMenuItem(
-                      value: _listSearchWeb[3],
-                      child: SizedBox(
-                        width: 200,
-                        child: Text(_listSearchWeb[3]),
-                      ),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      int index = _listSearchWeb.indexOf(value ?? _listSearchWeb[0]);
-                      _filterSongVelkyZpevnik.clear();
-                      _filterInterpretVelkyZpevnik.clear();
-                      _filterInterpretPisnickyAkordy.clear();
-                      _filterSongPisnickyAkordy.clear();
-                      context.read<WebBloc>().add(ChangeSearchWeb(searchWeb: index));
-                    });
-                  },
-                  hint: const Text('Select an option'),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class WebInterpretCard extends StatelessWidget {
@@ -672,30 +867,86 @@ class WebInterpretCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<WebBloc, WebState>(
+      buildWhen: (previous, current) =>
+          previous.currentInterpret.title != current.currentInterpret.title,
       builder: (context, state) {
-        return MouseRegion(
-          cursor: SystemMouseCursors.click,
-          child: GestureDetector(
-            onTap: () {
-              if (state.currentInterpret.title == interpret.title) {
-                context.read<WebBloc>().add(const ChangeCurrentInterpret(interpret: null));
-              } else {
-                context.read<WebBloc>().add(ChangeCurrentInterpret(interpret: interpret));
-              }
-            },
-            child: Container(
-              height: 60,
-              width: 200,
-              alignment: Alignment.centerLeft,
-              decoration: const BoxDecoration(
-                border: Border(
-                  top: BorderSide(color: AppColor.grey3Color, width: 1.0),
+        final isSelected = state.currentInterpret.title == interpret.title;
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: Material(
+            color: isSelected ? AppColor.primaryColor.withValues(alpha: 0.08) : Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(10),
+              onTap: () {
+                if (isSelected) {
+                  context.read<WebBloc>().add(const ChangeCurrentInterpret(interpret: null));
+                } else {
+                  context.read<WebBloc>().add(ChangeCurrentInterpret(interpret: interpret));
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: isSelected ? AppColor.primaryColor.withValues(alpha: 0.3) : AppColor.grey3Color,
+                  ),
                 ),
-              ),
-              child: Text(
-                interpret.title,
-                style: TextStyle(fontSize: 14, color: state.currentInterpret.title == interpret.title ? AppColor.alertErrorColor : AppColor.grey1Color),
-                overflow: TextOverflow.ellipsis,
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 16,
+                      backgroundColor: isSelected ? AppColor.primaryColor : AppColor.grey3Color,
+                      child: Text(
+                        interpret.title.isNotEmpty ? interpret.title[0].toUpperCase() : '?',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: isSelected ? Colors.white : AppColor.grey1Color,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            interpret.title,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                              color: isSelected ? AppColor.primaryColor : AppColor.grey1Color,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (interpret.songs > 0)
+                            Text(
+                              '${interpret.songs} ${'songs'.tr()}',
+                              style: TextStyle(fontSize: 11, color: AppColor.grey1Color.withValues(alpha: 0.7)),
+                            ),
+                        ],
+                      ),
+                    ),
+                    if (interpret.songs > 0)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: isSelected ? AppColor.primaryColor.withValues(alpha: 0.1) : AppColor.grey3Color.withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          '${interpret.songs}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: isSelected ? AppColor.primaryColor : AppColor.grey1Color,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),

@@ -94,66 +94,74 @@ class _ListSongState extends State<ListSong> {
                       children: [
                         SizedBox(
                           height: clampedSongListHeight,
-                          child: ListView(
-                            children: state.listSong
-                                .map((song) => Draggable<Song>(
-                                      data: song,
-                                      feedback: Material(
-                                        elevation: 4,
-                                        borderRadius: BorderRadius.circular(4),
-                                        child: Container(
-                                          width: 280,
-                                          height: 40,
-                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                          decoration: BoxDecoration(
-                                            color: AppColor.primaryColor.withOpacity(0.9),
-                                            borderRadius: BorderRadius.circular(4),
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              const Icon(Icons.music_note, size: 16, color: Colors.white),
-                                              const SizedBox(width: 8),
-                                              Expanded(
-                                                child: Text(
-                                                  song.title,
-                                                  style: const TextStyle(fontSize: 14, color: Colors.white),
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                      child: Container(
-                                        height: 40,
-                                        decoration: BoxDecoration(
-                                          color: state.selectedSongId == song.id ? AppColor.alertSuccessLightColor : Colors.transparent,
-                                          border: Border(
-                                            top: BorderSide(color: state.selectedSongId == song.id ? AppColor.alertErrorDarkColor : AppColor.grey3Color, width: 1.0),
+                          child: ListView.builder(
+                            itemCount: state.listSong.length,
+                            itemBuilder: (context, index) {
+                              final song = state.listSong[index];
+                              return RepaintBoundary(
+                                child: Draggable<Song>(
+                                  key: ValueKey('song_${song.id}'),
+                                data: song,
+                                feedback: Material(
+                                  elevation: 4,
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: Container(
+                                    width: 280,
+                                    height: 40,
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: AppColor.primaryColor.withOpacity(0.9),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.music_note, size: 16, color: Colors.white),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            song.title,
+                                            style: const TextStyle(fontSize: 14, color: Colors.white),
+                                            overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
-                                        child: BlocBuilder<PreviewChordBloc, PreviewChordState>(
-                                          builder: (context, state) {
-                                            return ListTile(
-                                              selected: state.data.song?.id == song.id,
-                                              selectedTileColor: state.selectedSongId == song.id ? AppColor.alertErrorLightColor : AppColor.grey4Color,
-                                              hoverColor: state.selectedSongId == song.id ? AppColor.alertSuccessDarkColor : AppColor.grey5Color,
-                                              title: SizedBox(
-                                                  width: 200,
-                                                  child: Text(
-                                                    song.title,
-                                                    style: const TextStyle(fontSize: 14),
-                                                    overflow: TextOverflow.ellipsis,
-                                                  )),
-                                              onTap: () {
-                                                _handleSongTap(context, state.data.song, song);
-                                              },
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                    ))
-                                .toList(),
+                                      ],
+                                    ),
+                                  ),
+                                  ),
+                                  child: Container(
+                                    key: ValueKey('container_${song.id}'),
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: state.selectedSongId == song.id ? AppColor.alertSuccessLightColor : Colors.transparent,
+                                    border: Border(
+                                      top: BorderSide(color: state.selectedSongId == song.id ? AppColor.alertErrorDarkColor : AppColor.grey3Color, width: 1.0),
+                                    ),
+                                  ),
+                                  child: BlocBuilder<PreviewChordBloc, PreviewChordState>(
+                                    buildWhen: (previous, current) =>
+                                        (current.data.song?.id == song.id) != (previous.data.song?.id == song.id),
+                                    builder: (context, previewState) {
+                                      return ListTile(
+                                        selected: previewState.data.song?.id == song.id,
+                                        selectedTileColor: previewState.selectedSongId == song.id ? AppColor.alertErrorLightColor : AppColor.grey4Color,
+                                        hoverColor: previewState.selectedSongId == song.id ? AppColor.alertSuccessDarkColor : AppColor.grey5Color,
+                                        title: SizedBox(
+                                            width: 200,
+                                            child: Text(
+                                              song.title,
+                                              style: const TextStyle(fontSize: 14),
+                                              overflow: TextOverflow.ellipsis,
+                                            )),
+                                        onTap: () {
+                                          _handleSongTap(context, previewState.data.song, song);
+                                        },
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                            );
+                            },
                           ),
                         ),
                         const SizedBox(height: 8),

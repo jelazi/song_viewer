@@ -58,16 +58,43 @@ class _LyricsRendererState extends State<LyricsRenderer> {
   double _fontScale = 1;
   double _baseFontScale = 1;
 
-  @override
-  Widget build(BuildContext context) {
-    ChordProcessor chordProcessor = ChordProcessor(context);
-    final chordLyricsDocument = chordProcessor.processText(
+  // Memoization cache for chord processing
+  ChordLyricsDocument? _cachedDocument;
+  String? _cachedLyrics;
+  TextStyle? _cachedLyricsStyle;
+  TextStyle? _cachedChordStyle;
+  int? _cachedTransposeIncrement;
+  TypeTranspose? _cachedTypeTranspose;
+
+  ChordLyricsDocument _processText(BuildContext context) {
+    if (_cachedDocument != null &&
+        _cachedLyrics == widget.lyrics &&
+        _cachedLyricsStyle == widget.textStyle &&
+        _cachedChordStyle == widget.chordStyle &&
+        _cachedTransposeIncrement == widget.transposeIncrement &&
+        _cachedTypeTranspose == widget.typeTranspose) {
+      return _cachedDocument!;
+    }
+
+    final chordProcessor = ChordProcessor(context);
+    _cachedDocument = chordProcessor.processText(
       text: widget.lyrics,
       lyricsStyle: widget.textStyle,
       chordStyle: widget.chordStyle,
       transposeIncrement: widget.transposeIncrement,
       typeTranspose: widget.typeTranspose,
     );
+    _cachedLyrics = widget.lyrics;
+    _cachedLyricsStyle = widget.textStyle;
+    _cachedChordStyle = widget.chordStyle;
+    _cachedTransposeIncrement = widget.transposeIncrement;
+    _cachedTypeTranspose = widget.typeTranspose;
+    return _cachedDocument!;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final chordLyricsDocument = _processText(context);
     if (chordLyricsDocument.chordLyricsLines.isEmpty) return Container();
     return GestureDetector(
       onScaleStart: ((details) {
@@ -287,6 +314,14 @@ class _LyricsRendererState extends State<LyricsRenderer> {
   @override
   void didUpdateWidget(covariant LyricsRenderer oldWidget) {
     super.didUpdateWidget(oldWidget);
+    // Invalidate cache if inputs changed
+    if (oldWidget.lyrics != widget.lyrics ||
+        oldWidget.textStyle != widget.textStyle ||
+        oldWidget.chordStyle != widget.chordStyle ||
+        oldWidget.transposeIncrement != widget.transposeIncrement ||
+        oldWidget.typeTranspose != widget.typeTranspose) {
+      _cachedDocument = null;
+    }
   }
 }
 

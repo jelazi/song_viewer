@@ -167,32 +167,68 @@ class WebBloc extends Bloc<WebEvent, WebState> {
 
   void _filterInterprets(FilterInterprets event, Emitter<WebState> emit) async {
     List<WebInterpret> list = [];
+    List<WebSong> songResults = [];
     emit(state.copyWith(isSearching: true));
     if (event.filter.isEmpty) {
       emit(state.copyWith(interprets: [], isSearching: false, filteredInterprets: [], searchWebInterprets: false));
       return;
     }
     final searchWeb = state.searchWeb;
+    final isSongMode = state.searchType == 0;
+
     if (searchWeb == 0) {
+      // VelkyZpevnik: typeahead returns both interprets and songs
       List<WebItem> listItem = await webRepository.findSongAndInterpretsFromVelkyZpevnik(event.filter);
-      list = listItem.map((e) => e is WebInterpret ? e : null).where((element) => element != null).toList().cast<WebInterpret>();
+      list = listItem.whereType<WebInterpret>().toList();
+      if (isSongMode) {
+        songResults = listItem.whereType<WebSong>().toList();
+      }
     }
 
     if (searchWeb == 1) {
-      list = await webRepository.findInterpretPisnickyAkordy(event.filter);
+      // PisnickyAkordy: interpret search by first letter
+      if (isSongMode) {
+        // Use MeiliSearch for direct song search
+        songResults = await webRepository.findSongsPisnickyAkordy(event.filter);
+      } else {
+        list = await webRepository.findInterpretPisnickyAkordy(event.filter);
+      }
     }
+
     if (searchWeb == 2) {
       list = await webRepository.findInterpretProScholy(event.filter);
       final searchedSongs = await webRepository.searchSongsProScholyLocal(event.filter);
-      emit(state.copyWith(interprets: list, isSearching: false, filteredInterprets: list, searchWebInterprets: false, songs: searchedSongs, filteredSongs: searchedSongs));
+      songResults = searchedSongs;
+      emit(state.copyWith(
+        interprets: list,
+        isSearching: false,
+        filteredInterprets: list,
+        searchWebInterprets: false,
+        songs: songResults,
+        filteredSongs: songResults,
+      ));
       return;
     }
     if (searchWeb == 3) {
       final searchedSongs = await webRepository.searchSongsWorshipLeader(event.filter);
-      emit(state.copyWith(interprets: [], isSearching: false, filteredInterprets: [], searchWebInterprets: false, songs: searchedSongs, filteredSongs: searchedSongs));
+      emit(state.copyWith(
+        interprets: [],
+        isSearching: false,
+        filteredInterprets: [],
+        searchWebInterprets: false,
+        songs: searchedSongs,
+        filteredSongs: searchedSongs,
+      ));
       return;
     }
-    emit(state.copyWith(interprets: list, isSearching: false, filteredInterprets: list, searchWebInterprets: false));
+    emit(state.copyWith(
+      interprets: list,
+      isSearching: false,
+      filteredInterprets: list,
+      searchWebInterprets: false,
+      songs: isSongMode ? songResults : state.songs,
+      filteredSongs: isSongMode ? songResults : state.filteredSongs,
+    ));
   }
 
   void _loadSongs(LoadSongs event, Emitter<WebState> emit) {}

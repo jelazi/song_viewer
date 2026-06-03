@@ -19,39 +19,89 @@ class SongCardTabletWeb extends StatefulWidget {
   State<SongCardTabletWeb> createState() => _SongCardTabletWebState();
 }
 
-class _SongCardTabletWebState extends State<SongCardTabletWeb> with TickerProviderStateMixin {
-  @override
-  void initState() {
-    super.initState();
-  }
-
+class _SongCardTabletWebState extends State<SongCardTabletWeb> {
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () async {
-        context.read<PreviewChordBloc>().add(ChangeLyricFromWebSongUpdate(webSong: widget.song, typeSearching: context.read<WebBloc>().state.searchWeb));
-        Navigator.pushNamed(context, '/previewPage');
-      },
-      child: SizedBox(
-        height: 80,
-        child: Card(
-            color: AppColor.whiteColor,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(5.0),
-              side: const BorderSide(
-                color: AppColor.grey3Color,
-                width: 1.0,
+    final song = widget.song;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: () {
+            context.read<PreviewChordBloc>().add(
+              ChangeLyricFromWebSongUpdate(
+                webSong: song,
+                typeSearching: context.read<WebBloc>().state.searchWeb,
               ),
+            );
+            Navigator.pushNamed(context, '/previewPage');
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColor.grey3Color),
             ),
-            surfaceTintColor: AppColor.primaryColor,
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              child: Text(
-                widget.song.title,
-                style: h5TextStyle,
-                softWrap: true,
-              ),
-            )),
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: AppColor.primaryColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.music_note, size: 18, color: AppColor.primaryColor),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        song.title,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: AppColor.grey1Color,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (song.interpret.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            song.interpret,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColor.grey1Color.withValues(alpha: 0.8),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                if (song.lyric.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppColor.alertSuccessLightColor.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Icon(Icons.check, size: 14, color: AppColor.alertSuccessDarkColor),
+                  ),
+                const SizedBox(width: 4),
+                Icon(Icons.chevron_right, size: 18, color: AppColor.grey1Color.withValues(alpha: 0.5)),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

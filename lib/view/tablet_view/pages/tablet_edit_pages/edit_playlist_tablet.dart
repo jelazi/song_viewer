@@ -27,14 +27,23 @@ class _EditPlaylistTabletState extends State<EditPlaylistTablet> {
   @override
   void initState() {
     super.initState();
-    _playlistName.text = context.read<PlaylistsBloc>().state.namePlaylist;
+    final name = context.read<PlaylistsBloc>().state.namePlaylist;
+    if (_playlistName.text != name) {
+      _playlistName.text = name;
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final name = context.read<PlaylistsBloc>().state.namePlaylist;
+    if (_playlistName.text != name) {
+      _playlistName.text = name;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_playlistName.text.isEmpty || _playlistName.text != context.read<PlaylistsBloc>().state.currentPlaylist.name) {
-      _playlistName.text = context.read<PlaylistsBloc>().state.currentPlaylist.name;
-    }
     return PopScope(
       canPop: true,
       onPopInvokedWithResult: (didPop, result) async {
@@ -82,24 +91,27 @@ class _EditPlaylistTabletState extends State<EditPlaylistTablet> {
                           context.read<PlaylistsBloc>().add(ChangeNamePlaylist(playlist: state.currentPlaylist, name: value));
                         },
                       ),
-                      SizedBox(
-                        height: MediaQuery.of(context).size.height - 180,
-                        child: SingleChildScrollView(
-                          physics: const NeverScrollableScrollPhysics(),
-                          child: Column(
-                            children: [
-                              for (int i = 0; i < state.currentSongs.length; i++)
-                                CurrentSongCard(
-                                  song: state.currentSongs[i],
-                                  key: ValueKey(i),
-                                ),
-                              if (draggedItem != null)
-                                CurrentSongCard(
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: state.currentSongs.length + (draggedItem != null ? 1 : 0),
+                          itemBuilder: (context, index) {
+                            if (draggedItem != null && index == state.currentSongs.length) {
+                              return RepaintBoundary(
+                                child: CurrentSongCard(
                                   song: draggedItem['song'],
+                                  index: index,
                                   key: const ValueKey('drag-placeholder'),
                                 ),
-                            ],
-                          ),
+                              );
+                            }
+                            return RepaintBoundary(
+                              child: CurrentSongCard(
+                                song: state.currentSongs[index],
+                                index: index,
+                                key: ValueKey(state.currentSongs[index].id),
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ],
@@ -177,92 +189,90 @@ class _EditPlaylistTabletState extends State<EditPlaylistTablet> {
 
 class CurrentSongCard extends StatelessWidget {
   final Song? song;
+  final int index;
 
   const CurrentSongCard({
     super.key,
     required this.song,
+    required this.index,
   });
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<PlaylistsBloc, PlaylistsState>(
-      builder: (context, state) {
-        return Card(
-          color: AppColor.whiteColor,
-          borderOnForeground: true,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(5.0),
-            side: const BorderSide(
-              color: AppColor.grey3Color,
-              width: 1.0,
+    return Card(
+      color: AppColor.whiteColor,
+      borderOnForeground: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(5.0),
+        side: const BorderSide(
+          color: AppColor.grey3Color,
+          width: 1.0,
+        ),
+      ),
+      child: GestureDetector(
+        onTap: () {
+          //   context.read<PlaylistsBloc>().add(DeleteSongFromPlaylist(song: e));
+        },
+        child: Container(
+            child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(song?.title ?? '', style: const TextStyle(fontSize: 16)),
             ),
-          ),
-          child: GestureDetector(
-            onTap: () {
-              //   context.read<PlaylistsBloc>().add(DeleteSongFromPlaylist(song: e));
-            },
-            child: Container(
-                child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Row(
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(song?.title ?? '', style: const TextStyle(fontSize: 16)),
-                ),
-                Row(
-                  children: [
-                    SizedBox(
-                      width: 60,
-                      height: 80,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          GestureDetector(
-                            onTap: () {
-                              if (song == null) {
-                                return;
-                              }
-                              context.read<PlaylistsBloc>().add(MoveSongInPlaylist(oldIndex: state.currentSongs.indexOf(song!), newIndex: state.currentSongs.indexOf(song!) - 1));
-                            },
-                            child: Container(
-                              padding: EdgeInsets.zero,
-                              child: const Icon(
-                                Icons.arrow_upward,
-                                color: AppColor.primaryColor,
-                              ),
-                            ),
+                SizedBox(
+                  width: 60,
+                  height: 80,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          if (song == null) {
+                            return;
+                          }
+                          context.read<PlaylistsBloc>().add(MoveSongInPlaylist(oldIndex: index, newIndex: index - 1));
+                        },
+                        child: Container(
+                          padding: EdgeInsets.zero,
+                          child: const Icon(
+                            Icons.arrow_upward,
+                            color: AppColor.primaryColor,
                           ),
-                          GestureDetector(
-                            onTap: () {
-                              if (song == null) {
-                                return;
-                              }
-                              context.read<PlaylistsBloc>().add(MoveSongInPlaylist(oldIndex: state.currentSongs.indexOf(song!), newIndex: state.currentSongs.indexOf(song!) + 1));
-                            },
-                            child: Container(
-                              padding: EdgeInsets.zero,
-                              child: const Icon(Icons.arrow_downward, color: AppColor.primaryColor),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete, color: AppColor.alertErrorColor),
-                      onPressed: () {
-                        if (song == null) {
-                          return;
-                        }
-                        context.read<PlaylistsBloc>().add(RemoveSongFromPlaylist(index: state.currentSongs.indexOf(song!)));
-                      },
-                    ),
-                  ],
+                      GestureDetector(
+                        onTap: () {
+                          if (song == null) {
+                            return;
+                          }
+                          context.read<PlaylistsBloc>().add(MoveSongInPlaylist(oldIndex: index, newIndex: index + 1));
+                        },
+                        child: Container(
+                          padding: EdgeInsets.zero,
+                          child: const Icon(Icons.arrow_downward, color: AppColor.primaryColor),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete, color: AppColor.alertErrorColor),
+                  onPressed: () {
+                    if (song == null) {
+                      return;
+                    }
+                    context.read<PlaylistsBloc>().add(RemoveSongFromPlaylist(index: index));
+                  },
                 ),
               ],
-            )),
-          ),
-        );
-      },
+            ),
+          ],
+        )),
+      ),
     );
   }
 }
