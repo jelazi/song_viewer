@@ -22,5 +22,6 @@ class WebSong extends WebItem {
     required this.interpret,
     this.ischords = true,
     this.server = '',
+    this.lyric = '',
   });
 }

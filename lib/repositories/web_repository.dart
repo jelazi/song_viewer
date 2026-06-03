@@ -1,9 +1,11 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:async';
+import 'dart:io';
 
 import 'package:beautiful_soup_dart/beautiful_soup.dart';
 import 'package:collection/collection.dart';
 import 'package:default_project/services/auxiliary_functions.dart';
+import 'package:flutter/foundation.dart';
 import 'package:html/dom.dart';
 import 'package:html/parser.dart';
 import 'package:logger_pkg/logger_pkg.dart';
@@ -34,19 +36,55 @@ class WebRepository {
   });
 
   Future<String> testGetSong() async {
-    // var response = await webProvider.testGet();
-    // final text = parseTextFromPisnickyAkordy(response.data);
-    // final respnseSearch = await webProvider.searchPisnickyAkordy('touha');
-    //  final responseFirstLetter = await webProvider.searchInterpretByFirstLetterPisnickyAkordy('b');
-    // final responseSearch = parseSearchByFirstLetterFromPisnickyAkordy(responseFirstLetter.data, 'b');
-    //   final responseSong = await webProvider.getSongsFromInterpretPisnickyAkordy('/pribuzni');
-    //  final responseSongText = parseGetSongsFromInterpretFromPisnickyAkordy(responseSong.data);
+    try {
+      // Step 1: Raw MeiliSearch response
+      String info = '';
+      try {
+        final rawResponse = await webProvider.searchPisnickyAkordy('kámen');
+        info += 'HTTP ${rawResponse.statusCode} | type=${rawResponse.data.runtimeType} | ';
+        if (rawResponse.data is Map) {
+          final data = rawResponse.data as Map;
+          info += 'keys=${data.keys} | ';
+          final hits = data['hits'];
+          info += 'hitsType=${hits.runtimeType} | ';
+          if (hits is List) {
+            info += 'count=${hits.length} | ';
+            for (int i = 0; i < hits.length && i < 2; i++) {
+              final hit = hits[i] as Map;
+              info += 'hit$i:{${hit.keys}:${hit.values}} | ';
+            }
+          }
+        } else {
+          info += 'data=${rawResponse.data.toString().substring(0, 100)} | ';
+        }
+      } catch (e) {
+        info += 'MeiliSearch FAILED: $e | ';
+      }
 
-    final response = await findSongAndInterpretsFromVelkyZpevnik('žalman');
-    final resSong = await findSongByInterpretFromVelkyZpevnik(response.first as WebInterpret);
-    await getTextSongVelkyZpevnik(resSong[5]);
-
+      // Step 2: Parsed songs
+      try {
+        final songs = await findSongsPisnickyAkordy('kámen');
+        info += 'parsed=${songs.length} songs | ';
+        for (int i = 0; i < songs.length && i < 2; i++) {
+          final s = songs[i];
+          info += 'song$i: title="${s.title}" ref="${s.ref}" interpret="${s.interpret}" | ';
+          if (s.lyric.isEmpty) {
+            final lyric = await getTextSongPisnickyAkordy(s.ref);
+            info += 'lyrics_len=${lyric.length} | ';
+          }
+        }
+      } catch (e) {
+        info += 'parse FAILED: $e | ';
+      }
+      debugPrint('[PA_TEST] $info');
+    } catch (e) {
+      debugPrint('[PA_TEST] FATAL: $e');
+    }
     return '';
+  }
+
+  void _dp(String msg) {
+    debugPrint('[PA_TEST] $msg');
   }
 
   Future<List<WebSong>> findSongByInterpretFromVelkyZpevnik(WebInterpret interpret) async {
@@ -121,10 +159,32 @@ class WebRepository {
   }
 
   Future<String> getTextSongPisnickyAkordy(String song) async {
-    String songText = '';
-    final response = await webProvider.getDataFromPisnickyAkordy(song);
-    songText = parseTextFromPisnickyAkordy(response.data);
-    return songText;
+    try {
+      final response = await webProvider.getDataFromPisnickyAkordy(song);
+      debugPrint('[PA_FETCH] song=$song status=${response.statusCode}');
+      if (response.statusCode != 200) {
+        debugPrint('[PA_FETCH] FAIL HTTP ${response.statusCode}');
+        return '';
+      }
+      if (response.data == null || response.data.toString().isEmpty) {
+        debugPrint('[PA_FETCH] FAIL empty response');
+        return '';
+      }
+      final html = response.data.toString();
+      final hasSongText = html.contains('songtext');
+      debugPrint('[PA_FETCH] hasSongtext=$hasSongText htmlLen=${html.length}');
+      debugPrint('[PA_FETCH] html=${html.substring(0, html.length > 400 ? 400 : html.length)}');
+      if (!hasSongText) {
+        debugPrint('[PA_FETCH] FAIL songtext not found in HTML');
+        return '';
+      }
+      final songText = parseTextFromPisnickyAkordy(html);
+      debugPrint('[PA_FETCH] parsedLen=${songText.length}');
+      return songText;
+    } catch (e) {
+      debugPrint('[PA_FETCH] EXCEPTION: $e');
+      return '';
+    }
   }
 
   Future<List<WebSong>> findSongOfInterpretPisnickyAkordy(
@@ -180,21 +240,51 @@ class WebRepository {
         if (hits is List) {
           for (final hit in hits) {
             if (hit is Map) {
+              // Extract title
+              final title = _firstOf(hit, ['title', 'nazev', 'name', 'jmeno']);
+              if (title == null) continue;
+
+              // Filter: only include songs (type contains "Písnička"), skip albums/interprets
               final type = hit['type'];
-              // Only include songs, skip interprets
-              if (type == 'song' || type == 'pisen') {
-                final title = hit['title'] ?? hit['name'] ?? '';
-                final ref = hit['url'] ?? hit['ref'] ?? '';
-                final interpret = hit['interpret'] ?? hit['artist'] ?? '';
-                if (title.isNotEmpty && ref.isNotEmpty) {
-                  songs.add(WebSong(
-                    title: title.toString(),
-                    ref: ref.toString(),
-                    interpret: interpret.toString(),
-                    server: 'pisnicky-akordy.cz',
-                  ));
-                }
+              if (type is List && !type.any((t) => t.toString().contains('Písnička'))) continue;
+              if (type is String && !type.contains('Písnička')) continue;
+              if (type == null) continue;
+
+              // Extract slug (short URL identifier)
+              final slug = _firstOf(hit, ['slug', 'url', 'ref', 'path']);
+              if (slug == null) continue;
+
+              // Extract interpreter info from nested object: {id, name, slug, image}
+              String interpretName = '';
+              String interpretSlug = '';
+              final interpreter = hit['interpreter'];
+              if (interpreter is Map) {
+                interpretName = (interpreter['name'] as String?) ?? '';
+                interpretSlug = (interpreter['slug'] as String?) ?? '';
               }
+              if (interpretName.isEmpty) {
+                interpretName = _firstOf(hit, ['interpret', 'artist', 'autor']) ?? '';
+              }
+
+              // Construct the correct song page URL: {interpreter_slug}/{song_slug}
+              // Pisnicky-akordy.cz URLs are like: /{autor-slug}/{song-slug}
+              String ref;
+              if (interpretSlug.isNotEmpty) {
+                ref = '$interpretSlug/$slug';
+              } else {
+                ref = slug;
+              }
+
+              // MeiliSearch might return lyrics directly in the hit
+              final lyric = _firstOf(hit, ['text', 'lyric', 'lyrics', 'content', 'songtext']) ?? '';
+
+              songs.add(WebSong(
+                title: title,
+                ref: ref,
+                interpret: interpretName,
+                server: 'pisnicky-akordy.cz',
+                lyric: lyric,
+              ));
             }
           }
         }
@@ -203,6 +293,15 @@ class WebRepository {
       logger.e('Error searching PisnickyAkordy songs: $e');
     }
     return songs;
+  }
+
+  /// Helper: return the first non-null/non-empty string value from [keys] in [map].
+  String? _firstOf(Map map, List<String> keys) {
+    for (final key in keys) {
+      final value = map[key];
+      if (value is String && value.isNotEmpty) return value;
+    }
+    return null;
   }
 
   Map<String, String> parseSearchByFirstLetterFromPisnickyAkordy(String htmlText, String firstLetter) {

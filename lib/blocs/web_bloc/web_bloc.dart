@@ -249,6 +249,7 @@ class WebBloc extends Bloc<WebEvent, WebState> {
           title: '',
           ref: '',
         )));
+
   }
 
   void _changeSearchType(ChangeSearchType event, Emitter<WebState> emit) {
