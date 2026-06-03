@@ -246,9 +246,9 @@ class WebRepository {
 
               // Filter: only include songs (type contains "Písnička"), skip albums/interprets
               final type = hit['type'];
-              if (type is List && !type.any((t) => t.toString().contains('Písnička'))) continue;
-              if (type is String && !type.contains('Písnička')) continue;
               if (type == null) continue;
+              final typeStr = type is List ? type.join(' ') : type.toString();
+              if (!typeStr.contains('Písnička')) continue;
 
               // Extract slug (short URL identifier)
               final slug = _firstOf(hit, ['slug', 'url', 'ref', 'path']);
@@ -268,10 +268,12 @@ class WebRepository {
 
               // Construct the correct song page URL: {interpreter_slug}/{song_slug}
               // Pisnicky-akordy.cz URLs are like: /{autor-slug}/{song-slug}
+              // Fallback: if no interpret slug, try just the song slug
               String ref;
               if (interpretSlug.isNotEmpty) {
                 ref = '$interpretSlug/$slug';
               } else {
+                // Some songs might be at /{slug} directly or /{slug}-akordy
                 ref = slug;
               }
 

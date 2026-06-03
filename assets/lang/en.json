@@ -189,6 +189,8 @@
     "filterSongOrInterpret": "Filter song or artist",
     "searchResults": "Search results",
     "searchForSongOrInterpret": "Search for a song or artist",
+    "webSongError": "Could not load this song",
+    "webSongErrorHint": "Try searching for a different version or use another web",
     "songsViewer": "Songs Viewer",
     "timeSong": "Song duration",
     "present": "Open presentation",

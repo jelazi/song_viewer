@@ -325,10 +325,26 @@ class _PreviewPageMobileState extends State<PreviewPageMobile> {
 
   Widget _getLyricsRenderer(PreviewChordState state, ScrollController scrollController) {
     String lyric = state.data.song?.lyrics ?? '';
-    //TODO: controller.notes.value = List.generate(list.length + 1, (index) => RxString(''));
+    // Handle web song with empty lyrics
+    if (lyric.isEmpty && state.isDataFromWeb) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.cloud_off, size: 64, color: AppColor.grey3Color),
+              const SizedBox(height: 16),
+              Text('webSongError'.tr(), textAlign: TextAlign.center, style: const TextStyle(fontSize: 16, color: AppColor.grey1Color)),
+              const SizedBox(height: 8),
+              Text('webSongErrorHint'.tr(), textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: AppColor.grey1Color.withValues(alpha: 0.7))),
+            ],
+          ),
+        ),
+      );
+    }
     if (state.twoColumns) {
       List<String> splittedLyric = state.lyricWithColumns(true, true, TypeLyric.translate);
-      //TODO:  controller.maxColumns.value = splittedLyric.length;
 
       if (splittedLyric.length == 1) {
         return LyricsRenderer(

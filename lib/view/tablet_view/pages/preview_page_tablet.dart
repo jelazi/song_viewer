@@ -372,8 +372,38 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
     );
   }
 
+  Widget _buildWebSongError() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.cloud_off, size: 64, color: AppColor.grey3Color),
+            const SizedBox(height: 16),
+            Text(
+              'webSongError'.tr(),
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 16, color: AppColor.grey1Color),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'webSongErrorHint'.tr(),
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: AppColor.grey1Color.withValues(alpha: 0.7)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _getLyricsOneColumnRenderer(PreviewChordState state, ScrollController scrollController) {
     String lyric = state.data.song?.lyrics ?? '';
+    // Show error when web song has no lyrics
+    if (lyric.isEmpty && state.isDataFromWeb) {
+      return _buildWebSongError();
+    }
     return LyricsRenderer(
       scrollController: scrollController,
       isVisibleNote: true,
@@ -394,10 +424,10 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
     List<String> splittedLyric = state.lyricWithColumns(true, true, TypeLyric.translate);
 
     if (splittedLyric.isEmpty) {
-      // when the song is from web and the lyrics are not loaded
-      return Center(
-        child: Text('empty'.tr()),
-      );
+      if (state.isDataFromWeb) {
+        return _buildWebSongError();
+      }
+      return const SizedBox.shrink();
     }
     if (splittedLyric.length == 1) {
       return LyricsRenderer(

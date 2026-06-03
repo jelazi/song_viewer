@@ -228,49 +228,64 @@ class PreviewChordBloc extends Bloc<PreviewChordEvent, PreviewChordState> {
 
   void _changeLyricFromWebSongUpdate(ChangeLyricFromWebSongUpdate event, Emitter<PreviewChordState> emit) async {
     final state = this.state;
-
     WebSong webSong = event.webSong;
 
-    if (event.typeSearching == 0) {
-      webSong.server = 'velkyzpevnik.cz';
-      final savedSong = hiveProvider.getWebSong('velkyzpevnik.cz${webSong.ref}');
-      if (savedSong != null) {
-        webSong = savedSong;
-      } else {
-        webSong.lyric = await webRepository.getTextSongVelkyZpevnik(webSong);
-        hiveProvider.setWebSong('velkyzpevnik.cz${webSong.ref}', webSong);
+    try {
+      if (event.typeSearching == 0) {
+        webSong.server = 'velkyzpevnik.cz';
+        final savedSong = hiveProvider.getWebSong('velkyzpevnik.cz${webSong.ref}');
+        if (savedSong != null) {
+          webSong = savedSong;
+        } else {
+          webSong.lyric = await webRepository.getTextSongVelkyZpevnik(webSong);
+          hiveProvider.setWebSong('velkyzpevnik.cz${webSong.ref}', webSong);
+        }
       }
-    }
-    if (event.typeSearching == 1) {
-      webSong.server = 'pisnicky-akordy.cz';
-      final savedSong = hiveProvider.getWebSong('pisnicky-akordy.cz${webSong.ref}');
-      if (savedSong != null) {
-        webSong = savedSong;
-      } else {
-        webSong.lyric = await webRepository.getTextSongPisnickyAkordy(webSong.ref);
-        hiveProvider.setWebSong('pisnicky-akordy.cz${webSong.ref}', webSong);
+      if (event.typeSearching == 1) {
+        webSong.server = 'pisnicky-akordy.cz';
+        final savedSong = hiveProvider.getWebSong('pisnicky-akordy.cz${webSong.ref}');
+        if (savedSong != null) {
+          webSong = savedSong;
+        } else {
+          webSong.lyric = await webRepository.getTextSongPisnickyAkordy(webSong.ref);
+          // Fallback: if first attempt returned empty, try just the slug (for songs without interpret prefix)
+          if (webSong.lyric.isEmpty && webSong.ref.contains('/')) {
+            final fallbackRef = webSong.ref.split('/').last;
+            debugPrint('[PA_FALLBACK] trying slug=$fallbackRef');
+            webSong.lyric = await webRepository.getTextSongPisnickyAkordy(fallbackRef);
+            if (webSong.lyric.isEmpty) {
+              debugPrint('[PA_FALLBACK] slug also failed');
+            } else {
+              debugPrint('[PA_FALLBACK] slug SUCCESS len=${webSong.lyric.length}');
+            }
+          }
+          hiveProvider.setWebSong('pisnicky-akordy.cz${webSong.ref}', webSong);
+        }
       }
-    }
-    if (event.typeSearching == 2) {
-      webSong.server = 'zpevnik.proscholy.cz';
-      final savedSong = hiveProvider.getWebSong('zpevnik.proscholy.cz${webSong.ref}');
-      if (savedSong != null) {
-        webSong = savedSong;
-      } else {
-        webSong.lyric = await webRepository.getTextSongProScholy(webSong.ref);
-        hiveProvider.setWebSong('zpevnik.proscholy.cz${webSong.ref}', webSong);
+      if (event.typeSearching == 2) {
+        webSong.server = 'zpevnik.proscholy.cz';
+        final savedSong = hiveProvider.getWebSong('zpevnik.proscholy.cz${webSong.ref}');
+        if (savedSong != null) {
+          webSong = savedSong;
+        } else {
+          webSong.lyric = await webRepository.getTextSongProScholy(webSong.ref);
+          hiveProvider.setWebSong('zpevnik.proscholy.cz${webSong.ref}', webSong);
+        }
       }
-    }
-    if (event.typeSearching == 3) {
-      webSong.server = 'songs.worshipleaderapp.com';
-      final savedSong = hiveProvider.getWebSong('songs.worshipleaderapp.com${webSong.ref}');
-      if (savedSong != null) {
-        webSong = savedSong;
-      } else {
-        webSong.lyric = await webRepository.getTextSongWorshipLeader(webSong.ref);
-        hiveProvider.setWebSong('songs.worshipleaderapp.com${webSong.ref}', webSong);
+      if (event.typeSearching == 3) {
+        webSong.server = 'songs.worshipleaderapp.com';
+        final savedSong = hiveProvider.getWebSong('songs.worshipleaderapp.com${webSong.ref}');
+        if (savedSong != null) {
+          webSong = savedSong;
+        } else {
+          webSong.lyric = await webRepository.getTextSongWorshipLeader(webSong.ref);
+          hiveProvider.setWebSong('songs.worshipleaderapp.com${webSong.ref}', webSong);
+        }
       }
+    } catch (e) {
+      debugPrint('[PA_ERROR] Failed to load web song: $e');
     }
+
     webSong.title = webSong.title.replaceAll('  ', '');
     webSong.title = webSong.title.replaceAll('\n', '');
     Song song = Song(title: webSong.title, interpret: webSong.interpret, id: webSong.server + webSong.ref, lyrics: webSong.lyric);

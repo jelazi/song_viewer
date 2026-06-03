@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:default_project/services/constants.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -50,9 +51,20 @@ class _WebBodyState extends State<WebBody> {
                     Text(state.currentInterpret.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColor.grey2Color)),
                     SizedBox(
                       height: MediaQuery.of(context).size.height - 200,
-                      child: state.currentSong == null || (state.currentSong?.lyric ?? '').isEmpty
-                          ? Container() //: Text(state.currentSong?.lyric ?? '')
-                          : LyricsRenderer(
+                      child: state.currentSong == null
+                          ? Container()
+                          : (state.currentSong?.lyric ?? '').isEmpty
+                              ? Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.cloud_off, size: 48, color: AppColor.grey3Color),
+                                      const SizedBox(height: 12),
+                                      Text('webSongError'.tr(), textAlign: TextAlign.center, style: const TextStyle(fontSize: 16, color: AppColor.grey1Color)),
+                                    ],
+                                  ),
+                                )
+                              : LyricsRenderer(
                               scrollController: scrollController,
                               isVisibleNote: true,
                               lyrics: state.currentSong!.lyric,

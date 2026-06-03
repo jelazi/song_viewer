@@ -261,6 +261,8 @@
     "filterSongOrInterpret": "Filtruj píseň nebo zpěváka",
     "searchResults": "Výsledky hledání",
     "searchForSongOrInterpret": "Hledej píseň nebo interpreta",
+    "webSongError": "Tuto píseň se nepodařilo načíst",
+    "webSongErrorHint": "Zkuste vyhledat jinou verzi nebo použít jiný web",
     "saveChanges": "Uložení změn",
     "saveChangesQuestion": "Chcete uložit změny?",
     "editOriginalLyricsLabel": "Editovat originální text",

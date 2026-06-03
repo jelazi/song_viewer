@@ -186,10 +186,13 @@ class WebBloc extends Bloc<WebEvent, WebState> {
     }
 
     if (searchWeb == 1) {
-      // PisnickyAkordy: interpret search by first letter
       if (isSongMode) {
         // Use MeiliSearch for direct song search
         songResults = await webRepository.findSongsPisnickyAkordy(event.filter);
+        // If no songs found, also search interprets so user can browse their songs
+        if (songResults.isEmpty) {
+          list = await webRepository.findInterpretPisnickyAkordy(event.filter);
+        }
       } else {
         list = await webRepository.findInterpretPisnickyAkordy(event.filter);
       }
