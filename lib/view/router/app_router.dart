@@ -1,5 +1,6 @@
 import 'package:default_project/view/desktop_view/pages/desktop_home_page/desktop_home_page.dart';
 import 'package:default_project/view/desktop_view/pages/presentation_page_desktop.dart';
+import 'package:default_project/view/mobile_view/pages/web_page_mobile.dart';
 import 'package:default_project/view/responsive_view/pages/page_responsive.dart';
 import 'package:default_project/view/responsive_view/pages/state_login.dart';
 import 'package:default_project/view/tablet_view/pages/presentation_page_tablet.dart';
@@ -102,6 +103,9 @@ class AppRouter {
         }
       case '/playlistsPageMobile':
         return MaterialPageRoute(builder: (_) => const PageResponsive(pageMobile: PlaylistsPageMobile(), pageTablet: PlaylistsPageMobile(), pageDesktop: PlaylistsPageMobile()));
+
+      case '/webPageMobile':
+        return MaterialPageRoute(builder: (_) => const PageResponsive(pageMobile: WebPageMobile(), pageTablet: WebPageMobile(), pageDesktop: WebPageMobile()));
 
       case '/editPlaylistPage':
         return MaterialPageRoute(builder: (_) => const PageResponsive(pageMobile: EditPlaylistTablet(), pageTablet: EditPlaylistTablet(), pageDesktop: EditPlaylistTablet()));

@@ -118,6 +118,19 @@ class _HomeDrawerState extends State<HomeDrawer> {
             ),
             ListTile(
               title: Row(children: [
+                const Icon(Icons.web),
+                const SizedBox(
+                  width: 10,
+                ),
+                Text('web'.tr()),
+              ]),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/webPageMobile');
+              },
+            ),
+            ListTile(
+              title: Row(children: [
                 const Icon(Icons.qr_code),
                 const SizedBox(
                   width: 10,

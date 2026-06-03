@@ -1,6 +1,29 @@
 # Development Log
 
-## 2026-03-27 - Fix iPad song loading failure
+## 2026-05-12 - Add web song search and import to mobile
+
+### What was done
+Added the web song download/search feature to mobile that was previously only available on tablet and desktop.
+
+### Files added
+- **`lib/view/mobile_view/pages/web_page_mobile.dart`** — new mobile page for searching songs from web sources (velkyzpevnik.cz, pisnicky-akordy.cz, zpevnik.proscholy.cz, songs.worshipleaderapp.com). Uses `WebBloc` for all search logic (same as tablet/desktop). Supports interpret-based search (VelkyZpevnik, PisnickyAkordy), combined interpret+song search (ProScholy), and direct song search (WorshipLeader). Tapping a song loads it via `ChangeLyricFromWebSongUpdate` and navigates to `/previewPage`.
+
+### Files modified
+- **`lib/view/mobile_view/pages/preview_page.dart`** — added "save to songbook" icon button in AppBar (visible only when `state.isDataFromWeb == true`). Shows a dialog to enter title, interpret and select groups, then saves the song via `songsRepository.updateSong()`. Same logic as in `preview_page_tablet.dart`.
+- **`lib/view/mobile_view/widgets/home_drawer.dart`** — added "Web" list tile (with `Icons.web`) that navigates to `/webPageMobile`.
+- **`lib/view/router/app_router.dart`** — added `/webPageMobile` route pointing to `WebPageMobile`.
+- **`assets/lang/cs.json`** — added missing `enterTitle` key ("Zadejte název písně").
+- **`assets/lang/en.json`** — added missing `enterTitle` key ("Please enter a song title").
+
+### Current state
+- Mobile now has full parity with tablet for web song features
+- Search, browse, preview, save to songbook, set as currently playing all work on mobile
+- No compile errors
+
+### Pending / Next steps
+- Consider adding a loading indicator when web song lyrics are being fetched in preview page on mobile
+
+
 
 ### What was done
 Fixed multiple issues that could prevent songs from loading on iPad (and other platforms).

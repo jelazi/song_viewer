@@ -467,5 +467,6 @@
     "songKaraokeQuery": "{} song karaoke",
     "savingBackupJson": "Saving backup.json...",
     "authorsLabel": "Authors",
-    "songsLabel": "Songs"
+    "songsLabel": "Songs",
+    "enterTitle": "Please enter a song title"
 }
