@@ -52,7 +52,7 @@ class _PreviewPageMobileState extends State<PreviewPageMobile> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(100),
+        preferredSize: const Size.fromHeight(110),
         child: BlocBuilder<PreviewChordBloc, PreviewChordState>(
           builder: (context, state) {
             return GestureDetector(
@@ -62,7 +62,7 @@ class _PreviewPageMobileState extends State<PreviewPageMobile> {
                 }
               },
               child: AnimatedContainer(
-                  height: state.appBarStatus ? 90.0 : 0.0,
+                  height: state.appBarStatus ? 100.0 : 0.0,
                   duration: const Duration(milliseconds: 200),
                   child: AppBar(
                     iconTheme: const IconThemeData(
@@ -250,7 +250,7 @@ class _PreviewPageMobileState extends State<PreviewPageMobile> {
                         },
                       ),
                       SizedBox(
-                        height: MediaQuery.of(context).size.height - 120,
+                        height: MediaQuery.of(context).size.height - 130,
                         child: _getLyricsRenderer(state, scrollController),
                       ),
                     ],

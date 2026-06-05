@@ -25,6 +25,7 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
   }) : super(const HomePageInitial(
           selectedSongId: '',
           isEditIconVisible: false,
+          superuserMode: false,
           listSong: [],
           listExpandedSongs: [],
           listAllGroups: [],
@@ -61,6 +62,7 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
 
     emit(state.copyWith(
       isEditIconVisible: settingsRepository.isEditIconVisible,
+      superuserMode: settingsRepository.superuserMode,
       listSong: List<Song>.from(songsRepository.songs),
       listAllGroups: songsRepository.listAllGroups,
       listSelectedGroups: List<String>.from(songsRepository.listAllGroups),
@@ -83,6 +85,7 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
     final state = this.state;
     emit(state.copyWith(
       isEditIconVisible: settingsRepository.isEditIconVisible,
+      superuserMode: settingsRepository.superuserMode,
     ));
   }
 

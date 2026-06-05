@@ -230,6 +230,7 @@
     "editColorText": "Barva textu pro editaci",
     "editColorChord": "Barva akordů pro editaci",
     "editIconVisibility": "Zobrazení ikony editace a mazání",
+    "superuserMode": "Režim superuživatele",
     "autoHideTopBar": "Automatické skrytí horního panelu",
     "version": "Verze",
     "pleaseSelectPathToSaveFile": "Vyber cestu pro uložení souboru",

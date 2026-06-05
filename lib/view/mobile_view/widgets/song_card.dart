@@ -1,12 +1,12 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:default_project/blocs/export_blocs.dart';
 import 'package:default_project/services/enums.dart';
+import 'package:default_project/view/mobile_view/widgets/dialogs/question_dialog.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 import '../../../model/song/song.dart';
-import '../../../model/user.dart';
 import '../../../services/constants.dart';
 
 class SongCard extends StatefulWidget {
@@ -14,9 +14,10 @@ class SongCard extends StatefulWidget {
   final int index;
   final bool isSelectedSong;
   final bool isEditIconVisible;
+  final bool superuserMode;
   final bool isExpanded;
 
-  const SongCard({Key? key, required this.song, required this.index, required this.isSelectedSong, required this.isEditIconVisible, required this.isExpanded}) : super(key: key);
+  const SongCard({Key? key, required this.song, required this.index, required this.isSelectedSong, required this.isEditIconVisible, required this.superuserMode, required this.isExpanded}) : super(key: key);
 
   @override
   State<SongCard> createState() => _SongCardState();
@@ -113,10 +114,9 @@ class _SongCardState extends State<SongCard> {
                           lyricsWithChords: widget.song.lyrics));
                     }),
                 // 3-dot menu
-                BlocBuilder<UsersBloc, UsersState>(
-                  builder: (context, userState) {
-                    final isAdmin = userState.currentUser?.typeUser == TypeUser.admin || userState.currentUser?.typeUser == TypeUser.superuser;
-                    return PopupMenuButton(
+                Visibility(
+                  visible: widget.isEditIconVisible,
+                  child: PopupMenuButton(
                       icon: const Icon(
                         Icons.more_vert,
                         color: AppColor.grey3Color,
@@ -127,7 +127,10 @@ class _SongCardState extends State<SongCard> {
                             value: 'preview',
                             child: Row(
                               children: [
-                                Icon(MdiIcons.bookMusicOutline, color: AppColor.primaryDarkColor),
+                                Icon(
+                                  MdiIcons.bookMusicOutline,
+                                  color: AppColor.grey1Color,
+                                ),
                                 const SizedBox(width: 12),
                                 Text('preview'.tr()),
                               ],
@@ -138,7 +141,10 @@ class _SongCardState extends State<SongCard> {
                             value: 'presentation',
                             child: Row(
                               children: [
-                                Icon(MdiIcons.presentation, color: AppColor.primaryDarkestColor),
+                                Icon(
+                                  MdiIcons.presentation,
+                                  color: AppColor.grey1Color,
+                                ),
                                 const SizedBox(width: 12),
                                 Text('presentation'.tr()),
                               ],
@@ -153,7 +159,10 @@ class _SongCardState extends State<SongCard> {
                               value: 'sheet',
                               child: Row(
                                 children: [
-                                  Icon(MdiIcons.imageFrame, color: AppColor.primaryColor),
+                                  Icon(
+                                    MdiIcons.imageFrame,
+                                    color: AppColor.grey1Color,
+                                  ),
                                   const SizedBox(width: 12),
                                   Text('sheet'.tr()),
                                 ],
@@ -168,7 +177,10 @@ class _SongCardState extends State<SongCard> {
                               value: 'youtube',
                               child: Row(
                                 children: [
-                                  Icon(MdiIcons.videoOutline, color: AppColor.primaryLightColor),
+                                  Icon(
+                                    MdiIcons.videoOutline,
+                                    color: AppColor.grey1Color,
+                                  ),
                                   const SizedBox(width: 12),
                                   Text('youtube'.tr()),
                                 ],
@@ -178,25 +190,51 @@ class _SongCardState extends State<SongCard> {
                                 Navigator.pushNamed(context, '/youtubeVideoPage');
                               },
                             ),
-                          if (isAdmin)
+                          if (widget.isEditIconVisible && widget.superuserMode)
                             PopupMenuItem(
                               value: 'edit',
-                              child: Row(
-                                children: [
-                                  Icon(MdiIcons.pencil, color: AppColor.primaryLightestColor),
-                                  const SizedBox(width: 12),
-                                  Text('edit'.tr()),
-                                ],
-                              ),
-                              onTap: () {
-                                context.read<EditSongBloc>().add(ChangeEditSong(song: widget.song.copyWith(), isOriginalLyrics: false));
-                                Navigator.pushNamed(context, '/editPage');
-                              },
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.edit,
+                                  color: AppColor.grey1Color,
+                                ),
+                                const SizedBox(width: 12),
+                                Text('edit'.tr()),
+                              ],
                             ),
+                            onTap: () {
+                              context.read<EditSongBloc>().add(ChangeEditSong(song: widget.song.copyWith(), isOriginalLyrics: false));
+                              Navigator.pushNamed(context, '/editPage');
+                            },
+                          ),
+                          if (widget.isEditIconVisible && widget.superuserMode)
+                            PopupMenuItem(
+                              value: 'delete',
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.delete,
+                                  color: AppColor.grey1Color,
+                                ),
+                                const SizedBox(width: 12),
+                                Text('delete'.tr()),
+                              ],
+                            ),
+                            onTap: () {
+                              showDialog(
+                                  context: context,
+                                  builder: (context) => QuestionDialog(
+                                        title: 'deleteSong'.tr(),
+                                        okClick: () {
+                                          context.read<HomePageBloc>().add(DeleteSong(song: widget.song));
+                                        },
+                                        question: '${'deleteSongQuestion'.tr()} ${widget.song.title}?',
+                                      ));
+                            },
+                          ),
                         ];
-                      },
-                    );
-                  },
+                      }),
                 ),
               ],
             ),

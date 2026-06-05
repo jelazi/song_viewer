@@ -169,9 +169,19 @@ class _SettingsPageMobileState extends State<SettingsPageMobile> {
                       title: 'editIconVisibility'.tr(),
                       onPressed: (conte, value) {
                         context.read<SettingsBloc>().add(ChangeSettingsValue('isEditIconVisible', value));
+                        context.read<HomePageBloc>().add(const UpdateSettingsData());
                       },
                       iconData: Icons.visibility,
                       switchValue: state.isEditIconVisible,
+                    ),
+                    SettingsTile.switched(
+                      title: 'superuserMode'.tr(),
+                      onPressed: (conte, value) {
+                        context.read<SettingsBloc>().add(ChangeSettingsValue('superuserMode', value));
+                        context.read<HomePageBloc>().add(const UpdateSettingsData());
+                      },
+                      iconData: Icons.admin_panel_settings,
+                      switchValue: state.superuserMode,
                     ),
                     SettingsTile.switched(
                         title: 'autoHideTopBar'.tr(),

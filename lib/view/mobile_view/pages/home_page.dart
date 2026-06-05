@@ -58,6 +58,7 @@ class _HomePageMobileState extends State<HomePageMobile> {
           previous.listSong != current.listSong ||
           previous.selectedSongId != current.selectedSongId ||
           previous.isEditIconVisible != current.isEditIconVisible ||
+          previous.superuserMode != current.superuserMode ||
           previous.listExpandedSongs != current.listExpandedSongs,
       builder: (context, state) {
         return Scaffold(
@@ -154,6 +155,7 @@ class _HomePageMobileState extends State<HomePageMobile> {
                         isSelectedSong: state.selectedSongId == song.id,
                         isEditIconVisible: state.isEditIconVisible,
                         isExpanded: state.listExpandedSongs.contains(song.id),
+                        superuserMode: state.superuserMode,
                       ),
                     );
                   },

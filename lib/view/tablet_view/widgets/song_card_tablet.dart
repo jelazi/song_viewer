@@ -15,12 +15,14 @@ class SongCardTablet extends StatefulWidget {
   final bool isSelectedSong;
 
   final bool isEditIconVisible;
+  final bool superuserMode;
 
   const SongCardTablet({
     Key? key,
     required this.song,
     required this.index,
     required this.isEditIconVisible,
+    required this.superuserMode,
     required this.isSelectedSong,
   }) : super(key: key);
 
@@ -210,25 +212,27 @@ class _SongCardTabletState extends State<SongCardTablet> with TickerProviderStat
                                 Navigator.pushNamed(context, '/youtubeVideoPage');
                               },
                             ),
-                          PopupMenuItem(
-                            value: 'edit',
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Icon(
-                                  Icons.edit,
-                                  color: AppColor.grey1Color,
-                                ),
-                                Text('edit'.tr()),
-                              ],
+                          if (widget.isEditIconVisible && widget.superuserMode)
+                            PopupMenuItem(
+                              value: 'edit',
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Icon(
+                                    Icons.edit,
+                                    color: AppColor.grey1Color,
+                                  ),
+                                  Text('edit'.tr()),
+                                ],
+                              ),
+                              onTap: () {
+                                context.read<EditSongBloc>().add(ChangeEditSong(song: widget.song.copyWith(), isOriginalLyrics: false));
+                                Navigator.pushNamed(context, '/editPage');
+                              },
                             ),
-                            onTap: () {
-                              context.read<EditSongBloc>().add(ChangeEditSong(song: widget.song.copyWith(), isOriginalLyrics: false));
-                              Navigator.pushNamed(context, '/editPage');
-                            },
-                          ),
-                          PopupMenuItem(
-                            value: 'delete',
+                          if (widget.isEditIconVisible && widget.superuserMode)
+                            PopupMenuItem(
+                              value: 'delete',
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [

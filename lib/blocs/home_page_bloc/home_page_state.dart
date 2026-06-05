@@ -5,6 +5,7 @@ class HomePageState extends Equatable {
   final String selectedSongId;
   final List<Song> listSong;
   final bool isEditIconVisible;
+  final bool superuserMode;
   final List<String> listExpandedSongs;
   final List<String> listAllGroups;
   final List<String> listSelectedGroups;
@@ -14,6 +15,7 @@ class HomePageState extends Equatable {
     required this.selectedSongId,
     required this.listSong,
     required this.isEditIconVisible,
+    required this.superuserMode,
     required this.listExpandedSongs,
     required this.listAllGroups,
     required this.listSelectedGroups,
@@ -21,12 +23,13 @@ class HomePageState extends Equatable {
   });
 
   @override
-  List<Object> get props => [selectedSongId, listSong, listExpandedSongs, isEditIconVisible, listAllGroups, listSelectedGroups, selectedPage];
+  List<Object> get props => [selectedSongId, listSong, listExpandedSongs, isEditIconVisible, superuserMode, listAllGroups, listSelectedGroups, selectedPage];
 
   HomePageState copyWith({
     String? selectedSongId,
     List<Song>? listSong,
     bool? isEditIconVisible,
+    bool? superuserMode,
     List<String>? listExpandedSongs,
     List<String>? listAllGroups,
     List<String>? listSelectedGroups,
@@ -36,6 +39,7 @@ class HomePageState extends Equatable {
       selectedSongId: selectedSongId ?? this.selectedSongId,
       listSong: listSong ?? this.listSong,
       isEditIconVisible: isEditIconVisible ?? this.isEditIconVisible,
+      superuserMode: superuserMode ?? this.superuserMode,
       listExpandedSongs: listExpandedSongs ?? this.listExpandedSongs,
       listAllGroups: listAllGroups ?? this.listAllGroups,
       listSelectedGroups: listSelectedGroups ?? this.listSelectedGroups,
@@ -47,6 +51,7 @@ class HomePageState extends Equatable {
 class HomePageInitial extends HomePageState {
   const HomePageInitial({
     required super.isEditIconVisible,
+    required super.superuserMode,
     required super.selectedSongId,
     required super.listSong,
     required super.listExpandedSongs,

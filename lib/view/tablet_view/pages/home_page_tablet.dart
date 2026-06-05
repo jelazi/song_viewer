@@ -76,6 +76,7 @@ class _HomePageTabletState extends State<HomePageTablet> {
           previous.listSong != current.listSong ||
           previous.selectedSongId != current.selectedSongId ||
           previous.isEditIconVisible != current.isEditIconVisible ||
+          previous.superuserMode != current.superuserMode ||
           previous.listExpandedSongs != current.listExpandedSongs ||
           previous.selectedPage != current.selectedPage ||
           previous.listAllGroups != current.listAllGroups ||
@@ -703,6 +704,7 @@ class _HomePageTabletState extends State<HomePageTablet> {
             index: index,
             isEditIconVisible: state.isEditIconVisible,
             isSelectedSong: state.selectedSongId == song.id,
+            superuserMode: state.superuserMode,
           ),
         );
       },

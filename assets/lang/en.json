@@ -471,5 +471,6 @@
     "savingBackupJson": "Saving backup.json...",
     "authorsLabel": "Authors",
     "songsLabel": "Songs",
-    "enterTitle": "Please enter a song title"
+    "enterTitle": "Please enter a song title",
+    "superuserMode": "Superuser mode"
 }

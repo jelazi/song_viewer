@@ -12,6 +12,7 @@ class SettingsState extends Equatable {
   final Color editColorChord;
   final bool isEditIconVisible;
   final bool autoHideTopBar;
+  final bool superuserMode;
   final TypeClickCard typeClickCard;
   // Presentation settings
   final int presentationScreenIndex;
@@ -41,6 +42,7 @@ class SettingsState extends Equatable {
     required this.editColorChord,
     required this.isEditIconVisible,
     required this.autoHideTopBar,
+    required this.superuserMode,
     required this.typeClickCard,
     required this.presentationScreenIndex,
     required this.presentationLinesPerPage,
@@ -70,6 +72,7 @@ class SettingsState extends Equatable {
         editColorText,
         isEditIconVisible,
         autoHideTopBar,
+        superuserMode,
         typeClickCard,
         presentationScreenIndex,
         presentationLinesPerPage,
@@ -98,6 +101,7 @@ class SettingsState extends Equatable {
     Color? editColorChord,
     bool? isEditIconVisible,
     bool? autoHideTopBar,
+    bool? superuserMode,
     TypeClickCard? typeClickCard,
     int? presentationScreenIndex,
     int? presentationLinesPerPage,
@@ -125,6 +129,7 @@ class SettingsState extends Equatable {
       editColorChord: editColorChord ?? this.editColorChord,
       isEditIconVisible: isEditIconVisible ?? this.isEditIconVisible,
       autoHideTopBar: autoHideTopBar ?? this.autoHideTopBar,
+      superuserMode: superuserMode ?? this.superuserMode,
       typeClickCard: typeClickCard ?? this.typeClickCard,
       presentationScreenIndex: presentationScreenIndex ?? this.presentationScreenIndex,
       presentationLinesPerPage: presentationLinesPerPage ?? this.presentationLinesPerPage,
@@ -156,6 +161,7 @@ class SettingsInitial extends SettingsState {
     required super.editColorChord,
     required super.isEditIconVisible,
     required super.autoHideTopBar,
+    required super.superuserMode,
     required super.typeClickCard,
     required super.presentationScreenIndex,
     required super.presentationLinesPerPage,

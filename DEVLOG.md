@@ -1,5 +1,82 @@
 # Development Log
 
+## 2026-06-05 - Add superuserMode toggle to Settings on all platforms
+
+### What was added
+New `superuserMode` setting (default: false) that gates Edit and Delete options on song cards across all platforms. Users must explicitly enable it in Settings → "Superuser mode" to see edit/delete buttons.
+
+### Changes
+**SettingsRepository** (`lib/repositories/settings_repository.dart`):
+- Added `_superuserMode` field (default `false`)
+- Hive save/load for `superuserMode`
+- Case handler in `changeSettingsValue()`
+
+**SettingsBloc + SettingsState** (`lib/blocs/settings_bloc/`):
+- Added `superuserMode` field to `SettingsState`, `copyWith`, `props`, and `SettingsInitial`
+- Passes `superuserMode` through `_emitAllValues`
+
+**HomePageBloc + HomePageState** (`lib/blocs/home_page_bloc/`):
+- Added `superuserMode` field to `HomePageState`, `copyWith`, `props`
+- Loaded from `settingsRepository` in `_init` and `_updateSettingsData`
+
+**Song cards** — edit/delete gated by `widget.isEditIconVisible && widget.superuserMode`:
+- `lib/view/mobile_view/widgets/song_card.dart` — added `superuserMode` prop; edit/delete shown only when both flags are true
+- `lib/view/tablet_view/widgets/song_card_tablet.dart` — same
+- `lib/view/mobile_view/pages/home_page.dart` — passes `superuserMode` to SongCard
+- `lib/view/tablet_view/pages/home_page_tablet.dart` — passes `superuserMode` to SongCardTablet
+
+**Settings pages** — toggle switches on all platforms:
+- `lib/view/mobile_view/pages/settings_page.dart` — `superuserMode` toggle with `admin_panel_settings` icon, dispatches `UpdateSettingsData` to HomePageBloc
+- `lib/view/tablet_view/pages/settings_page_tablet.dart` — same
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/general_settings_body.dart` — new `_buildSuperuserModeToggle` widget
+
+**Backup service** (`lib/services/backup_service.dart`):
+- `superuserMode` exported in `_exportSettings()`, imported in `_importSettings()`
+
+**Localization** (`assets/lang/`):
+- `cs.json`: `"superuserMode": "Režim superuživatele"`
+- `en.json`: `"superuserMode": "Superuser mode"`
+
+### Current state
+- Zero errors, zero warnings
+- `superuserMode` persists across restarts via Hive
+- Edit/delete require both `isEditIconVisible` (popup visibility) AND `superuserMode` (edit permission) to be true
+
+## 2026-06-05 - Fix: unify mobile SongCard edit/delete with tablet behavior
+
+### What was fixed
+Mobile SongCard had an inconsistent edit/delete system: edit was gated by admin role check (only admin/superuser saw the option), and the Delete option was missing entirely. The tablet version uses `isEditIconVisible` setting (toggled in Settings via "editIconVisibility") uniformly.
+
+### Changes
+- **`lib/view/mobile_view/widgets/song_card.dart`**: Replaced `BlocBuilder<UsersBloc, UsersState>` admin check with `Visibility(visible: widget.isEditIconVisible)` wrapping the entire 3-dot popup menu — matching tablet behavior exactly
+- Added "Delete" PopupMenuItem with confirmation dialog (same as tablet)
+- Removed admin role check — edit/delete visibility is now controlled solely by the Settings toggle `isEditIconVisible`
+- Removed unused `model/user.dart` import, added `question_dialog.dart` import for delete confirmation
+
+### Current state
+- Mobile and tablet now share identical song card popup behavior: preview, presentation, sheet (conditional), youtube (conditional), edit, delete
+- Both controlled by same Settings toggle: Settings → editIconVisibility
+- Zero errors, zero warnings in mobile_view/ directory
+
+## 2026-06-05 - Fix: increase song header bar height on mobile and tablet
+
+### What was fixed
+The top AppBar showing song title and interpret name was too narrow (cramped vertically) on mobile and tablet preview/playlist views, making the two-line text look squished.
+
+### Changes
+- **Mobile `preview_page.dart`**: Increased `AnimatedContainer` height from 90→100, `PreferredSize` from 100→110, body `SizedBox` offset from -120→-130
+- **Tablet `preview_page_tablet.dart`**: Wrapped AppBar in `PreferredSize(Size.fromHeight(110))` (was default 56px); no body offset change needed (uses `Expanded`)
+- **Tablet `playlist_tablet.dart`**: Wrapped AppBar in `PreferredSize(Size.fromHeight(70))`; body `Container` offset from -120→-134
+
+### Files changed
+- `lib/view/mobile_view/pages/preview_page.dart`
+- `lib/view/tablet_view/pages/preview_page_tablet.dart`
+- `lib/view/tablet_view/pages/playlist_tablet.dart`
+
+### Current state
+- Zero errors, zero warnings (only pre-existing info-level deprecation notices)
+- All three pages compile cleanly
+
 ## 2026-06-05 - Desktop ribbon redesign: macOS-style compact toolbar
 
 ### What was done

@@ -73,6 +73,11 @@ class _GeneralSettingsBodyState extends State<GeneralSettingsBody> {
               _buildSectionTitle('bracketScanTitle'.tr()),
               const SizedBox(height: 8),
               const BracketErrorScanner(),
+              const SizedBox(height: 24),
+              // Superuser mode
+              _buildSectionTitle('superuserMode'.tr()),
+              const SizedBox(height: 8),
+              _buildSuperuserModeToggle(context, state),
             ],
           ),
         );
@@ -542,6 +547,32 @@ class _GeneralSettingsBodyState extends State<GeneralSettingsBody> {
           },
         ),
       ],
+    );
+  }
+
+  Widget _buildSuperuserModeToggle(BuildContext context, SettingsState state) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        border: Border.all(color: AppColor.grey3Color),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.admin_panel_settings, size: 20, color: AppColor.grey1Color),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text('superuserMode'.tr(), style: const TextStyle(fontSize: 14)),
+          ),
+          Switch.adaptive(
+            value: state.superuserMode,
+            onChanged: (value) {
+              context.read<SettingsBloc>().add(ChangeSettingsValue('superuserMode', value));
+              context.read<HomePageBloc>().add(const UpdateSettingsData());
+            },
+          ),
+        ],
+      ),
     );
   }
 }

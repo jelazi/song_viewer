@@ -57,7 +57,9 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
       context.read<PreviewChordBloc>().add(ChangeHeightWindow(height: MediaQuery.of(context).size.height));
     }
     return Scaffold(
-      appBar: AppBar(
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(110),
+        child: AppBar(
         title: BlocConsumer<PreviewChordBloc, PreviewChordState>(listener: (context, state) {
           if (state.heightWindow != MediaQuery.of(context).size.height) {
             context.read<PreviewChordBloc>().add(ChangeHeightWindow(height: MediaQuery.of(context).size.height));
@@ -269,6 +271,7 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
             },
           ),
         ],
+      ),
       ),
       body: BlocBuilder<PreviewChordBloc, PreviewChordState>(
         builder: (context, state) {

@@ -24,6 +24,7 @@ class SettingsRepository {
   Color _editColorChord = Colors.red;
   bool _isEditIconVisible = true;
   bool _autoHideTopBar = false;
+  bool _superuserMode = false;
   bool _twoColumns = false;
   User _currentUser = User.empty();
   String version = '';
@@ -105,6 +106,10 @@ class SettingsRepository {
     return _autoHideTopBar;
   }
 
+  bool get superuserMode {
+    return _superuserMode;
+  }
+
   User get currentUser {
     return _currentUser;
   }
@@ -141,6 +146,7 @@ class SettingsRepository {
     _editColorChord = Color(await hiveProvider.getSettingsValue('editColorChord') ?? Colors.red.value);
     _isEditIconVisible = await hiveProvider.getSettingsValue('isEditIconVisible') ?? true;
     _autoHideTopBar = await hiveProvider.getSettingsValue('autoHideTopBar') ?? false;
+    _superuserMode = await hiveProvider.getSettingsValue('superuserMode') ?? false;
     _currentUser = await hiveProvider.getSettingsValue('currentUser') ?? User.empty();
     _typeClickCard = await hiveProvider.getSettingsValue('typeClickCard') ?? TypeClickCard.none;
     _twoColumns = await hiveProvider.getSettingsValue('twoColumns') ?? false;
@@ -276,6 +282,12 @@ class SettingsRepository {
         {
           _autoHideTopBar = value;
           hiveProvider.setSettingsValue('autoHideTopBar', value);
+          break;
+        }
+      case 'superuserMode':
+        {
+          _superuserMode = value;
+          hiveProvider.setSettingsValue('superuserMode', value);
           break;
         }
       case 'currentUser':
