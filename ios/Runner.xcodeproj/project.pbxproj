@@ -200,6 +200,7 @@
 				9705A1C41CF9048500538489 /* Embed Frameworks */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
 				E0AF8E91B75C0B83B36D2196 /* [CP] Embed Pods Frameworks */,
+				627255D41D27E3393FE7CBBE /* Strip Simulator Architectures */,
 			);
 			buildRules = (
 			);
@@ -308,6 +309,25 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" embed_and_thin";
+		};
+		627255D41D27E3393FE7CBBE /* Strip Simulator Architectures */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Strip Simulator Architectures";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "echo \"Stripping simulator architectures from embedded frameworks...\" && FRAMEWORKS_DIR=\"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}\" && find \"$FRAMEWORKS_DIR\" -name \"*.framework\" -type d | while read -r FRAMEWORK_DIR; do PLIST=\"$FRAMEWORK_DIR/Info.plist\"; if [ -f \"$PLIST\" ]; then EXECUTABLE=$(defaults read \"$PLIST\" CFBundleExecutable 2>/dev/null || echo \"\"); if [ -n \"$EXECUTABLE\" ]; then EXECUTABLE_PATH=\"$FRAMEWORK_DIR/$EXECUTABLE\"; if [ -f \"$EXECUTABLE_PATH\" ]; then ARCHS=$(lipo -info \"$EXECUTABLE_PATH\" 2>/dev/null); if echo \"$ARCHS\" | grep -qi \"x86_64\\|i386\\|arm64e\"; then echo \"Removing simulator archs from: $EXECUTABLE\"; lipo -remove x86_64 -remove i386 -remove arm64e \"$EXECUTABLE_PATH\" -output \"$EXECUTABLE_PATH\" 2>/dev/null || true; fi; fi; fi; fi; done";
+			showEnvVarsInLog = 0;
 		};
 		9740EEB61CF901F6004384FC /* Run Script */ = {
 			isa = PBXShellScriptBuildPhase;

@@ -41,4 +41,30 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
   end
+
+  # Exclude simulator architectures from pods to avoid
+  # App Store validation error:
+  # "executable references an unsupported platform"
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'
+    end
+  end
+
+  # Add a build phase to strip simulator architectures from
+  # pre-compiled frameworks that may contain simulator slices.
+  project_path = 'Runner.xcodeproj'
+  runner_project = Xcodeproj::Project.open(project_path)
+  runner_target = runner_project.targets.find { |t| t.name == 'Runner' }
+
+  if runner_target
+    phase_name = 'Strip Simulator Architectures'
+    exists = runner_target.build_phases.find { |p| p.respond_to?(:name) && p.name == phase_name }
+    unless exists
+      phase = runner_target.new_shell_script_build_phase(phase_name)
+      phase.shell_script = 'echo "Stripping simulator architectures from embedded frameworks..." && FRAMEWORKS_DIR="${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}" && find "$FRAMEWORKS_DIR" -name "*.framework" -type d | while read -r FRAMEWORK_DIR; do PLIST="$FRAMEWORK_DIR/Info.plist"; if [ -f "$PLIST" ]; then EXECUTABLE=$(defaults read "$PLIST" CFBundleExecutable 2>/dev/null || echo ""); if [ -n "$EXECUTABLE" ]; then EXECUTABLE_PATH="$FRAMEWORK_DIR/$EXECUTABLE"; if [ -f "$EXECUTABLE_PATH" ]; then ARCHS=$(lipo -info "$EXECUTABLE_PATH" 2>/dev/null); if echo "$ARCHS" | grep -qi "x86_64\\|i386\\|arm64e"; then echo "Removing simulator archs from: $EXECUTABLE"; lipo -remove x86_64 -remove i386 -remove arm64e "$EXECUTABLE_PATH" -output "$EXECUTABLE_PATH" 2>/dev/null || true; fi; fi; fi; fi; done'
+      phase.show_env_vars_in_log = '0'
+      runner_project.save
+    end
+  end
 end

@@ -54,7 +54,7 @@ class RibbonMenu extends StatelessWidget {
                   ],
                 ],
               ),
-              if (_hasContextActions(state, isSettingsBody)) ...[
+              if (_hasContextActions(context, state, isSettingsBody)) ...[
                 const SizedBox(height: 4),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -117,6 +117,7 @@ class RibbonMenu extends StatelessWidget {
     final isPreviewBody = state.bodyName == 'preview' ||
         state.bodyName == 'browse_youtube' ||
         state.bodyName == 'browse_sheets';
+    final isSuperuser = context.read<SettingsBloc>().state.superuserMode;
 
     return ToolbarSegmentedControl<String>(
       selectedValue: isPreviewBody ? 'preview' : state.bodyName,
@@ -125,7 +126,8 @@ class RibbonMenu extends StatelessWidget {
       },
       items: [
         ToolbarSegment(label: 'preview'.tr(), icon: const Icon(Icons.preview), value: 'preview'),
-        ToolbarSegment(label: 'edit'.tr(), icon: const Icon(Icons.edit), value: 'edit'),
+        if (isSuperuser)
+          ToolbarSegment(label: 'edit'.tr(), icon: const Icon(Icons.edit), value: 'edit'),
         ToolbarSegment(label: 'web'.tr(), icon: const Icon(Icons.web), value: 'web'),
         ToolbarSegment(label: 'playlist'.tr(), icon: const Icon(Icons.playlist_play), value: 'playlist'),
         ToolbarSegment(label: 'song_enrichment'.tr(), icon: const Icon(Icons.auto_awesome), value: 'song_enrichment'),
@@ -133,9 +135,12 @@ class RibbonMenu extends StatelessWidget {
     );
   }
 
-  bool _hasContextActions(DesktopRibbonMenuState state, bool isSettingsBody) {
+  bool _hasContextActions(BuildContext context, DesktopRibbonMenuState state, bool isSettingsBody) {
     if (isSettingsBody) return true;
-    if (state.bodyName == 'edit') return true;
+    if (state.bodyName == 'edit') {
+      final isSuperuser = context.read<SettingsBloc>().state.superuserMode;
+      return isSuperuser;
+    }
     if (state.bodyName == 'preview' || state.bodyName == 'browse_youtube' || state.bodyName == 'browse_sheets') return true;
     if (state.bodyName == 'playlist') return true;
     if (state.bodyName == 'web') return true;
@@ -203,6 +208,7 @@ class RibbonMenu extends StatelessWidget {
   }
 
   Widget _buildPreviewActions(BuildContext context, DesktopRibbonMenuState state) {
+    final isSuperuser = context.read<SettingsBloc>().state.superuserMode;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -212,8 +218,8 @@ class RibbonMenu extends StatelessWidget {
           _buildZoomTransposeGroup(context),
           _buildOpenMediaGroup(context, state),
         ] else ...[
-          _buildNewSongButton(context),
-          const ToolbarDivider(),
+          if (isSuperuser) _buildNewSongButton(context),
+          if (isSuperuser) const ToolbarDivider(),
           _buildCurrentSongButton(context),
         ],
         const ToolbarDivider(),

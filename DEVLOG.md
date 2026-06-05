@@ -1,5 +1,38 @@
 # Development Log
 
+## 2026-06-05 - Fix App Store validation: strip simulator architectures from iOS frameworks
+
+### What was fixed
+App Store upload failed with: "Invalid executable. The objective_c.framework/objective_c executable references an unsupported platform in the arm64 slice."
+
+The `objective_c` package (transitive dep) ships with simulator architecture slices in its binary framework, which is rejected by Apple's submission validation.
+
+### Changes
+- **`ios/Podfile`**: Added `EXCLUDED_ARCHS[sdk=iphonesimulator*] = 'arm64'` to all Pods targets in `post_install` block — prevents Xcode from building/embedding simulator architectures for CocoaPods
+- **`ios/Runner.xcodeproj/project.pbxproj`**: Added "Strip Simulator Architectures" shell script build phase (runs after Embed Pods Frameworks) that uses `lipo -remove` to strip x86_64, i386, and arm64e slices from all embedded frameworks
+
+### Fix approach
+Two-layer defense:
+1. Podfile `EXCLUDED_ARCHS` — prevents simulator archs from being built in the first place
+2. Custom build phase — strips any remaining simulator slices from frameworks already in the bundle
+
+## 2026-06-05 - Add superuserMode gating to desktop ribbon edit section
+
+### What was fixed
+Desktop editing was still accessible without `superuserMode` enabled. The ribbon menu's "Edit" section selector, "New Song" button, and delete functionality were all visible and functional regardless of the `superuserMode` setting.
+
+### Changes
+- **`lib/view/desktop_view/widgets/ribbon_menu.dart`**:
+  - `_buildSectionSelector`: `edit` `ToolbarSegment` now conditionally included only when `superuserMode == true`
+  - `_hasContextActions`: added `BuildContext` parameter; returns `false` for `bodyName == 'edit'` when `superuserMode` is `false` (hides the entire context action row)
+  - `_buildPreviewActions`: `_buildNewSongButton` and its divider shown only when `superuserMode == true`
+
+### Current state
+- Edit section button hidden from the ribbon when `superuserMode` is disabled
+- New Song button hidden from preview and edit action rows
+- Delete button implicitly gated (only reachable from edit context actions)
+- Zero errors, zero warnings
+
 ## 2026-06-05 - Add superuserMode toggle to Settings on all platforms
 
 ### What was added
