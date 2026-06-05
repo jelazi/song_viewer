@@ -14,889 +14,326 @@ import '../../../model/playlist.dart';
 import '../../../model/song/song.dart';
 import 'my_toast.dart';
 import 'ribbon_button.dart';
-import 'ribbon_spacer.dart';
 
-class RibbonMenu extends StatefulWidget {
+class RibbonMenu extends StatelessWidget {
   const RibbonMenu({super.key});
-
-  @override
-  State<RibbonMenu> createState() => _RibbonMenuState();
-}
-
-class _RibbonMenuState extends State<RibbonMenu> with TickerProviderStateMixin {
-  late TabController _tabController;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
       builder: (context, state) {
-        final isPreviewBody = state.bodyName == 'preview' || state.bodyName == 'browse_youtube' || state.bodyName == 'browse_sheets';
+        final isPreviewBody = state.bodyName == 'preview' ||
+            state.bodyName == 'browse_youtube' ||
+            state.bodyName == 'browse_sheets';
         final isSettingsBody = state.bodyName == 'groups' ||
             state.bodyName == 'users' ||
             state.bodyName == 'presentation_settings' ||
             state.bodyName == 'general_settings' ||
             state.bodyName == 'backup_restore';
-        if (state.bodyName == 'edit') {
-          _tabController = TabController(length: 2, vsync: this);
-        } else if (isPreviewBody) {
-          _tabController = TabController(length: 2, vsync: this);
-        } else if (state.bodyName == 'web') {
-          _tabController = TabController(length: 2, vsync: this);
-        } else if (isSettingsBody) {
-          _tabController = TabController(length: 2, vsync: this, initialIndex: 1);
-        } else if (state.bodyName == 'playlist') {
-          _tabController = TabController(length: 2, vsync: this);
-        } else if (state.bodyName == 'song_enrichment') {
-          _tabController = TabController(length: 2, vsync: this);
-        } else {
-          _tabController = TabController(length: 1, vsync: this);
-        }
 
         return Container(
-          height: 92,
           width: MediaQuery.of(context).size.width,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
-            border: Border.all(color: Colors.black),
+            color: AppColor.whiteColor,
+            border: Border(
+              bottom: BorderSide(color: AppColor.grey4Color),
+            ),
           ),
-          child: Stack(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Positioned(
-                top: 0,
-                left: 0,
-                child: SizedBox(
-                  height: 90,
-                  width: MediaQuery.of(context).size.width,
-                  child: Column(
-                    children: [
-                      SizedBox(
-                        height: 30,
-                        child: isPreviewBody
-                            ? TabBar(
-                                isScrollable: true,
-                                tabAlignment: TabAlignment.start,
-                                controller: _tabController,
-                                tabs: [
-                                  Tab(text: 'home'.tr()),
-                                  Tab(text: 'settings'.tr()),
-                                ],
-                              )
-                            : state.bodyName == 'edit'
-                                ? TabBar(
-                                    isScrollable: true,
-                                    tabAlignment: TabAlignment.start,
-                                    controller: _tabController,
-                                    tabs: [
-                                      Tab(text: 'home'.tr()),
-                                      Tab(text: 'settings'.tr()),
-                                    ],
-                                  )
-                                : state.bodyName == 'web'
-                                    ? TabBar(
-                                        isScrollable: true,
-                                        tabAlignment: TabAlignment.start,
-                                        controller: _tabController,
-                                        tabs: [
-                                          Tab(text: 'home'.tr()),
-                                          Tab(text: 'settings'.tr()),
-                                        ],
-                                      )
-                                    : state.bodyName == 'groups'
-                                        ? TabBar(
-                                            isScrollable: true,
-                                            tabAlignment: TabAlignment.start,
-                                            controller: _tabController,
-                                            onTap: (index) {
-                                              if (index == 0) {
-                                                context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: 'preview'));
-                                              }
-                                            },
-                                            tabs: [
-                                              Tab(text: 'home'.tr()),
-                                              Tab(text: 'settings'.tr()),
-                                            ],
-                                          )
-                                        : state.bodyName == 'users'
-                                            ? TabBar(
-                                                isScrollable: true,
-                                                tabAlignment: TabAlignment.start,
-                                                controller: _tabController,
-                                                onTap: (index) {
-                                                  if (index == 0) {
-                                                    context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: 'preview'));
-                                                  }
-                                                },
-                                                tabs: [
-                                                  Tab(text: 'home'.tr()),
-                                                  Tab(text: 'settings'.tr()),
-                                                ],
-                                              )
-                                            : state.bodyName == 'presentation_settings'
-                                                ? TabBar(
-                                                    isScrollable: true,
-                                                    tabAlignment: TabAlignment.start,
-                                                    controller: _tabController,
-                                                    onTap: (index) {
-                                                      if (index == 0) {
-                                                        context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: 'preview'));
-                                                      }
-                                                    },
-                                                    tabs: [
-                                                      Tab(text: 'home'.tr()),
-                                                      Tab(text: 'settings'.tr()),
-                                                    ],
-                                                  )
-                                                : state.bodyName == 'general_settings' || state.bodyName == 'backup_restore'
-                                                    ? TabBar(
-                                                        isScrollable: true,
-                                                        tabAlignment: TabAlignment.start,
-                                                        controller: _tabController,
-                                                        onTap: (index) {
-                                                          if (index == 0) {
-                                                            context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: 'preview'));
-                                                          }
-                                                        },
-                                                        tabs: [
-                                                          Tab(text: 'home'.tr()),
-                                                          Tab(text: 'settings'.tr()),
-                                                        ],
-                                                      )
-                                                    : state.bodyName == 'playlist' || state.bodyName == 'song_enrichment'
-                                                        ? TabBar(
-                                                            isScrollable: true,
-                                                            tabAlignment: TabAlignment.start,
-                                                            controller: _tabController,
-                                                            onTap: (index) {
-                                                              if (index == 0) {
-                                                                context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: state.bodyName));
-                                                              }
-                                                            },
-                                                            tabs: [
-                                                              Tab(text: 'home'.tr()),
-                                                              Tab(text: 'settings'.tr()),
-                                                            ],
-                                                          )
-                                                        : TabBar(
-                                                            isScrollable: true,
-                                                            tabAlignment: TabAlignment.start,
-                                                            controller: _tabController,
-                                                            tabs: [
-                                                              Tab(text: 'home'.tr()),
-                                                            ],
-                                                          ),
-                      ),
-                      SizedBox(
-                        height: 60,
-                        child: isPreviewBody
-                            ? TabBarView(
-                                controller: _tabController,
-                                children: const [
-                                  HomeTabbar(),
-                                  SettingsTabbar(),
-                                ],
-                              )
-                            : state.bodyName == 'edit'
-                                ? TabBarView(
-                                    controller: _tabController,
-                                    children: const [
-                                      HomeTabbar(),
-                                      SettingsTabbar(),
-                                    ],
-                                  )
-                                : state.bodyName == 'groups'
-                                    ? TabBarView(
-                                        controller: _tabController,
-                                        children: const [
-                                          HomeTabbar(),
-                                          SettingsTabbar(),
-                                        ],
-                                      )
-                                    : state.bodyName == 'web'
-                                        ? TabBarView(
-                                            controller: _tabController,
-                                            children: const [
-                                              HomeTabbar(),
-                                              SettingsTabbar(),
-                                            ],
-                                          )
-                                        : state.bodyName == 'users'
-                                            ? TabBarView(
-                                                controller: _tabController,
-                                                children: const [
-                                                  HomeTabbar(),
-                                                  SettingsTabbar(),
-                                                ],
-                                              )
-                                            : state.bodyName == 'presentation_settings'
-                                                ? TabBarView(
-                                                    controller: _tabController,
-                                                    children: const [
-                                                      HomeTabbar(),
-                                                      SettingsTabbar(),
-                                                    ],
-                                                  )
-                                                : state.bodyName == 'general_settings' || state.bodyName == 'backup_restore'
-                                                    ? TabBarView(
-                                                        controller: _tabController,
-                                                        children: const [
-                                                          HomeTabbar(),
-                                                          SettingsTabbar(),
-                                                        ],
-                                                      )
-                                                    : state.bodyName == 'playlist' || state.bodyName == 'song_enrichment'
-                                                        ? TabBarView(
-                                                            controller: _tabController,
-                                                            children: const [
-                                                              HomeTabbar(),
-                                                              SettingsTabbar(),
-                                                            ],
-                                                          )
-                                                        : TabBarView(
-                                                            controller: _tabController,
-                                                            children: const [
-                                                              HomeTabbar(),
-                                                            ],
-                                                          ),
-                      ),
-                    ],
-                  ),
-                ),
+              Row(
+                children: [
+                  _buildNavigationGroup(context, state, isPreviewBody, isSettingsBody),
+                  if (!isSettingsBody) ...[
+                    const ToolbarDivider(),
+                    const SizedBox(width: 4),
+                    _buildSectionSelector(context, state),
+                  ],
+                ],
               ),
-              Positioned(
-                top: 0,
-                right: 0,
-                child: SizedBox(
-                  height: 30,
-                  width: 240,
+              if (_hasContextActions(state, isSettingsBody)) ...[
+                const SizedBox(height: 4),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      _getTopButton('preview', Icons.preview),
-                      _getTopButton('edit', Icons.edit),
-                      _getTopButton('web', Icons.web),
-                      _getTopButton('playlist', Icons.playlist_play),
-                      _getTopButton('song_enrichment', Icons.auto_awesome),
+                      _buildContextActions(context, state, isPreviewBody, isSettingsBody),
                     ],
                   ),
                 ),
-              ),
+              ],
             ],
           ),
         );
       },
     );
   }
-}
 
-Widget _getTopButton(String name, IconData icon) {
-  return BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
-    builder: (context, state) {
-      return Tooltip(
-        message: name.tr(),
-        child: MouseRegion(
-          cursor: SystemMouseCursors.click,
-          child: GestureDetector(
-            onTap: () {
-              context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: name));
-            },
-            child: BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
-              builder: (context, state) {
-                return Container(
-                    padding: const EdgeInsets.only(top: 2, left: 8, right: 8, bottom: 2),
-                    decoration: BoxDecoration(
-                      color: state.bodyName == name ? AppColor.primaryColor : null,
-                      border: const Border(
-                          left: BorderSide(
-                            color: AppColor.grey3Color,
-                          ),
-                          bottom: BorderSide(
-                            color: AppColor.grey3Color,
-                          )),
-                    ),
-                    child: Icon(
-                      icon,
-                      color: state.bodyName == name ? AppColor.whiteColor : AppColor.primaryColor,
-                    ));
-              },
-            ),
+  Widget _buildNavigationGroup(
+    BuildContext context,
+    DesktopRibbonMenuState state,
+    bool isPreviewBody,
+    bool isSettingsBody,
+  ) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        RibbonButton(
+          text: 'home'.tr(),
+          icon: Icon(
+            Icons.home,
+            size: 16,
+            color: !isSettingsBody ? AppColor.whiteColor : AppColor.grey1Color,
           ),
+          isEnabled: true,
+          isSelected: !isSettingsBody,
+          onPressed: () {
+            context.read<DesktopRibbonMenuBloc>().add(const ChangeHomeBody(bodyName: 'preview'));
+          },
         ),
-      );
-    },
-  );
-}
+        const SizedBox(width: 2),
+        RibbonButton(
+          text: 'settings'.tr(),
+          icon: Icon(
+            Icons.settings,
+            size: 16,
+            color: isSettingsBody ? AppColor.whiteColor : AppColor.grey1Color,
+          ),
+          isEnabled: true,
+          isSelected: isSettingsBody,
+          onPressed: () {
+            context.read<DesktopRibbonMenuBloc>().add(const ChangeHomeBody(bodyName: 'general_settings'));
+          },
+        ),
+      ],
+    );
+  }
 
-class EditTabbar extends StatelessWidget {
-  const EditTabbar({
-    super.key,
-  });
+  Widget _buildSectionSelector(BuildContext context, DesktopRibbonMenuState state) {
+    final isPreviewBody = state.bodyName == 'preview' ||
+        state.bodyName == 'browse_youtube' ||
+        state.bodyName == 'browse_sheets';
 
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
-      builder: (context, state) {
-        return SizedBox(
-            width: MediaQuery.of(context).size.width,
-            child: const Row(
-              children: [],
-            ));
+    return ToolbarSegmentedControl<String>(
+      selectedValue: isPreviewBody ? 'preview' : state.bodyName,
+      onChanged: (value) {
+        context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: value));
+      },
+      items: [
+        ToolbarSegment(label: 'preview'.tr(), icon: const Icon(Icons.preview), value: 'preview'),
+        ToolbarSegment(label: 'edit'.tr(), icon: const Icon(Icons.edit), value: 'edit'),
+        ToolbarSegment(label: 'web'.tr(), icon: const Icon(Icons.web), value: 'web'),
+        ToolbarSegment(label: 'playlist'.tr(), icon: const Icon(Icons.playlist_play), value: 'playlist'),
+        ToolbarSegment(label: 'song_enrichment'.tr(), icon: const Icon(Icons.auto_awesome), value: 'song_enrichment'),
+      ],
+    );
+  }
+
+  bool _hasContextActions(DesktopRibbonMenuState state, bool isSettingsBody) {
+    if (isSettingsBody) return true;
+    if (state.bodyName == 'edit') return true;
+    if (state.bodyName == 'preview' || state.bodyName == 'browse_youtube' || state.bodyName == 'browse_sheets') return true;
+    if (state.bodyName == 'playlist') return true;
+    if (state.bodyName == 'web') return true;
+    return false;
+  }
+
+  Widget _buildContextActions(
+    BuildContext context,
+    DesktopRibbonMenuState state,
+    bool isPreviewBody,
+    bool isSettingsBody,
+  ) {
+    if (isSettingsBody) {
+      return _buildSettingsActions(context, state);
+    }
+
+    if (state.bodyName == 'edit') {
+      return _buildEditActions(context, state);
+    }
+
+    if (isPreviewBody) {
+      return _buildPreviewActions(context, state);
+    }
+
+    if (state.bodyName == 'playlist') {
+      return _buildPlaylistActions(context);
+    }
+
+    if (state.bodyName == 'web') {
+      return _buildWebActions(context);
+    }
+
+    if (state.bodyName == 'song_enrichment') {
+      return const SizedBox.shrink();
+    }
+
+    return const SizedBox.shrink();
+  }
+
+  Widget _buildWebActions(BuildContext context) {
+    final webNames = ['Velký zpěvník', 'Písničky-akordy', 'ProScholy', 'Worship Leader'];
+    final webIcons = [Icons.library_music, Icons.music_note, Icons.church, Icons.mic];
+    return BlocBuilder<WebBloc, WebState>(
+      builder: (context, webState) {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(webNames.length, (index) {
+            final isSelected = webState.searchWeb == index;
+            return Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: RibbonButton(
+                text: webNames[index],
+                isEnabled: true,
+                isSelected: isSelected,
+                icon: Icon(webIcons[index]),
+                onPressed: () {
+                  context.read<WebBloc>().add(ChangeSearchWeb(searchWeb: index));
+                },
+              ),
+            );
+          }),
+        );
       },
     );
   }
-}
 
-class SettingsTabbar extends StatelessWidget {
-  const SettingsTabbar({
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-        width: MediaQuery.of(context).size.width,
-        child: Row(
-          children: [
-            RibbonButton(
-                text: 'exportAllSongs'.tr(),
-                icon: const Icon(
-                  Icons.exit_to_app,
-                  color: Colors.blue,
-                ),
-                isEnabled: true,
-                onPressed: () async {
-                  final listSong = context.read<HomePageBloc>().songsRepository.getListSongToJson();
-                  String? outputFile = await FilePicker.platform.saveFile(
-                    dialogTitle: 'pleaseSelectPathToSaveFile'.tr(),
-                    fileName: 'list_songs.json',
-                  );
-                  if (outputFile == null) {
-                    return;
-                  }
-                  File returnedFile = File(outputFile);
-                  await returnedFile.writeAsString(listSong);
-                }),
-            BlocBuilder<EditSongBloc, EditSongState>(
-              builder: (context, state) {
-                return Visibility(
-                  visible: state.currentEditSong.id.isNotEmpty,
-                  child: RibbonButton(
-                      text: 'exportLyricsToTxt'.tr(),
-                      icon: SizedBox(height: 25, child: Image.asset('assets/icons/txt.png')),
-                      isEnabled: true,
-                      onPressed: () async {
-                        String lyric = '';
-                        showDialog(
-                            context: context,
-                            builder: (context) {
-                              return SelectDialog(
-                                title: 'exportLyricsToTxt'.tr(),
-                                selectQuestion: 'withOrWithoutChords'.tr(),
-                                firstSelectTitle: 'withChords'.tr(),
-                                firstSelectFunction: () async {
-                                  lyric = state.currentEditSong.lyricsWithChords;
-                                  String? outputFile = await FilePicker.platform.saveFile(
-                                    dialogTitle: 'pleaseSelectPathToSaveFile'.tr(),
-                                    fileName: '${state.currentEditSong.title}.txt',
-                                  );
-                                  if (outputFile == null) {
-                                    return;
-                                  }
-                                  File returnedFile = File(outputFile);
-                                  await returnedFile.writeAsString(lyric);
-                                },
-                                secondSelectTitle: 'withoutChords'.tr(),
-                                secondSelectFunction: () async {
-                                  lyric = state.currentEditSong.lyricsWithoutChordsWithLines;
-                                  String? outputFile = await FilePicker.platform.saveFile(
-                                    dialogTitle: 'pleaseSelectPathToSaveFile'.tr(),
-                                    fileName: '${state.currentEditSong.title}.txt',
-                                  );
-                                  if (outputFile == null) {
-                                    return;
-                                  }
-                                  File returnedFile = File(outputFile);
-                                  await returnedFile.writeAsString(lyric);
-                                },
-                              );
-                            });
-                      }),
-                );
-              },
-            ),
-            const RibbonSpacer(),
-            RibbonButton(
-                text: 'groups'.tr(),
-                icon: const Icon(
-                  Icons.group,
-                  color: Colors.teal,
-                ),
-                isEnabled: true,
-                onPressed: () {
-                  context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: 'groups'));
-                }),
-            RibbonButton(
-                text: 'users'.tr(),
-                icon: const Icon(
-                  Icons.person,
-                  color: Colors.indigo,
-                ),
-                isEnabled: true,
-                onPressed: () {
-                  context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: 'users'));
-                }),
-            RibbonButton(
-                text: 'presentationBtn'.tr(),
-                icon: const Icon(
-                  Icons.present_to_all,
-                  color: Colors.deepPurple,
-                ),
-                isEnabled: true,
-                onPressed: () {
-                  context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: 'presentation_settings'));
-                }),
-            RibbonButton(
-                text: 'generalSettings'.tr(),
-                icon: const Icon(
-                  Icons.settings,
-                  color: Colors.blueGrey,
-                ),
-                isEnabled: true,
-                onPressed: () {
-                  context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: 'general_settings'));
-                }),
-            const RibbonSpacer(),
-            RibbonButton(
-                text: 'qrCode'.tr(),
-                icon: const Icon(
-                  Icons.qr_code,
-                  color: Colors.orange,
-                ),
-                isEnabled: true,
-                onPressed: () {
-                  QrCodeDialog.show(context);
-                }),
-            const RibbonSpacer(),
-            RibbonButton(
-                text: 'backupAndRestore'.tr(),
-                icon: const Icon(
-                  Icons.backup,
-                  color: Colors.brown,
-                ),
-                isEnabled: true,
-                onPressed: () {
-                  context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: 'backup_restore'));
-                }),
-          ],
-        ));
-  }
-}
-
-class PreviewTabbar extends StatelessWidget {
-  const PreviewTabbar({
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: MediaQuery.of(context).size.width,
-      child: Row(children: [
-        BlocBuilder<PreviewChordBloc, PreviewChordState>(
-          builder: (context, state) {
-            return RibbonButton(
-                text: 'zoomIn'.tr(),
-                icon: const Icon(
-                  Icons.zoom_in,
-                  color: Colors.blue,
-                ),
-                isEnabled: state.data.song != null,
-                onPressed: () {
-                  context.read<PreviewChordBloc>().add(const ChangeFontSize(isIncrease: true));
-                });
-          },
-        ),
-        BlocBuilder<PreviewChordBloc, PreviewChordState>(
-          builder: (context, state) {
-            return RibbonButton(
-                text: 'zoomOut'.tr(),
-                isEnabled: state.data.song != null,
-                icon: const Icon(
-                  Icons.zoom_out,
-                  color: Colors.blue,
-                ),
-                onPressed: () {
-                  context.read<PreviewChordBloc>().add(const ChangeFontSize(isIncrease: false));
-                });
-          },
-        ),
-        BlocBuilder<PreviewChordBloc, PreviewChordState>(
-          builder: (context, state) {
-            return RibbonButton(
-                text: 'transpose'.tr(),
-                isEnabled: state.data.song != null,
-                icon: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.add,
-                      size: 18,
-                      color: Colors.orange,
-                    ),
-                    Icon(
-                      Icons.music_note,
-                      size: 18,
-                      color: Colors.orange,
-                    ),
-                  ],
-                ),
-                onPressed: () {
-                  context.read<PreviewChordBloc>().add(const TransposeChord(increment: 1));
-                });
-          },
-        ),
-        BlocBuilder<PreviewChordBloc, PreviewChordState>(
-          builder: (context, state) {
-            return RibbonButton(
-                text: 'transpose'.tr(),
-                isEnabled: state.data.song != null,
-                icon: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.remove,
-                      size: 18,
-                      color: Colors.orange,
-                    ),
-                    Icon(
-                      Icons.music_note,
-                      size: 18,
-                      color: Colors.orange,
-                    ),
-                  ],
-                ),
-                onPressed: () {
-                  context.read<PreviewChordBloc>().add(const TransposeChord(increment: -1));
-                });
-          },
-        ),
-      ]),
+  Widget _buildPreviewActions(BuildContext context, DesktopRibbonMenuState state) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (state.isSelectedSong) ...[
+          _buildCurrentSongButton(context),
+          const ToolbarDivider(),
+          _buildZoomTransposeGroup(context),
+          _buildOpenMediaGroup(context, state),
+        ] else ...[
+          _buildNewSongButton(context),
+          const ToolbarDivider(),
+          _buildCurrentSongButton(context),
+        ],
+        const ToolbarDivider(),
+        _buildPresentationGroup(context),
+      ],
     );
   }
-}
 
-class HomeTabbar extends StatelessWidget {
-  const HomeTabbar({
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-        width: MediaQuery.of(context).size.width,
-        child: BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
-          builder: (context, state) {
-            return state.isSelectedSong
-                ? state.bodyName == 'preview' || state.bodyName == 'browse_youtube' || state.bodyName == 'browse_sheets'
-                    ? Row(
-                        children: [
-                          _buildCurrentSongButton(context),
-                          const RibbonSpacer(),
-                          BlocBuilder<PreviewChordBloc, PreviewChordState>(
-                            builder: (context, state) {
-                              return RibbonButton(
-                                  text: 'zoomIn'.tr(),
-                                  icon: const Icon(
-                                    Icons.zoom_in,
-                                    color: Colors.blue,
-                                  ),
-                                  isEnabled: state.data.song != null,
-                                  onPressed: () {
-                                    context.read<PreviewChordBloc>().add(const ChangeFontSize(isIncrease: true));
-                                  });
-                            },
-                          ),
-                          BlocBuilder<PreviewChordBloc, PreviewChordState>(
-                            builder: (context, state) {
-                              return RibbonButton(
-                                  text: 'zoomOut'.tr(),
-                                  isEnabled: state.data.song != null,
-                                  icon: const Icon(
-                                    Icons.zoom_out,
-                                    color: Colors.blue,
-                                  ),
-                                  onPressed: () {
-                                    context.read<PreviewChordBloc>().add(const ChangeFontSize(isIncrease: false));
-                                  });
-                            },
-                          ),
-                          BlocBuilder<PreviewChordBloc, PreviewChordState>(
-                            builder: (context, state) {
-                              return RibbonButton(
-                                  text: 'transpose'.tr(),
-                                  isEnabled: state.data.song != null,
-                                  icon: const Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.add,
-                                        size: 18,
-                                        color: Colors.orange,
-                                      ),
-                                      Icon(
-                                        Icons.music_note,
-                                        size: 18,
-                                        color: Colors.orange,
-                                      ),
-                                    ],
-                                  ),
-                                  onPressed: () {
-                                    context.read<PreviewChordBloc>().add(const TransposeChord(increment: 1));
-                                  });
-                            },
-                          ),
-                          BlocBuilder<PreviewChordBloc, PreviewChordState>(
-                            builder: (context, state) {
-                              return RibbonButton(
-                                  text: 'transpose'.tr(),
-                                  isEnabled: state.data.song != null,
-                                  icon: const Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.remove,
-                                        size: 18,
-                                        color: Colors.orange,
-                                      ),
-                                      Icon(
-                                        Icons.music_note,
-                                        size: 18,
-                                        color: Colors.orange,
-                                      ),
-                                    ],
-                                  ),
-                                  onPressed: () {
-                                    context.read<PreviewChordBloc>().add(const TransposeChord(increment: -1));
-                                  });
-                            },
-                          ),
-                          const RibbonSpacer(),
-                          BlocBuilder<PreviewChordBloc, PreviewChordState>(
-                            builder: (context, previewState) {
-                              final hasYoutube = previewState.data.song?.youtubeVideos?.isNotEmpty ?? false;
-                              if (!hasYoutube) return const SizedBox.shrink();
-                              final isActive = state.bodyName == 'browse_youtube';
-                              return RibbonButton(
-                                  text: 'openVideos'.tr(),
-                                  isEnabled: true,
-                                  isSelected: isActive,
-                                  icon: const Icon(
-                                    Icons.play_circle_fill,
-                                    color: Colors.red,
-                                  ),
-                                  onPressed: () {
-                                    context.read<DesktopRibbonMenuBloc>().add(
-                                          ChangeHomeBody(bodyName: isActive ? 'preview' : 'browse_youtube'),
-                                        );
-                                  });
-                            },
-                          ),
-                          BlocBuilder<PreviewChordBloc, PreviewChordState>(
-                            builder: (context, previewState) {
-                              final hasSheets = previewState.data.song?.sheets?.isNotEmpty ?? false;
-                              if (!hasSheets) return const SizedBox.shrink();
-                              final isActive = state.bodyName == 'browse_sheets';
-                              return RibbonButton(
-                                  text: 'openSheet'.tr(),
-                                  isEnabled: true,
-                                  isSelected: isActive,
-                                  icon: Icon(
-                                    Icons.music_note,
-                                    color: Colors.green.shade700,
-                                  ),
-                                  onPressed: () {
-                                    context.read<DesktopRibbonMenuBloc>().add(
-                                          ChangeHomeBody(bodyName: isActive ? 'preview' : 'browse_sheets'),
-                                        );
-                                  });
-                            },
-                          ),
-                          BlocBuilder<PreviewChordBloc, PreviewChordState>(
-                            builder: (context, state) {
-                              return state.data.song?.youtubeVideos?.isNotEmpty == true || state.data.song?.sheets?.isNotEmpty == true
-                                  ? const RibbonSpacer()
-                                  : const SizedBox.shrink();
-                            },
-                          ),
-                          const RibbonSpacer(),
-                          _buildPresentationButton(context),
-                        ],
-                      )
-                    : state.bodyName == 'edit'
-                        ? Row(
-                            children: [
-                              getNewSongButton(context),
-                              const RibbonSpacer(),
-                              RibbonButton(
-                                  text: 'lyrics'.tr(),
-                                  icon: const Icon(
-                                    Icons.edit,
-                                    color: Colors.blue,
-                                  ),
-                                  onPressed: () {
-                                    context.read<DesktopRibbonMenuBloc>().add(const ChangeEditBody(bodyName: 'lyrics'));
-                                  },
-                                  isEnabled: true,
-                                  isSelected: state.bodyEditName == 'lyrics'),
-                              RibbonButton(
-                                  text: 'chord'.tr(),
-                                  icon: const Icon(
-                                    Icons.piano,
-                                    color: Colors.orange,
-                                  ),
-                                  onPressed: () {
-                                    context.read<DesktopRibbonMenuBloc>().add(const ChangeEditBody(bodyName: 'chords'));
-                                  },
-                                  isEnabled: true,
-                                  isSelected: state.bodyEditName == 'chords'),
-                              RibbonButton(
-                                  text: 'youtube'.tr(),
-                                  icon: const Icon(
-                                    Icons.videocam,
-                                    color: Colors.red,
-                                  ),
-                                  onPressed: () {
-                                    context.read<DesktopRibbonMenuBloc>().add(const ChangeEditBody(bodyName: 'youtube'));
-                                  },
-                                  isEnabled: true,
-                                  isSelected: state.bodyEditName == 'youtube'),
-                              RibbonButton(
-                                  text: 'sheets'.tr(),
-                                  icon: Icon(
-                                    Icons.music_note,
-                                    color: Colors.green.shade700,
-                                  ),
-                                  onPressed: () {
-                                    context.read<DesktopRibbonMenuBloc>().add(const ChangeEditBody(bodyName: 'sheets'));
-                                  },
-                                  isEnabled: true,
-                                  isSelected: state.bodyEditName == 'sheets'),
-                              RibbonButton(
-                                  text: 'otherSettings'.tr(),
-                                  icon: Icon(
-                                    Icons.settings,
-                                    color: Colors.grey.shade700,
-                                  ),
-                                  onPressed: () {
-                                    context.read<DesktopRibbonMenuBloc>().add(const ChangeEditBody(bodyName: 'settings'));
-                                  },
-                                  isEnabled: true,
-                                  isSelected: state.bodyEditName == 'settings'),
-                              RibbonButton(
-                                  text: 'delete'.tr(),
-                                  icon: const Icon(
-                                    Icons.delete,
-                                    color: Colors.red,
-                                  ),
-                                  onPressed: () {
-                                    showDialog(
-                                        context: context,
-                                        builder: (context) {
-                                          return QuestionDialog(
-                                              title: 'deleteSong'.tr(),
-                                              okClick: () {
-                                                context.read<EditSongBloc>().add(const DeleteCurrentSong());
-                                              },
-                                              question: 'deleteSongQuestion'.tr());
-                                        });
-                                  },
-                                  isEnabled: true,
-                                  isSelected: state.bodyEditName == 'settings'),
-                            ],
-                          )
-                        : const Row(
-                            children: [],
-                          )
-                : Row(
-                    children: [
-                      getNewSongButton(context),
-                      const RibbonSpacer(),
-                      _buildCurrentSongButton(context),
-                      const RibbonSpacer(),
-                      _buildPresentationButton(context),
-                    ],
-                  );
-          },
-        ));
+  Widget _buildEditActions(BuildContext context, DesktopRibbonMenuState state) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildNewSongButton(context),
+        const ToolbarDivider(),
+        _buildEditModeSelector(context, state),
+        const ToolbarDivider(),
+        _buildDeleteButton(context),
+      ],
+    );
   }
 
-  RibbonButton getNewSongButton(BuildContext context) {
+  Widget _buildPlaylistActions(BuildContext context) {
+    return _buildPresentationGroup(context);
+  }
+
+  Widget _buildSettingsActions(BuildContext context, DesktopRibbonMenuState state) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildExportButton(context),
+        _buildExportLyricsButton(context),
+        const ToolbarDivider(),
+        _buildSettingsNavButton(
+          context: context,
+          text: 'groups'.tr(),
+          icon: const Icon(Icons.group, color: Colors.teal),
+          bodyName: 'groups',
+          isSelected: state.bodyName == 'groups',
+        ),
+        _buildSettingsNavButton(
+          context: context,
+          text: 'users'.tr(),
+          icon: const Icon(Icons.person, color: Colors.indigo),
+          bodyName: 'users',
+          isSelected: state.bodyName == 'users',
+        ),
+        _buildSettingsNavButton(
+          context: context,
+          text: 'presentationBtn'.tr(),
+          icon: const Icon(Icons.present_to_all, color: Colors.deepPurple),
+          bodyName: 'presentation_settings',
+          isSelected: state.bodyName == 'presentation_settings',
+        ),
+        _buildSettingsNavButton(
+          context: context,
+          text: 'generalSettings'.tr(),
+          icon: const Icon(Icons.settings, color: Colors.blueGrey),
+          bodyName: 'general_settings',
+          isSelected: state.bodyName == 'general_settings',
+        ),
+        const ToolbarDivider(),
+        _buildQrCodeButton(context),
+        const ToolbarDivider(),
+        _buildBackupRestoreButton(context, state),
+      ],
+    );
+  }
+
+  Widget _buildNewSongButton(BuildContext context) {
     return RibbonButton(
       text: 'newSong'.tr(),
-      icon: const Icon(
-        Icons.new_label,
-        color: Colors.green,
-      ),
-      onPressed: () {
-        TextEditingController nameController = TextEditingController();
-        TextEditingController artistController = TextEditingController();
-        showDialog(
-            context: context,
-            builder: (context) {
-              return EditDialog(
-                  width: 300,
-                  height: 300,
-                  title: 'newSong'.tr(),
-                  okBack: false,
-                  okClick: () {
-                    if (nameController.text.isEmpty) {
-                      MyToast.showText(text: 'nameSongIsEmpty'.tr(), typeNotification: TypeNotification.error);
-                      return;
-                    }
-                    Song song = Song.empty()
-                      ..title = nameController.text
-                      ..interpret = artistController.text;
-                    context.read<EditSongBloc>().add(CreateNewSong(song: song));
-                    Navigator.pop(context);
-                    context.read<DesktopRibbonMenuBloc>().add(ChangeIsSelectedSong(song: song));
-                    context.read<DesktopRibbonMenuBloc>().add(const ChangeHomeBody(bodyName: 'edit'));
-                  },
-                  widgetContent: Column(
-                    children: [
-                      TextField(
-                        controller: nameController,
-                        decoration: InputDecoration(
-                          border: const OutlineInputBorder(),
-                          labelText: 'songName'.tr(),
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 10,
-                      ),
-                      TextField(
-                        controller: artistController,
-                        decoration: InputDecoration(
-                          border: const OutlineInputBorder(),
-                          labelText: 'artist'.tr(),
-                        ),
-                      ),
-                    ],
-                  ));
-            });
-      },
+      icon: const Icon(Icons.new_label, color: Colors.green),
       isEnabled: true,
+      onPressed: () {
+        final nameController = TextEditingController();
+        final artistController = TextEditingController();
+        showDialog(
+          context: context,
+          builder: (dialogContext) {
+            return EditDialog(
+              width: 300,
+              height: 300,
+              title: 'newSong'.tr(),
+              okBack: false,
+              okClick: () {
+                if (nameController.text.isEmpty) {
+                  MyToast.showText(text: 'nameSongIsEmpty'.tr(), typeNotification: TypeNotification.error);
+                  return;
+                }
+                final song = Song.empty()
+                  ..title = nameController.text
+                  ..interpret = artistController.text;
+                context.read<EditSongBloc>().add(CreateNewSong(song: song));
+                Navigator.pop(dialogContext);
+                context.read<DesktopRibbonMenuBloc>().add(ChangeIsSelectedSong(song: song));
+                context.read<DesktopRibbonMenuBloc>().add(const ChangeHomeBody(bodyName: 'edit'));
+              },
+              widgetContent: Column(
+                children: [
+                  TextField(
+                    controller: nameController,
+                    decoration: InputDecoration(
+                      border: const OutlineInputBorder(),
+                      labelText: 'songName'.tr(),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: artistController,
+                    decoration: InputDecoration(
+                      border: const OutlineInputBorder(),
+                      labelText: 'artist'.tr(),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -914,7 +351,7 @@ class HomeTabbar extends StatelessWidget {
               isSelected: isActive,
               icon: Icon(
                 isActive ? Icons.cloud_done : Icons.cloud_upload,
-                size: 22,
+                size: 16,
                 color: isActive ? Colors.green : Colors.blueGrey,
               ),
               onPressed: () {
@@ -933,83 +370,328 @@ class HomeTabbar extends StatelessWidget {
     );
   }
 
-  Widget _buildPresentationButton(BuildContext context) {
+  Widget _buildZoomTransposeGroup(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        BlocBuilder<PreviewChordBloc, PreviewChordState>(
+          builder: (context, state) {
+            return RibbonButton(
+              text: 'zoomIn'.tr(),
+              isEnabled: state.data.song != null,
+              icon: const Icon(Icons.zoom_in, color: Colors.blue),
+              onPressed: () {
+                context.read<PreviewChordBloc>().add(const ChangeFontSize(isIncrease: true));
+              },
+            );
+          },
+        ),
+        BlocBuilder<PreviewChordBloc, PreviewChordState>(
+          builder: (context, state) {
+            return RibbonButton(
+              text: 'zoomOut'.tr(),
+              isEnabled: state.data.song != null,
+              icon: const Icon(Icons.zoom_out, color: Colors.blue),
+              onPressed: () {
+                context.read<PreviewChordBloc>().add(const ChangeFontSize(isIncrease: false));
+              },
+            );
+          },
+        ),
+        const SizedBox(width: 2),
+        BlocBuilder<PreviewChordBloc, PreviewChordState>(
+          builder: (context, state) {
+            return RibbonButton(
+              text: '+1',
+              isEnabled: state.data.song != null,
+              showText: false,
+              icon: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.add, size: 14, color: Colors.orange),
+                  Icon(Icons.music_note, size: 14, color: Colors.orange),
+                ],
+              ),
+              onPressed: () {
+                context.read<PreviewChordBloc>().add(const TransposeChord(increment: 1));
+              },
+            );
+          },
+        ),
+        BlocBuilder<PreviewChordBloc, PreviewChordState>(
+          builder: (context, state) {
+            return RibbonButton(
+              text: '\u22121',
+              isEnabled: state.data.song != null,
+              showText: false,
+              icon: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.remove, size: 14, color: Colors.orange),
+                  Icon(Icons.music_note, size: 14, color: Colors.orange),
+                ],
+              ),
+              onPressed: () {
+                context.read<PreviewChordBloc>().add(const TransposeChord(increment: -1));
+              },
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOpenMediaGroup(BuildContext context, DesktopRibbonMenuState state) {
+    return BlocBuilder<PreviewChordBloc, PreviewChordState>(
+      builder: (context, previewState) {
+        final hasYoutube = previewState.data.song?.youtubeVideos?.isNotEmpty ?? false;
+        final hasSheets = previewState.data.song?.sheets?.isNotEmpty ?? false;
+
+        if (!hasYoutube && !hasSheets) return const SizedBox.shrink();
+
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (hasYoutube)
+              RibbonButton(
+                text: 'openVideos'.tr(),
+                isEnabled: true,
+                isSelected: state.bodyName == 'browse_youtube',
+                icon: const Icon(Icons.play_circle_fill, color: Colors.red),
+                onPressed: () {
+                  final isActive = state.bodyName == 'browse_youtube';
+                  context.read<DesktopRibbonMenuBloc>().add(
+                        ChangeHomeBody(bodyName: isActive ? 'preview' : 'browse_youtube'),
+                      );
+                },
+              ),
+            if (hasSheets)
+              RibbonButton(
+                text: 'openSheet'.tr(),
+                isEnabled: true,
+                isSelected: state.bodyName == 'browse_sheets',
+                icon: Icon(Icons.music_note, color: Colors.green.shade700),
+                onPressed: () {
+                  final isActive = state.bodyName == 'browse_sheets';
+                  context.read<DesktopRibbonMenuBloc>().add(
+                        ChangeHomeBody(bodyName: isActive ? 'preview' : 'browse_sheets'),
+                      );
+                },
+              ),
+            if (hasYoutube || hasSheets) const ToolbarDivider(),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildPresentationGroup(BuildContext context) {
     return BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
       builder: (context, ribbonState) {
         final isOpen = ribbonState.isPresentationWindowOpen;
-
         return BlocBuilder<PresentationPlaylistBloc, PresentationPlaylistState>(
           builder: (context, playlistState) {
             return Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Presentation button - only enabled if playlist is not empty
                 RibbonButton(
-                    text: isOpen ? 'closePresentationBtn'.tr() : 'presentationF5'.tr(),
-                    isEnabled: isOpen || playlistState.isNotEmpty,
-                    icon: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          isOpen ? Icons.close_fullscreen : Icons.present_to_all,
-                          size: 18,
-                          color: (isOpen || playlistState.isNotEmpty) ? Colors.deepPurple : Colors.grey,
-                        ),
-                      ],
-                    ),
-                    onPressed: () async {
-                      final manager = PresentationWindowManager();
-                      if (isOpen) {
-                        await manager.closePresentationWindow();
-                      } else if (playlistState.isNotEmpty) {
-                        _openPresentationFromPlaylist(context);
-                      }
-                    }),
-                // Add songs to playlist dialog button
+                  text: isOpen ? 'closePresentationBtn'.tr() : 'presentationF5'.tr(),
+                  isEnabled: isOpen || playlistState.isNotEmpty,
+                  icon: Icon(
+                    isOpen ? Icons.close_fullscreen : Icons.present_to_all,
+                    size: 16,
+                    color: (isOpen || playlistState.isNotEmpty) ? Colors.deepPurple : Colors.grey,
+                  ),
+                  onPressed: () async {
+                    final manager = PresentationWindowManager();
+                    if (isOpen) {
+                      await manager.closePresentationWindow();
+                    } else if (playlistState.isNotEmpty) {
+                      _openPresentationFromPlaylist(context);
+                    }
+                  },
+                ),
                 RibbonButton(
-                    text: 'addToPlaylist'.tr(),
-                    isEnabled: true,
-                    icon: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.playlist_add, size: 18, color: Colors.teal),
-                      ],
-                    ),
-                    onPressed: () {
-                      _showAddSongsDialog(context);
-                    }),
-                // Save playlist button
+                  text: 'addToPlaylist'.tr(),
+                  isEnabled: true,
+                  icon: const Icon(Icons.playlist_add, size: 16, color: Colors.teal),
+                  onPressed: () {
+                    _showAddSongsDialog(context);
+                  },
+                ),
                 RibbonButton(
-                    text: 'savePlaylist'.tr(),
-                    isEnabled: playlistState.isNotEmpty,
-                    icon: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.save, size: 18, color: playlistState.isNotEmpty ? Colors.blue : Colors.grey),
-                      ],
-                    ),
-                    onPressed: () {
-                      if (playlistState.isNotEmpty) {
-                        _showSavePlaylistDialog(context);
-                      }
-                    }),
-                // Load playlist button
+                  text: 'savePlaylist'.tr(),
+                  isEnabled: playlistState.isNotEmpty,
+                  icon: Icon(
+                    Icons.save,
+                    size: 16,
+                    color: playlistState.isNotEmpty ? Colors.blue : Colors.grey,
+                  ),
+                  onPressed: () {
+                    if (playlistState.isNotEmpty) {
+                      _showSavePlaylistDialog(context);
+                    }
+                  },
+                ),
                 RibbonButton(
-                    text: 'loadPlaylist'.tr(),
-                    isEnabled: true,
-                    icon: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.folder_open, size: 18, color: Colors.amber.shade800),
-                      ],
-                    ),
-                    onPressed: () {
-                      _showLoadPlaylistDialog(context);
-                    }),
+                  text: 'loadPlaylist'.tr(),
+                  isEnabled: true,
+                  icon: Icon(Icons.folder_open, size: 16, color: Colors.amber.shade800),
+                  onPressed: () {
+                    _showLoadPlaylistDialog(context);
+                  },
+                ),
               ],
             );
           },
         );
+      },
+    );
+  }
+
+  Widget _buildEditModeSelector(BuildContext context, DesktopRibbonMenuState state) {
+    return ToolbarSegmentedControl<String>(
+      selectedValue: state.bodyEditName,
+      onChanged: (value) {
+        context.read<DesktopRibbonMenuBloc>().add(ChangeEditBody(bodyName: value));
+      },
+      items: [
+        ToolbarSegment(label: 'lyrics'.tr(), icon: const Icon(Icons.edit, color: Colors.blue), value: 'lyrics'),
+        ToolbarSegment(label: 'chord'.tr(), icon: const Icon(Icons.piano, color: Colors.orange), value: 'chords'),
+        ToolbarSegment(label: 'youtube'.tr(), icon: const Icon(Icons.videocam, color: Colors.red), value: 'youtube'),
+        ToolbarSegment(label: 'sheets'.tr(), icon: Icon(Icons.music_note, color: Colors.green.shade700), value: 'sheets'),
+        ToolbarSegment(label: 'otherSettings'.tr(), icon: Icon(Icons.settings, color: Colors.grey.shade700), value: 'settings'),
+      ],
+    );
+  }
+
+  Widget _buildDeleteButton(BuildContext context) {
+    return RibbonButton(
+      text: 'delete'.tr(),
+      isEnabled: true,
+      showText: false,
+      icon: const Icon(Icons.delete, color: Colors.red),
+      onPressed: () {
+        showDialog(
+          context: context,
+          builder: (dialogContext) {
+            return QuestionDialog(
+              title: 'deleteSong'.tr(),
+              okClick: () {
+                context.read<EditSongBloc>().add(const DeleteCurrentSong());
+              },
+              question: 'deleteSongQuestion'.tr(),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildExportButton(BuildContext context) {
+    return RibbonButton(
+      text: 'exportAllSongs'.tr(),
+      isEnabled: true,
+      icon: const Icon(Icons.exit_to_app, color: Colors.blue),
+      onPressed: () async {
+        final listSong = context.read<HomePageBloc>().songsRepository.getListSongToJson();
+        final outputFile = await FilePicker.platform.saveFile(
+          dialogTitle: 'pleaseSelectPathToSaveFile'.tr(),
+          fileName: 'list_songs.json',
+        );
+        if (outputFile == null) return;
+        final returnedFile = File(outputFile);
+        await returnedFile.writeAsString(listSong);
+      },
+    );
+  }
+
+  Widget _buildExportLyricsButton(BuildContext context) {
+    return BlocBuilder<EditSongBloc, EditSongState>(
+      builder: (context, state) {
+        return Visibility(
+          visible: state.currentEditSong.id.isNotEmpty,
+          child: RibbonButton(
+            text: 'exportLyricsToTxt'.tr(),
+            isEnabled: true,
+            icon: SizedBox(height: 20, child: Image.asset('assets/icons/txt.png')),
+            onPressed: () async {
+              String lyric = '';
+              showDialog(
+                context: context,
+                builder: (dialogContext) {
+                  return SelectDialog(
+                    title: 'exportLyricsToTxt'.tr(),
+                    selectQuestion: 'withOrWithoutChords'.tr(),
+                    firstSelectTitle: 'withChords'.tr(),
+                    firstSelectFunction: () async {
+                      lyric = state.currentEditSong.lyricsWithChords;
+                      final outputFile = await FilePicker.platform.saveFile(
+                        dialogTitle: 'pleaseSelectPathToSaveFile'.tr(),
+                        fileName: '${state.currentEditSong.title}.txt',
+                      );
+                      if (outputFile == null) return;
+                      final returnedFile = File(outputFile);
+                      await returnedFile.writeAsString(lyric);
+                    },
+                    secondSelectTitle: 'withoutChords'.tr(),
+                    secondSelectFunction: () async {
+                      lyric = state.currentEditSong.lyricsWithoutChordsWithLines;
+                      final outputFile = await FilePicker.platform.saveFile(
+                        dialogTitle: 'pleaseSelectPathToSaveFile'.tr(),
+                        fileName: '${state.currentEditSong.title}.txt',
+                      );
+                      if (outputFile == null) return;
+                      final returnedFile = File(outputFile);
+                      await returnedFile.writeAsString(lyric);
+                    },
+                  );
+                },
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSettingsNavButton({
+    required BuildContext context,
+    required String text,
+    required Widget icon,
+    required String bodyName,
+    required bool isSelected,
+  }) {
+    return RibbonButton(
+      text: text,
+      icon: icon,
+      isEnabled: true,
+      isSelected: isSelected,
+      onPressed: () {
+        context.read<DesktopRibbonMenuBloc>().add(ChangeHomeBody(bodyName: bodyName));
+      },
+    );
+  }
+
+  Widget _buildQrCodeButton(BuildContext context) {
+    return RibbonButton(
+      text: 'qrCode'.tr(),
+      isEnabled: true,
+      icon: const Icon(Icons.qr_code, color: Colors.orange),
+      onPressed: () {
+        QrCodeDialog.show(context);
+      },
+    );
+  }
+
+  Widget _buildBackupRestoreButton(BuildContext context, DesktopRibbonMenuState state) {
+    return RibbonButton(
+      text: 'backupAndRestore'.tr(),
+      isEnabled: true,
+      isSelected: state.bodyName == 'backup_restore',
+      icon: const Icon(Icons.backup, color: Colors.brown),
+      onPressed: () {
+        context.read<DesktopRibbonMenuBloc>().add(const ChangeHomeBody(bodyName: 'backup_restore'));
       },
     );
   }
@@ -1022,12 +704,10 @@ class HomeTabbar extends StatelessWidget {
 
     if (playlistBloc.state.isEmpty) return;
 
-    // Select first song if none selected
     if (playlistBloc.state.currentSong == null) {
       playlistBloc.add(const SelectPresentationSong(index: 0));
     }
 
-    // Apply settings to presentation bloc
     presentationBloc.add(UpdatePresentationSettings(
       linesPerPage: settingsState.presentationLinesPerPage,
       fontSize: settingsState.presentationFontSize,
@@ -1036,15 +716,13 @@ class HomeTabbar extends StatelessWidget {
       screenIndex: settingsState.presentationScreenIndex,
     ));
 
-    // Get song directly from playlist (don't rely on BLoC state timing)
-    final currentSong = playlistBloc.state.currentSong ?? (playlistBloc.state.isNotEmpty ? playlistBloc.state.playlist.songs.first : null);
+    final currentSong = playlistBloc.state.currentSong ??
+        (playlistBloc.state.isNotEmpty ? playlistBloc.state.playlist.songs.first : null);
 
     if (currentSong == null) return;
 
-    // Update presentation bloc with the song
     presentationBloc.add(UpdatePresentationSong(song: currentSong));
 
-    // Compute page content directly — no race condition
     final result = PresentationBloc.computePageContent(
       song: currentSong,
       linesPerPage: settingsState.presentationLinesPerPage,
@@ -1057,7 +735,6 @@ class HomeTabbar extends StatelessWidget {
         'totalPages: ${result.totalPages}, '
         'screenIndex: ${settingsState.presentationScreenIndex}');
 
-    // Open window immediately with computed content
     manager.openPresentationWindow(
       context,
       title: currentSong.title,
@@ -1075,7 +752,7 @@ class HomeTabbar extends StatelessWidget {
   }
 
   void _showSavePlaylistDialog(BuildContext context) {
-    final TextEditingController nameController = TextEditingController(
+    final nameController = TextEditingController(
       text: DateFormat('dd.MM.yyyy').format(DateTime.now()),
     );
 
@@ -1143,18 +820,15 @@ class HomeTabbar extends StatelessWidget {
   void _showLoadPlaylistDialog(BuildContext context) {
     final playlistsBloc = context.read<PlaylistsBloc>();
     final allSongs = context.read<HomePageBloc>().songsRepository.songs;
-    int? expandedIndex; // which playlist is expanded (-1 = none)
+    int? expandedIndex;
 
-    // Resolve song IDs to Song objects
     List<Song> resolveSongs(List<String> songIds) {
       final songs = <Song>[];
       for (final id in songIds) {
         try {
           final song = allSongs.firstWhere((s) => s.id == id);
           songs.add(song);
-        } catch (_) {
-          // Song not found, skip
-        }
+        } catch (_) {}
       }
       return songs;
     }
@@ -1214,7 +888,8 @@ class HomeTabbar extends StatelessWidget {
                                             child: Column(
                                               crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
-                                                Text(playlist.name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                                                Text(playlist.name,
+                                                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
                                                 Text(
                                                   'nSongs'.tr(args: [playlist.listSongIds.length.toString()]),
                                                   style: const TextStyle(fontSize: 11, color: Colors.grey),
@@ -1255,7 +930,6 @@ class HomeTabbar extends StatelessWidget {
                                       ),
                                     ),
                                   ),
-                                  // Expanded song list
                                   if (isExpanded)
                                     Container(
                                       constraints: const BoxConstraints(maxHeight: 250),
@@ -1266,7 +940,8 @@ class HomeTabbar extends StatelessWidget {
                                       child: songs.isEmpty
                                           ? Padding(
                                               padding: const EdgeInsets.all(12),
-                                              child: Text('noSongsInPlaylist'.tr(), style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                                              child: Text('noSongsInPlaylist'.tr(),
+                                                  style: const TextStyle(color: Colors.grey, fontSize: 12)),
                                             )
                                           : ReorderableListView.builder(
                                               shrinkWrap: true,
@@ -1276,7 +951,6 @@ class HomeTabbar extends StatelessWidget {
                                                 final ids = List<String>.from(playlist.listSongIds);
                                                 final movedId = ids.removeAt(oldIdx);
                                                 ids.insert(newIdx, movedId);
-                                                // Update the playlist on server
                                                 final updatedPlaylist = Playlist(
                                                   id: playlist.id,
                                                   name: playlist.name,
@@ -1340,7 +1014,7 @@ class HomeTabbar extends StatelessWidget {
   void _showAddSongsDialog(BuildContext context) {
     final homePageBloc = context.read<HomePageBloc>();
     final allSongs = homePageBloc.state.listSong;
-    final TextEditingController searchController = TextEditingController();
+    final searchController = TextEditingController();
 
     showDialog(
       context: context,
@@ -1348,8 +1022,9 @@ class HomeTabbar extends StatelessWidget {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             final filter = searchController.text.toLowerCase();
-            final filteredSongs =
-                filter.isEmpty ? allSongs : allSongs.where((s) => s.title.toLowerCase().contains(filter) || (s.interpret?.toLowerCase().contains(filter) ?? false)).toList();
+            final filteredSongs = filter.isEmpty
+                ? allSongs
+                : allSongs.where((s) => s.title.toLowerCase().contains(filter) || (s.interpret?.toLowerCase().contains(filter) ?? false)).toList();
 
             return AlertDialog(
               title: Text('addSongsToPlaylist'.tr()),
@@ -1376,7 +1051,9 @@ class HomeTabbar extends StatelessWidget {
                           return ListTile(
                             dense: true,
                             title: Text(song.title, style: const TextStyle(fontSize: 13)),
-                            subtitle: song.interpret != null && song.interpret!.isNotEmpty ? Text(song.interpret!, style: const TextStyle(fontSize: 11)) : null,
+                            subtitle: song.interpret != null && song.interpret!.isNotEmpty
+                                ? Text(song.interpret!, style: const TextStyle(fontSize: 11))
+                                : null,
                             trailing: IconButton(
                               icon: const Icon(Icons.add, size: 18),
                               onPressed: () {

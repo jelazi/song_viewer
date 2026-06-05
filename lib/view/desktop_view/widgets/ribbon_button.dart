@@ -3,20 +3,22 @@ import 'package:flutter/material.dart';
 import '../../../services/constants.dart';
 
 class RibbonButton extends StatefulWidget {
-  RibbonButton({
+  const RibbonButton({
     super.key,
     required this.text,
     required this.icon,
     required this.onPressed,
     required this.isEnabled,
     this.isSelected = false,
+    this.showText = true,
   });
 
   final String text;
   final Widget icon;
-  final Function onPressed;
+  final VoidCallback onPressed;
   final bool isEnabled;
   final bool isSelected;
+  final bool showText;
 
   @override
   State<RibbonButton> createState() => _RibbonButtonState();
@@ -25,22 +27,20 @@ class RibbonButton extends StatefulWidget {
 class _RibbonButtonState extends State<RibbonButton> {
   bool _isHovering = false;
   bool _isPressed = false;
+
   @override
   Widget build(BuildContext context) {
+    final isActive = widget.isSelected || _isPressed;
+
     return Tooltip(
       message: widget.text,
       child: MouseRegion(
         cursor: widget.isEnabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
-        onEnter: (event) {
-          if (!widget.isEnabled) {
-            return;
-          }
+        onEnter: (_) {
+          if (!widget.isEnabled) return;
           setState(() => _isHovering = true);
         },
-        onExit: (event) {
-          if (!widget.isEnabled) {
-            return;
-          }
+        onExit: (_) {
           setState(() {
             _isHovering = false;
             _isPressed = false;
@@ -48,61 +48,63 @@ class _RibbonButtonState extends State<RibbonButton> {
         },
         child: GestureDetector(
           onTap: () {
-            if (!widget.isEnabled) {
-              return;
-            }
+            if (!widget.isEnabled) return;
             widget.onPressed();
           },
-          onTapDown: (event) {
-            if (!widget.isEnabled) {
-              return;
-            }
+          onTapDown: (_) {
+            if (!widget.isEnabled) return;
             setState(() => _isPressed = true);
           },
-          onTapUp: (event) {
-            if (!widget.isEnabled) {
-              return;
-            }
+          onTapUp: (_) {
+            if (!widget.isEnabled) return;
             setState(() => _isPressed = false);
           },
-          child: Container(
-            width: 80,
-            height: 80,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: widget.isSelected || _isPressed ? AppColor.grey4Color : AppColor.whiteColor,
-              border: Border.all(
-                  color: _isPressed && _isHovering
-                      ? AppColor.alertWarningColor
-                      : _isHovering && !widget.isSelected
-                          ? AppColor.primaryColor
-                          : AppColor.grey3Color,
-                  width: _isHovering && !widget.isSelected ? 2 : 1),
-              boxShadow: _isPressed || widget.isSelected
-                  ? [
-                      BoxShadow(
-                        color: Colors.white.withOpacity(0.6),
-                        offset: const Offset(-2, -2),
-                        blurRadius: 4,
-                      ),
-                    ]
-                  : [],
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 120),
+            curve: Curves.easeOut,
+            height: 30,
+            padding: EdgeInsets.symmetric(
+              horizontal: widget.showText ? 10 : 6,
             ),
-            child: Column(
+            decoration: BoxDecoration(
+              color: isActive
+                  ? AppColor.primaryColor
+                  : _isHovering
+                      ? AppColor.grey4Color
+                      : Colors.transparent,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                widget.icon,
-                Container(
-                    alignment: Alignment.center,
-                    width: 70,
-                    child: Text(
-                      widget.text,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: widget.isEnabled ? AppColor.grey1Color : AppColor.grey3Color,
-                      ),
-                    )),
+                IconTheme(
+                  data: IconThemeData(
+                    size: 16,
+                    color: isActive
+                        ? AppColor.whiteColor
+                        : widget.isEnabled
+                            ? AppColor.grey1Color
+                            : AppColor.grey3Color,
+                  ),
+                  child: widget.icon,
+                ),
+                if (widget.showText) ...[
+                  const SizedBox(width: 5),
+                  Text(
+                    widget.text,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w500,
+                      color: isActive
+                          ? AppColor.whiteColor
+                          : widget.isEnabled
+                              ? AppColor.grey1Color
+                              : AppColor.grey3Color,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -110,4 +112,99 @@ class _RibbonButtonState extends State<RibbonButton> {
       ),
     );
   }
+}
+
+class ToolbarDivider extends StatelessWidget {
+  const ToolbarDivider({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 1,
+      height: 20,
+      margin: const EdgeInsets.symmetric(horizontal: 6),
+      color: AppColor.grey3Color,
+    );
+  }
+}
+
+class ToolbarSegmentedControl<T> extends StatelessWidget {
+  const ToolbarSegmentedControl({
+    super.key,
+    required this.items,
+    required this.selectedValue,
+    required this.onChanged,
+  });
+
+  final List<ToolbarSegment<T>> items;
+  final T selectedValue;
+  final ValueChanged<T> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 28,
+      decoration: BoxDecoration(
+        color: AppColor.grey4Color,
+        borderRadius: BorderRadius.circular(7),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: items.asMap().entries.map((entry) {
+          final index = entry.key;
+          final item = entry.value;
+          final isSelected = item.value == selectedValue;
+          final isLast = index == items.length - 1;
+
+          return GestureDetector(
+            onTap: () => onChanged(item.value),
+            child: Container(
+              height: 28,
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              decoration: BoxDecoration(
+                color: isSelected ? AppColor.primaryColor : Colors.transparent,
+                borderRadius: BorderRadius.horizontal(
+                  left: index == 0 ? const Radius.circular(7) : Radius.zero,
+                  right: isLast ? const Radius.circular(7) : Radius.zero,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconTheme(
+                    data: IconThemeData(
+                      size: 15,
+                      color: isSelected ? AppColor.whiteColor : AppColor.grey2Color,
+                    ),
+                    child: item.icon,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    item.label,
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w500,
+                      color: isSelected ? AppColor.whiteColor : AppColor.grey2Color,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+class ToolbarSegment<T> {
+  final String label;
+  final Widget icon;
+  final T value;
+
+  const ToolbarSegment({
+    required this.label,
+    required this.icon,
+    required this.value,
+  });
 }

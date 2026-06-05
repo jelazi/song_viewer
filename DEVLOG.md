@@ -1,6 +1,64 @@
 # Development Log
 
-## 2026-05-12 - Add web song search and import to mobile
+## 2026-06-05 - Desktop ribbon redesign: macOS-style compact toolbar
+
+### What was done
+Complete redesign of the desktop view ribbon/toolbar from a bulky TabBar+TabBarView system (92px tall, 80x80 buttons) to a clean single-row macOS-style toolbar (46px tall, compact 30px buttons).
+
+### Design approach
+- Studied tablet and mobile button patterns (compact icon+text, subtle borders, logical grouping)
+- Created a two-row toolbar: Row 1 = permanent navigation (Home, Settings) + section selector (Preview, Edit, Web, Playlists, AI), Row 2 = context-sensitive actions
+- Buttons are 30px tall, icon+text layout, with rounded corners (6px), hover highlighting, and primary-color fill when selected
+- Context action row scrolls horizontally when needed (e.g. settings with many buttons)
+- Groups are separated by thin 1px vertical dividers
+
+### Toolbar layout
+```
+[Home] [Settings] │ [Preview | Edit | Web | Playlists | AI] │ ...context actions...
+```
+
+- **Left**: Home and Settings buttons — always visible, highlighted when active
+- **Center**: Segmented control for 5 main sections — replaces the old top-right quick-access icons
+- **Right**: Context-sensitive actions that change based on the active section and song selection state
+
+### Context actions by section
+- **Preview (no song selected)**: New Song, Current Song, Presentation + playlist controls
+- **Preview (song selected)**: Current Song, Zoom In/Out, Transpose ±1, Open Videos/Sheet (conditional), Presentation + playlist controls
+- **Edit**: New Song, Edit mode selector (Lyrics | Chords | YouTube | Sheets | Settings) as segmented control, Delete
+- **Playlists**: Presentation + playlist controls
+- **Web / AI Enrichment**: No additional context actions
+- **Settings**: Export All Songs, Export Lyrics to TXT, navigation (Groups | Users | Presentation | General), QR Code, Backup & Restore
+
+## 2026-06-05 - Desktop ribbon redesign + web search + groups fix
+
+### Changes
+1. **Settings mode hides section selector** — when in Settings (groups/users/presentation/general/backup), the segmented control (Preview|Edit|Web|Playlists|AI) is hidden from the first row, only Home and Settings buttons remain
+2. **Web source buttons in ribbon** — Velký zpěvník, Písničky-akordy, ProScholy, Worship Leader source buttons added to the second row context actions in Web mode; duplicate source chips removed from `list_web_song.dart`
+3. **Web source switching clears controllers** — `BlocListener` in `list_web_song.dart` clears all filter controllers when `searchWeb` changes (via ribbon)
+4. **Web search fixed for song mode** — desktop search now shows songs directly when returned in song mode (`searchType == 0`), matching tablet behavior; songs appear in the interprets list when no interpret is selected
+5. **Groups body restyled** — cards now use `Material` + `InkWell` with rounded corners (10px), consistent with the app's card design (interpret/song cards); "add group" card in `primaryLightestColor`
+
+### Files changed
+- **`lib/view/desktop_view/widgets/ribbon_menu.dart`** — conditional section selector hiding in settings mode; `_buildWebActions` method with 4 source buttons; `_hasContextActions` includes web body
+- **`lib/view/desktop_view/pages/desktop_home_page/home_bodies/list_web_song.dart`** — removed `_buildWebsiteTabs` (duplicate chips); added `BlocListener` for text controller clearing on source switch; added song display in interprets section for song mode (Velký zpěvník + Písničky-akordy)
+- **`lib/view/desktop_view/pages/desktop_home_page/home_bodies/groups_body.dart`** — rewritten with consistent `Material`+`InkWell` card styling, group icon, edit/delete buttons, "add group" card
+
+### Preserved features
+- All desktop-specific features kept: editing (lyrics, chords, YouTube, sheets, settings), web search, playlists, AI enrichment, presentation controls, export/import, user management, group management, QR code, backup & restore
+- All visibility states preserved: song selection state, edit sub-mode state, conditional YouTube/sheets buttons
+- All existing functionality: new song dialog, presentation open/close, playlist save/load, export, delete confirmation
+- BLoC architecture unchanged — same events and state fields used
+
+### Current state
+- Zero compilation errors, zero warnings (only pre-existing info-level notices)
+- Toolbar is 46px tall vs 92px previously — saves 46px of vertical space
+- Toolbar scrolls horizontally when content overflows narrow windows
+- All localization keys reused from existing translations
+
+### Known issues
+- None
+
+ - Add web song search and import to mobile
 
 ### What was done
 Added the web song download/search feature to mobile that was previously only available on tablet and desktop.

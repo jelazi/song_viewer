@@ -47,8 +47,19 @@ class _ListWebSongState extends State<ListWebSong> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<WebBloc, WebState>(
-      builder: (context, state) {
+    return BlocListener<WebBloc, WebState>(
+      listenWhen: (previous, current) => previous.searchWeb != current.searchWeb,
+      listener: (context, state) {
+        _filterSongVelkyZpevnik.clear();
+        _filterInterpretVelkyZpevnik.clear();
+        _filterInterpretPisnickyAkordy.clear();
+        _filterSongPisnickyAkordy.clear();
+        _filterInterpretProScholy.clear();
+        _filterSongProScholy.clear();
+        _filterWorshipLeader.clear();
+      },
+      child: BlocBuilder<WebBloc, WebState>(
+        builder: (context, state) {
         final isSongMode = state.searchType == 0;
         return Container(
             width: 400,
@@ -58,9 +69,6 @@ class _ListWebSongState extends State<ListWebSong> {
               border: Border(left: BorderSide(color: AppColor.grey3Color, width: 1.0), right: BorderSide(color: AppColor.grey3Color, width: 1.0)),
             ),
             child: Column(mainAxisAlignment: MainAxisAlignment.start, crossAxisAlignment: CrossAxisAlignment.start, children: [
-              // Modern segmented website tabs
-              _buildWebsiteTabs(state),
-              const SizedBox(height: 8),
               // Search type toggle
               if (state.searchWeb == 0 || state.searchWeb == 1 || state.searchWeb == 2)
                 _buildSearchTypeToggle(state),
@@ -80,53 +88,7 @@ class _ListWebSongState extends State<ListWebSong> {
                 ),
               ),
             ]));
-      },
-    );
-  }
-
-  Widget _buildWebsiteTabs(WebState state) {
-    final names = ['Velký zpěvník', 'Písničky-akordy', 'ProScholy', 'Worship Leader'];
-    final icons = [Icons.library_music, Icons.music_note, Icons.church, Icons.mic];
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: List.generate(names.length, (index) {
-          final isSelected = state.searchWeb == index;
-          return Padding(
-            padding: const EdgeInsets.only(right: 6),
-            child: GestureDetector(
-              onTap: () {
-                _filterSongVelkyZpevnik.clear();
-                _filterInterpretVelkyZpevnik.clear();
-                _filterInterpretPisnickyAkordy.clear();
-                _filterSongPisnickyAkordy.clear();
-                _filterInterpretProScholy.clear();
-                _filterSongProScholy.clear();
-                _filterWorshipLeader.clear();
-                context.read<WebBloc>().add(ChangeSearchWeb(searchWeb: index));
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: isSelected ? AppColor.primaryColor : Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: isSelected ? AppColor.primaryColor : AppColor.grey3Color),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(icons[index], size: 14, color: isSelected ? Colors.white : AppColor.grey1Color),
-                    const SizedBox(width: 4),
-                    Text(
-                      names[index],
-                      style: TextStyle(fontSize: 12, fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal, color: isSelected ? Colors.white : AppColor.grey1Color),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        }),
+        },
       ),
     );
   }
@@ -200,7 +162,7 @@ class _ListWebSongState extends State<ListWebSong> {
                 style: const TextStyle(fontSize: 12),
                 decoration: InputDecoration(
                   border: const OutlineInputBorder(),
-                  labelText: 'filterInterpret'.tr(),
+                  labelText: state.searchType == 0 ? 'filterSong'.tr() : 'filterInterpret'.tr(),
                   suffixIcon: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -274,9 +236,23 @@ class _ListWebSongState extends State<ListWebSong> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.start,
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: state.filteredInterprets
-                              .map((interpret) => _buildDesktopInterpretCard(state, interpret))
-                              .toList(),
+                          children: [
+                            ...state.filteredInterprets
+                                .map((interpret) => _buildDesktopInterpretCard(state, interpret))
+                                .toList(),
+                            if (state.filteredSongs.isNotEmpty && state.currentInterpret.title.isEmpty) ...[
+                              const SizedBox(height: 6),
+                              if (state.filteredInterprets.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4, bottom: 2),
+                                  child: Text('songsLabel'.tr(), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColor.grey1Color)),
+                                ),
+                              ...state.filteredSongs.map((song) => _buildDesktopSongCard(
+                                state, song, 'velkyzpevnik.cz',
+                                isSelected: state.currentSong?.title == song.title,
+                              )),
+                            ],
+                          ],
                         ),
                       ),
                     ),
@@ -372,7 +348,7 @@ class _ListWebSongState extends State<ListWebSong> {
                 style: const TextStyle(fontSize: 12),
                 decoration: InputDecoration(
                   border: const OutlineInputBorder(),
-                  labelText: 'filterInterpret'.tr(),
+                  labelText: state.searchType == 0 ? 'filterSong'.tr() : 'filterInterpret'.tr(),
                   suffixIcon: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -439,20 +415,34 @@ class _ListWebSongState extends State<ListWebSong> {
                   ? const Center(
                       child: SizedBox(height: 40, width: 40, child: CircularProgressIndicator()),
                     )
-                        : Container(
-                            padding: const EdgeInsets.only(left: 10),
-                            alignment: Alignment.topLeft,
-                            child: SingleChildScrollView(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: state.filteredInterprets
-                                    .map((interpret) => _buildDesktopInterpretCard(state, interpret))
-                                    .toList(),
-                              ),
-                            ),
-                          ),
-                  ),
+                  : Container(
+                      padding: const EdgeInsets.only(left: 10),
+                      alignment: Alignment.topLeft,
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ...state.filteredInterprets
+                                .map((interpret) => _buildDesktopInterpretCard(state, interpret))
+                                .toList(),
+                            if (state.filteredSongs.isNotEmpty && state.currentInterpret.title.isEmpty) ...[
+                              const SizedBox(height: 6),
+                              if (state.filteredInterprets.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4, bottom: 2),
+                                  child: Text('songsLabel'.tr(), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColor.grey1Color)),
+                                ),
+                              ...state.filteredSongs.map((song) => _buildDesktopSongCard(
+                                state, song, 'pisnicky-akordy.cz',
+                                isSelected: state.currentSong?.title == song.title,
+                              )),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+              ),
       Visibility(
         visible: state.currentInterpret.title.isNotEmpty,
         child: Container(
