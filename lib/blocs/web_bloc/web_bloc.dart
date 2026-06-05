@@ -80,45 +80,55 @@ class WebBloc extends Bloc<WebEvent, WebState> {
     final eventSong = event.song;
     if (eventSong != null) {
       WebSong currentSong = WebSong(title: eventSong.title, ref: eventSong.ref, interpret: eventSong.interpret);
-      if (event.typeSearching == 'velkyzpevnik.cz') {
-        currentSong.server = 'velkyzpevnik.cz';
-        final savedSong = hiveProvider.getWebSong('velkyzpevnik.cz${currentSong.ref}');
-        if (savedSong != null) {
-          currentSong = savedSong;
-        } else {
-          currentSong.lyric = await webRepository.getTextSongVelkyZpevnik(currentSong);
-          hiveProvider.setWebSong('velkyzpevnik.cz${currentSong.ref}', currentSong);
+      try {
+        if (event.typeSearching == 'velkyzpevnik.cz') {
+          currentSong.server = 'velkyzpevnik.cz';
+          final savedSong = hiveProvider.getWebSong('velkyzpevnik.cz${currentSong.ref}');
+          if (savedSong != null) {
+            currentSong = savedSong;
+          } else {
+            currentSong.lyric = await webRepository.getTextSongVelkyZpevnik(currentSong);
+            hiveProvider.setWebSong('velkyzpevnik.cz${currentSong.ref}', currentSong);
+          }
         }
-      }
-      if (event.typeSearching == 'pisnicky-akordy.cz') {
-        currentSong.server = 'pisnicky-akordy.cz';
-        final savedSong = hiveProvider.getWebSong('pisnicky-akordy.cz${currentSong.ref}');
-        if (savedSong != null) {
-          currentSong = savedSong;
-        } else {
-          currentSong.lyric = await webRepository.getTextSongPisnickyAkordy(currentSong.ref);
-          hiveProvider.setWebSong('pisnicky-akordy.cz${currentSong.ref}', currentSong);
+        if (event.typeSearching == 'pisnicky-akordy.cz') {
+          currentSong.server = 'pisnicky-akordy.cz';
+          final savedSong = hiveProvider.getWebSong('pisnicky-akordy.cz${currentSong.ref}');
+          if (savedSong != null) {
+            currentSong = savedSong;
+          } else {
+            currentSong.lyric = await webRepository.getTextSongPisnickyAkordy(currentSong.ref);
+            // Fallback: try just the song slug if interpret/slug format failed
+            if (currentSong.lyric.isEmpty && currentSong.ref.contains('/')) {
+              final fallbackRef = currentSong.ref.split('/').last;
+              debugPrint('[WEB_FALLBACK] trying slug=$fallbackRef');
+              currentSong.lyric = await webRepository.getTextSongPisnickyAkordy(fallbackRef);
+            }
+            hiveProvider.setWebSong('pisnicky-akordy.cz${currentSong.ref}', currentSong);
+          }
         }
-      }
-      if (event.typeSearching == 'zpevnik.proscholy.cz') {
-        currentSong.server = 'zpevnik.proscholy.cz';
-        final savedSong = hiveProvider.getWebSong('zpevnik.proscholy.cz${currentSong.ref}');
-        if (savedSong != null) {
-          currentSong = savedSong;
-        } else {
-          currentSong.lyric = await webRepository.getTextSongProScholy(currentSong.ref);
-          hiveProvider.setWebSong('zpevnik.proscholy.cz${currentSong.ref}', currentSong);
+        if (event.typeSearching == 'zpevnik.proscholy.cz') {
+          currentSong.server = 'zpevnik.proscholy.cz';
+          final savedSong = hiveProvider.getWebSong('zpevnik.proscholy.cz${currentSong.ref}');
+          if (savedSong != null) {
+            currentSong = savedSong;
+          } else {
+            currentSong.lyric = await webRepository.getTextSongProScholy(currentSong.ref);
+            hiveProvider.setWebSong('zpevnik.proscholy.cz${currentSong.ref}', currentSong);
+          }
         }
-      }
-      if (event.typeSearching == 'songs.worshipleaderapp.com') {
-        currentSong.server = 'songs.worshipleaderapp.com';
-        final savedSong = hiveProvider.getWebSong('songs.worshipleaderapp.com${currentSong.ref}');
-        if (savedSong != null) {
-          currentSong = savedSong;
-        } else {
-          currentSong.lyric = await webRepository.getTextSongWorshipLeader(currentSong.ref);
-          hiveProvider.setWebSong('songs.worshipleaderapp.com${currentSong.ref}', currentSong);
+        if (event.typeSearching == 'songs.worshipleaderapp.com') {
+          currentSong.server = 'songs.worshipleaderapp.com';
+          final savedSong = hiveProvider.getWebSong('songs.worshipleaderapp.com${currentSong.ref}');
+          if (savedSong != null) {
+            currentSong = savedSong;
+          } else {
+            currentSong.lyric = await webRepository.getTextSongWorshipLeader(currentSong.ref);
+            hiveProvider.setWebSong('songs.worshipleaderapp.com${currentSong.ref}', currentSong);
+          }
         }
+      } catch (e) {
+        debugPrint('[WEB_ERROR] Failed to load web song: $e');
       }
 
       emit(state.copyWith(currentSong: currentSong, downloadWebSong: false));

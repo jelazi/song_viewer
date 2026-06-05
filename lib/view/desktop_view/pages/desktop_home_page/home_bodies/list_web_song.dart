@@ -65,15 +65,19 @@ class _ListWebSongState extends State<ListWebSong> {
               if (state.searchWeb == 0 || state.searchWeb == 1 || state.searchWeb == 2)
                 _buildSearchTypeToggle(state),
               const SizedBox(height: 4),
-              // Search body
+              // Search body — items are direct children of a flex Column so Expanded works
               Expanded(
-                child: state.searchWeb == 0
-                    ? Column(children: getSearchWidgetForVelkyZpevnik(state))
-                    : state.searchWeb == 1
-                        ? Column(children: getSearchWidgetForPisnickyAkordy(state))
-                        : state.searchWeb == 2
-                            ? Column(children: getSearchWidgetForProScholy(state))
-                            : Column(children: getSearchWidgetForWorshipLeader(state)),
+                child: Column(
+                  children: [
+                    ...state.searchWeb == 0
+                        ? getSearchWidgetForVelkyZpevnik(state)
+                        : state.searchWeb == 1
+                            ? getSearchWidgetForPisnickyAkordy(state)
+                            : state.searchWeb == 2
+                                ? getSearchWidgetForProScholy(state)
+                                : getSearchWidgetForWorshipLeader(state),
+                  ],
+                ),
               ),
             ]));
       },
