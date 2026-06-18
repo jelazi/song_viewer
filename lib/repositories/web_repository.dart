@@ -626,6 +626,246 @@ class WebRepository {
     return text.trim();
   }
 
+  // ── WorshipChords (worshipchords.com) ──
+
+  /// Matches a single chord token, e.g. `Ab`, `Em7`, `Csus4`, `Eb/G`, `Ab/C`.
+  static final RegExp _wcChordToken = RegExp(r'^[A-G][#b]?(?:maj|min|m|sus|dim|aug|add|M)?\d*(?:sus\d*)?(?:/[A-G][#b]?)?$');
+
+  /// Search songs directly on worshipchords.com using the site's `?s=` search.
+  Future<List<WebSong>> searchSongsWorshipChords(String searchText) async {
+    try {
+      final response = await webProvider.searchWorshipChords(searchText);
+      if (response.statusCode != 200 || response.data == null) {
+        logger.e('WorshipChords search error: ${response.statusCode}');
+        return [];
+      }
+      return _parseWorshipChordsSongList(response.data.toString());
+    } catch (e) {
+      logger.e('Error searching WorshipChords songs: $e');
+      return [];
+    }
+  }
+
+  /// Search artists/bands on worshipchords.com. The site has no artist index,
+  /// so candidates are derived from the `?s=` result page: band names (the
+  /// `categories` span) and linked authors ("View all posts in ...").
+  Future<List<WebInterpret>> findInterpretWorshipChords(String searchText) async {
+    final List<WebInterpret> interprets = [];
+    try {
+      final response = await webProvider.searchWorshipChords(searchText);
+      if (response.statusCode != 200 || response.data == null) {
+        logger.e('WorshipChords interpret search error: ${response.statusCode}');
+        return interprets;
+      }
+      final document = parse(response.data.toString());
+      final query = removeDiacriticsAndWhitespace(searchText.toLowerCase());
+      final Map<String, WebInterpret> bySlug = {};
+
+      // Band names from the "categories" span (e.g. "Bethel Music, Jenn Johnson").
+      for (final span in document.querySelectorAll('span.categories')) {
+        for (final raw in span.text.split(',')) {
+          final name = raw.trim();
+          if (name.isEmpty) continue;
+          final slug = _slugifyWorshipChords(name);
+          if (slug.isEmpty || bySlug.containsKey(slug)) continue;
+          if (removeDiacriticsAndWhitespace(name.toLowerCase()).contains(query)) {
+            bySlug[slug] = WebInterpret(title: name, ref: slug);
+          }
+        }
+      }
+
+      // Linked authors: <a href="/slug/" title="View all posts in Name">Name</a>.
+      for (final a in document.querySelectorAll('a[title^="View all posts in"]')) {
+        final name = a.text.trim();
+        final href = a.attributes['href'] ?? '';
+        if (name.isEmpty || href.isEmpty) continue;
+        final slug = _worshipChordsSlugFromUrl(href);
+        if (slug.isEmpty || bySlug.containsKey(slug)) continue;
+        if (removeDiacriticsAndWhitespace(name.toLowerCase()).contains(query)) {
+          bySlug[slug] = WebInterpret(title: name, ref: slug);
+        }
+      }
+
+      interprets.addAll(bySlug.values);
+      interprets.sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
+    } catch (e) {
+      logger.e('Error finding WorshipChords interprets: $e');
+    }
+    return interprets;
+  }
+
+  /// Get all songs listed on an artist/band page (e.g. `/phil-wickham/`).
+  Future<List<WebSong>> findSongByInterpretWorshipChords(WebInterpret interpret) async {
+    try {
+      final response = await webProvider.getArtistWorshipChords(interpret.ref);
+      if (response.statusCode != 200 || response.data == null) {
+        logger.e('WorshipChords artist page error: ${response.statusCode}');
+        return [];
+      }
+      final songs = _parseWorshipChordsSongList(response.data.toString());
+      // Prefer the page's artist name when a result lacks one.
+      for (final s in songs) {
+        if (s.interpret.isEmpty) s.interpret = interpret.title;
+      }
+      return songs;
+    } catch (e) {
+      logger.e('Error loading WorshipChords artist songs: $e');
+      return [];
+    }
+  }
+
+  /// Download a single worshipchords.com song: lyrics with inline chords plus
+  /// an optional YouTube link found on the page.
+  Future<({String lyric, String youtube})> getSongDataWorshipChords(String ref) async {
+    try {
+      final response = await webProvider.getSongWorshipChords(ref);
+      if (response.statusCode != 200 || response.data == null) {
+        logger.e('WorshipChords song error: ${response.statusCode}');
+        return (lyric: '', youtube: '');
+      }
+      final html = response.data.toString();
+      final document = parse(html);
+      // Prefer the chords version; fall back to lyrics-only.
+      final pre = document.querySelector('.song-chords-content pre') ?? document.querySelector('.song-lyrics-content pre');
+      String lyric = '';
+      if (pre != null) {
+        lyric = _convertWorshipChordsChords(pre.text);
+      } else {
+        final lyricsBlock = document.querySelector('.song-lyrics-content');
+        lyric = lyricsBlock?.text.trim() ?? '';
+      }
+      final youtube = _extractWorshipChordsYoutube(html);
+      return (lyric: lyric, youtube: youtube);
+    } catch (e) {
+      logger.e('Error getting WorshipChords song: $e');
+      return (lyric: '', youtube: '');
+    }
+  }
+
+  /// Parse a list of songs from a worshipchords.com page. Both the search
+  /// results and the artist pages wrap each song in `<div class="artist-songs">`.
+  List<WebSong> _parseWorshipChordsSongList(String html) {
+    final List<WebSong> songs = [];
+    final document = parse(html);
+    final seen = <String>{};
+    for (final block in document.querySelectorAll('.artist-songs')) {
+      // The song link ends with "-chords/". Prefer the bookmark anchor (search
+      // results); otherwise take the first chords anchor (artist pages).
+      Element? anchor = block.querySelector('a[rel="bookmark"]');
+      anchor ??= block.querySelectorAll('a').cast<Element?>().firstWhere(
+            (e) => (e?.attributes['href'] ?? '').contains('-chords'),
+            orElse: () => null,
+          );
+      if (anchor == null) continue;
+      final href = anchor.attributes['href'] ?? '';
+      final ref = _worshipChordsSlugFromUrl(href);
+      if (ref.isEmpty || seen.contains(ref)) continue;
+
+      String title = (anchor.attributes['title'] ?? '').trim();
+      if (title.isEmpty) title = anchor.text.trim();
+      title = _cleanWorshipChordsTitle(title);
+      if (title.isEmpty) continue;
+
+      final interpret = block.querySelector('span.categories')?.text.trim() ?? '';
+
+      seen.add(ref);
+      songs.add(WebSong(
+        title: title,
+        ref: ref,
+        interpret: interpret,
+        ischords: true,
+        server: 'worshipchords.com',
+      ));
+    }
+    return songs;
+  }
+
+  String _cleanWorshipChordsTitle(String title) {
+    var t = title.replaceAll(RegExp(r'\s+'), ' ').trim();
+    t = t.replaceAll(RegExp(r'\s*[Cc]hords$'), '').trim();
+    return t;
+  }
+
+  /// Extract the path slug from a worshipchords.com URL or relative path.
+  String _worshipChordsSlugFromUrl(String url) {
+    var s = url.trim();
+    s = s.replaceFirst(RegExp(r'^https?://[^/]+'), '');
+    s = s.replaceAll(RegExp(r'[?#].*$'), '');
+    s = s.replaceAll(RegExp(r'^/|/$'), '');
+    return s;
+  }
+
+  /// Convert a band/author name into the WordPress category slug used in URLs,
+  /// e.g. "Hillsong Worship" -> "hillsong-worship".
+  String _slugifyWorshipChords(String name) {
+    var s = name.toLowerCase().trim();
+    s = s.replaceAll(RegExp(r'[^a-z0-9\s-]'), '');
+    s = s.replaceAll(RegExp(r'\s+'), '-');
+    s = s.replaceAll(RegExp(r'-+'), '-');
+    s = s.replaceAll(RegExp(r'^-|-$'), '');
+    return s;
+  }
+
+  String _extractWorshipChordsYoutube(String html) {
+    final embed = RegExp(r'youtube\.com/embed/([A-Za-z0-9_-]{6,})').firstMatch(html);
+    if (embed != null) return 'https://www.youtube.com/watch?v=${embed.group(1)}';
+    final watch = RegExp(r'youtube\.com/watch\?v=([A-Za-z0-9_-]{6,})').firstMatch(html);
+    if (watch != null) return 'https://www.youtube.com/watch?v=${watch.group(1)}';
+    final short = RegExp(r'youtu\.be/([A-Za-z0-9_-]{6,})').firstMatch(html);
+    if (short != null) return 'https://www.youtube.com/watch?v=${short.group(1)}';
+    return '';
+  }
+
+  /// Convert worshipchords.com "chords above lyrics" plain text into the app's
+  /// inline `[Chord]` notation, aligning each chord to its column in the lyric.
+  String _convertWorshipChordsChords(String pre) {
+    final lines = pre.replaceAll('\r\n', '\n').split('\n');
+    final List<String> out = [];
+    int i = 0;
+    while (i < lines.length) {
+      final line = lines[i];
+      if (_isWorshipChordsChordLine(line)) {
+        final next = i + 1 < lines.length ? lines[i + 1] : '';
+        if (next.trim().isNotEmpty && !_isWorshipChordsChordLine(next)) {
+          out.add(_mergeWorshipChordsLine(line, next));
+          i += 2;
+          continue;
+        } else {
+          // Standalone chord line (intro/instrumental): wrap each chord.
+          out.add(line.trim().split(RegExp(r'\s+')).map((c) => '[$c]').join(' '));
+          i += 1;
+          continue;
+        }
+      }
+      out.add(line);
+      i += 1;
+    }
+    return out.join('\n').trim();
+  }
+
+  bool _isWorshipChordsChordLine(String line) {
+    final trimmed = line.trim();
+    if (trimmed.isEmpty) return false;
+    return trimmed.split(RegExp(r'\s+')).every((tok) => _wcChordToken.hasMatch(tok));
+  }
+
+  /// Insert each chord from [chordLine] into [lyricLine] at its column position.
+  String _mergeWorshipChordsLine(String chordLine, String lyricLine) {
+    String buffer = lyricLine;
+    int offset = 0;
+    for (final match in RegExp(r'\S+').allMatches(chordLine)) {
+      final pos = match.start + offset;
+      final chord = '[${match.group(0)}]';
+      if (pos >= buffer.length) {
+        buffer = buffer.padRight(pos) + chord;
+      } else {
+        buffer = buffer.substring(0, pos) + chord + buffer.substring(pos);
+      }
+      offset += chord.length;
+    }
+    return buffer.trimRight();
+  }
+
   Future<dynamic> findSongSupermusic(String text) async {
     dynamic response = await webProvider.getDataSupermusic('najdi.php?hladane=$text&typhladania=textpiesen');
     try {

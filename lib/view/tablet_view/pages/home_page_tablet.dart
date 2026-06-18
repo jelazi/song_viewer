@@ -32,7 +32,7 @@ class _HomePageTabletState extends State<HomePageTablet> {
   final TextEditingController _filterInterpretVelkyZpevnik = TextEditingController();
   final TextEditingController _filterSongVelkyZpevnik = TextEditingController();
   String selectPage = 'preview';
-  final List<String> _listSearchWeb = ['velkyzpevnik.cz', 'pisnicky-akordy.cz', 'zpevnik.proscholy.cz', 'songs.worshipleaderapp.com'];
+  final List<String> _listSearchWeb = ['velkyzpevnik.cz', 'pisnicky-akordy.cz', 'zpevnik.proscholy.cz', 'songs.worshipleaderapp.com', 'worshipchords.com'];
 
   bool selectLargeScreen(Size size) {
     bool isLargeScreen = false;
@@ -428,7 +428,7 @@ class _HomePageTabletState extends State<HomePageTablet> {
           ),
           const SizedBox(height: 10),
           // Search type toggle (show for sites that support both)
-          if (wState.searchWeb == 0 || wState.searchWeb == 1 || wState.searchWeb == 2)
+          if (wState.searchWeb == 0 || wState.searchWeb == 1 || wState.searchWeb == 2 || wState.searchWeb == 4)
             Row(
               children: [
                 _buildToggleChip(
@@ -462,8 +462,8 @@ class _HomePageTabletState extends State<HomePageTablet> {
   }
 
   Widget buildWebsiteChip(int index, bool isSelected, WebState wState) {
-    final names = ['Velký zpěvník', 'Písničky-akordy', 'ProScholy', 'Worship Leader'];
-    final icons = [Icons.library_music, Icons.music_note, Icons.church, Icons.mic];
+    final names = ['Velký zpěvník', 'Písničky-akordy', 'ProScholy', 'Worship Leader', 'Worship Chords'];
+    final icons = [Icons.library_music, Icons.music_note, Icons.church, Icons.mic, Icons.queue_music];
     return GestureDetector(
       onTap: () {
         _filterInterpretPisnickyAkordy.clear();

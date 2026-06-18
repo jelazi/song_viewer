@@ -21,9 +21,10 @@ class _WebPageMobileState extends State<WebPageMobile> {
     'pisnicky-akordy.cz',
     'zpevnik.proscholy.cz',
     'songs.worshipleaderapp.com',
+    'worshipchords.com',
   ];
-  final List<String> _siteNames = ['Velký zpěvník', 'Písničky-akordy', 'ProScholy', 'Worship Leader'];
-  final List<IconData> _siteIcons = [Icons.library_music, Icons.music_note, Icons.church, Icons.mic];
+  final List<String> _siteNames = ['Velký zpěvník', 'Písničky-akordy', 'ProScholy', 'Worship Leader', 'Worship Chords'];
+  final List<IconData> _siteIcons = [Icons.library_music, Icons.music_note, Icons.church, Icons.mic, Icons.queue_music];
 
   final TextEditingController _filterController = TextEditingController();
   final TextEditingController _filterSongController = TextEditingController();
@@ -55,7 +56,7 @@ class _WebPageMobileState extends State<WebPageMobile> {
           body: Column(
             children: [
               _buildWebsiteTabs(state),
-              if (state.searchWeb == 0 || state.searchWeb == 1 || state.searchWeb == 2)
+              if (state.searchWeb == 0 || state.searchWeb == 1 || state.searchWeb == 2 || state.searchWeb == 4)
                 _buildSearchTypeToggle(state),
               Expanded(child: _buildBody(state)),
             ],

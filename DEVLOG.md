@@ -1,5 +1,36 @@
 # Development Log
 
+## 2026-06-18 - Add worshipchords.com web source (worship songs) with YouTube links
+
+### What was added
+A new web source, **worshipchords.com**, added to the web section as the 5th site (index 4), searchable both by song and by interpret/artist, downloading lyrics with chords. Unlike the other sources, it also captures a YouTube link when one is present on the song page.
+
+### How worshipchords.com works (reverse-engineered)
+- It is a WordPress site that blocks non-browser clients, so every request sends a browser `User-Agent`.
+- The WP REST API is disabled; full-text search uses `GET /?s=<query>` (searches song titles, lyrics, and authors) and returns an HTML result page.
+- Search results and artist/author pages both wrap each song in `<div class="artist-songs">`; the song link ends with `-chords/`, the performing band is in `<span class="categories">`, and songwriters are linked as `<a title="View all posts in ...">`.
+- Artist pages live at `/<slug>/` (e.g. `/phil-wickham/`, `/hillsong-worship/`). WordPress category slugs match `lowercase, spaces→hyphens`.
+- Song pages expose chords as plain "chords above lyrics" text inside `<div class="song-chords-content"><pre>`, and a YouTube tutorial as a `youtube.com/embed/<id>` iframe.
+
+### Search behavior
+- **By song** (song mode): `GET /?s=<query>` → list of songs.
+- **By interpret** (interpret mode): candidates derived from the search page — band names (`categories` span, slugified) and linked authors (exact slug) — filtered by the query; selecting one loads `/<slug>/` and lists that artist's songs.
+
+### Changes
+- **`model/web_song.dart` (+ `.g.dart`)**: added `youtube` field (HiveField 6); updated the Hive adapter and JSON (de)serialization by hand.
+- **`providers/web_provider.dart`**: added `searchWorshipChords`, `getArtistWorshipChords`, `getSongWorshipChords` with a browser User-Agent.
+- **`repositories/web_repository.dart`**: added `searchSongsWorshipChords`, `findInterpretWorshipChords`, `findSongByInterpretWorshipChords`, and `getSongDataWorshipChords` (returns `(lyric, youtube)`). Includes a parser that converts "chords above lyrics" text into the app's inline `[Chord]` notation, aligning each chord to its lyric column, plus band-name slugification and YouTube extraction.
+- **`blocs/web_bloc`**: registered `worshipchords.com` (index 4) in the source lists, added search routing in `_filterInterprets` (song vs interpret mode), interpret browsing in `_changeCurrentInterpret`, and the download branch in `_changeCurrentWebSong` (stores lyric + youtube).
+- **`blocs/preview_bloc/preview_chord_bloc.dart`**: added the index-4 download branch and now sets `youtubeVideos` on the resulting `Song` when a YouTube link is present.
+- **UI**: added the site to mobile (`web_page_mobile.dart`), tablet (`home_page_tablet.dart`), and desktop (`list_web_song.dart` with a new `getSearchWidgetForWorshipChords`, plus `ribbon_menu.dart`). Search-type toggle (song/interpret) is enabled for the new site.
+
+### Verification
+- Live integration test (run and then removed to avoid flaky CI) confirmed:
+  - Song search "goodness of god" → 50 results with correct title/interpret/ref.
+  - Interpret search "phil wickham" → resolves the artist; artist page lists 28 songs.
+  - Song download → inline-chord lyrics parsed correctly and YouTube link `https://www.youtube.com/watch?v=n0FBb6hnwTo` extracted.
+- `flutter analyze` on all changed files: no new errors.
+
 ## 2026-06-07 - Fix iOS build: support ALL simulators (iOS 18 x86_64 + iOS 26+ arm64)
 
 ### What was fixed

@@ -27,6 +27,7 @@ class WebState extends Equatable {
     'pisnicky-akordy.cz',
     'zpevnik.proscholy.cz',
     'songs.worshipleaderapp.com',
+    'worshipchords.com',
   ];
 
   final int searchType;

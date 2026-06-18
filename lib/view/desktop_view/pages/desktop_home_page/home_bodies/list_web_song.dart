@@ -23,6 +23,7 @@ class _ListWebSongState extends State<ListWebSong> {
     'pisnicky-akordy.cz',
     'zpevnik.proscholy.cz',
     'songs.worshipleaderapp.com',
+    'worshipchords.com',
   ];
 
   final TextEditingController _filterInterpretPisnickyAkordy = TextEditingController();
@@ -32,6 +33,8 @@ class _ListWebSongState extends State<ListWebSong> {
   final TextEditingController _filterInterpretProScholy = TextEditingController();
   final TextEditingController _filterSongProScholy = TextEditingController();
   final TextEditingController _filterWorshipLeader = TextEditingController();
+  final TextEditingController _filterInterpretWorshipChords = TextEditingController();
+  final TextEditingController _filterSongWorshipChords = TextEditingController();
   Timer? _debounceTimer;
 
   @override
@@ -57,6 +60,8 @@ class _ListWebSongState extends State<ListWebSong> {
         _filterInterpretProScholy.clear();
         _filterSongProScholy.clear();
         _filterWorshipLeader.clear();
+        _filterInterpretWorshipChords.clear();
+        _filterSongWorshipChords.clear();
       },
       child: BlocBuilder<WebBloc, WebState>(
         builder: (context, state) {
@@ -70,7 +75,7 @@ class _ListWebSongState extends State<ListWebSong> {
             ),
             child: Column(mainAxisAlignment: MainAxisAlignment.start, crossAxisAlignment: CrossAxisAlignment.start, children: [
               // Search type toggle
-              if (state.searchWeb == 0 || state.searchWeb == 1 || state.searchWeb == 2)
+              if (state.searchWeb == 0 || state.searchWeb == 1 || state.searchWeb == 2 || state.searchWeb == 4)
                 _buildSearchTypeToggle(state),
               const SizedBox(height: 4),
               // Search body — items are direct children of a flex Column so Expanded works
@@ -83,7 +88,9 @@ class _ListWebSongState extends State<ListWebSong> {
                             ? getSearchWidgetForPisnickyAkordy(state)
                             : state.searchWeb == 2
                                 ? getSearchWidgetForProScholy(state)
-                                : getSearchWidgetForWorshipLeader(state),
+                                : state.searchWeb == 4
+                                    ? getSearchWidgetForWorshipChords(state)
+                                    : getSearchWidgetForWorshipLeader(state),
                   ],
                 ),
               ),
@@ -773,6 +780,188 @@ class _ListWebSongState extends State<ListWebSong> {
           ),
         ),
       ];
+  }
+
+  List<Widget> getSearchWidgetForWorshipChords(WebState state) {
+    return [
+      Container(
+        padding: const EdgeInsets.only(bottom: 10),
+        height: 50,
+        width: 250,
+        child: ValueListenableBuilder<TextEditingValue>(
+          valueListenable: _filterInterpretWorshipChords,
+          builder: (context, value, child) {
+            return TextField(
+              controller: _filterInterpretWorshipChords,
+              style: const TextStyle(fontSize: 12),
+              decoration: InputDecoration(
+                border: const OutlineInputBorder(),
+                labelText: state.searchType == 0 ? 'filterSong'.tr() : 'filterInterpret'.tr(),
+                suffixIcon: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        context.read<WebBloc>().add(FilterInterprets(filter: _filterInterpretWorshipChords.text));
+                      },
+                      icon: const Icon(Icons.search, size: 18),
+                    ),
+                    if (value.text.isNotEmpty)
+                      IconButton(
+                        onPressed: () {
+                          _filterInterpretWorshipChords.clear();
+                          context.read<WebBloc>().add(const FilterInterprets(filter: ''));
+                        },
+                        icon: const Icon(Icons.clear, size: 18),
+                      ),
+                  ],
+                ),
+              ),
+              onChanged: (value) {
+                _debouncedSearch(() {
+                  context.read<WebBloc>().add(FilterInterprets(filter: value));
+                });
+              },
+              onSubmitted: (value) {
+                _debounceTimer?.cancel();
+                context.read<WebBloc>().add(FilterInterprets(filter: value));
+              },
+            );
+          },
+        ),
+      ),
+      // Song mode: flat list of songs. Interpret mode: browse interprets, then their songs.
+      if (state.searchType == 0)
+        Expanded(
+          flex: 1,
+          child: state.isSearching
+              ? const Center(
+                  child: SizedBox(height: 40, width: 40, child: CircularProgressIndicator()),
+                )
+              : Container(
+                  padding: const EdgeInsets.only(left: 10),
+                  alignment: Alignment.topLeft,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: state.filteredSongs
+                          .map((song) => _buildDesktopSongCard(
+                                state, song, 'worshipchords.com',
+                                isSelected: state.currentSong?.ref == song.ref,
+                              ))
+                          .toList(),
+                    ),
+                  ),
+                ),
+        )
+      else ...[
+        state.currentInterpret.title.isNotEmpty
+            ? Align(
+                alignment: Alignment.centerLeft,
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: GestureDetector(
+                    onTap: () {
+                      context.read<WebBloc>().add(const ChangeCurrentInterpret(interpret: null));
+                    },
+                    child: Container(
+                      height: 30,
+                      margin: const EdgeInsets.all(5),
+                      padding: const EdgeInsets.only(left: 5),
+                      decoration: BoxDecoration(border: Border.all(), borderRadius: BorderRadius.circular(5)),
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        state.currentInterpret.title,
+                        style: const TextStyle(fontSize: 14, color: AppColor.alertErrorColor),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                ),
+              )
+            : Expanded(
+                flex: 1,
+                child: state.isSearching
+                    ? const Center(
+                        child: SizedBox(height: 40, width: 40, child: CircularProgressIndicator()),
+                      )
+                    : Container(
+                        padding: const EdgeInsets.only(left: 10),
+                        alignment: Alignment.topLeft,
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: state.filteredInterprets
+                                .map((interpret) => _buildDesktopInterpretCard(state, interpret))
+                                .toList(),
+                          ),
+                        ),
+                      ),
+              ),
+        Visibility(
+          visible: state.currentInterpret.title.isNotEmpty,
+          child: Container(
+            padding: const EdgeInsets.only(bottom: 10),
+            height: 50,
+            width: 250,
+            child: ValueListenableBuilder<TextEditingValue>(
+              valueListenable: _filterSongWorshipChords,
+              builder: (context, value, child) {
+                return TextField(
+                  controller: _filterSongWorshipChords,
+                  style: const TextStyle(fontSize: 12),
+                  decoration: InputDecoration(
+                    border: const OutlineInputBorder(),
+                    labelText: 'filterSong'.tr(),
+                    suffixIcon: value.text.isNotEmpty
+                        ? IconButton(
+                            onPressed: () {
+                              _filterSongWorshipChords.clear();
+                              context.read<WebBloc>().add(const FilterSongs(filter: ''));
+                            },
+                            icon: const Icon(Icons.clear, size: 18),
+                          )
+                        : null,
+                  ),
+                  onChanged: (value) {
+                    context.read<WebBloc>().add(FilterSongs(filter: value));
+                  },
+                  onSubmitted: (value) {
+                    context.read<WebBloc>().add(FilterSongs(filter: value));
+                  },
+                );
+              },
+            ),
+          ),
+        ),
+        Visibility(
+          visible: state.currentInterpret.title.isNotEmpty,
+          child: Expanded(
+            flex: 10,
+            child: state.searchWebSongs
+                ? const Center(
+                    child: SizedBox(height: 40, width: 40, child: CircularProgressIndicator()),
+                  )
+                : Container(
+                    padding: const EdgeInsets.only(left: 10),
+                    alignment: Alignment.topLeft,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: state.filteredSongs
+                            .map((song) => _buildDesktopSongCard(
+                                  state, song, 'worshipchords.com',
+                                  isSelected: state.currentSong?.title == song.title,
+                                ))
+                            .toList(),
+                      ),
+                    ),
+                  ),
+          ),
+        ),
+      ],
+    ];
   }
 
   Widget _buildDesktopSongCard(WebState state, WebSong song, String typeSearching, {required bool isSelected}) {

@@ -1,4 +1,5 @@
 import 'package:default_project/model/web_song.dart';
+import 'package:default_project/model/youtube_video.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -282,13 +283,31 @@ class PreviewChordBloc extends Bloc<PreviewChordEvent, PreviewChordState> {
           hiveProvider.setWebSong('songs.worshipleaderapp.com${webSong.ref}', webSong);
         }
       }
+      if (event.typeSearching == 4) {
+        webSong.server = 'worshipchords.com';
+        final savedSong = hiveProvider.getWebSong('worshipchords.com${webSong.ref}');
+        if (savedSong != null) {
+          webSong = savedSong;
+        } else {
+          final data = await webRepository.getSongDataWorshipChords(webSong.ref);
+          webSong.lyric = data.lyric;
+          webSong.youtube = data.youtube;
+          hiveProvider.setWebSong('worshipchords.com${webSong.ref}', webSong);
+        }
+      }
     } catch (e) {
       debugPrint('[PA_ERROR] Failed to load web song: $e');
     }
 
     webSong.title = webSong.title.replaceAll('  ', '');
     webSong.title = webSong.title.replaceAll('\n', '');
-    Song song = Song(title: webSong.title, interpret: webSong.interpret, id: webSong.server + webSong.ref, lyrics: webSong.lyric);
+    Song song = Song(
+      title: webSong.title,
+      interpret: webSong.interpret,
+      id: webSong.server + webSong.ref,
+      lyrics: webSong.lyric,
+      youtubeVideos: webSong.youtube.isNotEmpty ? [YoutubeVideo(name: webSong.title, path: webSong.youtube)] : null,
+    );
     emit(state.copyWith(data: state.data.copyWith(song: song), currentColumn: 0, cap: 0, transposeIncrement: 0, isDataFromWeb: true));
   }
 

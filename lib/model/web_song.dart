@@ -16,6 +16,10 @@ class WebSong extends WebItem {
   bool ischords = true;
   @HiveField(5)
   String lyric = '';
+
+  /// Optional YouTube link associated with the song (e.g. from worshipchords.com).
+  @HiveField(6)
+  String youtube = '';
   WebSong({
     required super.title,
     required super.ref,
@@ -23,5 +27,6 @@ class WebSong extends WebItem {
     this.ischords = true,
     this.server = '',
     this.lyric = '',
+    this.youtube = '',
   });
 }

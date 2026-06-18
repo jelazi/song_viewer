@@ -11,6 +11,7 @@ class WebProvider {
   final String proScholy = 'https://zpevnik.proscholy.cz/';
   final String pisnickyAkordy = 'https://pisnicky-akordy.cz';
   final String worshipLeaderUrl = 'https://songs.worshipleaderapp.com';
+  final String worshipChordsUrl = 'https://worshipchords.com';
   final tokenPisnickyAkordy = 'f66490724034594fbc28593a67fffc5cfa6362bd628400e6991879c98639d8e8';
 
   Future<dynamic> testGet() async {
@@ -228,6 +229,46 @@ class WebProvider {
     return dio.Dio().get(
       '$worshipLeaderUrl/api/get',
       queryParameters: {'id': songId},
+    );
+  }
+
+  // ── WorshipChords (worshipchords.com) ──
+
+  /// worshipchords.com is a WordPress site that blocks non-browser clients,
+  /// so every request must send a browser-like User-Agent.
+  Options get _worshipChordsOptions => Options(
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+        },
+        followRedirects: true,
+        responseType: ResponseType.plain,
+      );
+
+  /// Full-text search on worshipchords.com (`?s=`). The site searches song
+  /// titles, lyrics and authors and returns an HTML result page.
+  Future<Response> searchWorshipChords(String query) async {
+    return dio.Dio().get(
+      '$worshipChordsUrl/',
+      queryParameters: {'s': query},
+      options: _worshipChordsOptions,
+    );
+  }
+
+  /// Get an artist/author page (e.g. `/phil-wickham/`) which lists their songs.
+  Future<Response> getArtistWorshipChords(String slug) async {
+    final normalized = slug.replaceAll(RegExp(r'^/|/$'), '');
+    return dio.Dio().get(
+      '$worshipChordsUrl/$normalized/',
+      options: _worshipChordsOptions,
+    );
+  }
+
+  /// Get a single song page (e.g. `/goodness-of-god-chords/`).
+  Future<Response> getSongWorshipChords(String slug) async {
+    final normalized = slug.replaceAll(RegExp(r'^/|/$'), '');
+    return dio.Dio().get(
+      '$worshipChordsUrl/$normalized/',
+      options: _worshipChordsOptions,
     );
   }
 }

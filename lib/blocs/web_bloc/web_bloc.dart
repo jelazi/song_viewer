@@ -51,7 +51,7 @@ class WebBloc extends Bloc<WebEvent, WebState> {
     add(const _Init());
   }
 
-  final listSearchWeb = ['velkyzpevnik.cz', 'pisnicky-akordy.cz', 'zpevnik.proscholy.cz', 'songs.worshipleaderapp.com'];
+  final listSearchWeb = ['velkyzpevnik.cz', 'pisnicky-akordy.cz', 'zpevnik.proscholy.cz', 'songs.worshipleaderapp.com', 'worshipchords.com'];
 
   void _init(_Init event, Emitter<WebState> emit) async {
     emit(state.copyWith(
@@ -127,6 +127,18 @@ class WebBloc extends Bloc<WebEvent, WebState> {
             hiveProvider.setWebSong('songs.worshipleaderapp.com${currentSong.ref}', currentSong);
           }
         }
+        if (event.typeSearching == 'worshipchords.com') {
+          currentSong.server = 'worshipchords.com';
+          final savedSong = hiveProvider.getWebSong('worshipchords.com${currentSong.ref}');
+          if (savedSong != null) {
+            currentSong = savedSong;
+          } else {
+            final data = await webRepository.getSongDataWorshipChords(currentSong.ref);
+            currentSong.lyric = data.lyric;
+            currentSong.youtube = data.youtube;
+            hiveProvider.setWebSong('worshipchords.com${currentSong.ref}', currentSong);
+          }
+        }
       } catch (e) {
         debugPrint('[WEB_ERROR] Failed to load web song: $e');
       }
@@ -149,6 +161,9 @@ class WebBloc extends Bloc<WebEvent, WebState> {
       }
       if (state.searchWeb == 2 && event.interpret != null) {
         songs = await webRepository.findSongByInterpretFromProScholy(event.interpret!);
+      }
+      if (state.searchWeb == 4 && event.interpret != null) {
+        songs = await webRepository.findSongByInterpretWorshipChords(event.interpret!);
       }
       hiveProvider.setHistoryInterpretToWebBox(listSearchWeb[state.searchWeb], event.interpret!);
       final historyInterprets = hiveProvider.getInterpretsFromWebBox(listSearchWeb[state.searchWeb]);
@@ -232,6 +247,28 @@ class WebBloc extends Bloc<WebEvent, WebState> {
         songs: searchedSongs,
         filteredSongs: searchedSongs,
       ));
+      return;
+    }
+    if (searchWeb == 4) {
+      if (isSongMode) {
+        final searchedSongs = await webRepository.searchSongsWorshipChords(event.filter);
+        emit(state.copyWith(
+          interprets: [],
+          isSearching: false,
+          filteredInterprets: [],
+          searchWebInterprets: false,
+          songs: searchedSongs,
+          filteredSongs: searchedSongs,
+        ));
+      } else {
+        final foundInterprets = await webRepository.findInterpretWorshipChords(event.filter);
+        emit(state.copyWith(
+          interprets: foundInterprets,
+          isSearching: false,
+          filteredInterprets: foundInterprets,
+          searchWebInterprets: false,
+        ));
+      }
       return;
     }
     emit(state.copyWith(

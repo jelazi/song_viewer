@@ -181,8 +181,8 @@ class RibbonMenu extends StatelessWidget {
   }
 
   Widget _buildWebActions(BuildContext context) {
-    final webNames = ['Velký zpěvník', 'Písničky-akordy', 'ProScholy', 'Worship Leader'];
-    final webIcons = [Icons.library_music, Icons.music_note, Icons.church, Icons.mic];
+    final webNames = ['Velký zpěvník', 'Písničky-akordy', 'ProScholy', 'Worship Leader', 'Worship Chords'];
+    final webIcons = [Icons.library_music, Icons.music_note, Icons.church, Icons.mic, Icons.queue_music];
     return BlocBuilder<WebBloc, WebState>(
       builder: (context, webState) {
         return Row(
