@@ -1,5 +1,39 @@
 # Development Log
 
+## 2026-06-18 - Web search: persisted search-query history (per server + combined)
+
+### What was added
+The web section's filter fields ("filter song" / "filter interpret") now have a **search history** dropdown. It shows previously searched queries for the current server and, in a separate section, a combined history across **all servers**. Selecting an entry re-runs that search. History is persisted in Hive, so it survives app restarts.
+
+### Storage (`providers/hive_provider.dart`)
+- New `searchHistoryBox` Hive box. Per-server history is keyed by server name; a reserved `__all__` key holds the combined cross-server list.
+- `addSearchHistory(server, query)` — most-recent-first, case-insensitive de-dup, capped at 20, mirrored into the combined list.
+- `getSearchHistory(server)`, `getAllSearchHistory()`, `clearSearchHistory(server)` (rebuilds the combined list from the remaining servers).
+
+### Bloc (`blocs/web_bloc`)
+- `WebState` gained `searchHistory` (current server) and `allSearchHistory` (combined), loaded on init and whenever the server changes.
+- New events `AddWebSearchHistory(query)` and `ClearWebSearchHistory`.
+- History is recorded only on an explicit search (Enter / search icon / picking a history entry), not on every debounced keystroke, so partial strings don't pollute it.
+
+### UI
+- New reusable `view/widgets/web_search_history_menu.dart` (a `PopupMenuButton` with a history icon, "This server" / "All servers" sections, and a "Clear history" action).
+- Wired into the search fields of all views: mobile (`web_page_mobile.dart`), tablet (`home_page_tablet.dart`), and desktop (`list_web_song.dart`, shared `_searchSuffix` / `_runServerSearch` helpers across all five site widgets).
+- Added translation keys `searchHistory`, `searchHistoryThisServer`, `searchHistoryAllServers`, `clearHistory`, `noSearchHistory` (cs + en).
+
+## 2026-06-18 - Desktop web preview: restore Save + chord editing
+
+### Problem
+On the desktop, previewing a song found in the web section showed only the title/interpret/lyrics — there was no way to save the song to the library or edit its chords (these actions exist on mobile/tablet via the `isDataFromWeb` toolbar, but the desktop `web_body.dart` had no equivalent).
+
+### Changes (`view/desktop_view/.../home_bodies/web_body.dart`)
+- The widget now derives a `Song` from the selected `WebSong` (title, interpret, lyrics, YouTube), kept in local state and re-synced when the selection changes.
+- Added a small action bar above the lyrics (shown once a song is loaded):
+  - **Save** button → opens the same save dialog as the tablet (edit title/interpret, pick groups) and writes the song to the library via `HomePageBloc.songsRepository.updateSong`.
+  - An info tooltip explaining chord interaction.
+- Chord editing parity with `preview_body.dart`: tapping a chord shows its diagram; **right-click** on the diagram opens `ChordEditorDialog`. Chord overrides are kept on the local song so they are included when the song is saved.
+- Chord positions now resolve against the previewed song (was using a stale `PreviewChordBloc` song).
+- Added translation keys `saveSong`/`songSaved`/`editChordHint` (+ missing `selectGroups`/`saveSong` in `en.json`).
+
 ## 2026-06-18 - Add worshipchords.com web source (worship songs) with YouTube links
 
 ### What was added

@@ -48,6 +48,8 @@ class WebBloc extends Bloc<WebEvent, WebState> {
     on<ChangeSearchWeb>(_changeSearchWeb);
     on<ChangeSearchType>(_changeSearchType);
     on<TestWebEvent>(_testWebEvent);
+    on<AddWebSearchHistory>(_addWebSearchHistory);
+    on<ClearWebSearchHistory>(_clearWebSearchHistory);
     add(const _Init());
   }
 
@@ -68,6 +70,8 @@ class WebBloc extends Bloc<WebEvent, WebState> {
     emit(state.copyWith(
       isSearching: false,
       historyInterprets: getLastTenInterpretsReverse(historyInterprets),
+      searchHistory: hiveProvider.getSearchHistory(listSearchWeb[state.searchWeb]),
+      allSearchHistory: hiveProvider.getAllSearchHistory(),
     ));
   }
 
@@ -295,6 +299,8 @@ class WebBloc extends Bloc<WebEvent, WebState> {
         filteredInterprets: [],
         interprets: [],
         historyInterprets: getLastTenInterpretsReverse(historyInterprets),
+        searchHistory: hiveProvider.getSearchHistory(state.listSearchWeb[event.searchWeb]),
+        allSearchHistory: hiveProvider.getAllSearchHistory(),
         currentInterpret: WebInterpret(
           title: '',
           ref: '',
@@ -308,5 +314,25 @@ class WebBloc extends Bloc<WebEvent, WebState> {
 
   void _testWebEvent(TestWebEvent event, Emitter<WebState> emit) async {
     await webRepository.testGetSong();
+  }
+
+  void _addWebSearchHistory(AddWebSearchHistory event, Emitter<WebState> emit) {
+    final query = event.query.trim();
+    if (query.isEmpty) return;
+    final server = listSearchWeb[state.searchWeb];
+    hiveProvider.addSearchHistory(server, query);
+    emit(state.copyWith(
+      searchHistory: hiveProvider.getSearchHistory(server),
+      allSearchHistory: hiveProvider.getAllSearchHistory(),
+    ));
+  }
+
+  void _clearWebSearchHistory(ClearWebSearchHistory event, Emitter<WebState> emit) {
+    final server = listSearchWeb[state.searchWeb];
+    hiveProvider.clearSearchHistory(server);
+    emit(state.copyWith(
+      searchHistory: hiveProvider.getSearchHistory(server),
+      allSearchHistory: hiveProvider.getAllSearchHistory(),
+    ));
   }
 }

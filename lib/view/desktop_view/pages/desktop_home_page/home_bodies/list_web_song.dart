@@ -7,6 +7,7 @@ import '../../../../../blocs/export_blocs.dart';
 import '../../../../../model/web_interpret.dart';
 import '../../../../../model/web_song.dart';
 import '../../../../../services/constants.dart';
+import '../../../../widgets/web_search_history_menu.dart';
 
 class ListWebSong extends StatefulWidget {
   ListWebSong({
@@ -46,6 +47,41 @@ class _ListWebSongState extends State<ListWebSong> {
   void _debouncedSearch(VoidCallback action) {
     _debounceTimer?.cancel();
     _debounceTimer = Timer(const Duration(milliseconds: 500), action);
+  }
+
+  /// Run an explicit server search and persist the query into the history.
+  void _runServerSearch(TextEditingController controller) {
+    _debounceTimer?.cancel();
+    context.read<WebBloc>().add(FilterInterprets(filter: controller.text));
+    context.read<WebBloc>().add(AddWebSearchHistory(query: controller.text));
+  }
+
+  /// Shared suffix for the desktop search fields: history menu + search + clear.
+  Widget _searchSuffix(TextEditingController controller, TextEditingValue value) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        WebSearchHistoryMenu(
+          onSelected: (query) {
+            controller.text = query;
+            controller.selection = TextSelection.fromPosition(TextPosition(offset: query.length));
+            _runServerSearch(controller);
+          },
+        ),
+        IconButton(
+          onPressed: () => _runServerSearch(controller),
+          icon: const Icon(Icons.search, size: 18),
+        ),
+        if (value.text.isNotEmpty)
+          IconButton(
+            onPressed: () {
+              controller.clear();
+              context.read<WebBloc>().add(const FilterInterprets(filter: ''));
+            },
+            icon: const Icon(Icons.clear, size: 18),
+          ),
+      ],
+    );
   }
 
   @override
@@ -170,35 +206,14 @@ class _ListWebSongState extends State<ListWebSong> {
                 decoration: InputDecoration(
                   border: const OutlineInputBorder(),
                   labelText: state.searchType == 0 ? 'filterSong'.tr() : 'filterInterpret'.tr(),
-                  suffixIcon: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        onPressed: () {
-                          context.read<WebBloc>().add(FilterInterprets(filter: _filterInterpretVelkyZpevnik.text));
-                        },
-                        icon: const Icon(Icons.search, size: 18),
-                      ),
-                      if (value.text.isNotEmpty)
-                        IconButton(
-                          onPressed: () {
-                            _filterInterpretVelkyZpevnik.clear();
-                            context.read<WebBloc>().add(const FilterInterprets(filter: ''));
-                          },
-                          icon: const Icon(Icons.clear, size: 18),
-                        ),
-                    ],
-                  ),
+                  suffixIcon: _searchSuffix(_filterInterpretVelkyZpevnik, value),
                 ),
                 onChanged: (value) {
                   _debouncedSearch(() {
                     context.read<WebBloc>().add(FilterInterprets(filter: value));
                   });
                 },
-                onSubmitted: (value) {
-                  _debounceTimer?.cancel();
-                  context.read<WebBloc>().add(FilterInterprets(filter: value));
-                },
+                onSubmitted: (value) => _runServerSearch(_filterInterpretVelkyZpevnik),
               );
             },
           ),
@@ -356,35 +371,14 @@ class _ListWebSongState extends State<ListWebSong> {
                 decoration: InputDecoration(
                   border: const OutlineInputBorder(),
                   labelText: state.searchType == 0 ? 'filterSong'.tr() : 'filterInterpret'.tr(),
-                  suffixIcon: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        onPressed: () {
-                          context.read<WebBloc>().add(FilterInterprets(filter: _filterInterpretPisnickyAkordy.text));
-                        },
-                        icon: const Icon(Icons.search, size: 18),
-                      ),
-                      if (value.text.isNotEmpty)
-                        IconButton(
-                          onPressed: () {
-                            _filterInterpretPisnickyAkordy.clear();
-                            context.read<WebBloc>().add(const FilterInterprets(filter: ''));
-                          },
-                          icon: const Icon(Icons.clear, size: 18),
-                        ),
-                    ],
-                  ),
+                  suffixIcon: _searchSuffix(_filterInterpretPisnickyAkordy, value),
                 ),
                 onChanged: (value) {
                   _debouncedSearch(() {
                     context.read<WebBloc>().add(FilterInterprets(filter: value));
                   });
                 },
-                onSubmitted: (value) {
-                  _debounceTimer?.cancel();
-                  context.read<WebBloc>().add(FilterInterprets(filter: value));
-                },
+                onSubmitted: (value) => _runServerSearch(_filterInterpretPisnickyAkordy),
               );
             },
           ),
@@ -539,35 +533,14 @@ class _ListWebSongState extends State<ListWebSong> {
               decoration: InputDecoration(
                 border: const OutlineInputBorder(),
                 labelText: 'filterSongOrInterpret'.tr(),
-                suffixIcon: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      onPressed: () {
-                        context.read<WebBloc>().add(FilterInterprets(filter: _filterInterpretProScholy.text));
-                      },
-                      icon: const Icon(Icons.search, size: 18),
-                    ),
-                    if (value.text.isNotEmpty)
-                      IconButton(
-                        onPressed: () {
-                          _filterInterpretProScholy.clear();
-                          context.read<WebBloc>().add(const FilterInterprets(filter: ''));
-                        },
-                        icon: const Icon(Icons.clear, size: 18),
-                      ),
-                  ],
-                ),
+                suffixIcon: _searchSuffix(_filterInterpretProScholy, value),
               ),
               onChanged: (value) {
                 _debouncedSearch(() {
                   context.read<WebBloc>().add(FilterInterprets(filter: value));
                 });
               },
-              onSubmitted: (value) {
-                _debounceTimer?.cancel();
-                context.read<WebBloc>().add(FilterInterprets(filter: value));
-              },
+              onSubmitted: (value) => _runServerSearch(_filterInterpretProScholy),
             );
           },
         ),
@@ -723,35 +696,14 @@ class _ListWebSongState extends State<ListWebSong> {
               decoration: InputDecoration(
                 border: const OutlineInputBorder(),
                 labelText: 'filterSong'.tr(),
-                suffixIcon: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      onPressed: () {
-                        context.read<WebBloc>().add(FilterInterprets(filter: _filterWorshipLeader.text));
-                      },
-                      icon: const Icon(Icons.search, size: 18),
-                    ),
-                    if (value.text.isNotEmpty)
-                      IconButton(
-                        onPressed: () {
-                          _filterWorshipLeader.clear();
-                          context.read<WebBloc>().add(const FilterInterprets(filter: ''));
-                        },
-                        icon: const Icon(Icons.clear, size: 18),
-                      ),
-                  ],
-                ),
+                suffixIcon: _searchSuffix(_filterWorshipLeader, value),
               ),
               onChanged: (value) {
                 _debouncedSearch(() {
                   context.read<WebBloc>().add(FilterInterprets(filter: value));
                 });
               },
-              onSubmitted: (value) {
-                _debounceTimer?.cancel();
-                context.read<WebBloc>().add(FilterInterprets(filter: value));
-              },
+              onSubmitted: (value) => _runServerSearch(_filterWorshipLeader),
             );
           },
         ),
@@ -797,35 +749,14 @@ class _ListWebSongState extends State<ListWebSong> {
               decoration: InputDecoration(
                 border: const OutlineInputBorder(),
                 labelText: state.searchType == 0 ? 'filterSong'.tr() : 'filterInterpret'.tr(),
-                suffixIcon: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      onPressed: () {
-                        context.read<WebBloc>().add(FilterInterprets(filter: _filterInterpretWorshipChords.text));
-                      },
-                      icon: const Icon(Icons.search, size: 18),
-                    ),
-                    if (value.text.isNotEmpty)
-                      IconButton(
-                        onPressed: () {
-                          _filterInterpretWorshipChords.clear();
-                          context.read<WebBloc>().add(const FilterInterprets(filter: ''));
-                        },
-                        icon: const Icon(Icons.clear, size: 18),
-                      ),
-                  ],
-                ),
+                suffixIcon: _searchSuffix(_filterInterpretWorshipChords, value),
               ),
               onChanged: (value) {
                 _debouncedSearch(() {
                   context.read<WebBloc>().add(FilterInterprets(filter: value));
                 });
               },
-              onSubmitted: (value) {
-                _debounceTimer?.cancel();
-                context.read<WebBloc>().add(FilterInterprets(filter: value));
-              },
+              onSubmitted: (value) => _runServerSearch(_filterInterpretWorshipChords),
             );
           },
         ),

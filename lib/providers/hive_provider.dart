@@ -15,12 +15,14 @@ class HiveProvider {
   late Box webSongBox;
   late Box interpretWebBox;
   late Box songsCacheBox;
+  late Box searchHistoryBox;
   Future<void> initHiveBox() async {
     settingsBox = await _openBoxSafe('settingsBox');
     transposeBox = await _openBoxSafe('transposeBox');
     webSongBox = await _openBoxSafe('webSongBox');
     interpretWebBox = await _openBoxSafe('interpretWebBox');
     songsCacheBox = await _openBoxSafe('songsCacheBox');
+    searchHistoryBox = await _openBoxSafe('searchHistoryBox');
   }
 
   /// Opens a Hive box, removing stale lock files on failure and retrying once.
@@ -217,5 +219,61 @@ class HiveProvider {
       return List<WebInterpret>.from(webInterprets);
     }
     return [];
+  }
+
+  // ---------------------------------------------------------------------------
+  // Web search-query history (persisted, per server + combined across servers)
+  // ---------------------------------------------------------------------------
+
+  static const int _maxSearchHistory = 20;
+  static const String _allHistoryKey = '__all__';
+
+  /// Record a search query for [server]. Stored most-recent-first, de-duplicated
+  /// case-insensitively, and also mirrored into a combined cross-server list.
+  void addSearchHistory(String server, String query) {
+    final q = query.trim();
+    if (q.isEmpty) return;
+    _pushHistory(server, q);
+    _pushHistory(_allHistoryKey, q);
+  }
+
+  void _pushHistory(String key, String q) {
+    final raw = searchHistoryBox.get(key);
+    List<String> list = raw is List ? List<String>.from(raw.map((e) => e.toString())) : <String>[];
+    list.removeWhere((e) => e.toLowerCase() == q.toLowerCase());
+    list.insert(0, q);
+    if (list.length > _maxSearchHistory) {
+      list = list.sublist(0, _maxSearchHistory);
+    }
+    searchHistoryBox.put(key, list);
+  }
+
+  /// Search-query history for a single server (most recent first).
+  List<String> getSearchHistory(String server) => _readHistory(server);
+
+  /// Combined search-query history across all servers (most recent first).
+  List<String> getAllSearchHistory() => _readHistory(_allHistoryKey);
+
+  List<String> _readHistory(String key) {
+    final raw = searchHistoryBox.get(key);
+    return raw is List ? List<String>.from(raw.map((e) => e.toString())) : <String>[];
+  }
+
+  /// Clear history for one server and rebuild the combined list from the rest.
+  void clearSearchHistory(String server) {
+    searchHistoryBox.delete(server);
+    final List<String> merged = [];
+    final seen = <String>{};
+    for (final key in searchHistoryBox.keys) {
+      if (key == _allHistoryKey) continue;
+      final raw = searchHistoryBox.get(key);
+      if (raw is List) {
+        for (final e in raw) {
+          final s = e.toString();
+          if (seen.add(s.toLowerCase())) merged.add(s);
+        }
+      }
+    }
+    searchHistoryBox.put(_allHistoryKey, merged.take(_maxSearchHistory).toList());
   }
 }

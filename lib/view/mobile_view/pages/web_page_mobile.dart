@@ -7,6 +7,7 @@ import '../../../blocs/export_blocs.dart';
 import '../../../model/web_interpret.dart';
 import '../../../model/web_song.dart';
 import '../../../services/constants.dart';
+import '../../widgets/web_search_history_menu.dart';
 
 class WebPageMobile extends StatefulWidget {
   const WebPageMobile({super.key});
@@ -541,6 +542,11 @@ class _WebPageMobileState extends State<WebPageMobile> {
     required ValueChanged<String> onChanged,
     required VoidCallback onClear,
   }) {
+    void runSearch(String value) {
+      onChanged(value);
+      context.read<WebBloc>().add(AddWebSearchHistory(query: value));
+    }
+
     return Container(
       height: 44,
       decoration: BoxDecoration(
@@ -556,17 +562,28 @@ class _WebPageMobileState extends State<WebPageMobile> {
             decoration: InputDecoration(
               hintText: hintText,
               prefixIcon: const Icon(Icons.search, color: AppColor.grey1Color, size: 20),
-              suffixIcon: value.text.isNotEmpty
-                  ? IconButton(
+              suffixIcon: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  WebSearchHistoryMenu(
+                    onSelected: (query) {
+                      controller.text = query;
+                      controller.selection = TextSelection.fromPosition(TextPosition(offset: query.length));
+                      runSearch(query);
+                    },
+                  ),
+                  if (value.text.isNotEmpty)
+                    IconButton(
                       icon: const Icon(Icons.clear, size: 18),
                       onPressed: onClear,
-                    )
-                  : null,
+                    ),
+                ],
+              ),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(vertical: 10),
             ),
             onChanged: onChanged,
-            onSubmitted: (value) => onChanged(value),
+            onSubmitted: runSearch,
           );
         },
       ),

@@ -471,6 +471,15 @@
     "savingBackupJson": "Saving backup.json...",
     "authorsLabel": "Authors",
     "songsLabel": "Songs",
+    "saveSong": "Save song",
+    "songSaved": "Song saved",
+    "searchHistory": "Search history",
+    "searchHistoryThisServer": "This server",
+    "searchHistoryAllServers": "All servers",
+    "clearHistory": "Clear history",
+    "noSearchHistory": "No search history",
+    "editChordHint": "Tap a chord to view the diagram, right-click to edit it",
+    "selectGroups": "Select groups to display",
     "enterTitle": "Please enter a song title",
     "superuserMode": "Superuser mode"
 }

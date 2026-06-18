@@ -54,3 +54,17 @@ class ChangeSearchType extends WebEvent {
 class TestWebEvent extends WebEvent {
   const TestWebEvent();
 }
+
+/// Persist a search query into the history for the current server.
+class AddWebSearchHistory extends WebEvent {
+  final String query;
+  const AddWebSearchHistory({required this.query});
+
+  @override
+  List<Object> get props => [query];
+}
+
+/// Clear the search history for the current server (and rebuild the combined list).
+class ClearWebSearchHistory extends WebEvent {
+  const ClearWebSearchHistory();
+}

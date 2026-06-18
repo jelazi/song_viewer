@@ -1,15 +1,19 @@
 import 'dart:math';
 
-import 'package:easy_localization/easy_localization.dart';
+import 'package:default_project/model/song/song.dart';
+import 'package:default_project/model/web_song.dart';
+import 'package:default_project/model/youtube_video.dart';
 import 'package:default_project/services/constants.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:default_project/view/desktop_view/widgets/my_toast.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 import '../../../../../blocs/export_blocs.dart';
 import '../../../../mobile_view/widgets/chords_lyric/chord_lyrics_line.dart';
 import '../../../../mobile_view/widgets/chords_lyric/guitar_tabs.dart';
 import '../../../../mobile_view/widgets/chords_lyric/lyrics_renderer.dart';
+import '../../../../mobile_view/widgets/dialogs/dialogs_export.dart';
+import '../../../widgets/chord_editor_dialog.dart';
 import 'list_web_song.dart';
 
 class WebBody extends StatefulWidget {
@@ -23,6 +27,11 @@ class _WebBodyState extends State<WebBody> {
   ScrollController scrollController = ScrollController();
   OverlayEntry? overlayChord;
 
+  /// Song built from the currently selected web song. Holds chord overrides
+  /// edited in the preview so they survive until the song is saved.
+  Song? _webSong;
+  String? _webSongKey;
+
   @override
   void dispose() {
     super.dispose();
@@ -30,10 +39,34 @@ class _WebBodyState extends State<WebBody> {
     disableAllOverlay();
   }
 
+  Song _buildSongFromWeb(WebSong web) {
+    final song = Song.empty();
+    song.title = web.title;
+    song.interpret = web.interpret;
+    song.lyrics = web.lyric;
+    if (web.youtube.isNotEmpty) {
+      song.youtubeVideos = [YoutubeVideo(name: web.title, path: web.youtube)];
+    }
+    return song;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<WebBloc, WebState>(
+    return BlocConsumer<WebBloc, WebState>(
+      listenWhen: (previous, current) => previous.currentSong?.server != current.currentSong?.server || previous.currentSong?.ref != current.currentSong?.ref,
+      listener: (context, state) {
+        disableAllOverlay();
+        final web = state.currentSong;
+        final key = web == null ? null : '${web.server}${web.ref}';
+        if (key != _webSongKey) {
+          setState(() {
+            _webSongKey = key;
+            _webSong = web == null ? null : _buildSongFromWeb(web);
+          });
+        }
+      },
       builder: (context, state) {
+        final hasSong = state.currentSong != null && (state.currentSong?.lyric ?? '').isNotEmpty;
         return GestureDetector(
           onTap: () {
             disableAllOverlay();
@@ -47,8 +80,20 @@ class _WebBodyState extends State<WebBody> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(state.currentSong?.title ?? '', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                    Text(state.currentInterpret.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColor.grey2Color)),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(state.currentSong?.title ?? '', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                              Text(state.currentInterpret.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColor.grey2Color)),
+                            ],
+                          ),
+                        ),
+                        if (hasSong) _buildActions(context, state),
+                      ],
+                    ),
                     SizedBox(
                       height: MediaQuery.of(context).size.height - 200,
                       child: state.currentSong == null
@@ -89,21 +134,132 @@ class _WebBodyState extends State<WebBody> {
     );
   }
 
-  // ignore: unused_element
-  Widget _getLyricsRenderer(WebState state, ScrollController scrollController, String lyric) {
-    return LyricsRenderer(
-      scrollController: scrollController,
-      isVisibleNote: true,
-      lyrics: lyric,
-      textStyle: state.textStyle,
-      chordStyle: state.chordStyle,
-      appBarStatus: state.appBarStatus,
-      onTapChord: (Chord chord, Offset pos) {
-        openChordImage(chord, pos, context);
-      },
-      transposeIncrement: state.transposeIncrement,
-      scrollSpeed: state.scrollSpeed,
-      baseFontSize: state.textStyle.fontSize ?? 20,
+  Widget _buildActions(BuildContext context, WebState state) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Tooltip(
+          message: 'editChordHint'.tr(),
+          child: const Icon(Icons.info_outline, size: 18, color: AppColor.grey2Color),
+        ),
+        const SizedBox(width: 8),
+        TextButton.icon(
+          onPressed: () => _openSaveDialog(context, state),
+          icon: const Icon(Icons.save, color: AppColor.primaryDarkColor),
+          label: Text('saveSong'.tr(), style: const TextStyle(color: AppColor.primaryDarkColor)),
+        ),
+      ],
+    );
+  }
+
+  void _openSaveDialog(BuildContext context, WebState state) {
+    final web = state.currentSong;
+    if (web == null) return;
+    final base = _webSong ?? _buildSongFromWeb(web);
+    final nameSongController = TextEditingController(text: base.title);
+    final interpretController = TextEditingController(text: base.interpret ?? '');
+    final listAllGroups = context.read<HomePageBloc>().state.listAllGroups;
+    final selectedGroups = <String>[];
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(builder: (context, setState) {
+        return EditDialog(
+          okBack: false,
+          height: 540,
+          width: 400,
+          title: 'saveSong'.tr(),
+          okClick: () {
+            if (selectedGroups.isEmpty) {
+              MyToast.showText(text: 'selectGroups'.tr(), typeNotification: TypeNotification.error);
+              return;
+            }
+            if (nameSongController.text.isEmpty) {
+              MyToast.showText(text: 'enterTitle'.tr(), typeNotification: TypeNotification.error);
+              return;
+            }
+            final song = Song.empty();
+            song.generateId();
+            song.title = nameSongController.text;
+            song.interpret = interpretController.text;
+            song.lyrics = base.lyrics;
+            song.notes = base.notes ?? [];
+            song.youtubeVideos = base.youtubeVideos ?? [];
+            song.chordOverrides = base.chordOverrides ?? {};
+            song.groups = selectedGroups;
+            context.read<HomePageBloc>().songsRepository.updateSong(song);
+            Navigator.of(context).pop();
+            MyToast.showText(text: 'songSaved'.tr(), typeNotification: TypeNotification.success);
+          },
+          widgetContent: SizedBox(
+            height: 400,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                SizedBox(
+                  height: 150,
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('title'.tr()),
+                          SizedBox(
+                            width: 250,
+                            child: TextField(
+                              style: const TextStyle(color: AppColor.primaryColor),
+                              controller: nameSongController,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('interpret'.tr()),
+                          SizedBox(
+                            width: 250,
+                            child: TextField(
+                              style: const TextStyle(color: AppColor.grey1Color),
+                              controller: interpretController,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(
+                  height: 200,
+                  child: SingleChildScrollView(
+                    child: Wrap(
+                      children: listAllGroups
+                          .map((e) => Padding(
+                                padding: const EdgeInsets.all(4.0),
+                                child: ChoiceChip(
+                                    checkmarkColor: selectedGroups.contains(e) ? AppColor.whiteColor : AppColor.primaryColor,
+                                    onSelected: (value) {
+                                      setState(() {
+                                        if (selectedGroups.contains(e)) {
+                                          selectedGroups.remove(e);
+                                        } else {
+                                          selectedGroups.add(e);
+                                        }
+                                      });
+                                    },
+                                    selectedColor: AppColor.primaryColor,
+                                    label: Text(e, style: TextStyle(color: selectedGroups.contains(e) ? AppColor.whiteColor : AppColor.primaryColor)),
+                                    selected: selectedGroups.contains(e)),
+                              ))
+                          .toList(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }),
     );
   }
 
@@ -113,10 +269,8 @@ class _WebBodyState extends State<WebBody> {
       overlayChord = null;
     }
 
-    final bloc = context.read<PreviewChordBloc>();
-    final chordService = bloc.songsRepository.chordService;
-    final song = bloc.state.data.song;
-    final positions = chordService.resolveChordPositions(chord.chordText, song: song);
+    final chordService = context.read<HomePageBloc>().songsRepository.chordService;
+    final positions = chordService.resolveChordPositions(chord.chordText, song: _webSong);
 
     if (positions.isEmpty) {
       return;
@@ -128,14 +282,40 @@ class _WebBodyState extends State<WebBody> {
       builder: (context) => Positioned(
         top: max(pos.dy - 130, 0),
         left: max(pos.dx - 60, 0),
-        child: TabWidget(
-          name: chord.chordText,
-          tabs: positions,
-          size: 3,
+        child: GestureDetector(
+          onSecondaryTap: () {
+            _openChordEditor(chord.chordText, context);
+          },
+          child: TabWidget(
+            name: chord.chordText,
+            tabs: positions,
+            size: 3,
+          ),
         ),
       ),
     );
     overlayState.insert(overlayChord!);
+  }
+
+  void _openChordEditor(String chordName, BuildContext context) {
+    disableAllOverlay();
+    final chordService = context.read<HomePageBloc>().songsRepository.chordService;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => ChordEditorDialog(
+        chordName: chordName,
+        chordService: chordService,
+        song: _webSong,
+        onSongUpdated: (updatedSong) {
+          // The web song isn't in the library yet; keep the override locally so
+          // it is included when the user saves the song.
+          setState(() {
+            _webSong = updatedSong;
+          });
+        },
+      ),
+    );
   }
 
   void disableAllOverlay() {

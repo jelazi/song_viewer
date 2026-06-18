@@ -22,6 +22,12 @@ class WebState extends Equatable {
   final bool searchWebSongs;
   final bool downloadWebSong;
 
+  /// Persisted search-query history for the current server (most recent first).
+  final List<String> searchHistory;
+
+  /// Persisted search-query history combined across all servers.
+  final List<String> allSearchHistory;
+
   final listSearchWeb = [
     'velkyzpevnik.cz',
     'pisnicky-akordy.cz',
@@ -52,6 +58,8 @@ class WebState extends Equatable {
     required this.searchWebSongs,
     required this.downloadWebSong,
     required this.historyInterprets,
+    this.searchHistory = const [],
+    this.allSearchHistory = const [],
   });
 
   @override
@@ -74,6 +82,8 @@ class WebState extends Equatable {
         searchWebSongs,
         downloadWebSong,
         historyInterprets,
+        searchHistory,
+        allSearchHistory,
       ];
 
   WebState copyWith({
@@ -95,6 +105,8 @@ class WebState extends Equatable {
     bool? searchWebInterprets,
     bool? searchWebSongs,
     bool? downloadWebSong,
+    List<String>? searchHistory,
+    List<String>? allSearchHistory,
   }) {
     return WebState(
       currentSong: identical(currentSong, _sentinel) ? this.currentSong : currentSong as WebSong?,
@@ -115,6 +127,8 @@ class WebState extends Equatable {
       searchWebInterprets: searchWebInterprets ?? this.searchWebInterprets,
       searchWebSongs: searchWebSongs ?? this.searchWebSongs,
       downloadWebSong: downloadWebSong ?? this.downloadWebSong,
+      searchHistory: searchHistory ?? this.searchHistory,
+      allSearchHistory: allSearchHistory ?? this.allSearchHistory,
     );
   }
 }

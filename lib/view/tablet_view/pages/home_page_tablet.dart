@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import '../../../blocs/export_blocs.dart';
 import '../../../model/web_song.dart';
 import '../../../services/constants.dart';
+import '../../widgets/web_search_history_menu.dart';
 import '../../mobile_view/widgets/dialogs/qr_code_dialog.dart';
 import '../widgets/filter_field_tablet.dart';
 import '../widgets/song_card_tablet.dart';
@@ -371,24 +372,33 @@ class _HomePageTabletState extends State<HomePageTablet> {
                 decoration: InputDecoration(
                   hintText: label,
                   prefixIcon: const Icon(Icons.search, color: AppColor.grey1Color),
-                  suffixIcon: _filterInterpretPisnickyAkordy.text.isNotEmpty
-                      ? IconButton(
+                  suffixIcon: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      WebSearchHistoryMenu(
+                        onSelected: (query) {
+                          _filterInterpretPisnickyAkordy.text = query;
+                          _filterInterpretPisnickyAkordy.selection = TextSelection.fromPosition(TextPosition(offset: query.length));
+                          context.read<WebBloc>().add(FilterInterprets(filter: query));
+                          context.read<WebBloc>().add(AddWebSearchHistory(query: query));
+                        },
+                      ),
+                      if (_filterInterpretPisnickyAkordy.text.isNotEmpty)
+                        IconButton(
                           icon: const Icon(Icons.clear, size: 18),
                           onPressed: () {
                             _filterInterpretPisnickyAkordy.clear();
                             context.read<WebBloc>().add(const FilterInterprets(filter: ''));
                           },
-                        )
-                      : null,
+                        ),
+                    ],
+                  ),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(vertical: 10),
                 ),
                 onSubmitted: (value) {
-                  if (wState.searchType == 0) {
-                    context.read<WebBloc>().add(FilterInterprets(filter: value));
-                  } else {
-                    context.read<WebBloc>().add(FilterInterprets(filter: value));
-                  }
+                  context.read<WebBloc>().add(FilterInterprets(filter: value));
+                  context.read<WebBloc>().add(AddWebSearchHistory(query: value));
                 },
                 onChanged: (value) {
                   context.read<WebBloc>().add(FilterInterprets(filter: value));
