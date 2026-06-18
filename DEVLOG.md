@@ -1,5 +1,46 @@
 # Development Log
 
+## 2026-06-07 - Fix iOS build: support ALL simulators (iOS 18 x86_64 + iOS 26+ arm64)
+
+### What was fixed
+Build failed on Apple Silicon iOS 26+ simulators (iPad Pro M5, etc.) because `EXCLUDED_ARCHS[sdk=iphonesimulator*] = 'arm64'` prevented arm64 simulator builds. These simulators require arm64.
+
+### Root cause
+The previous fix for App Store validation added `EXCLUDED_ARCHS[sdk=iphonesimulator*] = 'arm64'` to prevent pre-built binary frameworks (like `objective_c`) from embedding arm64 simulator slices in device builds. However, this also blocked arm64 simulator builds needed for iOS 26+ on Apple Silicon.
+
+### Changes
+- **`ios/Podfile`**: Removed `EXCLUDED_ARCHS[sdk=iphonesimulator*] = 'arm64'` entirely — all architectures now build normally.
+- **`ios/Podfile`**: Updated Strip Simulator Architectures build phase:
+  - Now guarded by `[ "$PLATFORM_NAME" != "iphonesimulator" ]` — only runs on device builds.
+  - Uses `vtool -arch arm64 -show-build` to check if an arm64 slice targets `IOSSIM` platform before stripping. This distinguishes arm64 simulator slices from arm64 device slices — only simulator slices are removed during archive/device builds.
+  - Previously only stripped `x86_64`, `i386`, `arm64e`; now also handles arm64 simulator slices correctly.
+
+### Verification
+- Simulator build (`flutter build ios --simulator`): all frameworks contain both `x86_64` and `arm64` slices
+- Device build (`flutter build ios`): only `arm64` device slices, no simulator slices
+- All 15+ frameworks (CocoaAsyncSocket, DKImagePickerController, objective_c, file_picker, etc.) now build as universal fat binaries for simulator
+- Both build types succeed with zero errors
+
+### Current state
+- iOS 18 simulators (x86_64): works
+- iOS 26+ simulators (arm64, Apple Silicon): works
+- App Store device builds: protected — strip phase removes arm64 simulator slices
+- Zero errors, zero warnings
+
+## 2026-06-07 - Revert tablet/iPad AppBar height increase, keep mobile only
+
+### What was fixed
+The previous AppBar height increase (for song title/interpret) was applied to both mobile and tablet files. Tablet/iPad bars became too large. Reverted tablet changes while keeping mobile changes intact.
+
+### Changes
+- **`preview_page_tablet.dart`**: Removed `PreferredSize(Size.fromHeight(110))` wrapper — AppBar returns to default height (~56px)
+- **`playlist_tablet.dart`**: Removed `PreferredSize(Size.fromHeight(70))` wrapper — AppBar returns to default height; body Container offset changed from `-134` back to `-120`
+
+### Current state
+- Mobile preview page retains enlarged header (100/110px)
+- Tablet preview and playlist pages use default AppBar height
+- Zero errors, zero warnings (only pre-existing info-level deprecation notices)
+
 ## 2026-06-05 - Fix App Store validation: strip simulator architectures from iOS frameworks
 
 ### What was fixed

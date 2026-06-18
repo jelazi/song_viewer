@@ -61,9 +61,7 @@ class _PlaylistTabletState extends State<PlaylistTablet> {
           }
         },
         child: Scaffold(
-            appBar: PreferredSize(
-              preferredSize: const Size.fromHeight(70),
-              child: AppBar(
+            appBar: AppBar(
               title: BlocConsumer<PlaylistsBloc, PlaylistsState>(listener: (context, state) {
                 if (state.heightWindow != MediaQuery.of(context).size.height) {
                   context.read<PlaylistsBloc>().add(ChangeHeightWindowPlaylist(height: MediaQuery.of(context).size.height));
@@ -144,9 +142,8 @@ class _PlaylistTabletState extends State<PlaylistTablet> {
                         });
                   },
                 ),
-              ],
-            ),
-            ),
+        ],
+      ),
             body: BlocBuilder<PlaylistsBloc, PlaylistsState>(builder: (context, state) {
               return GestureDetector(
                   onTap: () {
@@ -165,7 +162,7 @@ class _PlaylistTabletState extends State<PlaylistTablet> {
                                 )),
                           ),
                           Container(
-                            height: MediaQuery.of(context).size.height - 134,
+                            height: MediaQuery.of(context).size.height - 120,
                             child: _isMobile(context) ? _getSingleColumnRenderer(state, scrollController) : _getLyricsTwoColumnsRenderer(state, scrollController),
                           ),
                         ])),
