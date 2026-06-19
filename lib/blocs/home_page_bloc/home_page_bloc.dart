@@ -76,8 +76,10 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
     if (event.updateSongRepository) {
       await songsRepository.updateSongsFromServer();
     }
+    // Re-apply the active filter so a refresh (e.g. after a delete) keeps the
+    // current view instead of resetting to the full list.
     emit(state.copyWith(
-      listSong: List<Song>.from(songsRepository.songs),
+      listSong: songsRepository.getSongByFilter(state.currentFilter),
     ));
   }
 
@@ -91,7 +93,7 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
 
   void _filterSong(FilterSong event, Emitter<HomePageState> emit) {
     final state = this.state;
-    emit(state.copyWith(listSong: songsRepository.getSongByFilter(event.filter)));
+    emit(state.copyWith(currentFilter: event.filter, listSong: songsRepository.getSongByFilter(event.filter)));
   }
 
   void _changeSelectedSong(ChangeSelectedSong event, Emitter<HomePageState> emit) {
@@ -163,9 +165,12 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
     final result = await songsRepository.deleteSong(event.song.id);
 
     if (result) {
-      await songsRepository.updateSongsFromServer();
       MyToast.showText(text: '${'songs'.tr()}: ${event.song.title} ${'deleted'.tr()}', typeNotification: TypeNotification.success);
-      emit(state.copyWith(listSong: List<Song>.from(songsRepository.songs)));
+      // Drop the deleted song from the currently shown list right away. We must
+      // not refresh from the server here: deleteSong already updated the local
+      // store/cache, and a failing/slow server fetch would throw before this
+      // emit, leaving the deleted song visible until the next restart.
+      emit(state.copyWith(listSong: state.listSong.where((song) => song.id != event.song.id).toList()));
     }
   }
 }

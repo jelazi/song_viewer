@@ -26,6 +26,21 @@ class _ListSongState extends State<ListSong> {
   double _songListHeight = 400.0; // Absolute height instead of flex
 
   @override
+  void initState() {
+    super.initState();
+    // Restore the active filter text so the field matches the already filtered
+    // list when this widget is remounted (otherwise the list stays filtered
+    // while the field appears empty).
+    _filter.text = context.read<HomePageBloc>().state.currentFilter;
+  }
+
+  @override
+  void dispose() {
+    _filter.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return BlocBuilder<HomePageBloc, HomePageState>(
       builder: (context, state) {

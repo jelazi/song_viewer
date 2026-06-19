@@ -22,16 +22,22 @@ class RibbonMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<DesktopRibbonMenuBloc, DesktopRibbonMenuState>(
       builder: (context, state) {
-        final isPreviewBody = state.bodyName == 'preview' ||
-            state.bodyName == 'browse_youtube' ||
-            state.bodyName == 'browse_sheets';
-        final isSettingsBody = state.bodyName == 'groups' ||
-            state.bodyName == 'users' ||
-            state.bodyName == 'presentation_settings' ||
-            state.bodyName == 'general_settings' ||
-            state.bodyName == 'backup_restore';
+        // Rebuild the ribbon when superuser mode changes (or finishes loading at
+        // startup); the section selector and context actions read it via
+        // context.read, so they need a rebuild to pick up the new value.
+        return BlocBuilder<SettingsBloc, SettingsState>(
+          buildWhen: (previous, current) => previous.superuserMode != current.superuserMode,
+          builder: (context, _) {
+            final isPreviewBody = state.bodyName == 'preview' ||
+                state.bodyName == 'browse_youtube' ||
+                state.bodyName == 'browse_sheets';
+            final isSettingsBody = state.bodyName == 'groups' ||
+                state.bodyName == 'users' ||
+                state.bodyName == 'presentation_settings' ||
+                state.bodyName == 'general_settings' ||
+                state.bodyName == 'backup_restore';
 
-        return Container(
+            return Container(
           width: MediaQuery.of(context).size.width,
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
@@ -68,6 +74,8 @@ class RibbonMenu extends StatelessWidget {
               ],
             ],
           ),
+            );
+          },
         );
       },
     );

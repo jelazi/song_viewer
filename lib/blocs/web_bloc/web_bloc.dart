@@ -88,17 +88,19 @@ class WebBloc extends Bloc<WebEvent, WebState> {
         if (event.typeSearching == 'velkyzpevnik.cz') {
           currentSong.server = 'velkyzpevnik.cz';
           final savedSong = hiveProvider.getWebSong('velkyzpevnik.cz${currentSong.ref}');
-          if (savedSong != null) {
+          if (savedSong != null && savedSong.lyric.isNotEmpty) {
             currentSong = savedSong;
           } else {
             currentSong.lyric = await webRepository.getTextSongVelkyZpevnik(currentSong);
-            hiveProvider.setWebSong('velkyzpevnik.cz${currentSong.ref}', currentSong);
+            if (currentSong.lyric.isNotEmpty) {
+              hiveProvider.setWebSong('velkyzpevnik.cz${currentSong.ref}', currentSong);
+            }
           }
         }
         if (event.typeSearching == 'pisnicky-akordy.cz') {
           currentSong.server = 'pisnicky-akordy.cz';
           final savedSong = hiveProvider.getWebSong('pisnicky-akordy.cz${currentSong.ref}');
-          if (savedSong != null) {
+          if (savedSong != null && savedSong.lyric.isNotEmpty) {
             currentSong = savedSong;
           } else {
             currentSong.lyric = await webRepository.getTextSongPisnickyAkordy(currentSong.ref);
@@ -108,39 +110,50 @@ class WebBloc extends Bloc<WebEvent, WebState> {
               debugPrint('[WEB_FALLBACK] trying slug=$fallbackRef');
               currentSong.lyric = await webRepository.getTextSongPisnickyAkordy(fallbackRef);
             }
-            hiveProvider.setWebSong('pisnicky-akordy.cz${currentSong.ref}', currentSong);
+            if (currentSong.lyric.isNotEmpty) {
+              hiveProvider.setWebSong('pisnicky-akordy.cz${currentSong.ref}', currentSong);
+            }
           }
         }
         if (event.typeSearching == 'zpevnik.proscholy.cz') {
           currentSong.server = 'zpevnik.proscholy.cz';
           final savedSong = hiveProvider.getWebSong('zpevnik.proscholy.cz${currentSong.ref}');
-          if (savedSong != null) {
+          if (savedSong != null && savedSong.lyric.isNotEmpty) {
             currentSong = savedSong;
           } else {
             currentSong.lyric = await webRepository.getTextSongProScholy(currentSong.ref);
-            hiveProvider.setWebSong('zpevnik.proscholy.cz${currentSong.ref}', currentSong);
+            if (currentSong.lyric.isNotEmpty) {
+              hiveProvider.setWebSong('zpevnik.proscholy.cz${currentSong.ref}', currentSong);
+            }
           }
         }
         if (event.typeSearching == 'songs.worshipleaderapp.com') {
           currentSong.server = 'songs.worshipleaderapp.com';
           final savedSong = hiveProvider.getWebSong('songs.worshipleaderapp.com${currentSong.ref}');
-          if (savedSong != null) {
+          if (savedSong != null && savedSong.lyric.isNotEmpty) {
             currentSong = savedSong;
           } else {
             currentSong.lyric = await webRepository.getTextSongWorshipLeader(currentSong.ref);
-            hiveProvider.setWebSong('songs.worshipleaderapp.com${currentSong.ref}', currentSong);
+            if (currentSong.lyric.isNotEmpty) {
+              hiveProvider.setWebSong('songs.worshipleaderapp.com${currentSong.ref}', currentSong);
+            }
           }
         }
         if (event.typeSearching == 'worshipchords.com') {
           currentSong.server = 'worshipchords.com';
           final savedSong = hiveProvider.getWebSong('worshipchords.com${currentSong.ref}');
-          if (savedSong != null) {
+          // Reuse the cache only when it actually holds lyrics; an empty entry
+          // (e.g. a previous transient/blocked request) must be refetched.
+          if (savedSong != null && savedSong.lyric.isNotEmpty) {
             currentSong = savedSong;
           } else {
             final data = await webRepository.getSongDataWorshipChords(currentSong.ref);
             currentSong.lyric = data.lyric;
             currentSong.youtube = data.youtube;
-            hiveProvider.setWebSong('worshipchords.com${currentSong.ref}', currentSong);
+            // Never cache an empty result, otherwise the failure gets stuck.
+            if (currentSong.lyric.isNotEmpty) {
+              hiveProvider.setWebSong('worshipchords.com${currentSong.ref}', currentSong);
+            }
           }
         }
       } catch (e) {

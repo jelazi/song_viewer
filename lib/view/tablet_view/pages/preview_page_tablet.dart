@@ -97,6 +97,10 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
                                         MyToast.showText(text: 'enterTitle'.tr(), typeNotification: TypeNotification.error);
                                         return;
                                       }
+                                      if ((state.data.song?.lyrics ?? '').isEmpty) {
+                                        MyToast.showText(text: 'webSongError'.tr(), typeNotification: TypeNotification.error);
+                                        return;
+                                      }
                                       Song song = Song.empty();
                                       song.generateId();
                                       song.title = nameSongController.text;

@@ -221,6 +221,9 @@ class SongsRepository {
       }
       _songs.removeWhere((element) => element.id == id);
       await _saveSongsToCache();
+      // Notify listeners (e.g. HomePageBloc) so the visible list refreshes
+      // immediately, regardless of which screen triggered the delete.
+      isChangedListSongController.sink.add(isChangedListSongValue++);
       return true;
     } catch (e) {
       return false;

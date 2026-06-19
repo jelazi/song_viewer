@@ -25,7 +25,7 @@ class SettingsState extends Equatable {
   final bool presentationShowPageNumber;
   final bool presentationShowTitle;
   final bool presentationAutoPageByParagraphs;
-  // QR code URLs — dynamic list
+  // QR code URLs — dynamic list¨§
   final List<QrLink> qrLinks;
   // AI enrichment API keys
   final String groqApiKey;

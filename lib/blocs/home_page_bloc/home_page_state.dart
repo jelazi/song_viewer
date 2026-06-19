@@ -11,6 +11,10 @@ class HomePageState extends Equatable {
   final List<String> listSelectedGroups;
   final String selectedPage;
 
+  /// The currently applied song filter text. Kept in state so the filter field
+  /// and the displayed list stay in sync even when the list widget is remounted.
+  final String currentFilter;
+
   const HomePageState({
     required this.selectedSongId,
     required this.listSong,
@@ -20,10 +24,12 @@ class HomePageState extends Equatable {
     required this.listAllGroups,
     required this.listSelectedGroups,
     required this.selectedPage,
+    this.currentFilter = '',
   });
 
   @override
-  List<Object> get props => [selectedSongId, listSong, listExpandedSongs, isEditIconVisible, superuserMode, listAllGroups, listSelectedGroups, selectedPage];
+  List<Object> get props =>
+      [selectedSongId, listSong, listExpandedSongs, isEditIconVisible, superuserMode, listAllGroups, listSelectedGroups, selectedPage, currentFilter];
 
   HomePageState copyWith({
     String? selectedSongId,
@@ -34,6 +40,7 @@ class HomePageState extends Equatable {
     List<String>? listAllGroups,
     List<String>? listSelectedGroups,
     String? selectedPage,
+    String? currentFilter,
   }) {
     return HomePageState(
       selectedSongId: selectedSongId ?? this.selectedSongId,
@@ -44,6 +51,7 @@ class HomePageState extends Equatable {
       listAllGroups: listAllGroups ?? this.listAllGroups,
       listSelectedGroups: listSelectedGroups ?? this.listSelectedGroups,
       selectedPage: selectedPage ?? this.selectedPage,
+      currentFilter: currentFilter ?? this.currentFilter,
     );
   }
 }

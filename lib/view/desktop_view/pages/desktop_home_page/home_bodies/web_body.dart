@@ -53,7 +53,14 @@ class _WebBodyState extends State<WebBody> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<WebBloc, WebState>(
-      listenWhen: (previous, current) => previous.currentSong?.server != current.currentSong?.server || previous.currentSong?.ref != current.currentSong?.ref,
+      // Also react to the lyric arriving: the song is emitted first with an empty
+      // lyric (download in progress) and again once the text is fetched. Without
+      // watching the lyric, _webSong would keep the empty version and saving would
+      // store only title/interpret.
+      listenWhen: (previous, current) =>
+          previous.currentSong?.server != current.currentSong?.server ||
+          previous.currentSong?.ref != current.currentSong?.ref ||
+          previous.currentSong?.lyric != current.currentSong?.lyric,
       listener: (context, state) {
         disableAllOverlay();
         final web = state.currentSong;
@@ -62,6 +69,12 @@ class _WebBodyState extends State<WebBody> {
           setState(() {
             _webSongKey = key;
             _webSong = web == null ? null : _buildSongFromWeb(web);
+          });
+        } else if (web != null && (_webSong?.lyrics ?? '').isEmpty && web.lyric.isNotEmpty) {
+          // Same song, lyrics just finished downloading — refresh the cached
+          // song so the save dialog stores the actual text.
+          setState(() {
+            _webSong = _buildSongFromWeb(web);
           });
         }
       },
@@ -156,6 +169,10 @@ class _WebBodyState extends State<WebBody> {
     final web = state.currentSong;
     if (web == null) return;
     final base = _webSong ?? _buildSongFromWeb(web);
+    // The downloaded text is the source of truth; fall back to it if the cached
+    // edit copy is still empty (e.g. lyrics finished loading after _webSong was
+    // first built). Without this the song could be saved with only title/interpret.
+    final lyrics = base.lyrics.isNotEmpty ? base.lyrics : web.lyric;
     final nameSongController = TextEditingController(text: base.title);
     final interpretController = TextEditingController(text: base.interpret ?? '');
     final listAllGroups = context.read<HomePageBloc>().state.listAllGroups;
@@ -178,11 +195,15 @@ class _WebBodyState extends State<WebBody> {
               MyToast.showText(text: 'enterTitle'.tr(), typeNotification: TypeNotification.error);
               return;
             }
+            if (lyrics.isEmpty) {
+              MyToast.showText(text: 'webSongError'.tr(), typeNotification: TypeNotification.error);
+              return;
+            }
             final song = Song.empty();
             song.generateId();
             song.title = nameSongController.text;
             song.interpret = interpretController.text;
-            song.lyrics = base.lyrics;
+            song.lyrics = lyrics;
             song.notes = base.notes ?? [];
             song.youtubeVideos = base.youtubeVideos ?? [];
             song.chordOverrides = base.chordOverrides ?? {};

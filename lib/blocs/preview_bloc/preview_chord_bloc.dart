@@ -286,13 +286,18 @@ class PreviewChordBloc extends Bloc<PreviewChordEvent, PreviewChordState> {
       if (event.typeSearching == 4) {
         webSong.server = 'worshipchords.com';
         final savedSong = hiveProvider.getWebSong('worshipchords.com${webSong.ref}');
-        if (savedSong != null) {
+        // Reuse the cache only when it actually holds lyrics; an empty entry
+        // (e.g. a previous transient/blocked request) must be refetched.
+        if (savedSong != null && savedSong.lyric.isNotEmpty) {
           webSong = savedSong;
         } else {
           final data = await webRepository.getSongDataWorshipChords(webSong.ref);
           webSong.lyric = data.lyric;
           webSong.youtube = data.youtube;
-          hiveProvider.setWebSong('worshipchords.com${webSong.ref}', webSong);
+          // Never cache an empty result, otherwise the failure gets stuck.
+          if (webSong.lyric.isNotEmpty) {
+            hiveProvider.setWebSong('worshipchords.com${webSong.ref}', webSong);
+          }
         }
       }
     } catch (e) {
