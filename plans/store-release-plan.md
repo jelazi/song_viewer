@@ -422,3 +422,119 @@ later proves real, it can be added as a paid add-on on top of an architecture th
 | **v1.1** | Sync via the user's own cloud (Drive + iCloud) | Not a release blocker |
 | **v1.2** | LAN sync for bands | This is the actual differentiating feature |
 | — | Self-hosted PocketBase | Stays, hidden in advanced settings |
+
+---
+
+## 10. Splitting into two products: personal build vs store build
+
+Answers "how do I keep developing everything for myself while shipping a restricted, sellable
+version" — and supersedes the either/or framing of Decisions 1 and 3 in §7.
+
+### Do not use two long-lived git branches
+
+The obvious idea — a `personal` branch and a `deploy` branch — is the wrong tool. Every fix and
+every feature would have to be cherry-picked or merged across, conflicts accumulate with every
+week, and after six months there are two projects instead of one. It makes *exactly* the thing the
+requirement asks for ("easily add features to both parts") the hardest thing to do.
+
+**Use one branch and two build flavors with compile-time feature flags.**
+
+### Why compile-time, not a runtime setting
+
+For the store build the forbidden code must be **absent from the artifact**, not merely disabled.
+Anyone can unpack an APK/IPA and read the strings; a reviewer finding `velkyzpevnik.cz` inside a
+paid app is exactly the B1 problem (§2). A runtime `if (settings.enableWebImport)` leaves every URL
+and the API token in the binary. A `const` flag lets the AOT compiler prove the branch is dead and
+strip it.
+
+### Three layers — only all three together give the guarantee
+
+**Layer 1 — composition root. This is where real removal happens.** The project already has the
+right seam: `AppRepositories` in `lib/main.dart:43`. Split the entrypoints:
+
+```
+lib/
+  config/features.dart      # const flags
+  main_personal.dart        # entrypoint: full feature set
+  main_store.dart           # entrypoint: store-safe
+  main.dart                 # shared bootstrap + MyApp (unchanged role)
+```
+
+The store entrypoint never causes `web_provider.dart` to be constructed. The whole subtree
+(provider → repository → bloc) becomes unreachable and is stripped with its URL strings.
+
+**Layer 2 — const flags for the UI**, so tabs and buttons compile out:
+
+```dart
+class Features {
+  static const bool webImport    = bool.fromEnvironment('FEATURE_WEB_IMPORT');
+  static const bool aiEnrichment = bool.fromEnvironment('FEATURE_AI');
+  static const bool sharedServer = bool.fromEnvironment('FEATURE_SHARED_SERVER');
+}
+```
+
+`bool.fromEnvironment` defaults to `false`. That is deliberate and worth keeping: **forgetting to
+pass anything yields the safe store build, not the personal one.** Fail-closed.
+
+**Layer 3 — verify the artifact.** This is what turns "I think it is excluded" into "I verified it
+is excluded", and it is what makes the claim defensible to a reviewer:
+
+```bash
+unzip -p build/app/outputs/bundle/storeRelease/*.aab | strings \
+  | grep -iE "velkyzpevnik|supermusic|proscholy|pisnicky-akordy|worshipleader|worshipchords" \
+  && { echo "FAIL: source sites present in store build"; exit 1; }
+```
+
+Wire it into CI as a build-failing step. Without it, one careless import silently drags the
+scraping back into the paid app.
+
+### Build configuration
+
+Use `--dart-define-from-file` (Flutter 3.7+) rather than long command lines:
+
+`config/personal.json` → all flags `true`; `config/store.json` → all flags `false`.
+
+```bash
+flutter run   --flavor personal -t lib/main_personal.dart --dart-define-from-file=config/personal.json
+flutter build appbundle --flavor store -t lib/main_store.dart --dart-define-from-file=config/store.json
+```
+
+Wrap in a `Makefile` so the daily command is `make store-android`.
+
+### Flavors per platform
+
+**Android** — `productFlavors` with distinct application IDs:
+`com.lzizka.songviewer.personal` and `com.lzizka.songviewer`. Useful side effect: **both builds
+install side by side on one phone**, so the store build can be tested next to the personal one.
+Flavor-specific icons and labels live in `android/app/src/personal/res` and `src/store/res`;
+Gradle merges them automatically.
+
+**iOS** — two schemes plus two `.xcconfig` files with different `PRODUCT_BUNDLE_IDENTIFIER` and
+`PRODUCT_NAME`. Scheme creation is manual work in Xcode, but it is one-off.
+
+### Git strategy
+
+Keep the current model, minus the long-lived branches: `master` = what is released, `develop` =
+integration, short-lived feature branches. Separate the two products by **tags, not branches** —
+`store/v1.0.0` and `personal/v1.2.4`. Both can be released from the same commit, or only one side.
+Override version numbers at build time with `--build-name` / `--build-number` so `pubspec.yaml`
+does not have to carry two.
+
+### What this also resolves
+
+| Flag | Personal | Store |
+|---|---|---|
+| `FEATURE_WEB_IMPORT` | on | **off** — resolves blocker B1 (§2) |
+| `FEATURE_SHARED_SERVER` | the existing PocketBase | local-first; server only if entered manually |
+| `FEATURE_AI` | on | evaluate (keys, cost) |
+
+Decision 1 ("what to do about web import") and Decision 2 ("sync model") stop being either/or and
+become "both, in different flavors" — nothing has to be given up in the personal build.
+
+### Effort
+
+~2–3 days: bootstrap/entrypoint refactor (½ day), Gradle flavors (½ day), iOS schemes (1 day —
+Xcode is slow), scripts and the CI check (½ day). The bulk of the work is untangling the UI: the
+places that reference `WebBloc` (`web_body.dart`, `list_web_song.dart`, `web_page_mobile.dart`,
+`song_card_tablet_web.dart`, `ribbon_menu.dart`, `home_page_tablet.dart`,
+`web_search_history_menu.dart`) must not be mentioned at all by the store build.

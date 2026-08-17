@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:default_project/config/features.dart';
+
 import 'package:default_project/services/constants.dart';
 import 'package:default_project/services/presentation_window_manager.dart';
 import 'package:default_project/view/mobile_view/widgets/dialogs/dialogs_export.dart';
@@ -136,9 +138,11 @@ class RibbonMenu extends StatelessWidget {
         ToolbarSegment(label: 'preview'.tr(), icon: const Icon(Icons.preview), value: 'preview'),
         if (isSuperuser)
           ToolbarSegment(label: 'edit'.tr(), icon: const Icon(Icons.edit), value: 'edit'),
-        ToolbarSegment(label: 'web'.tr(), icon: const Icon(Icons.web), value: 'web'),
+        // Personal flavour only — see plans/store-release-plan.md §10.
+        if (Features.webImport) ToolbarSegment(label: 'web'.tr(), icon: const Icon(Icons.web), value: 'web'),
         ToolbarSegment(label: 'playlist'.tr(), icon: const Icon(Icons.playlist_play), value: 'playlist'),
-        ToolbarSegment(label: 'song_enrichment'.tr(), icon: const Icon(Icons.auto_awesome), value: 'song_enrichment'),
+        if (Features.aiEnrichment)
+          ToolbarSegment(label: 'song_enrichment'.tr(), icon: const Icon(Icons.auto_awesome), value: 'song_enrichment'),
       ],
     );
   }
@@ -189,6 +193,10 @@ class RibbonMenu extends StatelessWidget {
   }
 
   Widget _buildWebActions(BuildContext context) {
+    // Compile-time dead in the store build, so the source-site labels below do
+    // not end up in the artifact — see plans/store-release-plan.md §10.
+    if (!Features.webImport) return const SizedBox.shrink();
+
     final webNames = ['Velký zpěvník', 'Písničky-akordy', 'ProScholy', 'Worship Leader', 'Worship Chords'];
     final webIcons = [Icons.library_music, Icons.music_note, Icons.church, Icons.mic, Icons.queue_music];
     return BlocBuilder<WebBloc, WebState>(

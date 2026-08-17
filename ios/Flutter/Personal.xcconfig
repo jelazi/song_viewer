@@ -1,0 +1,8 @@
+// Personal flavour — full feature set, never submitted to the App Store.
+// See plans/store-release-plan.md §10.
+//
+// Include this from the Debug-personal / Release-personal build configurations
+// (see ios/FLAVORS.md for the one-off Xcode setup).
+
+PRODUCT_BUNDLE_IDENTIFIER = com.lzizka.songviewer.personal
+PRODUCT_NAME = Songs Viewer Dev

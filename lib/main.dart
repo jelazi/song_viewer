@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:bot_toast/bot_toast.dart';
+import 'package:default_project/config/features.dart';
 import 'package:default_project/model/update_playlist_data.dart';
 import 'package:default_project/model/update_songlist_data.dart';
 import 'package:default_project/model/web_item.dart';
@@ -46,7 +47,9 @@ class AppRepositories {
   final PlaylistRepository playlistRepository;
   final UsersRepository usersRepository;
   final SongsRepository songsRepository;
-  final WebRepository webRepository;
+
+  /// Null in the store build — web import is compiled out entirely (§10).
+  final WebRepository? webRepository;
   final HiveProvider hiveProvider;
 
   AppRepositories({
@@ -54,15 +57,20 @@ class AppRepositories {
     required this.playlistRepository,
     required this.usersRepository,
     required this.songsRepository,
-    required this.webRepository,
     required this.hiveProvider,
+    this.webRepository,
   });
 }
 
-void main(List<String> args) async {
+/// Shared application bootstrap.
+///
+/// Not an entrypoint itself — `main_personal.dart` and `main_store.dart` call
+/// this. Which features are compiled in is decided by [Features], whose values
+/// come from `--dart-define-from-file`. See plans/store-release-plan.md §10.
+Future<void> bootstrap(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  debugPrint('Main started with args: $args');
+  debugPrint('Main started with args: $args (flavor: ${Features.flavorName})');
 
   // CORRECT WAY according to documentation: use WindowController.fromCurrentEngine()
   if (args.isNotEmpty && args.first == 'multi_window') {
@@ -780,10 +788,15 @@ class _MyAppState extends State<MyApp> with WindowListener {
               return bloc;
             },
           ),
-          BlocProvider(
-            create: ((context) => WebBloc(
-                webRepository: widget.repositories.webRepository, settingsRepository: widget.repositories.settingsRepository, hiveProvider: widget.repositories.hiveProvider)),
-          ),
+          // Personal flavour only — the store build must not reference WebBloc
+          // at all, so the scraping subtree stays out of the artifact (§10).
+          if (Features.webImport)
+            BlocProvider(
+              create: ((context) => WebBloc(
+                  webRepository: widget.repositories.webRepository!,
+                  settingsRepository: widget.repositories.settingsRepository,
+                  hiveProvider: widget.repositories.hiveProvider)),
+            ),
           BlocProvider(
             create: ((context) => UsersBloc(usersRepository: widget.repositories.usersRepository)),
           ),
@@ -802,12 +815,13 @@ class _MyAppState extends State<MyApp> with WindowListener {
               songsRepository: widget.repositories.songsRepository,
             ),
           ),
-          BlocProvider(
-            create: (context) => SongEnrichmentBloc(
-              aiSearchService: AiSearchService(),
-              settingsRepository: widget.repositories.settingsRepository,
+          if (Features.aiEnrichment)
+            BlocProvider(
+              create: (context) => SongEnrichmentBloc(
+                aiSearchService: AiSearchService(),
+                settingsRepository: widget.repositories.settingsRepository,
+              ),
             ),
-          ),
         ],
         child: MaterialApp(
           title: 'Songs viewer',

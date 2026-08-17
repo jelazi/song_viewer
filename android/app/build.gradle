@@ -22,6 +22,19 @@ if (flutterVersionName == null) {
     flutterVersionName = '1.0'
 }
 
+// Release signing credentials. Never committed — see android/.gitignore.
+// Without this file the release build falls back to the debug key, which Play
+// rejects; see plans/store-release-plan.md §2 (blocker B3).
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+def hasReleaseKeystore = false
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.withReader('UTF-8') { reader ->
+        keystoreProperties.load(reader)
+    }
+    hasReleaseKeystore = file(keystoreProperties['storeFile']).exists()
+}
+
 android {
     namespace "com.lzizka.songsviewer.songs_viewer_bloc"
     compileSdk flutter.compileSdkVersion
@@ -41,21 +54,56 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId "com.lzizka.songsviewer.songs_viewer_bloc"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
         minSdkVersion flutter.minSdkVersion
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
 
+    // Two products from one codebase — see plans/store-release-plan.md §10.
+    // Different application IDs mean both can be installed side by side on the
+    // same device, so the store build can be tested next to the personal one.
+    flavorDimensions "product"
+
+    productFlavors {
+        personal {
+            dimension "product"
+            // Deliberately kept at the original application ID so existing
+            // installations (and their local Hive data) survive this split.
+            applicationId "com.lzizka.songsviewer.songs_viewer_bloc"
+            manifestPlaceholders = [appName: "Songs Viewer Dev"]
+        }
+        store {
+            dimension "product"
+            // Clean, permanent ID for the published app. This cannot be changed
+            // after the first release — see §2 (blocker B4).
+            applicationId "com.lzizka.songviewer"
+            manifestPlaceholders = [appName: "Songs Viewer"]
+        }
+    }
+
+    signingConfigs {
+        if (hasReleaseKeystore) {
+            release {
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig signingConfigs.debug
+            if (hasReleaseKeystore) {
+                signingConfig signingConfigs.release
+            } else {
+                // Keeps `flutter run --release` working locally. A build signed
+                // this way must never be uploaded to Play.
+                logger.warn("WARNING: android/key.properties or the keystore is missing — " +
+                            "signing the release build with DEBUG keys. Do not upload this artifact.")
+                signingConfig signingConfigs.debug
+            }
         }
     }
 }

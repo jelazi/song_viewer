@@ -1,4 +1,5 @@
 import 'package:default_project/blocs/export_blocs.dart';
+import 'package:default_project/config/features.dart';
 import 'package:default_project/services/constants.dart';
 import 'package:default_project/services/enums.dart';
 import 'package:default_project/view/desktop_view/widgets/my_dropdown_field.dart';
@@ -116,19 +117,21 @@ class _HomeDrawerState extends State<HomeDrawer> {
                 Navigator.pushNamed(context, '/playlistsPageMobile');
               },
             ),
-            ListTile(
-              title: Row(children: [
-                const Icon(Icons.web),
-                const SizedBox(
-                  width: 10,
-                ),
-                Text('web'.tr()),
-              ]),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/webPageMobile');
-              },
-            ),
+            // Personal flavour only — see plans/store-release-plan.md §10.
+            if (Features.webImport)
+              ListTile(
+                title: Row(children: [
+                  const Icon(Icons.web),
+                  const SizedBox(
+                    width: 10,
+                  ),
+                  Text('web'.tr()),
+                ]),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, '/webPageMobile');
+                },
+              ),
             ListTile(
               title: Row(children: [
                 const Icon(Icons.qr_code),

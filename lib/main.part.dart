@@ -30,14 +30,20 @@ Future<({AppRepositories repositories, SyncInfo syncInfo})> initProvidersAndChec
     Hive.init(directory.path);
   }
 
-  // Initialize PocketBase provider
+  // Initialize PocketBase provider.
+  //
+  // In a local-first build the app must be fully usable with no server and no
+  // configuration, so startup never waits on the network — see
+  // plans/store-release-plan.md §3.5 and §10.
   PocketBaseProvider pocketBaseProvider = PocketBaseProvider();
-  await pocketBaseProvider.loadConfig();
-  final isAuthenticated = await pocketBaseProvider.authenticate();
+  bool isAuthenticated = false;
+  if (Features.sharedServer) {
+    await pocketBaseProvider.loadConfig();
+    isAuthenticated = await pocketBaseProvider.authenticate();
+  }
 
   HiveProvider hiveProvider = HiveProvider();
   await hiveProvider.initHiveBox();
-  WebProvider webProvider = WebProvider();
 
   SettingsRepository settingsRepository = SettingsRepository(
     hiveProvider: hiveProvider,
@@ -63,9 +69,17 @@ Future<({AppRepositories repositories, SyncInfo syncInfo})> initProvidersAndChec
     settingsRepository: settingsRepository,
   );
 
-  WebRepository webRepository = WebRepository(
-    webProvider: webProvider,
-  );
+  // Web import is built only in the personal flavour. The store build must not
+  // merely disable it — the provider, the repository and their source URLs must
+  // be absent from the artifact (blocker B1, §2). Because `Features.webImport`
+  // is a compile-time constant, this whole branch is provably dead in the store
+  // build and the AOT compiler strips the subtree with it.
+  WebRepository? webRepository;
+  if (Features.webImport) {
+    webRepository = WebRepository(
+      webProvider: WebProvider(),
+    );
+  }
 
   // Check server data counts
   int songCount = 0;

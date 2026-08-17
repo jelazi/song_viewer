@@ -1,3 +1,4 @@
+import 'package:default_project/config/features.dart';
 import 'package:default_project/view/desktop_view/pages/desktop_home_page/desktop_home_page.dart';
 import 'package:default_project/view/desktop_view/pages/presentation_page_desktop.dart';
 import 'package:default_project/view/mobile_view/pages/web_page_mobile.dart';
@@ -104,7 +105,11 @@ class AppRouter {
       case '/playlistsPageMobile':
         return MaterialPageRoute(builder: (_) => const PageResponsive(pageMobile: PlaylistsPageMobile(), pageTablet: PlaylistsPageMobile(), pageDesktop: PlaylistsPageMobile()));
 
+      // Personal flavour only. In the store build this route is compile-time
+      // dead, so WebPageMobile is never constructed and the whole web import
+      // page is stripped — see plans/store-release-plan.md §10.
       case '/webPageMobile':
+        if (!Features.webImport) return MaterialPageRoute(builder: (_) => Container());
         return MaterialPageRoute(builder: (_) => const PageResponsive(pageMobile: WebPageMobile(), pageTablet: WebPageMobile(), pageDesktop: WebPageMobile()));
 
       case '/editPlaylistPage':

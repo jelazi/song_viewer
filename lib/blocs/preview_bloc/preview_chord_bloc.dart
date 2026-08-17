@@ -1,3 +1,4 @@
+import 'package:default_project/config/features.dart';
 import 'package:default_project/model/web_song.dart';
 import 'package:default_project/model/youtube_video.dart';
 import 'package:equatable/equatable.dart';
@@ -17,15 +18,19 @@ part 'preview_chord_state.dart';
 class PreviewChordBloc extends Bloc<PreviewChordEvent, PreviewChordState> {
   final SettingsRepository settingsRepository;
   final SongsRepository songsRepository;
-  final WebRepository webRepository;
+
+  /// Null in the store build — web import is compiled out (see
+  /// plans/store-release-plan.md §10). Only ever touched behind
+  /// `Features.webImport`.
+  final WebRepository? webRepository;
   final HiveProvider hiveProvider;
   final double menuHeight = 140;
 
   PreviewChordBloc({
     required this.settingsRepository,
     required this.songsRepository,
-    required this.webRepository,
     required this.hiveProvider,
+    this.webRepository,
   }) : super(PreviewChordInitial(
           data: CurrentData(song: null),
           textStyle: const TextStyle(),
@@ -228,6 +233,10 @@ class PreviewChordBloc extends Bloc<PreviewChordEvent, PreviewChordState> {
   }
 
   void _changeLyricFromWebSongUpdate(ChangeLyricFromWebSongUpdate event, Emitter<PreviewChordState> emit) async {
+    // Web import is compiled out of the store build (§10). `Features.webImport`
+    // is a compile-time constant, so everything below is provably dead there.
+    if (!Features.webImport) return;
+
     final state = this.state;
     WebSong webSong = event.webSong;
 
@@ -238,7 +247,7 @@ class PreviewChordBloc extends Bloc<PreviewChordEvent, PreviewChordState> {
         if (savedSong != null) {
           webSong = savedSong;
         } else {
-          webSong.lyric = await webRepository.getTextSongVelkyZpevnik(webSong);
+          webSong.lyric = await webRepository!.getTextSongVelkyZpevnik(webSong);
           hiveProvider.setWebSong('velkyzpevnik.cz${webSong.ref}', webSong);
         }
       }
@@ -248,12 +257,12 @@ class PreviewChordBloc extends Bloc<PreviewChordEvent, PreviewChordState> {
         if (savedSong != null) {
           webSong = savedSong;
         } else {
-          webSong.lyric = await webRepository.getTextSongPisnickyAkordy(webSong.ref);
+          webSong.lyric = await webRepository!.getTextSongPisnickyAkordy(webSong.ref);
           // Fallback: if first attempt returned empty, try just the slug (for songs without interpret prefix)
           if (webSong.lyric.isEmpty && webSong.ref.contains('/')) {
             final fallbackRef = webSong.ref.split('/').last;
             debugPrint('[PA_FALLBACK] trying slug=$fallbackRef');
-            webSong.lyric = await webRepository.getTextSongPisnickyAkordy(fallbackRef);
+            webSong.lyric = await webRepository!.getTextSongPisnickyAkordy(fallbackRef);
             if (webSong.lyric.isEmpty) {
               debugPrint('[PA_FALLBACK] slug also failed');
             } else {
@@ -269,7 +278,7 @@ class PreviewChordBloc extends Bloc<PreviewChordEvent, PreviewChordState> {
         if (savedSong != null) {
           webSong = savedSong;
         } else {
-          webSong.lyric = await webRepository.getTextSongProScholy(webSong.ref);
+          webSong.lyric = await webRepository!.getTextSongProScholy(webSong.ref);
           hiveProvider.setWebSong('zpevnik.proscholy.cz${webSong.ref}', webSong);
         }
       }
@@ -279,7 +288,7 @@ class PreviewChordBloc extends Bloc<PreviewChordEvent, PreviewChordState> {
         if (savedSong != null) {
           webSong = savedSong;
         } else {
-          webSong.lyric = await webRepository.getTextSongWorshipLeader(webSong.ref);
+          webSong.lyric = await webRepository!.getTextSongWorshipLeader(webSong.ref);
           hiveProvider.setWebSong('songs.worshipleaderapp.com${webSong.ref}', webSong);
         }
       }
@@ -291,7 +300,7 @@ class PreviewChordBloc extends Bloc<PreviewChordEvent, PreviewChordState> {
         if (savedSong != null && savedSong.lyric.isNotEmpty) {
           webSong = savedSong;
         } else {
-          final data = await webRepository.getSongDataWorshipChords(webSong.ref);
+          final data = await webRepository!.getSongDataWorshipChords(webSong.ref);
           webSong.lyric = data.lyric;
           webSong.youtube = data.youtube;
           // Never cache an empty result, otherwise the failure gets stuck.

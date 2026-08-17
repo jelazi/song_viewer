@@ -441,3 +441,119 @@ architekturu, která už funguje.
 | **v1.1** | Synchronizace přes vlastní cloud uživatele (Drive + iCloud) | Neblokuje vydání |
 | **v1.2** | LAN sync pro kapelu | Tohle je skutečná odlišující funkce |
 | — | Vlastní PocketBase | Zůstává, skryté v pokročilém nastavení |
+
+---
+
+## 10. Rozdělení na dva produkty: osobní build vs. store build
+
+Odpovídá na otázku „jak si můžu dál vyvíjet všechno pro sebe a zároveň vydávat omezenou,
+prodejnou verzi" — a nahrazuje rámování „buď–anebo" u rozhodnutí 1 a 3 v §7.
+
+### Nepoužívat dvě dlouhoběžící gitové větve
+
+Nasnadě je nápad mít větev `personal` a větev `deploy` — je to špatný nástroj. Každá oprava
+a každá funkce by se musela cherry-pickovat nebo mergovat přes obě, s každým týdnem přibývá
+konfliktů a po půl roce máš dva projekty místo jednoho. Dělá to *přesně* z toho, co je zadáním
+(„jednoduše přidávat funkce do obou částí"), tu nejtěžší věc.
+
+**Použij jednu větev a dva build flavory s příznaky vyhodnocenými při kompilaci.**
+
+### Proč při kompilaci, ne přepínačem za běhu
+
+Ve store buildu musí zakázaný kód **v artefaktu chybět**, ne být jen vypnutý. Kdokoli si rozbalí
+APK/IPA a přečte řetězce; recenzent, který v placené aplikaci najde `velkyzpevnik.cz`, je přesně
+problém B1 (§2). Runtime `if (settings.enableWebImport)` nechá v binárce všechny URL i API token.
+`const` příznak umožní AOT kompilátoru dokázat, že je větev mrtvá, a odstranit ji.
+
+### Tři vrstvy — jistotu dávají jen všechny tři dohromady
+
+**Vrstva 1 — kompoziční kořen. Tady vzniká skutečné odstranění.** Projekt už má správný šev:
+`AppRepositories` v `lib/main.dart:43`. Rozděl vstupní body:
+
+```
+lib/
+  config/features.dart      # const příznaky
+  main_personal.dart        # vstupní bod: plná sada funkcí
+  main_store.dart           # vstupní bod: bezpečné pro obchody
+  main.dart                 # sdílený bootstrap + MyApp (role beze změny)
+```
+
+Store vstupní bod nikdy nezpůsobí vytvoření `web_provider.dart`. Celý podstrom
+(provider → repository → bloc) se stane nedosažitelným a odstraní se i s řetězci URL.
+
+**Vrstva 2 — const příznaky pro UI**, aby se záložky a tlačítka vůbec nepřeložily:
+
+```dart
+class Features {
+  static const bool webImport    = bool.fromEnvironment('FEATURE_WEB_IMPORT');
+  static const bool aiEnrichment = bool.fromEnvironment('FEATURE_AI');
+  static const bool sharedServer = bool.fromEnvironment('FEATURE_SHARED_SERVER');
+}
+```
+
+`bool.fromEnvironment` má výchozí hodnotu `false`. Je to záměr, který stojí za udržení: **když
+zapomeneš cokoli předat, dostaneš bezpečný store build, ne ten osobní.** Fail-closed.
+
+**Vrstva 3 — ověřit artefakt.** Tohle dělá rozdíl mezi „myslím, že to tam není" a „ověřil jsem,
+že to tam není", a je to obhajitelné i před recenzentem:
+
+```bash
+unzip -p build/app/outputs/bundle/storeRelease/*.aab | strings \
+  | grep -iE "velkyzpevnik|supermusic|proscholy|pisnicky-akordy|worshipleader|worshipchords" \
+  && { echo "FAIL: zdrojové weby jsou ve store buildu"; exit 1; }
+```
+
+Zapojit do CI jako krok, který build shodí. Bez toho ti první nepozorná změna importu tiše protáhne
+scraping zpět do placené aplikace.
+
+### Konfigurace buildu
+
+Použij `--dart-define-from-file` (Flutter 3.7+) místo dlouhých příkazových řádků:
+
+`config/personal.json` → všechny příznaky `true`; `config/store.json` → všechny `false`.
+
+```bash
+flutter run   --flavor personal -t lib/main_personal.dart --dart-define-from-file=config/personal.json
+flutter build appbundle --flavor store -t lib/main_store.dart --dart-define-from-file=config/store.json
+```
+
+Zabalit do `Makefile`, ať je denní příkaz `make store-android`.
+
+### Flavory na platformách
+
+**Android** — `productFlavors` s odlišnými application ID:
+`com.lzizka.songviewer.personal` a `com.lzizka.songviewer`. Užitečný vedlejší efekt: **oba buildy
+jdou nainstalovat na jeden telefon vedle sebe**, takže se store verze dá testovat vedle osobní.
+Ikony a názvy specifické pro flavor patří do `android/app/src/personal/res` a `src/store/res`;
+Gradle je slévá automaticky.
+
+**iOS** — dvě schémata plus dva `.xcconfig` soubory s odlišným `PRODUCT_BUNDLE_IDENTIFIER`
+a `PRODUCT_NAME`. Vytvoření schémat je ruční práce v Xcode, ale jednorázová.
+
+### Strategie v gitu
+
+Zůstat u současného modelu, jen bez dlouhoběžících větví: `master` = to, co je vydané,
+`develop` = integrace, krátké feature větve. Dva produkty odděl **tagy, ne větvemi** —
+`store/v1.0.0` a `personal/v1.2.4`. Z jednoho commitu se dá vydat obojí, nebo jen jedna strana.
+Čísla verzí přebij při buildu přes `--build-name` / `--build-number`, ať `pubspec.yaml` nemusí
+držet dvě.
+
+### Co se tím zároveň vyřeší
+
+| Příznak | Personal | Store |
+|---|---|---|
+| `FEATURE_WEB_IMPORT` | zapnuto | **vypnuto** — řeší blokátor B1 (§2) |
+| `FEATURE_SHARED_SERVER` | stávající PocketBase | lokálně first; server jen při ručním zadání |
+| `FEATURE_AI` | zapnuto | zvážit (klíče, náklady) |
+
+Rozhodnutí 1 („co s web importem") a rozhodnutí 2 („model synchronizace") přestávají být
+„buď–anebo" a stávají se z nich „obojí, jen v jiném flavoru" — v osobním buildu si nemusíš nic
+odepírat.
+
+### Náročnost
+
+~2–3 dny: refaktor bootstrapu a vstupních bodů (½ dne), Gradle flavory (½ dne), iOS schémata
+(1 den — Xcode je pomalý), skripty a kontrola v CI (½ dne). Nejvíc práce je rozplést UI: místa,
+která odkazují na `WebBloc` (`web_body.dart`, `list_web_song.dart`, `web_page_mobile.dart`,
+`song_card_tablet_web.dart`, `ribbon_menu.dart`, `home_page_tablet.dart`,
+`web_search_history_menu.dart`), nesmí store build vůbec zmínit.

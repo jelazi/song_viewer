@@ -1,0 +1,9 @@
+// Store flavour — the version published on the App Store.
+// See plans/store-release-plan.md §10.
+//
+// This bundle identifier is permanent once the app is first published.
+// Include this from the Debug-store / Release-store build configurations
+// (see ios/FLAVORS.md for the one-off Xcode setup).
+
+PRODUCT_BUNDLE_IDENTIFIER = com.lzizka.songviewer
+PRODUCT_NAME = Songs Viewer

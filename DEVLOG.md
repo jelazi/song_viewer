@@ -1,5 +1,48 @@
 # Development Log
 
+## 2026-08-17 (part 11) - feat(build): split into personal and store flavours
+
+### What was done
+Implemented the two-product split described in the new §10 of `plans/store-release-plan.md` (added to both language versions in this session). One branch, one codebase, two build flavours driven by compile-time flags — deliberately *not* two long-lived git branches, which would make cross-porting features the hardest part of the workflow.
+
+**Feature flags** — `lib/config/features.dart`: `webImport`, `aiEnrichment`, `sharedServer`, all `bool.fromEnvironment` constants. The `false` default is load-bearing: forgetting to pass a config yields the safe store build, not the personal one. Values come from `config/personal.json` / `config/store.json` via `--dart-define-from-file`.
+
+**Entrypoints** — `lib/main_personal.dart` and `lib/main_store.dart`, both thin wrappers over `bootstrap()` (the former `main()` in `lib/main.dart`).
+
+**Composition root** — `AppRepositories.webRepository` and `PreviewChordBloc.webRepository` are now nullable and only constructed under `if (Features.webImport)` in `main.part.dart`. PocketBase auto-authentication at startup is now behind `Features.sharedServer`, so the store build never blocks boot on the network.
+
+**UI gating** — `WebBloc` and `SongEnrichmentBloc` providers, the mobile drawer entry, the desktop ribbon segment, the tablet dropdown item, the `/webPageMobile` route, and the `getWebBody` / `buildWebsiteChip` / `_buildWebActions` builders are all behind compile-time guards.
+
+**Android flavours** — `productFlavors` in `android/app/build.gradle`. `personal` deliberately keeps the *existing* application ID `com.lzizka.songsviewer.songs_viewer_bloc` so current installs and their local Hive data survive the split; `store` gets the clean, permanent `com.lzizka.songviewer`. Per-flavour app names via `manifestPlaceholders`.
+
+**Release signing (blocker B3)** — wired `signingConfigs.release` from `android/key.properties`; the keystore at `android/app/src/upload-keystore.jks` was verified to exist. Falls back to debug keys with a loud warning if either is missing.
+
+**Also fixed while in the manifest** — added the `<intent>` VIEW/https `<queries>` entry that `url_launcher` needs on Android 11+ (§3.2).
+
+**iOS** — `ios/Flutter/Personal.xcconfig` and `Store.xcconfig` written; schemes and build configurations must be created manually in Xcode, documented step by step in `ios/FLAVORS.md`. Editing `project.pbxproj` programmatically was avoided deliberately.
+
+**Tooling** — `Makefile` (`make store-android`, `make personal-run`, …) and `tool/verify_store_build.sh`.
+
+### What was fixed
+The verification script initially reported a **false pass**. Its `grep | sort` pipeline aborted with `sort: Illegal byte sequence` on binary input, and an aborted scan looked identical to a clean one. Fixed by forcing `LC_ALL=C`, extracting strings once to a temp file, and adding a **positive control** — if the scan cannot even find the string `flutter` in the artifact, it reports "unverified" instead of "clean". The corrected scan immediately found matches the broken one had missed.
+
+The script now separates two severities: BLOCKING (real host names and the API token — capability) versus RESIDUE (bare identifiers and UI labels — no capability, reported as a warning). Without that split the gate would fail on cosmetic findings and get ignored.
+
+### Current state
+- `flutter analyze lib`: **0 errors, 0 warnings** (182 infos, all pre-existing style lints).
+- `flutter build appbundle --release --flavor store` **succeeds** — 61.1 MB AAB, built and re-built several times.
+- **Verified on the built artifact**: no `velkyzpevnik.cz`, `supermusic.cz`, `pisnicky-akordy.cz`, `zpevnik.proscholy.cz`, `songs.worshipleaderapp.com`, `worshipchords.com` and no pisnicky-akordy API token. The scraping capability is genuinely absent from the store build, which was the point of blocker B1.
+- **Known residue**: 8 bare identifier fragments remain (`ProScholy` ×6, `superMusic`, `velkyZpevnik`). They come from `WebRepository`/`WebAddress` still being reachable through `PreviewChordBloc`'s field type, and survive in DWARF debug info. They expose no capability. Adding `--obfuscate --split-debug-info` to the store targets did **not** remove them (the ELF keeps unobfuscated DWARF; Flutter warns about this and suggests `--strip`).
+- `flutter test test/unit_tests`: 309 pass, 10 fail. The **same 10 fail on a clean stash of these changes** — verified by stashing — so they are pre-existing, in `settings_repository_test.dart` and `songs_repository_test.dart`, neither of which was touched here.
+- `android/gradle.properties` gained `android.builtInKotlin=false` / `android.newDsl=false`, written automatically by the Flutter migrator during the first flavour build — not a hand edit.
+
+### Pending / next steps
+- **The obfuscated store build has not been runtime-tested.** Smoke-test it on a device before uploading; obfuscation is standard release practice but nothing here has exercised it at runtime.
+- **The store build has not been run on a device at all** — only compiled and scanned. Verify offline first-launch behaviour with `Features.sharedServer` off.
+- To remove the last identifier residue, `PreviewChordBloc` must stop importing `web_repository.dart`: extract a single-method interface (`fetchLyrics(song, sourceIndex)`) into a neutral file, move the per-site dispatch into `WebRepository`, and wire the implementation only in the personal build. Not done — it carries no capability, so it was left as a documented follow-up rather than expanding this change further.
+- iOS schemes still need the manual Xcode pass in `ios/FLAVORS.md`.
+- Unchanged from part 10: rotate the PocketBase password and the three API keys, and delete the token at `web_provider.dart:15` (still present — the personal flavour still uses it).
+
 ## 2026-08-17 (part 10) - docs: Czech translation of the release plan, sync architecture section, B2 refresh
 
 ### What was done

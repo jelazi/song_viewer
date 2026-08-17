@@ -1,3 +1,4 @@
+import 'package:default_project/config/features.dart';
 import 'package:default_project/model/web_interpret.dart';
 import 'package:default_project/repositories/settings_repository.dart';
 import 'package:default_project/view/mobile_view/widgets/dialogs/edit_dialog.dart';
@@ -332,6 +333,9 @@ class _HomePageTabletState extends State<HomePageTablet> {
   }
 
   Widget getWebBody(HomePageState state) {
+    // Compile-time dead in the store build (§10).
+    if (!Features.webImport) return const SizedBox.shrink();
+
     return BlocBuilder<WebBloc, WebState>(
       builder: (context, wState) {
         return Column(
@@ -472,6 +476,9 @@ class _HomePageTabletState extends State<HomePageTablet> {
   }
 
   Widget buildWebsiteChip(int index, bool isSelected, WebState wState) {
+    // Compile-time dead in the store build (§10).
+    if (!Features.webImport) return const SizedBox.shrink();
+
     final names = ['Velký zpěvník', 'Písničky-akordy', 'ProScholy', 'Worship Leader', 'Worship Chords'];
     final icons = [Icons.library_music, Icons.music_note, Icons.church, Icons.mic, Icons.queue_music];
     return GestureDetector(
@@ -826,19 +833,21 @@ class _HomePageTabletState extends State<HomePageTablet> {
                   ),
                 ),
               ),
-              DropdownMenuItem(
-                value: 'web',
-                child: SizedBox(
-                  width: 200,
-                  child: Row(
-                    children: [
-                      const Icon(Icons.web, color: AppColor.grey1Color),
-                      const SizedBox(width: 8),
-                      Text('web'.tr()),
-                    ],
+              // Personal flavour only — see plans/store-release-plan.md §10.
+              if (Features.webImport)
+                DropdownMenuItem(
+                  value: 'web',
+                  child: SizedBox(
+                    width: 200,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.web, color: AppColor.grey1Color),
+                        const SizedBox(width: 8),
+                        Text('web'.tr()),
+                      ],
+                    ),
                   ),
                 ),
-              ),
               DropdownMenuItem(
                 value: 'playlists',
                 child: SizedBox(
