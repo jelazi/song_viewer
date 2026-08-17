@@ -1,0 +1,6 @@
+// Personal flavour — full feature set, never submitted to the App Store.
+// See plans/store-release-plan.md §10 and macos/FLAVORS.md.
+
+PRODUCT_NAME = Songs Viewer Dev
+PRODUCT_BUNDLE_IDENTIFIER = com.lzizka.songsviewer.macos
+PRODUCT_COPYRIGHT = Copyright © 2026 Lukáš Žižka. All rights reserved.

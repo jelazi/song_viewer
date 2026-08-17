@@ -212,8 +212,16 @@ class WebRepository {
     List<WebInterpret> interprets = [];
 
     if (allInterpretersPisnickyAkordy.isEmpty) {
-      final response = await webProvider.searchInterpretByFirstLetterPisnickyAkordy(searchText);
-      allInterpretersPisnickyAkordy = parseSearchByFirstLetterFromPisnickyAkordy(response.data, searchText);
+      // A third-party site being unreachable, slow or refusing the request
+      // (403/429/Cloudflare) must never take the app down — this runs during
+      // WebBloc init, so an uncaught error here breaks startup.
+      try {
+        final response = await webProvider.searchInterpretByFirstLetterPisnickyAkordy(searchText);
+        allInterpretersPisnickyAkordy = parseSearchByFirstLetterFromPisnickyAkordy(response.data, searchText);
+      } catch (e) {
+        logger.w('pisnicky-akordy.cz interpret lookup failed: $e');
+        return interprets;
+      }
     }
     if (allInterpretersPisnickyAkordy.isNotEmpty) {
       final searchTextToLover = removeDiacriticsAndWhitespace(searchText.toLowerCase());

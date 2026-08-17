@@ -1,5 +1,72 @@
 # Development Log
 
+## 2026-08-17 (part 13) - fix(web): unreachable source site no longer crashes startup
+
+### What was fixed
+Running the personal build threw an unhandled `DioException` during startup:
+
+```
+DioException [bad response]: status code of 403
+#1  WebRepository.findInterpretPisnickyAkordy (web_repository.dart:215)
+#2  WebBloc._init (web_bloc.dart:67)
+```
+
+**Not a regression from the flavour work.** `git diff --stat` confirms `web_bloc.dart`, `web_repository.dart` and `web_provider.dart` were untouched in parts 11–12; the code path is unchanged and the 403 comes from the remote server.
+
+**The failing request carries no token.** `WebBloc._init` calls `findInterpretPisnickyAkordy('a')` as a warm-up, which does a plain `GET https://pisnicky-akordy.cz/#a` (`web_provider.dart:187-189`). The hardcoded bearer token is only used by `searchPisnickyAkordy` (the MeiliSearch endpoint), which is not on this path — so this is not an expired or revoked key, it is the site refusing the request outright (bot protection / Cloudflare is the usual cause of a bare 403 on a page fetch).
+
+The actual defect is the lack of resilience: a third-party site being unreachable, slow or refusing must not take the app down. Fixed in two places, following the try/catch-and-return-empty style already used elsewhere in `WebRepository` (e.g. `findSongsPisnickyAkordy`):
+
+- `web_repository.dart` — `findInterpretPisnickyAkordy` wraps the fetch, logs a warning via `logger.w` and returns an empty list.
+- `web_bloc.dart` — `_init` wraps the warm-up call so the bloc still emits a usable state (history, search history, `isSearching: false`) instead of the exception escaping the event handler. Uses `debugPrint` because that file does not import `logger_pkg`.
+
+### Deliberately not done
+No attempt was made to get around the 403. A bare 403 on a page fetch is the site operator actively refusing the request, and defeating that (spoofing the user agent, rotating addresses) is not something to build in — it is the same site whose API token is already hardcoded at `web_provider.dart:15`. This is a concrete instance of blocker B1 (`plans/store-release-plan.md` §2): the personal build depends on sites that can refuse access at any time.
+
+### Current state
+- `flutter analyze lib`: **0 errors, 0 warnings** (181 infos, back to the part-11 baseline).
+- The store build is unaffected either way — `WebBloc` is not constructed there at all.
+- **The fix has not been run.** It is a compile-verified change only; the personal build was not launched to confirm startup now survives the 403.
+
+### Pending / next steps
+- Launch the personal build to confirm startup completes and the web tab degrades gracefully rather than crashing.
+- Consider whether the `_init` warm-up fetch is worth keeping at all — it hits a third-party site on every startup for a cache that may not be used.
+- Everything still pending from part 12 (web target unbuildable, macOS/Windows/Linux flavour builds unproven, Xcode scheme setup).
+
+## 2026-08-17 (part 12) - feat(build): flavours across all platforms, VS Code launch configs, build script
+
+### What was done
+Extended the part 11 flavour split to every platform, following the conventions already used in a larger Flutter project at work (separate `main_<flavor>.dart` entrypoints, a root `build.sh` dispatcher with a numbered menu, `launch.json` entries per flavour × platform × mode).
+
+**Verified empirically, not from memory** — `flutter build <platform> --help` on Flutter 3.44:
+
+| Platform | `--flavor` |
+|---|---|
+| Android (apk/appbundle), iOS, macOS | supported |
+| Windows, Linux, web | **not supported — no flavor concept at all** |
+
+That distinction drives the whole design. On Windows/Linux/web the entrypoint plus `--dart-define-from-file` does the separation (which is what strips the code anyway), and because both flavours would otherwise overwrite each other in the same output directory, `build.sh` copies each result into `dist/<flavor>/<platform>/`.
+
+- **`build.sh`** — root dispatcher matching the same style: `./build.sh [platform] [flavor] [mode]`, interactive menu when arguments are missing. Handles all seven targets plus `all`. Refuses politely and explains when the host cannot build a target (Windows needs a Windows host, Linux a Linux host, macOS/iOS need macOS). Adds `--obfuscate --split-debug-info` for store release builds, and runs `tool/verify_store_build.sh` on every store artifact.
+- **`.vscode/launch.json`** — 24 configurations, personal and store × macOS / Windows / Linux / iOS / Android / Chrome × debug / release. `--flavor` is passed only for Android; on macOS/iOS it is deliberately left out until the Xcode schemes exist, so every configuration works as-is today.
+- **`macos/Runner/Configs/Personal.xcconfig` / `Store.xcconfig`** and **`macos/FLAVORS.md`** — including the trap that `PRODUCT_BUNDLE_IDENTIFIER` is currently hardcoded in `project.pbxproj` and overrides any xcconfig value, so it must be cleared per configuration or the xcconfigs appear to be ignored.
+- **`Makefile`** — reduced to thin aliases over `build.sh`, so there is one source of truth rather than two competing build systems.
+
+### What was fixed
+`build.sh` initially used `${mode^}` to capitalise the Windows output directory. That is a bash 4+ construct and macOS ships bash 3.2, so the script would have failed on the user's own machine. Replaced with an explicit `case`.
+
+### Current state
+- `bash -n build.sh`: syntax OK. `launch.json`: valid, 24 configurations (parsed and counted).
+- `./build.sh web store release` **fails**, but for a pre-existing reason unrelated to flavours: `lib/main.dart:19` imports `lib/services/win32_fullscreen.dart`, which uses `dart:ffi` — unavailable on web. Confirmed pre-existing by checking `git show HEAD:lib/main.dart` (the import is there) and that neither file was modified in this work. **The web target is therefore currently unbuildable for either flavour.**
+- Android store AAB build and artifact verification remain green from part 11.
+- macOS/Windows/Linux flavour builds have **not** been executed in this session.
+
+### Pending / next steps
+- Fix the web build by making `win32_fullscreen.dart` conditionally imported (it is Windows-only), or web stays unbuildable.
+- Run the macOS, Windows and Linux flavour builds at least once each; only Android has actually been proven end to end.
+- iOS and macOS Xcode scheme setup still manual (`ios/FLAVORS.md`, `macos/FLAVORS.md`).
+- Open question raised by the user and not yet acted on: whether to extract web import into a separate package so the store build cannot reference it at all. Analysis and recommendation given in chat — a local package adds an enforceable boundary cheaply, but true dependency-graph exclusion would need two app packages and duplicated native config for six platforms.
+
 ## 2026-08-17 (part 11) - feat(build): split into personal and store flavours
 
 ### What was done

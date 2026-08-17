@@ -1,0 +1,7 @@
+// Store flavour — the version published on the Mac App Store.
+// This bundle identifier is permanent once the app is first published.
+// See plans/store-release-plan.md §10 and macos/FLAVORS.md.
+
+PRODUCT_NAME = Songs Viewer
+PRODUCT_BUNDLE_IDENTIFIER = com.lzizka.songviewer
+PRODUCT_COPYRIGHT = Copyright © 2026 Lukáš Žižka. All rights reserved.

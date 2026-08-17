@@ -64,7 +64,13 @@ class WebBloc extends Bloc<WebEvent, WebState> {
       ),
     ));
     emit(state.copyWith(isSearching: true));
-    await webRepository.findInterpretPisnickyAkordy('a');
+    // Warm-up fetch only. It is a nice-to-have, so failure must leave the bloc
+    // in a usable state rather than propagate out of the event handler.
+    try {
+      await webRepository.findInterpretPisnickyAkordy('a');
+    } catch (e) {
+      debugPrint('WebBloc init warm-up failed, continuing without it: $e');
+    }
     final historyInterprets = hiveProvider.getInterpretsFromWebBox('pisnicky-akordy.cz');
 
     emit(state.copyWith(
