@@ -510,12 +510,24 @@ scraping zpět do placené aplikace.
 
 Použij `--dart-define-from-file` (Flutter 3.7+) místo dlouhých příkazových řádků:
 
-`config/personal.json` → všechny příznaky `true`; `config/store.json` → všechny `false`.
+Tři konfigurace, protože omezení se řídí tím, **jak se build distribuuje**, ne
+tím, jak se flavor jmenuje:
+
+| Build | Konfigurace | Web import |
+|---|---|---|
+| personal, jakákoli platforma | `config/personal.json` | zapnuto |
+| store, Android / iOS | `config/store_mobile.json` | **vypnuto** — tyhle artefakty jdou na Google Play a App Store, kde platí B1 |
+| store, macOS / Windows / Linux / web | `config/store_desktop.json` | zapnuto — distribuuje se přímo, pravidla obchodů neplatí |
 
 ```bash
 flutter run   --flavor personal -t lib/main_personal.dart --dart-define-from-file=config/personal.json
-flutter build appbundle --flavor store -t lib/main_store.dart --dart-define-from-file=config/store.json
+flutter build appbundle --flavor store -t lib/main_store.dart --dart-define-from-file=config/store_mobile.json
 ```
+
+V praxi používej `./build.sh <platforma> <flavor> <mode>`, který konfiguraci vybere
+sám a sken B1 pouští jen na artefakty, které skutečně jdou do obchodu — skenovat
+desktopové buildy by ze své podstaty selhávalo vždycky a brána, která selhává
+pořád, se přestane brát vážně.
 
 Zabalit do `Makefile`, ať je denní příkaz `make store-android`.
 
@@ -540,11 +552,16 @@ držet dvě.
 
 ### Co se tím zároveň vyřeší
 
-| Příznak | Personal | Store |
-|---|---|---|
-| `FEATURE_WEB_IMPORT` | zapnuto | **vypnuto** — řeší blokátor B1 (§2) |
-| `FEATURE_SHARED_SERVER` | stávající PocketBase | lokálně first; server jen při ručním zadání |
-| `FEATURE_AI` | zapnuto | zvážit (klíče, náklady) |
+| Příznak | Personal | Store — Android / iOS | Store — desktop a web |
+|---|---|---|---|
+| `FEATURE_WEB_IMPORT` | zapnuto | **vypnuto** — řeší blokátor B1 (§2) | zapnuto |
+| `FEATURE_SHARED_SERVER` | stávající PocketBase | lokálně first; server jen při ručním zadání | stejné jako mobil |
+| `FEATURE_AI` | zapnuto | zvážit (klíče, náklady) | stejné jako mobil |
+
+Podstatný je ten první řádek: **B1 je problém pravidel obchodů, ne problém kódu.**
+Do Google Play a App Store se nahrávají jen artefakty pro Android a iOS, takže jen
+ty se té funkce musí vzdát. Desktopové buildy téhož store produktu se distribuují
+přímo a web import si nechávají.
 
 Rozhodnutí 1 („co s web importem") a rozhodnutí 2 („model synchronizace") přestávají být
 „buď–anebo" a stávají se z nich „obojí, jen v jiném flavoru" — v osobním buildu si nemusíš nic

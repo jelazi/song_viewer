@@ -12,9 +12,17 @@
 #
 # Two products from one codebase (plans/store-release-plan.md §10):
 #
-#   personal — full feature set, including web import. For own use and desktop
-#              distribution. NEVER submit this to an app store.
-#   store    — the sellable build. Web import is compiled out; local-first start.
+#   personal — full feature set, PocketBase sync, band-specific behaviour.
+#              For own use. NEVER submit this to an app store.
+#   store    — the general, sellable build. Local-first start.
+#
+# Within the store flavour the feature set depends on *how it is distributed*,
+# not on the flavour name:
+#
+#   Android / iOS  — published to Google Play and the App Store, so web import
+#                    is compiled out (blocker B1). Uses config/store_mobile.json.
+#   macOS/Win/Linux/web — distributed directly, no store policy applies, so web
+#                    import stays enabled. Uses config/store_desktop.json.
 #
 # IMPORTANT: `--flavor` only exists on Android, iOS and macOS. On Windows, Linux
 # and web Flutter has no flavor concept at all, so both flavors would overwrite
@@ -131,11 +139,32 @@ fi
 
 # ---------------------------------------------------------------- helpers
 
-# Which platforms Flutter accepts `--flavor` for. Verified with
-# `flutter build <platform> --help` on Flutter 3.44.
-supports_flavor() {
+# Whether to pass `--flavor` for this platform.
+#
+# Flutter only accepts it on Android, iOS and macOS (verified with
+# `flutter build <platform> --help` on Flutter 3.44) — Windows, Linux and web
+# have no flavor concept at all.
+#
+# On iOS and macOS it additionally requires a matching shared Xcode scheme;
+# passing it without one fails with "The Xcode project does not define custom
+# schemes". So those are probed rather than assumed, which means the build keeps
+# working before the manual Xcode setup (ios/FLAVORS.md, macos/FLAVORS.md) and
+# starts using the flavour automatically once the schemes exist.
+# Platforms where Flutter has no flavor concept at all, so both flavours land in
+# the same output directory and have to be separated afterwards.
+has_no_flavor_concept() {
     case "$1" in
-        macos|ios|android-aab|android-apk) return 0 ;;
+        windows|linux|web) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+supports_flavor() {
+    local platform="$1" flavor="$2"
+    case "$platform" in
+        android-aab|android-apk) return 0 ;;
+        ios)   [ -f "ios/Runner.xcodeproj/xcshareddata/xcschemes/$flavor.xcscheme" ] ;;
+        macos) [ -f "macos/Runner.xcodeproj/xcshareddata/xcschemes/$flavor.xcscheme" ] ;;
         *) return 1 ;;
     esac
 }
@@ -150,7 +179,32 @@ host_can_build() {
 }
 
 entrypoint_for() { echo "lib/main_$1.dart"; }
-config_for()     { echo "config/$1.json"; }
+
+# Platforms whose artifacts actually get uploaded to Google Play / the App Store.
+# Only these are subject to the web-import restriction (blocker B1). Desktop
+# builds are distributed directly, so store policy does not apply to them.
+is_published_to_store() {
+    case "$1" in
+        android-aab|android-apk|ios) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+# Which dart-define config a build uses:
+#
+#   personal              -> config/personal.json        everything on
+#   store + mobile        -> config/store_mobile.json    web import OFF
+#   store + desktop/web   -> config/store_desktop.json   web import ON
+config_for() {
+    local flavor="$1" platform="$2"
+    if [ "$flavor" = "personal" ]; then
+        echo "config/personal.json"
+    elif is_published_to_store "$platform"; then
+        echo "config/store_mobile.json"
+    else
+        echo "config/store_desktop.json"
+    fi
+}
 
 # Obfuscation strips Dart symbol names from the AOT snapshot. Standard release
 # practice, and it keeps flavour internals out of the shipped binary. The symbol
@@ -169,12 +223,17 @@ build_one() {
 
     local entry config flavor_arg obfuscate
     entry="$(entrypoint_for "$flavor")"
-    config="$(config_for "$flavor")"
+    config="$(config_for "$flavor" "$platform")"
     obfuscate="$(obfuscation_args_for "$flavor" "$mode")"
 
     flavor_arg=""
-    if supports_flavor "$platform"; then
+    if supports_flavor "$platform" "$flavor"; then
         flavor_arg="--flavor $flavor"
+    elif [ "$platform" = "ios" ] || [ "$platform" = "macos" ]; then
+        echo "NOTE: no '$flavor' Xcode scheme yet, building without --flavor."
+        echo "      The entrypoint and dart-defines still select the right feature"
+        echo "      set; only the bundle id / app name stay shared."
+        echo "      See $platform/FLAVORS.md to set the schemes up."
     fi
 
     echo ""
@@ -192,7 +251,7 @@ build_one() {
         return 0
     fi
 
-    if ! supports_flavor "$platform"; then
+    if has_no_flavor_concept "$platform"; then
         echo "NOTE: Flutter has no --flavor for $platform; the entrypoint and"
         echo "      --dart-define-from-file do the separation, and the output is"
         echo "      copied to dist/$flavor/$platform/ so the flavours do not"
@@ -269,6 +328,16 @@ verify_if_store() {
     local platform="$1" flavor="$2"
     [ "$flavor" = "store" ] || return 0
     [ -x tool/verify_store_build.sh ] || return 0
+
+    # Desktop store builds keep web import on purpose — they are distributed
+    # directly, not through an app store — so scanning them would always fail
+    # and the gate would quickly get ignored. Only gate what actually ships.
+    if ! is_published_to_store "$platform"; then
+        echo ""
+        echo "NOTE: $platform is not published through an app store, so web import"
+        echo "      stays enabled and the B1 scan does not apply."
+        return 0
+    fi
 
     local artifact=""
     case "$platform" in

@@ -62,8 +62,11 @@ Register both identifiers in the Apple Developer portal first.
 
 ```bash
 flutter build ios --flavor store -t lib/main_store.dart \
-    --dart-define-from-file=config/store.json --no-codesign
+    --dart-define-from-file=config/store_mobile.json --no-codesign
 ```
+
+(iOS is published through the App Store, so it uses `store_mobile.json` with web
+import compiled out. `./build.sh ios store release` picks this automatically.)
 
 Then run `tool/verify_store_build.sh` to confirm the artifact carries none of
 the third-party source URLs.

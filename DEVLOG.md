@@ -1,5 +1,39 @@
 # Development Log
 
+## 2026-08-17 (part 15) - feat(build): web import removed only where it is actually published
+
+### What was done
+Corrected the flavour model on the user's clarification. The restriction is not "personal vs store" — it follows **how a build is distributed**:
+
+- **Android / iOS store builds** go to Google Play and the App Store, so web import must be compiled out (blocker B1).
+- **macOS / Windows / Linux / web store builds** are distributed directly, no store policy applies, so web import stays enabled.
+
+Personal remains the band-specific build (PocketBase sync, everything on); store is the general product that will be reworked separately.
+
+- `config/store.json` **deleted**, replaced by `config/store_mobile.json` (`FEATURE_WEB_IMPORT: false`) and `config/store_desktop.json` (`FEATURE_WEB_IMPORT: true`). Deleting rather than aliasing the old name means a stale command fails loudly instead of silently building the wrong feature set.
+- `build.sh` — new `is_published_to_store()` predicate drives both config selection and the verification gate. `config_for()` now takes the platform.
+- **The B1 scan now only gates Android and iOS.** Desktop store builds legitimately contain the source hosts, so scanning them would fail every time, and a gate that always fails stops being read.
+- `.vscode/launch.json`, `lib/config/features.dart`, `lib/main_store.dart`, `ios/FLAVORS.md` and §10 of both plan translations updated to the three-config model.
+
+### What was fixed
+`build.sh` passed `--flavor` unconditionally for macOS and iOS, but the Xcode schemes do not exist yet, so every macOS/iOS build would have failed with "The Xcode project does not define custom schemes" — introduced in part 12 and not caught because no macOS build had been run. `supports_flavor()` now probes for `<platform>/Runner.xcodeproj/xcshareddata/xcschemes/<flavor>.xcscheme` and falls back to building without `--flavor`, printing why. The build works before the manual Xcode setup and starts using the flavour automatically once the schemes exist.
+
+Also split out `has_no_flavor_concept()` (windows/linux/web) — one call site was still asking `supports_flavor` a question it no longer answered after the signature change.
+
+### Current state
+Verified by building, not by reasoning — both directions of the flag were checked:
+
+- `./build.sh macos store release` → **succeeds** (58.0 MB `.app`). Scanning it finds all six source hosts and the API token, which is the **expected and correct** result for a desktop build: it confirms `store_desktop.json` really does enable web import. `build.sh` skipped the gate automatically with an explanatory note.
+- `./build.sh android-aab store release` → **succeeds**, and the scan reports no source hosts and no API token. The mobile store build is still clean after the config rename.
+- `flutter analyze lib`: 0 errors, 0 warnings (181 infos, unchanged).
+- Identifier residue on Android unchanged from part 11 (`ProScholy` ×6, `superMusic`, `velkyZpevnik`) — no capability, documented follow-up.
+
+### Pending / next steps
+- Windows and Linux flavour builds still unproven (cannot be built from macOS).
+- Web target still unbuildable for any flavour — `lib/main.dart:19` imports `win32_fullscreen.dart`, which needs `dart:ffi`. Note this now matters more: web is in the desktop group, so it is meant to ship with web import enabled.
+- macOS store build produces `default_project.app` — `PRODUCT_NAME` in `macos/Runner/Configs/AppInfo.xcconfig` is still the template default. Fixed by the `macos/FLAVORS.md` setup, or sooner by hand.
+- Personal build still not launched since the part 14 change.
+
 ## 2026-08-17 (part 14) - refactor(web): drop the network warm-up from WebBloc init
 
 ### What was done

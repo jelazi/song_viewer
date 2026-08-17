@@ -492,12 +492,24 @@ scraping back into the paid app.
 
 Use `--dart-define-from-file` (Flutter 3.7+) rather than long command lines:
 
-`config/personal.json` → all flags `true`; `config/store.json` → all flags `false`.
+Three configs, because the restriction follows **how a build is distributed**,
+not what the flavour is called:
+
+| Build | Config | Web import |
+|---|---|---|
+| personal, any platform | `config/personal.json` | on |
+| store, Android / iOS | `config/store_mobile.json` | **off** — these are the artifacts uploaded to Google Play and the App Store, where B1 applies |
+| store, macOS / Windows / Linux / web | `config/store_desktop.json` | on — distributed directly, no store policy applies |
 
 ```bash
 flutter run   --flavor personal -t lib/main_personal.dart --dart-define-from-file=config/personal.json
-flutter build appbundle --flavor store -t lib/main_store.dart --dart-define-from-file=config/store.json
+flutter build appbundle --flavor store -t lib/main_store.dart --dart-define-from-file=config/store_mobile.json
 ```
+
+In practice use `./build.sh <platform> <flavor> <mode>`, which selects the config
+and only runs the B1 scan on the artifacts that actually ship to a store —
+scanning desktop builds would always fail by design, and a gate that always fails
+gets ignored.
 
 Wrap in a `Makefile` so the daily command is `make store-android`.
 
@@ -522,11 +534,16 @@ does not have to carry two.
 
 ### What this also resolves
 
-| Flag | Personal | Store |
-|---|---|---|
-| `FEATURE_WEB_IMPORT` | on | **off** — resolves blocker B1 (§2) |
-| `FEATURE_SHARED_SERVER` | the existing PocketBase | local-first; server only if entered manually |
-| `FEATURE_AI` | on | evaluate (keys, cost) |
+| Flag | Personal | Store — Android / iOS | Store — desktop & web |
+|---|---|---|---|
+| `FEATURE_WEB_IMPORT` | on | **off** — resolves blocker B1 (§2) | on |
+| `FEATURE_SHARED_SERVER` | the existing PocketBase | local-first; server only if entered manually | same as mobile |
+| `FEATURE_AI` | on | evaluate (keys, cost) | same as mobile |
+
+The web-import column is the important one: **B1 is a store-policy problem, not a
+code problem.** Only the Android and iOS artifacts are uploaded to Google Play and
+the App Store, so only they have to drop the feature. Desktop builds of the same
+store product are distributed directly and keep it.
 
 Decision 1 ("what to do about web import") and Decision 2 ("sync model") stop being either/or and
 become "both, in different flavors" — nothing has to be given up in the personal build.

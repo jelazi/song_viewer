@@ -14,8 +14,21 @@
 /// **forgetting to pass a config yields the safe store build, not the personal
 /// one.** Fail-closed, never fail-open.
 ///
-/// Values come from `--dart-define-from-file=config/personal.json` or
-/// `config/store.json`. See `plans/store-release-plan.md` §10.
+/// Values come from `--dart-define-from-file`, and which file is used depends on
+/// the flavour *and* on how the build is distributed:
+///
+/// | Build | Config | Web import |
+/// |---|---|---|
+/// | personal, any platform | `config/personal.json` | on |
+/// | store, Android / iOS | `config/store_mobile.json` | **off** |
+/// | store, macOS / Windows / Linux / web | `config/store_desktop.json` | on |
+///
+/// Only the mobile artifacts are published to Google Play and the App Store, so
+/// only they are subject to the web-import restriction. Desktop builds are
+/// distributed directly and keep the feature.
+///
+/// `build.sh` picks the right file automatically. See
+/// `plans/store-release-plan.md` §10.
 class Features {
   const Features._();
 

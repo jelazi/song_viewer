@@ -1,0 +1,6 @@
+{
+  "_comment": "Store build for Android and iOS — the artifacts actually published to Google Play and the App Store. Web import MUST stay false here: shipping it in a paid store app is blocker B1 (plans/store-release-plan.md §2).",
+  "FEATURE_WEB_IMPORT": false,
+  "FEATURE_AI": false,
+  "FEATURE_SHARED_SERVER": false
+}
