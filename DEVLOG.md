@@ -1,5 +1,57 @@
 # Development Log
 
+## 2026-08-17 (part 8) - security: PocketBase credentials are no longer shipped in builds
+
+### What was fixed
+`pocketbase_config.json` (PocketBase URL + account email + plain-text password) was listed under `flutter: assets:` in `pubspec.yaml`, so every build embedded it verbatim as `flutter_assets/pocketbase_config.json` — readable with any archive tool. The file itself was already in `.gitignore` and untracked, so the leak was through builds, not through git.
+
+- The live config was moved to the location the app already prefers: `~/.songviewer/pocketbase_config.json` (`chmod 600`, directory `chmod 700`). On sandboxed macOS builds `Platform.environment['HOME']` resolves to the app container, so the same file was also placed in `~/Library/Containers/com.lzizka.songsviewer.macos/Data/.songviewer/`.
+- `pubspec.yaml` — the asset entry was removed, with a comment stating why it must not come back.
+- `providers/pocketbase_provider.dart` — `loadConfig()` no longer falls back to `rootBundle.loadString('pocketbase_config.json')`; it reads only the user config directory and logs a hint to configure the server in the settings when the file is missing. The now-unused `flutter/services.dart` import was dropped.
+- The credential-bearing `pocketbase_config.json` was deleted from the repository root; a placeholder-only `pocketbase_config.example.json` was added in its place.
+- `tools/firebase_to_pocketbase.py` (tracked in git) had the PocketBase password and a Firebase Auth password/API key hardcoded as defaults — all replaced with empty strings. The script already loads the PocketBase config from `~/.songviewer/pocketbase_config.json` and prompts for the Firebase values.
+- `README.md` — setup section now copies `pocketbase_config.example.json` into `~/.songviewer/`, sets the permissions and states that credentials are never bundled.
+
+### Current state
+- `flutter analyze lib`: 0 errors. Clean rebuild (`rm -rf build/macos && flutter build macos --debug`) succeeds.
+- Verified on the built app: no `pocketbase_config.json` in `flutter_assets`, and grepping the whole `.app` bundle for the password finds nothing.
+- The rebuilt app was launched and refreshed `songscachebox.hive` (5 MB) from the server during the run, so it authenticates from the new config location.
+- The password no longer appears anywhere in the working tree except `tools/firebase_backup/users.json`.
+
+### Firebase migration backup moved out of the repository
+`tools/firebase_backup/` (`songs.json`, `playlists.json`, `groups.json`, `users.json` — the last one holding every migrated user's plain-text password) was tracked in git. On the user's decision it was moved to `~/.songviewer/firebase_backup/` (`chmod go-rwx`), removed from the index with `git rm -r --cached` (the deletion is staged, not committed) and added to `.gitignore`. `tools/firebase_to_pocketbase.py` now reads and writes the backup through a `BACKUP_DIR = ~/.songviewer/firebase_backup` constant instead of `tools/firebase_backup`, and `load_pb_config()` no longer looks for `pocketbase_config.json` in the repository root — only in `~/.songviewer`. `python3 -c "ast.parse(...)"` passes on the edited script.
+
+After this, grepping the working tree for the PocketBase password, the Firebase password and the Firebase API key returns nothing.
+
+### Pending / next steps
+- **The password itself was not rotated** (the user's explicit decision for now). It shipped inside every build released so far, so it should be treated as public; rotating it invalidates every installation that still relies on it.
+- **Git history still contains the old credentials** (`tools/firebase_to_pocketbase.py`, `tools/firebase_backup/users.json`). Removing them means rewriting history (`git filter-repo`); rotation is the more practical answer.
+- The staged deletion of `tools/firebase_backup/` still has to be committed.
+
+## 2026-08-17 (part 7) - docs: store release plan for paid App Store / Play distribution
+
+### What was done
+Audited the repository for readiness to sell the app on the App Store and Google Play, and wrote `plans/store-release-plan.md`. No application code was changed — this entry documents an analysis, not an implementation.
+
+Findings recorded in the plan:
+
+- **B1 — third-party scraping.** `lib/providers/web_provider.dart:9-15` pulls songs from six chord/lyrics sites and imports the content into the user's library and PocketBase; `:16` holds a hardcoded pisnicky-akordy.cz API token. This is the decisive blocker for a *paid* release (Apple 5.2 / Play IP policy).
+- **B2 — bundled secrets.** `pocketbase_config.json` is listed under `flutter: assets:` in `pubspec.yaml` and loaded via `rootBundle` in `lib/providers/pocketbase_provider.dart:127`, so admin e-mail and plaintext password ship inside every build. Also a single shared server account for all users. Gemini key is stored plaintext in Hive (`settings_repository.dart:210`) and echoed into the settings export (`general_settings_body.dart:294`).
+- **B3 — signing.** `android/app/build.gradle:56-60` still signs release with `signingConfigs.debug`, although `android/key.properties` exists.
+- **B4 — placeholder metadata.** Android `applicationId` `com.lzizka.songsviewer.songs_viewer_bloc` vs iOS `com.lzizka.songviewer`; `android:label="songs_viewer_bloc"`; pubspec `name: default_project`; placeholder `NSPhotoLibraryUsageDescription`.
+- **B5 — no privacy policy, account-deletion route or store assets.**
+- Secondary: unpinned `targetSdk`, missing `<queries>` for `https` VIEW intents (url_launcher), blocking network work in `initProvidersAndCheckSync()` (`lib/main.part.dart:25-81`), locale hardcoded to `cs` (`lib/main.dart:110`), no crash reporting, no onboarding.
+
+The plan is phased (0–5), with effort estimates and five open decisions (web-import strategy, sync model, monetization model, tablet scope, individual vs company account).
+
+### Current state
+`flutter analyze`: 195 issues, **0 errors, 0 warnings** — all `info` level (mostly `use_super_parameters`, `use_build_context_synchronously`, `avoid_print` in tests). Mobile release builds (`appbundle` / `ipa`) were **not** attempted in this session and remain unverified.
+
+### Pending / next steps
+- Rotate the PocketBase admin password and the Gemini API key — both must be treated as leaked.
+- Answer the five open decisions in `plans/store-release-plan.md` §7 before Phase 1 work starts.
+- Start the Google Play closed-test track early; a new personal account needs 12 testers for 14 continuous days.
+
 ## 2026-08-17 (part 6) - fix: new-chord overlay is dismissable and its checkbox is readable
 
 ### What was fixed

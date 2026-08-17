@@ -30,8 +30,15 @@ See [PocketBase Setup](#pocketbase-setup) below.
 Copy the config template and fill in your PocketBase credentials:
 
 ```bash
-cp pocketbase_config.json ~/.songviewer/pocketbase_config.json
+mkdir -p ~/.songviewer && chmod 700 ~/.songviewer
+cp pocketbase_config.example.json ~/.songviewer/pocketbase_config.json
+chmod 600 ~/.songviewer/pocketbase_config.json
 ```
+
+The credentials live **only** in `~/.songviewer/pocketbase_config.json`. That file is
+never committed and is deliberately not bundled as an app asset, so no build ships it —
+alternatively, leave it out entirely and enter the server and credentials in the app
+settings, which writes the same file.
 
 Edit `~/.songviewer/pocketbase_config.json`:
 
@@ -106,7 +113,7 @@ The app authenticates via the PocketBase `users` collection (not `app_users`):
 
 1. In Admin UI, go to **Collections** > **users**
 2. Create a new record with email and password
-3. Use these credentials in the app config (`pocketbase_config.json`) or in the app settings
+3. Use these credentials in `~/.songviewer/pocketbase_config.json` or in the app settings
 
 ---
 

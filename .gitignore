@@ -119,3 +119,6 @@ app.*.symbols
 lib/firebase_options.dart
 *.g.dart
 pocketbase_config.json
+
+# Firebase migration backup — holds plain-text user data, keep it out of the repo
+tools/firebase_backup/

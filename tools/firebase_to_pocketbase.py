@@ -41,20 +41,26 @@ _SSL_CTX.verify_mode = ssl.CERT_NONE
 
 # ─── Configuration ───────────────────────────────────────────────────────────
 
-# Firebase config - fill in your Firebase project details
+# Firebase config - never commit real values here, the script prompts for what
+# is missing (see prompt_firebase_config()).
 FIREBASE_CONFIG = {
-    "apiKey": "***REMOVED-CREDENTIAL***",           # Firebase Web API key (from Firebase Console → Project Settings)
-    "projectId": "songlist-7b702",        # Firebase project ID (e.g., "my-app-12345")
-    "email": "lzizka@gmail.com",            # Firebase Auth email
-    "password": "***REMOVED-CREDENTIAL***",         # Firebase Auth password
+    "apiKey": "",           # Firebase Web API key (from Firebase Console → Project Settings)
+    "projectId": "",        # Firebase project ID (e.g., "my-app-12345")
+    "email": "",            # Firebase Auth email
+    "password": "",         # Firebase Auth password
 }
 
-# PocketBase config - loaded from pocketbase_config.json
+# PocketBase config - loaded from ~/.songviewer/pocketbase_config.json by
+# load_pb_config(); leave empty here so no credentials end up in the repository.
 PB_CONFIG = {
-    "url": "http://your-pocketbase-url.example",
-    "email": "lzizka@gmail.com",
-    "password": "***REMOVED-CREDENTIAL***",
+    "url": "",
+    "email": "",
+    "password": "",
 }
+
+# JSON backup location. Kept outside the repository: the export contains user
+# records with plain-text passwords.
+BACKUP_DIR = Path.home() / ".songviewer" / "firebase_backup"
 
 # Firestore collection names (as used in the old Firebase app)
 FIRESTORE_COLLECTIONS = ["songs", "playlists", "users", "groups"]
@@ -471,8 +477,8 @@ def transform_group(firebase_doc):
 
 def save_backup(data, filename):
     """Save data as JSON backup file."""
-    backup_dir = Path(__file__).parent / "firebase_backup"
-    backup_dir.mkdir(exist_ok=True)
+    backup_dir = BACKUP_DIR
+    backup_dir.mkdir(parents=True, exist_ok=True)
     filepath = backup_dir / filename
     with open(filepath, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
@@ -502,7 +508,6 @@ def import_from_json_files(backup_dir):
 def load_pb_config():
     """Load PocketBase config from pocketbase_config.json."""
     config_paths = [
-        Path(__file__).parent.parent / "pocketbase_config.json",
         Path.home() / ".songviewer" / "pocketbase_config.json",
     ]
     for path in config_paths:
@@ -602,14 +607,14 @@ def main():
         print(f"\n  Total: {total} documents exported")
 
         if mode == "2":
-            print("\n✓ Export complete! JSON files saved to tools/firebase_backup/")
+            print(f"\n✓ Export complete! JSON files saved to {BACKUP_DIR}/")
             print("  Run this script again with mode 3 to import into PocketBase.")
             sys.exit(0)
 
     # ─── Import from JSON backup ───
     elif mode == "3":
         print("\n[2/5] Loading from JSON backup...")
-        backup_dir = Path(__file__).parent / "firebase_backup"
+        backup_dir = BACKUP_DIR
         if not backup_dir.exists():
             custom_path = input(f"  Backup directory [{backup_dir}]: ").strip()
             if custom_path:

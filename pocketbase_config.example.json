@@ -1,0 +1,5 @@
+{
+    "pocketbaseUrl": "https://your-pocketbase-url.example",
+    "email": "your-user@example.com",
+    "password": "your-password"
+}

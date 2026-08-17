@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
 import 'package:logger_pkg/logger_pkg.dart';
 import 'package:pocketbase/pocketbase.dart';
@@ -106,11 +105,15 @@ class PocketBaseProvider {
 
   PocketBaseProvider();
 
-  /// Loads config from pocketbase_config.json file in app documents directory.
-  /// Falls back to bundled asset config if file doesn't exist.
+  /// Loads config from pocketbase_config.json in the user config directory
+  /// (`~/.songviewer`).
+  ///
+  /// The config holds the server credentials in plain text, so it is never
+  /// bundled with the app: there is no asset fallback on purpose. When no
+  /// config exists the app starts unconnected and the credentials have to be
+  /// entered in the settings, which writes them to the same file.
   Future<PocketBaseConfig?> loadConfig() async {
     try {
-      // Try loading from app documents directory first
       final dir = await _getConfigDir();
       final file = File('$dir/pocketbase_config.json');
       if (await file.exists()) {
@@ -118,17 +121,9 @@ class PocketBaseProvider {
         _config = PocketBaseConfig.fromJson(jsonDecode(content));
         return _config;
       }
+      logger.w('No pocketbase_config.json in $dir — configure the server in the app settings');
     } catch (e) {
-      logger.w('Could not load config from documents: $e');
-    }
-
-    // Try loading from bundled asset
-    try {
-      final content = await rootBundle.loadString('pocketbase_config.json');
-      _config = PocketBaseConfig.fromJson(jsonDecode(content));
-      return _config;
-    } catch (e) {
-      logger.w('No pocketbase_config.json found: $e');
+      logger.w('Could not load PocketBase config: $e');
     }
 
     return null;

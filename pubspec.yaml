@@ -68,7 +68,9 @@ flutter:
     - assets/lang/en.json
     - assets/logos/ic_launcher.png
     - assets/icons/
-    - pocketbase_config.json
+  # NOTE: pocketbase_config.json is deliberately NOT bundled — it holds the
+  # server credentials in plain text. It is read at runtime from
+  # ~/.songviewer/pocketbase_config.json (see pocketbase_config.example.json).
 
   # Multi-window entry points
   # The presentation_window.dart will be used for secondary windows
