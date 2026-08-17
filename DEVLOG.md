@@ -1,5 +1,32 @@
 # Development Log
 
+## 2026-08-17 (part 17) - build: macOS build opens the output and /Applications in Finder
+
+### What was done
+Installing on macOS means dragging the bundle into `/Applications`, so `build.sh` now opens both Finder windows as its last step after a macOS build.
+
+- New `open_macos_finder_windows()` — runs for `platform=macos` on a Darwin host (any flavour), after `verify_if_store`. It opens the build output directory and `/Applications`, printing `Finder: <dir>  +  /Applications`.
+- The output-directory lookup that `rename_personal_macos_app()` did inline was extracted into `macos_products_dir()`, shared by both functions. It returns the first of `Products/<Mode>-<flavour>` (used once a flavour Xcode scheme exists) and `Products/<Mode>` that actually contains a `.app`, so the two functions can never disagree about which directory the build landed in. When neither holds a bundle, both functions warn and return instead of failing the build.
+
+### Current state
+- `bash -n build.sh` passes.
+- `./build.sh macos personal release` printed `Output: …/Release/Songs Viewer.app` and `Finder: build/macos/Build/Products/Release  +  /Applications`; `osascript -e 'tell application "Finder" to get name of every window'` then reported exactly two windows: `Applications, Release`.
+
+## 2026-08-17 (part 16) - build: personal macOS build is renamed to "Songs Viewer.app"
+
+### What was done
+`build.sh` left the macOS bundle under the Flutter project name (`default_project.app`), which is what shows up in Finder and the Dock. The personal build is only ever used locally, so it now ends up named after the product.
+
+- New `rename_personal_macos_app()` — runs only for `platform=macos` + `flavor=personal`, right after `collect_output`. It looks for `default_project.app` first under `build/macos/Build/Products/<Mode>-personal` (used once a flavour Xcode scheme exists) and then under plain `<Mode>`, deletes any previous `Songs Viewer.app` and moves the bundle onto that name. When nothing is found it warns instead of failing the build. Only the bundle directory is renamed; the executable and `Info.plist` inside are untouched.
+- The `Debug`/`Release` directory-name mapping that `collect_output` did inline was extracted into `mode_dir_name()` and is now shared by both (still a longhand `case` — macOS bash 3.2 has no `${var^}`).
+- `verify_if_store()` looked up the macOS artifact with `-name '*.app'`, which after this change could have matched the renamed personal bundle sitting in the same `Products/<Mode>` directory; it now excludes `$MACOS_PERSONAL_APP_NAME`. (That branch is currently unreachable — macOS is not `is_published_to_store` — but the gate should not be able to verify the wrong artifact if that ever changes.)
+
+### Current state
+- `bash -n build.sh` passes.
+- `./build.sh macos personal debug` → `Output: build/macos/Build/Products/Debug/Songs Viewer.app`; the renamed bundle was opened and confirmed running.
+- `./build.sh macos personal release` → `Output: build/macos/Build/Products/Release/Songs Viewer.app`.
+- Calling the function with `flavor=store` returns without doing anything, so store builds keep `default_project.app`.
+
 ## 2026-08-17 (part 15) - feat(build): web import removed only where it is actually published
 
 ### What was done

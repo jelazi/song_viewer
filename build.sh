@@ -288,7 +288,19 @@ build_one() {
     esac
 
     collect_output "$platform" "$flavor" "$mode"
+    rename_personal_macos_app "$platform" "$flavor" "$mode"
     verify_if_store "$platform" "$flavor"
+    open_macos_finder_windows "$platform" "$flavor" "$mode"
+}
+
+# Xcode and the Windows runner use a capitalised mode directory (Debug/Release).
+# Written out longhand because macOS ships bash 3.2, which has no ${var^}.
+mode_dir_name() {
+    case "$1" in
+        debug)   echo "Debug" ;;
+        release) echo "Release" ;;
+        *)       echo "$1" ;;
+    esac
 }
 
 # For platforms without native flavour separation, copy the build out of the
@@ -298,14 +310,8 @@ collect_output() {
     local src dest
     dest="dist/$flavor/$platform"
 
-    # Windows output uses a capitalised mode directory (Debug/Release).
-    # Written out longhand because macOS ships bash 3.2, which has no ${var^}.
     local mode_capitalized
-    case "$mode" in
-        debug)   mode_capitalized="Debug" ;;
-        release) mode_capitalized="Release" ;;
-        *)       mode_capitalized="$mode" ;;
-    esac
+    mode_capitalized="$(mode_dir_name "$mode")"
 
     case "$platform" in
         windows) src="build/windows/x64/runner/$mode_capitalized" ;;
@@ -322,6 +328,67 @@ collect_output() {
     else
         echo "WARNING: expected output at $src but it is missing."
     fi
+}
+
+# The macOS bundle is named after the Flutter project (default_project.app). The
+# personal build is only ever used locally, so rename it to the product name and
+# it shows up as "Songs Viewer" in Finder and the Dock. Only the bundle
+# directory is renamed — the executable and Info.plist inside are untouched.
+MACOS_PERSONAL_APP_NAME="Songs Viewer.app"
+
+# Directory Xcode wrote the bundle into. With a flavour scheme it appends the
+# flavour to the configuration name (Release-personal); without one it is plain
+# Release. Prints the first one that actually holds a bundle.
+macos_products_dir() {
+    local mode="$1" flavor="$2" base dir
+    base="build/macos/Build/Products/$(mode_dir_name "$mode")"
+
+    for dir in "$base-$flavor" "$base"; do
+        if [ -n "$(find "$dir" -maxdepth 1 -name '*.app' -print -quit 2>/dev/null)" ]; then
+            echo "$dir"
+            return 0
+        fi
+    done
+    return 1
+}
+
+rename_personal_macos_app() {
+    local platform="$1" flavor="$2" mode="$3"
+    [ "$platform" = "macos" ] && [ "$flavor" = "personal" ] || return 0
+
+    local dir src dest
+    if ! dir="$(macos_products_dir "$mode" "$flavor")"; then
+        echo "WARNING: no macOS bundle found for $mode — not renamed."
+        return 0
+    fi
+
+    src="$dir/default_project.app"
+    if [ ! -d "$src" ]; then
+        echo "WARNING: $src not found — not renamed."
+        return 0
+    fi
+
+    dest="$dir/$MACOS_PERSONAL_APP_NAME"
+    rm -rf "$dest"
+    mv "$src" "$dest"
+    echo "Output: $dest"
+}
+
+# Installing on macOS means dragging the bundle into /Applications, so open both
+# Finder windows the moment the build is done: the build output and the
+# applications folder.
+open_macos_finder_windows() {
+    local platform="$1" flavor="$2" mode="$3" dir
+    [ "$platform" = "macos" ] && [ "$HOST" = "Darwin" ] || return 0
+
+    if ! dir="$(macos_products_dir "$mode" "$flavor")"; then
+        echo "NOTE: no macOS bundle found for $mode — not opening Finder."
+        return 0
+    fi
+
+    open "$dir"
+    open /Applications
+    echo "Finder: $dir  +  /Applications"
 }
 
 verify_if_store() {
@@ -343,7 +410,9 @@ verify_if_store() {
     case "$platform" in
         android-aab) artifact="$(find build/app/outputs/bundle -name '*.aab' 2>/dev/null | head -n1)" ;;
         android-apk) artifact="$(find build/app/outputs/flutter-apk -name '*store*.apk' 2>/dev/null | head -n1)" ;;
-        macos)       artifact="$(find "build/macos/Build/Products" -maxdepth 2 -name '*.app' 2>/dev/null | head -n1)" ;;
+        # Skip the renamed personal bundle — a store build must never be
+        # verified against the personal one left behind in the same directory.
+        macos)       artifact="$(find "build/macos/Build/Products" -maxdepth 2 -name '*.app' ! -name "$MACOS_PERSONAL_APP_NAME" 2>/dev/null | head -n1)" ;;
         ios)         artifact="$(find build/ios/ipa -name '*.ipa' 2>/dev/null | head -n1)" ;;
         windows|linux|web) artifact="dist/store/$platform" ;;
     esac
