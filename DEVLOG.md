@@ -1,5 +1,33 @@
 # Development Log
 
+## 2026-08-17 (part 9) - chore(repo): purge secrets from git history, move origin to GitHub
+
+### Why
+`git pull` against Bitbucket started failing with HTTP 410 — Atlassian deprecated app passwords (CHANGE-3222). The repository already had a second remote, `github.com` (`https://github.com/jelazi/songs_viewer_bloc`), so switching there was the obvious fix — except that repo is **public** and the local history carried credentials.
+
+### What was found
+- The GitHub repo was public, 85 commits behind (last push 2026-01-25), with 0 commits that did not exist locally.
+- Git history contained three secrets, all introduced in `694390b`: `tools/firebase_service_account.json` (Firebase service account private key, deleted later in `c215b19` but still in history), the PocketBase and Firebase passwords plus the Firebase Web API key hardcoded in `tools/firebase_to_pocketbase.py`, and `tools/firebase_backup/users.json` with every migrated user's plain-text password.
+- `694390b` was **not** an ancestor of the GitHub tip, so nothing had leaked publicly yet — but any push would have published it.
+
+### What was done
+- `.gitignore` — added `**/firebase_service_account.json`.
+- Full mirror backup taken first: `~/songs_viewer_bloc-backup-20260817-175350.git` (22 MB, still holds the dirty history).
+- `git filter-repo --force --invert-paths --path tools/firebase_service_account.json --path tools/firebase_backup/ --replace-text <file>` — removed the two paths from every commit and replaced the three secret strings with `***REMOVED-CREDENTIAL***`. The replacements file was written to the session scratchpad, never into the repo.
+- Remote `github.com` renamed to `origin` (filter-repo had already dropped the Bitbucket `origin`), `develop` pushed and set as upstream. The push was a fast-forward, not a rewrite, because every commit before `694390b` kept its hash — only the later ones changed.
+
+### Current state
+- Searching all refs for the three secrets returns 0 hits; `tools/firebase_service_account.json` and `tools/firebase_backup/*` no longer appear in any commit. The `supabase` branch was rewritten too.
+- Content check: `git diff backup/develop HEAD` (excluding the uncommitted `.gitignore`) is empty — no file content changed. Commit count 169 → 168; the now-empty `chore(tools): remove firebase backup data files` commit was pruned.
+- Verified through the GitHub API on `develop`: both secret paths return 404 and `tools/firebase_to_pocketbase.py` shows empty credential fields.
+- `git status`: only the uncommitted `.gitignore` line and the untracked `.claude/`.
+
+### Pending / next steps
+- **The Bitbucket repository still holds the full dirty history**, including the service account key. It is no longer reachable from here (app password revoked by Atlassian) — delete the repo or purge it through the Bitbucket web UI.
+- **The backup mirror `~/songs_viewer_bloc-backup-20260817-175350.git` contains the secrets.** Keep it until the new history is proven good, then delete it.
+- PocketBase password rotation and invalidating the Firebase service account key are still open (both deferred by the user). The service account key is no longer in any repository, but it remains valid.
+- The `.gitignore` change and this DEVLOG entry are not committed yet.
+
 ## 2026-08-17 (part 8) - security: PocketBase credentials are no longer shipped in builds
 
 ### What was fixed

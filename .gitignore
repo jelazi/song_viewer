@@ -122,3 +122,6 @@ pocketbase_config.json
 
 # Firebase migration backup — holds plain-text user data, keep it out of the repo
 tools/firebase_backup/
+
+# Firebase service account private key — never commit
+**/firebase_service_account.json
