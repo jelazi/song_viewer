@@ -17,7 +17,7 @@ menších mezer v přípravě releasu.
 | # | Blokátor | Závažnost | Proč blokuje |
 |---|---------|----------|---------------|
 | B1 | Stahování obsahu ze šesti cizích webů s texty a akordy, včetně natvrdo zapsaného API tokenu | **Kritická** | App Store 5.2 (duševní vlastnictví) / Play „Intellectual Property" — téměř jisté zamítnutí nebo pozdější stažení, plus reálná autorskoprávní odpovědnost ve chvíli, kdy jde o peníze |
-| B2 | Přihlašovací údaje admina k PocketBase zabalené jako asset (`pocketbase_config.json`) | **Kritická** | Každý kupující si je vytáhne z IPA/APK; navíc jedna sdílená databáze pro všechny uživatele |
+| B2 | ~~Přihlašovací údaje k PocketBase zabalené jako asset~~ → **z části opraveno 2026-08-17**; heslo *nebylo* změněno a sdílená databáze zůstává | **Kritická** | Údaj se sice už nedistribuuje, ale byl v každém dosud vydaném buildu, takže se musí považovat za veřejný. Placená aplikace navíc nemůže mít všechny kupující v jedné sdílené databázi |
 | B3 | Release buildy pro Android se podepisují **debug** klíčem | **Kritická** | Play debug-podepsaný AAB odmítne |
 | B4 | Placeholder metadata (název aplikace, bundle ID, purpose strings, pubspec name/description) | Vysoká | Zaručené potíže při review; bundle ID jsou po vydání trvalé |
 | B5 | Chybí zásady ochrany osobních údajů, cesta ke smazání účtu, materiály pro obchody | Vysoká | Vyžadují to formuláře obou obchodů před odesláním |
@@ -52,7 +52,7 @@ existují pro modely, repozitáře a jeden BLoC; integrační testy přes Patrol
 
 ### B1 — stahování obsahu z cizích webů (ten rozhodující)
 
-`lib/providers/web_provider.dart:9-15` má natvrdo zapsaných šest zdrojů:
+`lib/providers/web_provider.dart:9-14` má natvrdo zapsaných šest zdrojů:
 
 ```
 velkyzpevnik.cz, supermusic.cz, zpevnik.proscholy.cz,
@@ -64,7 +64,8 @@ dotazy na ProScholy v `web_provider.dart:41-110`, WorshipLeader `/api/grid` a `/
 `:218-230`, HTML WorshipChords na `:251-270`) a **stažené texty a akordy ukládá do lokální
 knihovny uživatele i na PocketBase server**.
 
-`lib/providers/web_provider.dart:16` navíc obsahuje natvrdo zapsaný API token pro pisnicky-akordy.cz.
+`lib/providers/web_provider.dart:15` navíc obsahuje natvrdo zapsaný API token pro pisnicky-akordy.cz,
+posílaný jako bearer hlavička na `:207`.
 
 Proč to blokuje právě **placené** vydání:
 
@@ -91,48 +92,48 @@ Doporučení: **varianta A pro v1.0**, případně B jako pozdější doplněk. 
 za přepínačem při kompilaci, aby desktopový build (který se přes obchody nedistribuuje) zůstal
 nedotčený.
 
-Bez ohledu na zvolenou variantu: **odstranit natvrdo zapsaný token** (`web_provider.dart:16`)
+Bez ohledu na zvolenou variantu: **odstranit natvrdo zapsaný token** (`web_provider.dart:15`)
 a nechat ho zneplatnit.
 
 ### B2 — tajemství a víceuživatelský provoz
 
-`pubspec.yaml` uvádí `pocketbase_config.json` v sekci `flutter: assets:` a soubor na disku obsahuje:
+> **Aktualizováno 2026-08-17.** *Distribuční* polovina tohoto blokátoru byla opravena zvlášť
+> v průběhu psaní tohoto plánu (DEVLOG část 8–9): `pocketbase_config.json` už není
+> v `flutter: assets:`, záložní `rootBundle` je z `pocketbase_provider.dart` pryč, konfigurace je
+> jen v `~/.songviewer/` a historie gitu byla vyčištěna. Níže je to, co zbývá.
 
-```
-pocketbaseUrl: https://your-pocketbase-url.example
-email:        <e-mail admina>
-password:     <heslo v čitelné podobě>
-```
+Původně byl `pocketbase_config.json` (URL serveru + e-mail účtu + heslo v čitelné podobě) uvedený
+v `flutter: assets:` a načítal se přes `rootBundle`, takže se kompiloval do každého distribuovaného
+balíčku a šel přečíst libovolným archivačním nástrojem.
 
-`lib/providers/pocketbase_provider.dart:127` ho načítá přes `rootBundle.loadString(...)` a na `:172`
-se s ním přihlašuje. Soubor je sice v `.gitignore` (`.gitignore:121`) — to je tu ale bezpředmětné,
-protože **se kompiluje přímo do distribuovaného balíčku aplikace**. Kdokoli si APK/IPA rozbalí.
-
-Druhý problém: je to jeden sdílený účet na jednom serveru. Placená aplikace prodávaná cizím lidem
-znamená, že by všichni kupující zapisovali do stejné databáze. Současný model je „privátní server
-naší kapely", ne produkt.
+Druhý problém, nedotčený: je to jeden sdílený účet na jednom serveru. Placená aplikace prodávaná
+cizím lidem znamená, že by všichni kupující zapisovali do stejné databáze. Současný model je
+„privátní server naší kapely", ne produkt.
 
 Náprava:
-1. Odebrat `pocketbase_config.json` z assetů v `pubspec.yaml` a zrušit záložní načítání přes
-   `rootBundle` v `pocketbase_provider.dart:127`.
-2. **Okamžitě změnit heslo admina k PocketBase a klíč ke Gemini** — obojí považuj za uniklé.
-3. Zpřísnit pravidla kolekcí v PocketBase tak, aby běžný uživatel četl a zapisoval jen vlastní
+1. ~~Odebrat `pocketbase_config.json` z assetů v `pubspec.yaml` a zrušit záložní načítání přes
+   `rootBundle`.~~ **Hotovo 2026-08-17.**
+2. **Změnit heslo k PocketBase** — stále otevřené (odloženo rozhodnutím). Bylo zabalené v každém
+   dosud vydaném buildu, takže se musí považovat za veřejné; vyčištění historie gitu neodvolá už
+   distribuované buildy. Změna hesla znehodnotí stávající instalace, což je přesně důvod, proč se má
+   udělat *dřív*, než si aplikaci koupí cizí lidé, ne potom.
+3. **Dostat tři API klíče z čitelného úložiště** — `groqApiKey`, `youtubeApiKey`, `geminiApiKey` jsou
+   v čitelné podobě v Hive (`settings_repository.dart:50-52`, načítají se na `:208-210`) a obrazovka
+   nastavení kopíruje klíče k YouTube a Gemini nešifrovaně do schránky
+   (`general_settings_body.dart:290-294`). Použít `flutter_secure_storage`, odstranit je z jakéhokoli
+   exportu či diagnostiky, nebo klíče zadávané uživatelem z mobilního buildu vypustit.
+4. Zpřísnit pravidla kolekcí v PocketBase tak, aby běžný uživatel četl a zapisoval jen vlastní
    záznamy. Projít podle toho `pocketbase_collections.json`.
-4. Rozhodnout model synchronizace (viz §7, rozhodnutí 2):
-   - **Lokálně first + volitelně vlastní server** *(doporučeno pro v1)*: aplikace je plně použitelná
-     offline bez jakéhokoli nastavování; synchronizace je pokročilé nastavení, kde si uživatel zadá
-     *vlastní* PocketBase URL a přihlašovací údaje. Žádná sdílená infrastruktura, žádné náklady na
-     hosting, žádná role správce osobních údajů podle GDPR.
-   - **Hostované účty**: server provozuješ ty, uživatelé se registrují. Lepší produkt, ale děláš
-     tím ze sebe správce osobních údajů (GDPR), přidává to náklady na hosting, vyžaduje mazání účtu
-     (v aplikaci **a zároveň** na veřejné webové adrese — požadavek Play) a skutečné zásady ochrany
-     osobních údajů pokrývající uložený obsah uživatelů.
-5. Tajemství, která se musí distribuovat, přesunout do `--dart-define` / `String.fromEnvironment`,
+5. Rozhodnout model synchronizace — **celý rozbor je v §9.** Ve zkratce: lokálně first jako výchozí
+   stav, PocketBase přesunutý do pokročilého nastavení „mám vlastní server". Hostované účty
+   provozované tebou se pro jednorázově placenou aplikaci nedoporučují.
+6. Tajemství, která se musí distribuovat, přesunout do `--dart-define` / `String.fromEnvironment`,
    nikdy do assetů.
-6. Klíč ke Gemini: teď je v čitelné podobě v Hive (`settings_repository.dart:210`) a vypisuje se do
-   exportu nastavení (`general_settings_body.dart:294`). Odstranit ho z jakéhokoli exportu či
-   diagnostiky; uložit přes `flutter_secure_storage`; nebo klíče zadávané uživatelem z mobilního
-   buildu vypustit.
+7. **Repozitář na GitHubu je veřejný.** Není to blokátor pro obchody, ale obchodní rozhodnutí, které
+   stojí za vědomé zvážení: kdokoli si aplikaci může naklonovat a sestavit zdarma a zdrojový kód
+   dokumentuje adresu tvého serveru. Buď to přijmout (placená verze konkuruje pohodlím, ne
+   utajením — u open-source aplikací prodávaných v obchodech běžná volba), nebo repozitář před
+   vydáním přepnout na soukromý.
 
 ### B3 — podepisování Android release buildu
 
@@ -252,9 +253,15 @@ Doporučení pro v1: **placené předem**, přehodnotit podle skutečných dat o
 - [ ] Zavést zvolenou variantu pro web import (§2 B1). U varianty A: skrýt
       `WebProvider`/`WebBloc`/webové části UI za přepínač buildu, aby se na mobil nedostaly.
 - [ ] Smazat natvrdo zapsaný token pro pisnicky-akordy.
-- [ ] Odebrat `pocketbase_config.json` z assetů v `pubspec.yaml` a zrušit záložní `rootBundle`
-      v `pocketbase_provider.dart`.
-- [ ] Zavést zvolený model synchronizace; zpřísnit pravidla kolekcí v PocketBase.
+- [x] ~~Odebrat `pocketbase_config.json` z assetů v `pubspec.yaml` a zrušit záložní `rootBundle`
+      v `pocketbase_provider.dart`.~~ Hotovo 2026-08-17.
+- [ ] Změnit heslo k PocketBase (stále otevřené) a přesunout tři API klíče do zabezpečeného úložiště.
+- [ ] Zavést zvolený model synchronizace (§9): pro v1.0 to znamená přesunout PocketBase do
+      pokročilého nastavení „mám vlastní server" a udělat z lokálního režimu výchozí cestu. Zpřísnit
+      pravidla kolekcí v PocketBase.
+- [ ] Přidat časové razítko `updatedAt` ke každé písni a playlistu už teď, ještě než bude existovat
+      jakýkoli cloudový sync — last-write-wins po jednotlivých záznamech (§9) nejde zpětně dodělat
+      nad daty, která razítko nemají.
 - [ ] Přesunout klíč ke Gemini do zabezpečeného úložiště a odstranit ho z exportu nastavení.
 - [ ] Udělat `initProvidersAndCheckSync()` neblokující a s timeoutem; aplikace musí být při prvním
       spuštění plně použitelná offline.
@@ -306,6 +313,12 @@ Doporučení pro v1: **placené předem**, přehodnotit podle skutečných dat o
 - [ ] Sledovat podíl relací bez pádu a recenze; mít připravenou cestu pro rychlou opravu.
 - [ ] Podle skutečných dat o konverzi rozhodnout o nákupech v aplikaci / zkušební verzi.
 - [ ] Distribuci pro desktop držet oddělenou od buildů pro obchody.
+- [ ] **v1.1** — synchronizace přes vlastní cloudové úložiště uživatele (Google Drive + iCloud)
+      podle §9. Ověření OAuth aplikace u Googlu pro scope `drive.appdata` začít řešit brzy — je to
+      čekání, ne práce.
+- [ ] **v1.2** — LAN sync pro kapelu (objevování přes mDNS/Bonjour + přenos stavu přes WebSocket)
+      podle §9. Tohle je odlišující funkce; prezentační režim na desktopu už je stejný vzor, jen
+      napříč okny místo napříč sítí.
 
 ---
 
@@ -329,9 +342,10 @@ Doporučení pro v1: **placené předem**, přehodnotit podle skutečných dat o
 1. **Web import** — varianta A (odstranit z mobilu, doporučeno), B (jen odkazovat), nebo C (usilovat
    o písemný souhlas)? Určuje, kolik z `web_bloc`, `web_repository`, `web_provider` a webových částí
    UI se dostane na mobil.
-2. **Model synchronizace** — lokálně first s volitelným vlastním PocketBase serverem uživatele
-   (doporučeno), nebo hostované účty, které provozuješ ty? Druhá varianta přidává GDPR, hosting
-   a mazání účtů.
+2. **Model synchronizace** — celý rozbor je v **§9**. Není to už volba ano/ne; doporučení je
+   postupná škála: lokálně first ve v1.0, sync přes vlastní cloud uživatele ve v1.1, LAN sync pro
+   kapelu ve v1.2, vlastní PocketBase zůstává jako pokročilá volba. Hostované účty provozované tebou
+   se pro jednorázově placenou aplikaci vědomě *nedoporučují*.
 3. **Zpoplatnění** — placené předem (doporučeno pro v1), nebo zdarma s jednorázovým odemčením
    přes IAP?
 4. **Rozsah v1** — jen telefon, nebo telefon + tablet? Deklarování podpory iPadu znamená sadu
@@ -344,8 +358,86 @@ Doporučení pro v1: **placené předem**, přehodnotit podle skutečných dat o
 
 ## 8. Okamžité kroky (nezávislé na všech rozhodnutích výše)
 
-1. Změnit heslo admina k PocketBase — je v čitelném souboru, který se balí do buildů.
-2. Ze stejného důvodu vyměnit API klíč ke Gemini.
-3. Ověřit, že žádný distribuovaný build s `pocketbase_config.json` se nikdy nedostal ven.
-4. Smazat `web_provider.dart:16` (token k cizímu API) a nechat ho zneplatnit u provozovatele webu,
-   pokud byl vydaný na tebe.
+1. **Změnit heslo k PocketBase.** Bylo zabalené v každém dosud vydaném buildu, takže je fakticky
+   veřejné. Stále otevřené (odloženo rozhodnutím) a je to jediná položka, která je tím *těžší*, čím
+   déle se odkládá — každá nová instalace zvětšuje škodu ze změny hesla.
+2. Vyměnit tři API klíče (`groqApiKey`, `youtubeApiKey`, `geminiApiKey`) a dostat je z čitelného
+   úložiště v Hive i z exportu do schránky.
+3. Smazat `web_provider.dart:15` (token k cizímu API, používaný na `:207`) a nechat ho zneplatnit
+   u provozovatele webu, pokud byl vydaný na tebe.
+4. Rozhodnout, jestli veřejný repozitář na GitHubu zůstane veřejný i po vydání (§2 B2, bod 7).
+
+---
+
+## 9. Architektura synchronizace bez vlastní databáze
+
+Rozvádí rozhodnutí 2 z §7. Klíčové zjištění: **jsou to dva různé problémy** a každý má jinou
+odpověď. Kód dnes dělá obojí — kolekce `realtime_state` (aktuální píseň, QR odkazy) a role
+`viewer/editor/admin/superuser` v `app_users` ukazují, že jde o nástroj pro kapelu, ne jen o osobní
+zpěvník.
+
+### Problém A — osobní synchronizace mezi vlastními zařízeními
+
+Telefon + tablet + desktop jednoho člověka. Řešitelné **úplně bez serveru**: synchronizace přes
+cloudové úložiště, které uživatel už má.
+
+**Doporučení: soubor ve vlastním cloudu uživatele.** Aplikace zapisuje snapshot/žurnál do složky na
+Google Drive, iCloud Drive, Dropboxu nebo přes WebDAV (Nextcloud). Dat se nikdy nedotkneš, neplatíš
+hosting a nejsi správce osobních údajů podle GDPR.
+
+| Varianta | Napříč platformami | Háček |
+|---|---|---|
+| **Google Drive** (složka `drive.appdata`) | iOS + Android + desktop | Scope je klasifikovaný jako *sensitive* → OAuth aplikace potřebuje ověření u Googlu; počítej pár týdnů navíc |
+| **iCloud / CloudKit** | jen Apple | Zdarma a nativní, ale Androidí tablet data neuvidí |
+| **Dropbox** | všude | OAuth aplikace; schválení jednodušší než u Googlu |
+| **WebDAV / Nextcloud** | všude | Žádné schvalování, ale má to jen technický uživatel |
+
+Rozumná kombinace: **Google Drive + iCloud** pokryje ~95 % uživatelů, WebDAV jako bonus pro
+techničtější. Ověření OAuth u Googlu je čekání, ne práce — ale musí se začít včas.
+
+**Řešení konfliktů se musí vyřešit bez ohledu na zvolené úložiště.** Když uživatel upraví píseň na
+telefonu i na tabletu, zatímco jsou obě zařízení offline, co vyhraje? Nejjednodušší udržitelná
+odpověď je last-write-wins **po jednotlivých písních** (ne nad celou databází), s razítkem
+`updatedAt` u každého záznamu. Model už je rozdělený na písně/playlisty, takže to sedí na stávající
+strukturu.
+
+### Problém B — kapela: společné playlisty a realtime „všichni na stejné písni"
+
+Soubory v cloudu tohle neřeší. Při zkoušce nebo na chválách potřebují všichni sledovat, na čem je
+zrovna kapelník.
+
+**Odpověď bez serveru: lokální síť.** Jedno zařízení dělá hostitele (kapelník), ostatní se připojí
+přes Wi-Fi — mDNS/Bonjour pro objevování, WebSocket pro přenos stavu. Žádný server, žádné účty,
+žádné provozní náklady.
+
+Pro tenhle konkrétní případ užití je LAN spíš **lepší** než cloud, ne horší: všichni jsou stejně ve
+stejné místnosti, funguje to i když v kostele nechytá signál, a je to okamžité bez latence.
+Prezentační režim na desktopu už je přesně tenhle vzor, jen napříč okny místo napříč sítí.
+
+Sdílení playlistu s kapelou *před* zkouškou pokryje export souboru přes share sheet nebo QR kód —
+`backup_service.dart`, `share_plus` i `qr_flutter` už v projektu jsou, takže jde spíš o doladění než
+o novou práci.
+
+### Vlastní PocketBase jako „pro" varianta
+
+To, co existuje dnes, nezahazovat — jen to přeznačit na pokročilé nastavení: *„mám vlastní server,
+tady je URL a přihlášení."* Pro kapelníka, který si server sám provozuje, je to plnohodnotná varianta
+a tebe nestojí nic. Jen to nesmí být výchozí cesta, kterou uvidí běžný kupující.
+
+### Varování k byznys modelu
+
+Kdyby hostovaný sync někdy provozoval ty: **jednorázově placená aplikace s doživotním hostovaným
+syncem je prodělečný model.** Náklady na server běží dál, příjem přišel jednou. Hostovaný sync
+funguje jen jako předplatné. Proto by v1 měla být postavená tak, aby server nepotřebovala vůbec —
+když se poptávka po hostovaném syncu později ukáže jako reálná, přidá se jako placený doplněk nad
+architekturu, která už funguje.
+
+### Doporučené fázování
+
+| Verze | Schopnost | Poznámka |
+|---|---|---|
+| **v1.0** | Lokálně first; plně použitelné offline bez jakéhokoli nastavování | Kvůli review v obchodech to stejně musí být (§3.5) |
+| **v1.0** | Export/import + QR / share sheet | Z velké části existuje; nejlevnější způsob, jak přenést písně mezi zařízeními |
+| **v1.1** | Synchronizace přes vlastní cloud uživatele (Drive + iCloud) | Neblokuje vydání |
+| **v1.2** | LAN sync pro kapelu | Tohle je skutečná odlišující funkce |
+| — | Vlastní PocketBase | Zůstává, skryté v pokročilém nastavení |

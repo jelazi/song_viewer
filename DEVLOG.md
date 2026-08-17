@@ -1,5 +1,38 @@
 # Development Log
 
+## 2026-08-17 (part 10) - docs: Czech translation of the release plan, sync architecture section, B2 refresh
+
+### What was done
+Follow-up to part 7. Documentation only — no application code, config or build files changed.
+
+- Added `plans/store-release-plan.cs.md`, a full Czech translation of `plans/store-release-plan.md`. Both files must be kept in sync when the plan changes; the Czech file carries a note saying so.
+- Added **§9 "Sync architecture without running your own database"** to both language versions, answering how to offer sync to paying strangers without operating a database:
+  - The problem splits in two: (A) personal multi-device sync, (B) band realtime "everyone on the same song". The codebase does both today — `realtime_state` and the `viewer/editor/admin/superuser` roles in `app_users` show it is a band tool, not only a personal songbook.
+  - (A) is solvable with zero infrastructure via a file in the user's **own** cloud — Google Drive `drive.appdata`, iCloud, Dropbox or WebDAV. Recommended combination: Drive + iCloud. The Drive scope is *sensitive* and needs Google OAuth verification (calendar time, start early).
+  - (B) is **not** solvable by cloud files; recommended answer is LAN sync (mDNS/Bonjour discovery + WebSocket state transport). For this use case LAN beats cloud — everyone is in the same room, works without mobile signal, no latency. Desktop presentation mode is already the same pattern across windows.
+  - Self-hosted PocketBase stays, demoted to an advanced "I run my own server" setting.
+  - Business-model warning: a one-time-purchase app with lifetime hosted sync is loss-making; hosted sync only works as a subscription. Hence v1 should need no server at all.
+  - Staging: v1.0 local-first + export/import/QR, v1.1 BYO-cloud sync, v1.2 LAN sync.
+- Rewrote **Decision 2 in §7** — no longer a binary "local-first vs hosted accounts" choice but the staged scale above.
+- Added to **Phase 1**: introduce an `updatedAt` timestamp on every song/playlist record now, before any cloud sync exists — per-record last-write-wins cannot be retrofitted onto data written without it. Added v1.1/v1.2 sync items to Phase 5.
+
+### What was fixed
+The plan's **B2** section was written against the pre-part-8 tree and had gone stale mid-session. Re-verified against the working tree and corrected in both language versions:
+
+- `pubspec.yaml` no longer lists `pocketbase_config.json` under assets, `rootBundle` is gone from `pocketbase_provider.dart`, and only `pocketbase_config.example.json` remains in the repo root — so the "remove the bundled asset" step is marked done rather than pending.
+- The still-open items were sharpened: the password was **not** rotated and shipped in every build released so far, so purging git history does not un-ship it; the single shared database is untouched; **three** API keys are in plain Hive (`settings_repository.dart:50-52`, loaded `:208-210`), not one, and `general_settings_body.dart:290-294` copies the YouTube and Gemini keys to the clipboard in the clear.
+- Line references corrected after the file shifted: the six scraped sources are `web_provider.dart:9-14`, the pisnicky-akordy token is `:15` and is sent as a bearer header at `:207`.
+- Added a new consideration to B2: the GitHub repo is now public, so anyone can clone and build the app for free and the source documents the server endpoint. Flagged as a commercial decision to make before launch, not a store blocker.
+
+### Current state
+Two plan documents in `plans/`, English and Czech, structurally identical (sections 0–9). Verified against the working tree, not from memory: `pubspec.yaml` assets, `pocketbase_provider.dart`, `settings_repository.dart`, `general_settings_body.dart`, `web_provider.dart`, `git remote -v`, `git status`. `flutter analyze`: 195 issues, 0 errors, 0 warnings — unchanged, nothing in `lib/` was touched.
+
+### Pending / next steps
+- Answer the five open decisions in §7; Decision 2 now has a concrete recommendation to accept or reject rather than an open question.
+- Rotate the PocketBase password and the three API keys; invalidate the pisnicky-akordy token.
+- Start the Play closed test early — a new personal account needs 12 testers for 14 continuous days.
+- Neither plan file is committed with these edits yet.
+
 ## 2026-08-17 (part 9) - chore(repo): purge secrets from git history, move origin to GitHub
 
 ### Why
