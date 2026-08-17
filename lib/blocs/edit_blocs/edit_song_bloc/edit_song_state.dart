@@ -26,6 +26,10 @@ class EditSongState extends Equatable {
   final bool isCurrentSongModified;
   final List<String> listModifications;
 
+  /// When true, changing a chord replaces every occurrence of that chord in the
+  /// whole song instead of just the selected one. Resets to false after use.
+  final bool changeAllSameChords;
+
   const EditSongState({
     required this.currentEditSong,
     required this.textStyle,
@@ -50,6 +54,7 @@ class EditSongState extends Equatable {
     required this.notes,
     this.isCurrentSongModified = false,
     this.listModifications = const [],
+    this.changeAllSameChords = false,
   });
 
   @override
@@ -77,6 +82,7 @@ class EditSongState extends Equatable {
         notes,
         isCurrentSongModified,
         listModifications,
+        changeAllSameChords,
       ];
 
   EditSongState copyWith({
@@ -103,6 +109,7 @@ class EditSongState extends Equatable {
     List<String>? notes,
     bool? isCurrentSongModified,
     List<String>? listModifications,
+    bool? changeAllSameChords,
   }) {
     return EditSongState(
       currentEditSong: currentEditSong ?? this.currentEditSong,
@@ -128,6 +135,7 @@ class EditSongState extends Equatable {
       notes: notes ?? this.notes,
       isCurrentSongModified: isCurrentSongModified ?? this.isCurrentSongModified,
       listModifications: listModifications ?? this.listModifications,
+      changeAllSameChords: changeAllSameChords ?? this.changeAllSameChords,
     );
   }
 

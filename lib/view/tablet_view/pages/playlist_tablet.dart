@@ -5,7 +5,6 @@ import 'package:default_project/view/mobile_view/widgets/chords_lyric/lyrics_ren
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 import '../../../blocs/export_blocs.dart';
 import '../../../services/constants.dart';
@@ -134,7 +133,7 @@ class _PlaylistTabletState extends State<PlaylistTablet> {
                   builder: (context, state) {
                     return IconButton(
                         icon: Icon(
-                          MdiIcons.radioboxMarked,
+                          Icons.radio_button_checked,
                           color: (state.currentSong.id != '' && state.selectedSongId == state.currentSong.id) ? Colors.green : AppColor.primaryDarkColor,
                         ),
                         onPressed: () {

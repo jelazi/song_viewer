@@ -19,14 +19,20 @@ class HiveProvider {
   Future<void> initHiveBox() async {
     settingsBox = await _openBoxSafe('settingsBox');
     transposeBox = await _openBoxSafe('transposeBox');
-    webSongBox = await _openBoxSafe('webSongBox');
-    interpretWebBox = await _openBoxSafe('interpretWebBox');
-    songsCacheBox = await _openBoxSafe('songsCacheBox');
+    webSongBox = await _openBoxSafe('webSongBox', isCache: true);
+    interpretWebBox = await _openBoxSafe('interpretWebBox', isCache: true);
+    songsCacheBox = await _openBoxSafe('songsCacheBox', isCache: true);
     searchHistoryBox = await _openBoxSafe('searchHistoryBox');
   }
 
   /// Opens a Hive box, removing stale lock files on failure and retrying once.
-  Future<Box> _openBoxSafe(String name) async {
+  ///
+  /// [isCache] marks boxes whose content can be downloaded again. If such a box
+  /// cannot be decoded — typically because it holds records written by an older
+  /// app version whose adapter has since changed — it is deleted and recreated
+  /// instead of blocking the app start. Boxes holding user data are never
+  /// dropped; those errors are rethrown.
+  Future<Box> _openBoxSafe(String name, {bool isCache = false}) async {
     try {
       return await Hive.openBox(name);
     } on PathAccessException catch (e) {
@@ -38,6 +44,11 @@ class HiveProvider {
           await lockFile.delete();
         } catch (_) {}
       }
+      return await Hive.openBox(name);
+    } catch (e) {
+      if (!isCache) rethrow;
+      logger.w('Hive cache box "$name" could not be read, recreating it: $e');
+      await Hive.deleteBoxFromDisk(name);
       return await Hive.openBox(name);
     }
   }

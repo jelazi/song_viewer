@@ -97,6 +97,14 @@ class ChangeChord extends EditSongEvent {
   List<Object> get props => [index, chord];
 }
 
+class SetChangeAllSameChords extends EditSongEvent {
+  final bool value;
+  const SetChangeAllSameChords({required this.value});
+
+  @override
+  List<Object> get props => [value];
+}
+
 class CreateChord extends EditSongEvent {
   final int index;
   final String chord;

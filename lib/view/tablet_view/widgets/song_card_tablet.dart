@@ -4,7 +4,6 @@ import 'package:default_project/services/enums.dart';
 import 'package:default_project/view/mobile_view/widgets/dialogs/question_dialog.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 import '../../../model/song/song.dart';
 import '../../../services/constants.dart';
@@ -122,7 +121,7 @@ class _SongCardTabletState extends State<SongCardTablet> with TickerProviderStat
                 ),
                 IconButton(
                     icon: Icon(
-                      MdiIcons.radioboxMarked,
+                      Icons.radio_button_checked,
                       color: widget.isSelectedSong ? AppColor.primaryColor : AppColor.grey3Color,
                     ),
                     onPressed: () {
@@ -148,7 +147,7 @@ class _SongCardTabletState extends State<SongCardTablet> with TickerProviderStat
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Icon(
-                                  MdiIcons.bookMusicOutline,
+                                  Icons.library_music_outlined,
                                   color: AppColor.grey1Color,
                                 ),
                                 Text('preview'.tr()),
@@ -165,7 +164,7 @@ class _SongCardTabletState extends State<SongCardTablet> with TickerProviderStat
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Icon(
-                                  MdiIcons.presentation,
+                                  Icons.slideshow_outlined,
                                   color: AppColor.grey1Color,
                                 ),
                                 Text('presentation'.tr()),
@@ -183,7 +182,7 @@ class _SongCardTabletState extends State<SongCardTablet> with TickerProviderStat
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Icon(
-                                    MdiIcons.imageFrame,
+                                    Icons.image_outlined,
                                     color: AppColor.grey1Color,
                                   ),
                                   Text('sheet'.tr()),
@@ -201,7 +200,7 @@ class _SongCardTabletState extends State<SongCardTablet> with TickerProviderStat
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Icon(
-                                    MdiIcons.videoOutline,
+                                    Icons.ondemand_video_outlined,
                                     color: AppColor.grey1Color,
                                   ),
                                   Text('youtube'.tr()),

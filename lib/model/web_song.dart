@@ -8,17 +8,20 @@ part 'web_song.g.dart';
 @JsonSerializable()
 @HiveType(typeId: 5)
 class WebSong extends WebItem {
-  @HiveField(2)
+  /// All fields carry a `defaultValue` so that records written by older app
+  /// versions — which did not have the field yet — stay readable instead of
+  /// failing with a null cast while opening the box.
+  @HiveField(2, defaultValue: '')
   String server = '';
-  @HiveField(3)
+  @HiveField(3, defaultValue: '')
   String interpret;
-  @HiveField(4)
+  @HiveField(4, defaultValue: true)
   bool ischords = true;
-  @HiveField(5)
+  @HiveField(5, defaultValue: '')
   String lyric = '';
 
   /// Optional YouTube link associated with the song (e.g. from worshipchords.com).
-  @HiveField(6)
+  @HiveField(6, defaultValue: '')
   String youtube = '';
   WebSong({
     required super.title,

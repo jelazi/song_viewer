@@ -97,6 +97,15 @@ class MockWebProvider extends _i1.Mock implements _i3.WebProvider {
       ) as String);
 
   @override
+  String get worshipChordsUrl => (super.noSuchMethod(
+        Invocation.getter(#worshipChordsUrl),
+        returnValue: _i4.dummyValue<String>(
+          this,
+          Invocation.getter(#worshipChordsUrl),
+        ),
+      ) as String);
+
+  @override
   String get tokenPisnickyAkordy => (super.noSuchMethod(
         Invocation.getter(#tokenPisnickyAkordy),
         returnValue: _i4.dummyValue<String>(
@@ -417,6 +426,57 @@ class MockWebProvider extends _i1.Mock implements _i3.WebProvider {
           Invocation.method(
             #getSongWorshipLeader,
             [songId],
+          ),
+        )),
+      ) as _i5.Future<_i2.Response<dynamic>>);
+
+  @override
+  _i5.Future<_i2.Response<dynamic>> searchWorshipChords(String? query) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #searchWorshipChords,
+          [query],
+        ),
+        returnValue:
+            _i5.Future<_i2.Response<dynamic>>.value(_FakeResponse_1<dynamic>(
+          this,
+          Invocation.method(
+            #searchWorshipChords,
+            [query],
+          ),
+        )),
+      ) as _i5.Future<_i2.Response<dynamic>>);
+
+  @override
+  _i5.Future<_i2.Response<dynamic>> getArtistWorshipChords(String? slug) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getArtistWorshipChords,
+          [slug],
+        ),
+        returnValue:
+            _i5.Future<_i2.Response<dynamic>>.value(_FakeResponse_1<dynamic>(
+          this,
+          Invocation.method(
+            #getArtistWorshipChords,
+            [slug],
+          ),
+        )),
+      ) as _i5.Future<_i2.Response<dynamic>>);
+
+  @override
+  _i5.Future<_i2.Response<dynamic>> getSongWorshipChords(String? slug) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getSongWorshipChords,
+          [slug],
+        ),
+        returnValue:
+            _i5.Future<_i2.Response<dynamic>>.value(_FakeResponse_1<dynamic>(
+          this,
+          Invocation.method(
+            #getSongWorshipChords,
+            [slug],
           ),
         )),
       ) as _i5.Future<_i2.Response<dynamic>>);

@@ -1,5 +1,127 @@
 # Development Log
 
+## 2026-08-17 (part 6) - fix: new-chord overlay is dismissable and its checkbox is readable
+
+### What was fixed
+Two reports from using the chord editor:
+
+1. **The "change all identical chords" checkbox was white on white** — the icon and label inherited the ambient icon/text theme. Both the popup menu entry (`_changeAllSameChordsItem`) and the overlay checkbox now set `color: Colors.black` explicitly, as does the overlay's text field content.
+2. **The "new chord" overlay could not be cancelled** — it only offered a confirm button, and Escape stops reaching the `KeyboardListener` as soon as focus leaves the text field (e.g. after tapping the checkbox). The overlay now has three ways out:
+   - a **close (X) icon button** next to the confirm button,
+   - **Escape**, still handled by the `KeyboardListener` while the field has focus,
+   - a **full-screen barrier** — the `OverlayEntry` now builds a `Stack` with a `Positioned.fill` `GestureDetector` (opaque) behind the input, so clicking anywhere outside cancels it. This also blocks interaction with the page while the input is open, like a real dialog.
+
+   The overlay panel also got `color: Colors.white` + `elevation: 4` so it reads as a floating panel, and it is slightly wider (desktop 260 → 300, tablet 280 → 330) to fit the second button. Both buttons carry `ok`/`cancel` tooltips from the existing translation keys.
+
+Files: `view/desktop_view/widgets/edit_span_desktop.dart`, `view/tablet_view/widgets/edit_span_tablet.dart`.
+
+### Current state
+- `flutter analyze lib`: 0 errors; `flutter build macos --debug` builds.
+- Not verified by hand — needs a right-click on a chord, then X / Escape / a click outside.
+
+## 2026-08-17 (part 5) - fix: new-chord overlay stayed open and fired twice on Enter
+
+### What was fixed
+Confirming a new chord with Enter left the input overlay on screen and threw `An OverlayEntry should be removed only once` (`overlay.dart:227`). `RawKeyboardListener.onKey` is invoked for the key *up* event as well, and `RawKeyUpEvent` carries the same `logicalKey`, so `submit()` ran twice: the second run removed an already-removed `OverlayEntry` and, worse, dispatched a second `CreateChord`/`ChangeChord` event.
+
+- `view/desktop_view/widgets/edit_span_desktop.dart`, `view/tablet_view/widgets/edit_span_tablet.dart`:
+  - `RawKeyboardListener`/`onKey` (deprecated) replaced with `KeyboardListener`/`onKeyEvent`, which ignores anything that is not a `KeyDownEvent`.
+  - The overlay entry is now a local `OverlayEntry?` inside `_createNewChord`; `removeOverlay()` nulls it before removing, and `submit()` returns early when it is already gone, so both the keyboard path and the confirm button are idempotent. Previously removal went through `widget.overlayEntry`, a mutable field on the widget that the parent rebuilds — a second hazard for removing the wrong entry.
+  - The unused `_removeOverlay()` method was dropped from both files.
+
+### Current state
+- `flutter analyze lib`: 0 errors, and the `deprecated_member_use` lint for `RawKeyboardListener` is gone from both files.
+- `flutter build macos --debug`: builds. `flutter test test/unit_tests/blocs`: 5/5 pass.
+- Not verified by hand — needs one Enter and one Escape in the overlay to confirm on screen.
+
+## 2026-08-17 (part 4) - fix: overflow in the new-chord overlay
+
+### What was fixed
+`A RenderFlex overflowed by 14 pixels on the bottom` from the "new chord" overlay added earlier today (part 1). The overlay had a hard-coded height (260x90 on desktop, 280x100 on tablet), but with the "change all identical chords" checkbox the content is 104 px tall (50 px text-field row + 54 px checkbox row).
+
+- `view/desktop_view/widgets/edit_span_desktop.dart`, `view/tablet_view/widgets/edit_span_tablet.dart` — the `SizedBox` around the overlay column now only constrains the width; the `Column` already had `mainAxisSize: MainAxisSize.min`, so it sizes to its content inside the loosely constrained `Positioned`. This also drops the `isNew ? … : …` height branch.
+
+### Current state
+- `flutter analyze lib`: 0 errors; `flutter build macos --debug` builds.
+- Not verified visually — opening the overlay needs a right-click on a chord in the desktop editor, which was not driven from here.
+
+## 2026-08-17 (part 3) - fix: startup crash reading the web song Hive cache
+
+### What was fixed
+Starting the app threw `type 'Null' is not a subtype of type 'String' in type cast` in `WebSongAdapter.read` while `HiveProvider.initHiveBox` opened `webSongBox`. The box still holds `WebSong` records written before the `youtube` field (`@HiveField(6)`, added 2026-06-18 with the worshipchords source) existed; for those frames `fields[6]` is `null` and the generated adapter cast it straight to `String`.
+
+- `model/web_song.dart` — every `@HiveField` now declares a `defaultValue` (`server`/`interpret`/`lyric`/`youtube` → `''`, `ischords` → `true`), so the regenerated adapter emits `fields[6] == null ? '' : fields[6] as String` and old records stay readable.
+- `model/web_interpret.dart` — same for `songs` (`defaultValue: -1`).
+- `providers/hive_provider.dart` — `_openBoxSafe` gained an `isCache` flag. `webSongBox`, `interpretWebBox` and `songsCacheBox` hold re-downloadable data: if one of them cannot be decoded at all, it is now deleted and recreated instead of blocking startup. Boxes with user data (`settingsBox`, `transposeBox`, `searchHistoryBox`) keep rethrowing.
+- Adapters regenerated with `dart run build_runner build --delete-conflicting-outputs`. This also refreshed the checked-in `test/unit_tests/repositories/*.mocks.dart` (additions only — the stale mocks were missing members such as `HiveProvider.searchHistoryBox`).
+
+### Current state
+- `flutter build macos --debug`: builds; the app was launched from the terminal for 20 s and reached the UI (localization loaded, main window started) with no exception and no error line in the log — the same box that crashed before now opens.
+- `flutter analyze lib`: 0 errors.
+- `flutter test test/unit_tests`: 309 pass, 10 fail — the same 10 pre-existing repository failures as before the change, so the regenerated mocks changed nothing.
+
+### Pending / next steps
+- The other Hive models (`user.dart`, `update_playlist_data.dart`, `update_songlist_data.dart`) have no fields added after their initial version, so they were left alone. Any future `@HiveField` added to a stored model should carry a `defaultValue`.
+
+## 2026-08-17 (part 2) - fix: macOS build (code signing + dead icon package)
+
+### What was fixed
+The macOS build failed with `Provisioning profile "Mac Team Provisioning Profile: *" doesn't include signing certificate "Apple Development: Lubomír Žižka (R79Y34SX3Q)"`. Three separate problems were behind a working `flutter build macos`:
+
+1. **Stale team provisioning profile.** The cached `Mac Team Provisioning Profile: *` (team `BZF32VC6NQ`, created 2025-09-30) contains only certificates that expired on 2026-03-27 / 2026-07-11 / 2026-08-12. The valid `Apple Development: Lubomír Žižka (R79Y34SX3Q)` certificate in the keychain (SHA-1 `9CA9498C…`, valid until 2027-08-12) was issued after the profile, so it is not in it. Regenerating the profile needs Xcode signed into the team account (`xcodebuild -allowProvisioningUpdates`), which the Flutter CLI does not do. The stale profile was moved to `~/Desktop/stale_profiles_backup/`.
+2. **Signing configuration.** `macos/Runner.xcodeproj/project.pbxproj` — all three Runner configurations (Debug, Profile, Release) switched from automatic team signing (`CODE_SIGN_IDENTITY[sdk=macosx*] = "Apple Development"`, `CODE_SIGN_STYLE = Automatic`, `DEVELOPMENT_TEAM = BZF32VC6NQ`) to local signing (`CODE_SIGN_IDENTITY = "-"`, `CODE_SIGN_STYLE = Manual`, empty `DEVELOPMENT_TEAM`) — Xcode's "Sign to Run Locally". The repository has no macOS distribution pipeline (only the Windows Inno Setup installer), so macOS builds are local-only.
+3. **Entitlements.** With local signing `$(AppIdentifierPrefix)` expands to nothing, so `keychain-access-groups` became the invalid group `com.lzizka.songsviewer.macos` and the app was killed at launch (`Launchd job spawn failed`, POSIX 162). The key was removed from `macos/Runner/DebugProfile.entitlements` and `Release.entitlements`; nothing in the code uses the keychain.
+
+After signing was fixed, the build hit a second, unrelated failure: **`material_design_icons_flutter` 7.0.7296 no longer compiles** with Flutter 3.44.3 (`class _MdiIconData extends IconData` — `IconData` is now a `final class`). The package's last release is from 2023 and upstream master (v7.4.47, Nov 2024) is unfixed, so the dependency was dropped and its 6 icons replaced with built-in Material icons across 7 files:
+
+| MDI | Material |
+| --- | --- |
+| `MdiIcons.radioboxMarked` | `Icons.radio_button_checked` |
+| `MdiIcons.guitarAcoustic` | `Icons.music_note` |
+| `MdiIcons.bookMusicOutline` | `Icons.library_music_outlined` |
+| `MdiIcons.presentation` | `Icons.slideshow_outlined` |
+| `MdiIcons.imageFrame` | `Icons.image_outlined` |
+| `MdiIcons.videoOutline` | `Icons.ondemand_video_outlined` |
+
+Touched: `view/mobile_view/pages/preview_page.dart`, `view/mobile_view/pages/edit_pages/edit_page.dart`, `view/mobile_view/widgets/song_card.dart`, `view/tablet_view/pages/preview_page_tablet.dart`, `view/tablet_view/pages/playlist_tablet.dart`, `view/tablet_view/pages/tablet_edit_pages/edit_page_tablet.dart`, `view/tablet_view/widgets/song_card_tablet.dart`, plus the dependency removal in `pubspec.yaml`.
+
+`macos/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme` also changed — Flutter's own tooling added the "Prepare Flutter Framework Script" pre-action during the build.
+
+### Current state
+- `flutter build macos --debug`: builds; the resulting app is ad-hoc signed (`Signature=adhoc`, `TeamIdentifier=not set`), `codesign --verify --deep --strict` passes, and the app was launched and confirmed running.
+- `flutter build macos --release`: builds and packages successfully (62.3 MB).
+- `flutter analyze lib test`: 0 errors.
+- `flutter test test/unit_tests/blocs`: 5/5 pass.
+
+### Pending / next steps
+- An ad-hoc signed app runs only on this machine — Gatekeeper will block it elsewhere. To distribute a macOS build, restore automatic signing with team `BZF32VC6NQ` in Xcode (which will also regenerate a fresh provisioning profile containing the current certificate) and re-add `keychain-access-groups` only if the keychain is ever actually used.
+- The MDI icon replacements were not visually reviewed on mobile/tablet screens.
+- Unrelated: the `desktop_multi_window`, `patrol` and `screen_retriever_macos` plugins still lack Swift Package Manager support (warning only, will become an error in a future Flutter).
+
+## 2026-08-17 - feat: change all identical chords in a song at once
+
+### What was done
+The chord editor (right-click / long-press on a chord → "Změň akord") got a new checkable option **"Změň všechny stejné akordy v písni"**. When it is enabled and a new chord is picked, the whole song is rewritten — every occurrence of the edited chord becomes the new one (e.g. selecting a `C` and changing it to `G` turns all `[C]` into `[G]`). Default is off, so the previous behaviour (change just the selected occurrence) is unchanged.
+
+- `blocs/edit_blocs/edit_song_bloc/edit_song_state.dart` — new `changeAllSameChords` flag (default `false`) in `EditSongState` (constructor, `props`, `copyWith`).
+- `blocs/edit_blocs/edit_song_bloc/edit_song_event.dart` — new `SetChangeAllSameChords(value)` event.
+- `blocs/edit_blocs/edit_song_bloc/edit_song_bloc.dart` — `_setChangeAllSameChords` handler; `_changeChord` now reads the old chord text between the brackets and, when the flag is on and the chord actually differs, does `text.replaceAll('[old]', '[new]')` over the whole lyrics instead of a single `replaceRange`. The flag is reset to `false` after every applied change and on `ChangeEditSong`.
+- `view/desktop_view/widgets/edit_span_desktop.dart` and `view/tablet_view/widgets/edit_span_tablet.dart` — new `_changeAllSameChordsItem(...)` checkbox entry at the top of the chord list in the "change chord" submenu (tapping it toggles the flag without closing the menu), and the same checkbox in the "new chord" input overlay (shown only when changing an existing chord, not when creating one on a lyric character). The overlay also got an explicit confirm (check) button, because tapping the checkbox takes focus away from the text field and Enter alone would no longer submit.
+- `assets/lang/cs.json`, `assets/lang/en.json` — new `changeAllSameChords` key.
+
+The mobile chord editor (`view/mobile_view/pages/edit_pages/edit_chords.dart`) has no working chord menu (its handlers are legacy commented-out code), so it was left untouched.
+
+### What was fixed
+`_changeChord` / `_createChord` recomputed `listUniqueChords` from a temporary `Song(id: '0', lyrics: text)` but asked for `TypeLyric.original` when editing the original lyrics — that reads `originalLyrics`, which is `null` on the temporary song, so the unique chord list came back empty while editing original lyrics. Both now use `TypeLyric.translate`, matching the field the text is actually stored in.
+
+### Current state
+- New `test/unit_tests/blocs/edit_song_bloc_test.dart` (mockito nice mocks for `SongsRepository`/`SettingsRepository`, generated `edit_song_bloc_test.mocks.dart`): 5 tests covering the default-off behaviour, the replace-all behaviour, the flag reset and the no-op case — all pass.
+- `flutter analyze lib test`: 0 errors (only pre-existing info/warning lints).
+- `flutter test test/unit_tests`: 309 passing, 10 failing — all 10 failures are in `repositories/settings_repository_test.dart` and `repositories/songs_repository_test.dart` and were verified to fail identically on a clean tree (pre-existing, unrelated).
+
+### Pending / next steps
+- Manual check on desktop and tablet: the checkbox inside the popup submenu and inside the new-chord overlay, including the new confirm button in the overlay.
+
 ## 2026-06-18 - Web search: persisted search-query history (per server + combined)
 
 ### What was added

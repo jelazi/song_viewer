@@ -148,6 +148,8 @@ class _EditSpanTabletState extends State<EditSpanTablet> {
                           Navigator.pop(context, 'changeChord');
                         },
                       ),
+                      _changeAllSameChordsItem(height: 40, fontSize: 14, iconSize: 22),
+                      const PopupMenuDivider(height: 1),
                       ...state.listUniqueChords
                           .map((e) => PopupMenuItem(
                                 height: 35,
@@ -178,6 +180,36 @@ class _EditSpanTabletState extends State<EditSpanTablet> {
           },
         ),
       ],
+    );
+  }
+
+  /// Checkable menu item: when enabled, picking a chord rewrites every
+  /// occurrence of the edited chord in the whole song. Tapping it toggles the
+  /// flag without closing the menu.
+  PopupMenuEntry _changeAllSameChordsItem({required double height, required double fontSize, required double iconSize}) {
+    return CustomPopupMenuItem(
+      height: height,
+      child: BlocBuilder<EditSongBloc, EditSongState>(
+        builder: (context, state) {
+          return InkWell(
+            onTap: () {
+              context.read<EditSongBloc>().add(SetChangeAllSameChords(value: !state.changeAllSameChords));
+            },
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  state.changeAllSameChords ? Icons.check_box : Icons.check_box_outline_blank,
+                  size: iconSize,
+                  color: Colors.black,
+                ),
+                const SizedBox(width: 8),
+                Text('changeAllSameChords'.tr(), style: TextStyle(fontSize: fontSize, color: Colors.black)),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -241,52 +273,128 @@ class _EditSpanTabletState extends State<EditSpanTablet> {
   void _createNewChord(BuildContext context, Offset position, int index, bool isNew) {
     TextEditingController controller = TextEditingController();
     OverlayState overlayState = Overlay.of(context);
-    widget.overlayEntry = OverlayEntry(
-      builder: (context) => Positioned(
-        top: position.dy,
-        left: position.dx,
-        child: Material(
-          child: SizedBox(
-            width: 200,
-            height: 50,
-            child: RawKeyboardListener(
-              focusNode: FocusNode(),
-              onKey: (event) {
-                if (event.logicalKey == LogicalKeyboardKey.enter || event.logicalKey == LogicalKeyboardKey.numpadEnter) {
-                  if (controller.text.isEmpty) {
+    final EditSongBloc bloc = context.read<EditSongBloc>();
+    OverlayEntry? entry;
+
+    /// The overlay must be removed exactly once — a key press delivers both a
+    /// down and an up event, and the confirm button can be tapped as well.
+    void removeOverlay() {
+      final currentEntry = entry;
+      entry = null;
+      currentEntry?.remove();
+    }
+
+    void submit() {
+      if (entry == null || controller.text.isEmpty) {
+        return;
+      }
+      if (isNew) {
+        bloc.add(CreateChord(index: index, chord: controller.text));
+      } else {
+        bloc.add(ChangeChord(index: index, chord: controller.text));
+      }
+      removeOverlay();
+    }
+
+    entry = OverlayEntry(
+      builder: (context) => Stack(
+        children: [
+          /// Tapping anywhere outside the input cancels it.
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: removeOverlay,
+            ),
+          ),
+          Positioned(
+            top: position.dy,
+            left: position.dx,
+            child: Material(
+              color: Colors.white,
+              elevation: 4,
+              child: KeyboardListener(
+                focusNode: FocusNode(),
+                onKeyEvent: (event) {
+                  if (event is! KeyDownEvent) {
                     return;
                   }
-                  if (isNew) {
-                    context.read<EditSongBloc>().add(CreateChord(index: index, chord: controller.text));
-                  } else {
-                    context.read<EditSongBloc>().add(ChangeChord(index: index, chord: controller.text));
+                  if (event.logicalKey == LogicalKeyboardKey.enter || event.logicalKey == LogicalKeyboardKey.numpadEnter) {
+                    submit();
                   }
-                  _removeOverlay();
-                }
-                if (event.logicalKey == LogicalKeyboardKey.escape) {
-                  _removeOverlay();
-                }
-              },
-              child: TextField(
-                focusNode: FocusNode(),
-                controller: controller,
-                textInputAction: TextInputAction.done,
-                autofocus: true,
-                decoration: InputDecoration(
-                  labelText: 'inputNewChord'.tr(),
+                  if (event.logicalKey == LogicalKeyboardKey.escape) {
+                    removeOverlay();
+                  }
+                },
+                child: SizedBox(
+                  width: 330,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        height: 50,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                focusNode: FocusNode(),
+                                controller: controller,
+                                textInputAction: TextInputAction.done,
+                                autofocus: true,
+                                style: const TextStyle(color: Colors.black),
+                                decoration: InputDecoration(
+                                  labelText: 'inputNewChord'.tr(),
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              tooltip: 'ok'.tr(),
+                              icon: const Icon(Icons.check, size: 22, color: Colors.black),
+                              onPressed: submit,
+                            ),
+                            IconButton(
+                              tooltip: 'cancel'.tr(),
+                              icon: const Icon(Icons.close, size: 22, color: Colors.black),
+                              onPressed: removeOverlay,
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (!isNew)
+                        BlocBuilder<EditSongBloc, EditSongState>(
+                          bloc: bloc,
+                          builder: (context, state) {
+                            return InkWell(
+                              onTap: () => bloc.add(SetChangeAllSameChords(value: !state.changeAllSameChords)),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      state.changeAllSameChords ? Icons.check_box : Icons.check_box_outline_blank,
+                                      size: 22,
+                                      color: Colors.black,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Flexible(child: Text('changeAllSameChords'.tr(), style: const TextStyle(fontSize: 14, color: Colors.black))),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
 
-    overlayState.insert(widget.overlayEntry);
-  }
-
-  void _removeOverlay() {
-    widget.overlayEntry.remove();
+    widget.overlayEntry = entry!;
+    overlayState.insert(entry!);
   }
 }
 

@@ -4,7 +4,6 @@ import 'package:default_project/services/enums.dart';
 import 'package:default_project/view/mobile_view/widgets/dialogs/question_dialog.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 import '../../../model/song/song.dart';
 import '../../../services/constants.dart';
@@ -101,7 +100,7 @@ class _SongCardState extends State<SongCard> {
                 // Select button
                 IconButton(
                     icon: Icon(
-                      MdiIcons.radioboxMarked,
+                      Icons.radio_button_checked,
                       color: widget.isSelectedSong ? Colors.green : AppColor.grey3Color,
                       size: 20,
                     ),
@@ -128,7 +127,7 @@ class _SongCardState extends State<SongCard> {
                             child: Row(
                               children: [
                                 Icon(
-                                  MdiIcons.bookMusicOutline,
+                                  Icons.library_music_outlined,
                                   color: AppColor.grey1Color,
                                 ),
                                 const SizedBox(width: 12),
@@ -142,7 +141,7 @@ class _SongCardState extends State<SongCard> {
                             child: Row(
                               children: [
                                 Icon(
-                                  MdiIcons.presentation,
+                                  Icons.slideshow_outlined,
                                   color: AppColor.grey1Color,
                                 ),
                                 const SizedBox(width: 12),
@@ -160,7 +159,7 @@ class _SongCardState extends State<SongCard> {
                               child: Row(
                                 children: [
                                   Icon(
-                                    MdiIcons.imageFrame,
+                                    Icons.image_outlined,
                                     color: AppColor.grey1Color,
                                   ),
                                   const SizedBox(width: 12),
@@ -178,7 +177,7 @@ class _SongCardState extends State<SongCard> {
                               child: Row(
                                 children: [
                                   Icon(
-                                    MdiIcons.videoOutline,
+                                    Icons.ondemand_video_outlined,
                                     color: AppColor.grey1Color,
                                   ),
                                   const SizedBox(width: 12),

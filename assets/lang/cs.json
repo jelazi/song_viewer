@@ -213,6 +213,7 @@
     "createChord": "Vytvoř akord",
     "deleteChord": "Vymaž akord",
     "newChord": "Nový akord",
+    "changeAllSameChords": "Změň všechny stejné akordy v písni",
     "noSongSelected": "Není vybrána píseň",
     "changeToOriginal": "Jdi na originál",
     "changeToTranslate": "Jdi na překlad",

@@ -52,6 +52,7 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
     on<UpdateListUniqueChords>(_updateListUniqueChords);
     on<ChangePositionChord>(_changePositionChord);
     on<ChangeChord>(_changeChord);
+    on<SetChangeAllSameChords>(_setChangeAllSameChords);
     on<CreateChord>(_createChord);
     on<DeleteChord>(_deleteChord);
     on<SaveSong>(_saveSong);
@@ -106,6 +107,7 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
         tags: event.song.tags ?? [],
         isCurrentSongModified: false,
         listModifications: const [],
+        changeAllSameChords: false,
       ));
     } else {
       emit(state.copyWith(
@@ -124,6 +126,7 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
         tags: event.song.tags ?? [],
         isCurrentSongModified: false,
         listModifications: const [],
+        changeAllSameChords: false,
       ));
     }
   }
@@ -403,6 +406,10 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
     _recalculateModified(emit);
   }
 
+  void _setChangeAllSameChords(SetChangeAllSameChords event, Emitter<EditSongState> emit) {
+    emit(state.copyWith(changeAllSameChords: event.value));
+  }
+
   void _changeChord(ChangeChord event, Emitter<EditSongState> emit) {
     final state = this.state;
     var text = state.currentText;
@@ -414,10 +421,20 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
         break;
       }
     }
-    text = text.replaceRange(firstIndex, lastIndex + 1, '[${event.chord}]');
+    final oldChord = text.substring(firstIndex + 1, lastIndex);
+    if (state.changeAllSameChords && oldChord != event.chord) {
+      /// Replace every occurrence of the same chord in the whole song.
+      text = text.replaceAll('[$oldChord]', '[${event.chord}]');
+    } else {
+      text = text.replaceRange(firstIndex, lastIndex + 1, '[${event.chord}]');
+    }
     Song currentSong = Song(id: '0', title: '', lyrics: text);
     emit(state.copyWith(
-        currentText: text, listUniqueChords: currentSong.getAllUniqueChordsFromSong(state.isOriginalLyrics ? TypeLyric.original : TypeLyric.translate), selectedChord: -1));
+      currentText: text,
+      listUniqueChords: currentSong.getAllUniqueChordsFromSong(TypeLyric.translate),
+      selectedChord: -1,
+      changeAllSameChords: false,
+    ));
     _recalculateModified(emit);
   }
 
@@ -427,8 +444,7 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
     // insert chord on index
     text = text.replaceRange(event.index, event.index, '[${event.chord}]');
     Song currentSong = Song(id: '0', title: '', lyrics: text);
-    emit(state.copyWith(
-        currentText: text, listUniqueChords: currentSong.getAllUniqueChordsFromSong(state.isOriginalLyrics ? TypeLyric.original : TypeLyric.translate), selectedChord: -1));
+    emit(state.copyWith(currentText: text, listUniqueChords: currentSong.getAllUniqueChordsFromSong(TypeLyric.translate), selectedChord: -1));
     _recalculateModified(emit);
   }
 

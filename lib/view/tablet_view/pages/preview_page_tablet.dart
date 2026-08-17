@@ -7,7 +7,6 @@ import 'package:default_project/view/mobile_view/widgets/dialogs/dialogs_export.
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 import '../../../blocs/export_blocs.dart';
 import '../../../services/enums.dart';
@@ -259,7 +258,7 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
             builder: (context, state) {
               return IconButton(
                   icon: Icon(
-                    MdiIcons.radioboxMarked,
+                    Icons.radio_button_checked,
                     color: (state.data.song != null && state.selectedSongId == state.data.song?.id) ? Colors.green : AppColor.primaryDarkColor,
                   ),
                   onPressed: () {

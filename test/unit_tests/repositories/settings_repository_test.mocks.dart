@@ -152,6 +152,25 @@ class MockHiveProvider extends _i1.Mock implements _i4.HiveProvider {
       );
 
   @override
+  _i2.Box<dynamic> get searchHistoryBox => (super.noSuchMethod(
+        Invocation.getter(#searchHistoryBox),
+        returnValue: _FakeBox_0<dynamic>(
+          this,
+          Invocation.getter(#searchHistoryBox),
+        ),
+      ) as _i2.Box<dynamic>);
+
+  @override
+  set searchHistoryBox(_i2.Box<dynamic>? _searchHistoryBox) =>
+      super.noSuchMethod(
+        Invocation.setter(
+          #searchHistoryBox,
+          _searchHistoryBox,
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
   _i5.Future<void> initHiveBox() => (super.noSuchMethod(
         Invocation.method(
           #initHiveBox,
@@ -328,6 +347,40 @@ class MockHiveProvider extends _i1.Mock implements _i4.HiveProvider {
       );
 
   @override
+  void saveChordDiagramsCache(
+    Map<String, List<String>>? diagrams,
+    String? syncTimestamp,
+  ) =>
+      super.noSuchMethod(
+        Invocation.method(
+          #saveChordDiagramsCache,
+          [
+            diagrams,
+            syncTimestamp,
+          ],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  bool isChordsSeedDone() => (super.noSuchMethod(
+        Invocation.method(
+          #isChordsSeedDone,
+          [],
+        ),
+        returnValue: false,
+      ) as bool);
+
+  @override
+  void setChordsSeedDone() => super.noSuchMethod(
+        Invocation.method(
+          #setChordsSeedDone,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
   _i10.WebInterpret? getInterpretFromWebBox(
     String? nameWeb,
     String? ref,
@@ -349,6 +402,49 @@ class MockHiveProvider extends _i1.Mock implements _i4.HiveProvider {
         ),
         returnValue: <_i10.WebInterpret>[],
       ) as List<_i10.WebInterpret>);
+
+  @override
+  void addSearchHistory(
+    String? server,
+    String? query,
+  ) =>
+      super.noSuchMethod(
+        Invocation.method(
+          #addSearchHistory,
+          [
+            server,
+            query,
+          ],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  List<String> getSearchHistory(String? server) => (super.noSuchMethod(
+        Invocation.method(
+          #getSearchHistory,
+          [server],
+        ),
+        returnValue: <String>[],
+      ) as List<String>);
+
+  @override
+  List<String> getAllSearchHistory() => (super.noSuchMethod(
+        Invocation.method(
+          #getAllSearchHistory,
+          [],
+        ),
+        returnValue: <String>[],
+      ) as List<String>);
+
+  @override
+  void clearSearchHistory(String? server) => super.noSuchMethod(
+        Invocation.method(
+          #clearSearchHistory,
+          [server],
+        ),
+        returnValueForMissingStub: null,
+      );
 }
 
 /// A class which mocks [PocketBaseProvider].

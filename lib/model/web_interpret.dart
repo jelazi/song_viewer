@@ -9,7 +9,7 @@ part 'web_interpret.g.dart';
 @JsonSerializable()
 @HiveType(typeId: 6)
 class WebInterpret extends WebItem {
-  @HiveField(3)
+  @HiveField(3, defaultValue: -1)
   int songs = -1;
   WebInterpret({required super.title, required super.ref, this.songs = -1});
 }

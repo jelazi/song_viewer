@@ -11,7 +11,6 @@ import 'package:default_project/view/mobile_view/widgets/dialogs/question_dialog
 import 'package:easy_localization/easy_localization.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../blocs/export_blocs.dart';
@@ -794,7 +793,7 @@ class EditRow extends StatelessWidget {
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(4),
                                   ),
-                                  child: Icon(MdiIcons.guitarAcoustic)),
+                                  child: Icon(Icons.music_note)),
                               onPressed: () => chordEditFunction!(),
                             ),
                           ),
