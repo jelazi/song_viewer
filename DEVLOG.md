@@ -1,5 +1,27 @@
 # Development Log
 
+## 2026-08-17 (part 14) - refactor(web): drop the network warm-up from WebBloc init
+
+### What was done
+Removed the warm-up fetch from `WebBloc._init` entirely, superseding the try/catch added in part 13. On the user's decision — part 13 had flagged it as questionable.
+
+`_init` previously called `webRepository.findInterpretPisnickyAkordy('a')`, a plain `GET https://pisnicky-akordy.cz/#a` on every startup, purely to pre-fill a cache. That made app startup depend on a third-party site being reachable, which is what produced the unhandled 403.
+
+**Nothing is lost.** `findInterpretPisnickyAkordy()` already guards its fetch with `if (allInterpretersPisnickyAkordy.isEmpty)`, so the interpret list populates itself lazily on the first real search. The warm-up only moved that work earlier.
+
+Also dropped the now-pointless `emit(state.copyWith(isSearching: true))` that immediately preceded it: with no async work left in the handler it emitted a spinner state and cleared it in the same synchronous run. Everything remaining in `_init` is local Hive reads.
+
+The defensive try/catch added to `web_repository.dart` in part 13 is **kept** — it still guards the lazy path, which is now the only path that hits the network.
+
+### Current state
+- `flutter analyze lib`: **0 errors, 0 warnings** (181 infos, unchanged baseline). No new lints in `web_bloc.dart`; the only one there is the pre-existing `depend_on_referenced_packages` on the `bloc` import.
+- `_init` no longer performs any network I/O.
+- **Not run.** Compile-verified only — the personal build has still not been launched to confirm startup behaviour.
+
+### Pending / next steps
+- Launch the personal build and confirm startup completes and the web tab still works (first search should populate the interpret list lazily).
+- Everything still pending from part 12: web target unbuildable (`dart:ffi` via `win32_fullscreen.dart`), macOS/Windows/Linux flavour builds unproven, Xcode scheme setup manual.
+
 ## 2026-08-17 (part 13) - fix(web): unreachable source site no longer crashes startup
 
 ### What was fixed

@@ -63,14 +63,10 @@ class WebBloc extends Bloc<WebEvent, WebState> {
         color: settingsRepository.previewColorChord,
       ),
     ));
-    emit(state.copyWith(isSearching: true));
-    // Warm-up fetch only. It is a nice-to-have, so failure must leave the bloc
-    // in a usable state rather than propagate out of the event handler.
-    try {
-      await webRepository.findInterpretPisnickyAkordy('a');
-    } catch (e) {
-      debugPrint('WebBloc init warm-up failed, continuing without it: $e');
-    }
+    // No network call during init. The interpret list is populated lazily by
+    // findInterpretPisnickyAkordy() on the first real search, so warming it up
+    // here bought nothing and made startup depend on a third-party site being
+    // reachable. Everything below is a local Hive read.
     final historyInterprets = hiveProvider.getInterpretsFromWebBox('pisnicky-akordy.cz');
 
     emit(state.copyWith(
