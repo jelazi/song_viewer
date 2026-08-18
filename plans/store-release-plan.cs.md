@@ -122,6 +122,13 @@ Náprava:
    nastavení kopíruje klíče k YouTube a Gemini nešifrovaně do schránky
    (`general_settings_body.dart:290-294`). Použít `flutter_secure_storage`, odstranit je z jakéhokoli
    exportu či diagnostiky, nebo klíče zadávané uživatelem z mobilního buildu vypustit.
+   **Pro store vyřešeno 2026-08-18** volbou „vypustit": celá sekce klíčů v nastavení (včetně
+   tlačítka „Export all API keys" do schránky) je za `Features.aiEnrichment`, takže ve store buildu
+   ji nelze zobrazit ani vyplnit — `FEATURE_AI` je `false` v `store_mobile.json`
+   i `store_desktop.json`. **Personal build zůstává beze změny**: klíče se zadávají dál a leží dál
+   v čitelném Hive. Zbývá tedy jen pro personal, a je to o řád menší riziko (jedno zařízení,
+   vlastní klíče). `backup_service.dart:197-199` / `:386-388` klíče pořád zapisuje do zálohy
+   nastavení a zpět načítá — ve store buildu jsou vždy prázdné, v personal ne.
 4. Zpřísnit pravidla kolekcí v PocketBase tak, aby běžný uživatel četl a zapisoval jen vlastní
    záznamy. Projít podle toho `pocketbase_collections.json`.
 5. Rozhodnout model synchronizace — **celý rozbor je v §9.** Ve zkratce: lokálně first jako výchozí

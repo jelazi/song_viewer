@@ -563,5 +563,22 @@
     "songKaraokeQuery": "{} píseň karaoke",
     "savingBackupJson": "Ukládání backup.json...",
     "authorsLabel": "Autoři",
-    "songsLabel": "Písně"
+    "songsLabel": "Písně",
+    "chordProImport": "Import ChordPro",
+    "chordProImportTitle": "Import písní ze souborů ChordPro",
+    "chordProImportHint": "Vyberte jeden nebo více souborů .cho / .chopro / .pro / .crd / .txt. Jeden soubor může obsahovat víc písní. Nic se neuloží, dokud import nepotvrdíte.",
+    "chordProPickFiles": "Vybrat soubory",
+    "chordProClear": "Vyčistit",
+    "chordProSourceFiles": "Načteno z: {}",
+    "chordProFoundSongs": "Nalezeno písní: {}",
+    "chordProImportSelected": "Importovat vybrané ({})",
+    "chordProImported": "Importováno {} písní.",
+    "chordProNoSongsFound": "Ve vybraných souborech nebyla nalezena žádná píseň s textem.",
+    "chordProImportFailed": "Import se nezdařil.",
+    "chordProWarningsTitle": "Poznámky k importu",
+    "chordProSkipped": "Přeskočeno bloků bez textu: {}",
+    "chordProLineCount": "{} řádků",
+    "chordProChordCount": "{} akordů",
+    "chordProChorusLabel": "R:",
+    "chordProBridgeLabel": "B:"
 }

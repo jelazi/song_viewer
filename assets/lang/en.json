@@ -482,5 +482,22 @@
     "changeAllSameChords": "Change all identical chords in the song",
     "selectGroups": "Select groups to display",
     "enterTitle": "Please enter a song title",
-    "superuserMode": "Superuser mode"
+    "superuserMode": "Superuser mode",
+    "chordProImport": "Import ChordPro",
+    "chordProImportTitle": "Import songs from ChordPro files",
+    "chordProImportHint": "Pick one or more .cho / .chopro / .pro / .crd / .txt files. A single file may contain several songs. Nothing is saved until you confirm.",
+    "chordProPickFiles": "Choose files",
+    "chordProClear": "Clear",
+    "chordProSourceFiles": "Read from: {}",
+    "chordProFoundSongs": "Songs found: {}",
+    "chordProImportSelected": "Import selected ({})",
+    "chordProImported": "Imported {} songs.",
+    "chordProNoSongsFound": "No song with lyrics was found in the selected files.",
+    "chordProImportFailed": "The import failed.",
+    "chordProWarningsTitle": "Notes about the import",
+    "chordProSkipped": "Blocks skipped for having no lyrics: {}",
+    "chordProLineCount": "{} lines",
+    "chordProChordCount": "{} chords",
+    "chordProChorusLabel": "Chorus:",
+    "chordProBridgeLabel": "Bridge:"
 }

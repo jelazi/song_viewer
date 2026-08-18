@@ -12,6 +12,7 @@ import 'package:default_project/repositories/playlist_repository.dart';
 import 'package:default_project/repositories/settings_repository.dart';
 import 'package:default_project/repositories/songs_repository.dart';
 import 'package:default_project/repositories/user_repository.dart';
+import 'package:default_project/services/chordpro_service.dart';
 import 'package:default_project/services/constants.dart';
 import 'package:default_project/services/enums.dart';
 import 'package:default_project/services/presentation_bridge.dart';
@@ -787,6 +788,20 @@ class _MyAppState extends State<MyApp> with WindowListener {
               PresentationWindowManager().setBloc(bloc);
               return bloc;
             },
+          ),
+          // Available in every flavour: importing a file the user already owns
+          // is not a content-distribution question, so no feature flag.
+          BlocProvider(
+            create: (context) => ChordProImportBloc(
+              songsRepository: widget.repositories.songsRepository,
+              // Section labels are resolved once here. Switching language later
+              // does not re-translate them, which only affects songs imported
+              // afterwards in the old language.
+              chordProService: ChordProService(
+                chorusLabel: 'chordProChorusLabel'.tr(),
+                bridgeLabel: 'chordProBridgeLabel'.tr(),
+              ),
+            ),
           ),
           // Personal flavour only — the store build must not reference WebBloc
           // at all, so the scraping subtree stays out of the artifact (§10).

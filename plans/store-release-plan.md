@@ -116,6 +116,14 @@ Fix:
    settings screen copies the YouTube and Gemini keys to the clipboard in the clear
    (`general_settings_body.dart:290-294`). Use `flutter_secure_storage`, strip them from any
    export/diagnostic output, or drop user-supplied keys from the mobile build.
+   **Settled for the store build on 2026-08-18** by taking the "drop them" option: the whole API-key
+   settings section — including the "Export all API keys" clipboard button — sits behind
+   `Features.aiEnrichment`, so a store build cannot display or accept the keys (`FEATURE_AI` is
+   `false` in both `store_mobile.json` and `store_desktop.json`). **The personal build is
+   unchanged**: keys are still entered there and still live in plain Hive. What remains is therefore
+   a personal-build-only concern and a much smaller one (one device, own keys).
+   `backup_service.dart:197-199` / `:386-388` still writes the keys into the settings backup and
+   reads them back — always empty in a store build, not in personal.
 4. Lock the PocketBase collection rules so a non-admin user can only read/write their own records.
    Review `pocketbase_collections.json` against this.
 5. Decide the sync model — **see §9 for the full analysis.** In short: local-first by default, with

@@ -291,6 +291,39 @@ class SongsRepository {
     await _saveSongsToCache();
   }
 
+  /// Stores a batch of newly imported songs.
+  ///
+  /// Deliberately not a loop over [updateSong]: that pushes to PocketBase and
+  /// rewrites the whole Hive cache per song, which on a store build (no server
+  /// configured) means one failing network round-trip for every song in the
+  /// file. Here the local list is filled first and persisted once, and the
+  /// server is only involved when there is actually a connection.
+  ///
+  /// Returns the number of songs added.
+  Future<int> addImportedSongs(List<Song> newSongs) async {
+    if (newSongs.isEmpty) return 0;
+
+    var added = 0;
+    for (final song in newSongs) {
+      song.generateId();
+      if (_songs.any((s) => s.id == song.id)) continue;
+      _songs.add(song);
+      added++;
+    }
+    if (added == 0) return 0;
+
+    if (_pocketBaseProvider.isConnected) {
+      for (final song in newSongs) {
+        final ok = await _pocketBaseProvider.addOrUpdateSong(song);
+        if (!ok) logger.w('Imported song not pushed to server: ${song.title}');
+      }
+    }
+
+    await _saveSongsToCache();
+    isChangedListSongController.sink.add(isChangedListSongValue++);
+    return added;
+  }
+
   void changeTransposeChord(Song song, int transpose) {
     _hiveProvider.setNewTransposeForSong(song.id, transpose);
   }

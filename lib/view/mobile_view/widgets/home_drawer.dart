@@ -132,6 +132,20 @@ class _HomeDrawerState extends State<HomeDrawer> {
                   Navigator.pushNamed(context, '/webPageMobile');
                 },
               ),
+            // Every flavour — the user imports files they already have.
+            ListTile(
+              title: Row(children: [
+                const Icon(Icons.file_download),
+                const SizedBox(
+                  width: 10,
+                ),
+                Text('chordProImport'.tr()),
+              ]),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/chordProImportPage');
+              },
+            ),
             ListTile(
               title: Row(children: [
                 const Icon(Icons.qr_code),

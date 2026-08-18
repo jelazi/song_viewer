@@ -1,5 +1,125 @@
 # Development Log
 
+## 2026-08-18 (part 2) - feat: ChordPro import, in every flavour
+
+### What was done
+The store build ships with an empty library, so it needs a way for the user to bring in songs they
+already own. ChordPro is the de-facto interchange format for chord sheets, and it turned out to be a
+near-perfect fit: **the app's own lyric markup already uses inline `[Chord]` exactly like ChordPro
+does.** The conversion is therefore mostly about the two places where the formats disagree.
+
+- **`lib/services/chordpro_service.dart`** (new) — a pure parser, no Flutter dependency. Handles
+  directives (`{title}`, `{artist}`/`{composer}`/`{subtitle}`, `{tempo}` → `bmp`, `{time}` →
+  `songBar`), section markers (`{soc}`/`{sob}`/`{sov}` and their long forms, with the directive's
+  own label preferred over the default), `{comment}` variants as visible lines, `{sot}`…`{eot}` tab
+  blocks kept verbatim, `#` source comments dropped, and multiple songs per file. Two things it gets
+  right that a naive converter would not:
+  - **No brace may reach `Song.lyrics`.** ChordPro spends `{...}` on directives, but
+    `SongLine.createItemsFromString` reads `{...}` as a *note* — a passed-through directive would
+    render as one. Every brace is either consumed as a directive or stripped, escapes included.
+  - **`typeTranspose` is set to `TypeTranspose.german`.** ChordPro names chords internationally
+    (`A#`, `B`); the model defaults to `czech`, where `B` is a different pitch. An imported song left
+    on the default would have transposed wrong — silently, and only noticeably to someone playing it.
+  - Unbalanced `[`/`]` are repaired rather than left to desynchronise the chord parser.
+  - `{define}` (chord fingerings) is **deliberately not mapped**: this app stores positions in its
+    own format, and guessing the translation would write silently wrong diagrams. Reported instead.
+  - Anything unmappable — `{key}`, `{capo}`, `{copyright}`, unknown directives — is surfaced as a
+    warning rather than dropped in silence. Pure layout directives are dropped without noise.
+- **`lib/blocs/chordpro_import_bloc/`** (new, 3 files per the house rules) — two-step flow: parse and
+  show, then write only on confirm, with per-song checkboxes. The bloc takes file *contents*, never a
+  picker or a path: choosing files is platform I/O and stays in the view, which also makes the whole
+  flow testable without a plugin.
+- **`SongsRepository.addImportedSongs()`** (new) — deliberately not a loop over `updateSong()`. That
+  one pushes to PocketBase and rewrites the entire Hive cache per song, which on a store build (no
+  server) means a failing network round-trip for *every* song in the file. The new method fills the
+  local list, persists once, and only talks to the server when `isConnected`.
+- **UI in all three layouts**, sharing one `ChordProImportView` so they cannot drift: desktop ribbon
+  segment + `ChordProImportBody`, tablet dropdown entry, mobile drawer entry + `/chordProImportPage`
+  route. **No feature flag** — importing a file the user already has is not content distribution,
+  which is the whole point of §2 blocker B1. This is the store build's answer to having no songs.
+- iOS resolves an extension filter to UTIs and `.cho`/`.chopro`/`.crd` are not registered there, so
+  the picker falls back to `FileType.any` on iOS only; everywhere else it filters properly.
+- 17 translation keys added to `cs.json` and `en.json`.
+
+### Current state
+- `flutter analyze lib`: **0 errors, 181 issues — the unchanged baseline.** The first draft imported
+  `package:bloc/bloc.dart` and added a 182nd lint; switched to `flutter_bloc` to match the other
+  blocs.
+- **39 new tests, all passing**: 28 for the parser (`test/unit_tests/services/chordpro_service_test.dart`)
+  and 11 for the bloc. Written with mockito + `flutter_test` rather than `bloc_test`, because
+  `bloc_test` is not a dependency of this project and the existing `edit_song_bloc_test.dart` does
+  the same. Test fixtures use invented placeholder text, not real song lyrics.
+- Full `flutter test test/unit_tests`: 348 pass, **10 fail — all pre-existing.** Verified by
+  stashing this work and re-running: the identical 10 fail on a clean tree. They are
+  `LateInitializationError: Field 'logger' has not been initialized` in `SongsRepository._saveSongsToCache`,
+  a test-setup gap unrelated to this change.
+- Builds, all green: `./build.sh macos personal release`, `./build.sh macos store release`,
+  `./build.sh android-aab store release`. The AAB's B1 scan passed its positive control and reported
+  only the known identifier residue (`ProScholy` ×6, `superMusic`, `velkyZpevnik`) — unchanged from
+  part 15.
+- Presence checked with `strings` on the AOT snapshot, both directions:
+  - store macOS → `chopro` 2, `chordProImportTitle` 2, `api.groq.com` **0**
+  - personal macOS → `chopro` 2, `chordProImportTitle` 2, `api.groq.com` **2**
+
+  So the import is in both flavours and the part-1 AI removal did not regress.
+
+### Pending / next steps
+- **Still not verified visually, and the attempt failed.** The personal build was launched and the
+  process confirmed running, but the window could not be brought up or inspected: `osascript` has no
+  assistive-access permission in this environment. No one has yet seen the import screen, picked a
+  real file, or confirmed an imported song renders and transposes correctly. **This is the one thing
+  that should happen before trusting the feature.**
+- `{copyright}` / `{ccli}` are reported as warnings and then lost, because `Song` has no field for
+  them. Worth adding `license` / `source` fields to `Song` — it is also what the store-listing story
+  needs (see the source research in §2 B1).
+- Import is one-way. There is no ChordPro *export*, which would be the natural companion.
+- Mobile and tablet layouts are wired but were not run at all; only the desktop path was built.
+
+## 2026-08-18 (part 1) - feat(store): the AI enrichment section is gone from the store build
+
+### What was done
+`Features.aiEnrichment` already hid the enrichment screen (`ribbon_menu.dart:144`) and its bloc
+(`main.dart:818`), but the **settings section that asks for the three API keys was not gated**, so a
+store build still offered fields for a feature that build does not contain. Per the user's decision:
+keys stay in the personal build, the AI section goes away entirely in the store build.
+
+- `general_settings_body.dart` — the "AI Enrichment — API keys" block (section title,
+  `_buildApiKeySettings`, trailing spacer) is now inside `if (Features.aiEnrichment) ...[ ]`. That
+  also removes the **"Export all API keys" button, which copied all three keys to the clipboard in
+  clear text** (`:287-306`), from the store build. Added the `package:default_project/config/features.dart`
+  import, matching how the other call sites import it.
+- `desktop_home_page.dart` — the `case 'song_enrichment'` in the body switch now assigns
+  `SongEnrichmentBody` only `if (Features.aiEnrichment)`. This is **defensive, not load-bearing**
+  (see below): the ribbon already hides the segment, and the guard turns a hypothetical stale
+  `bodyName` into an empty body instead of a `ProviderNotFoundException` on the missing
+  `SongEnrichmentBloc`.
+- `plans/store-release-plan.md` and `.cs.md`, §2 blocker B2 item 3 — recorded that the store side is
+  settled by the "drop user-supplied keys" option and that what remains is personal-build-only.
+
+### Current state
+- `flutter analyze lib`: 0 errors, 181 issues — unchanged baseline, nothing new in the two touched
+  files.
+- Verified on real artifacts, reading the AOT snapshot with `strings` on
+  `App.framework/Versions/A/App` (an earlier `grep -r` over the `.app` gave false negatives on both
+  builds and was discarded):
+  - `./build.sh macos personal release` → `api.groq.com` 2, `generativelanguage` 2,
+    `youtube/v3/search` 2, `llama-3.3-70b` 2. Personal keeps everything.
+  - `./build.sh macos store release` → all four counts **0**. `pisnicky-akordy` is 6 in both, which
+    is correct: web import stays on for desktop store builds (part 15).
+- **The `desktop_home_page.dart` guard is not what strips the AI code.** Measured, not assumed: with
+  that guard stashed and only the settings-section change in place, the store build still reported 0
+  for all four strings. The tree shaker already drops `AiSearchService` because `SongEnrichmentBloc`
+  is never constructed in a store build. The guard is kept for the crash-safety reason above.
+
+### Pending / next steps
+- **Not visually verified.** The store build was not launched to look at the General Settings screen;
+  the removal is compile-time evident but no one has seen it.
+- Personal build: the three keys are still plain text in Hive and still flow through
+  `backup_service.dart:197-199` / `:386-388` into the settings backup, and the clipboard export
+  button is still there. Left alone by decision — personal is a single-device build with the user's
+  own keys.
+- Key rotation (§8 item 2) is untouched and still open.
+
 ## 2026-08-17 (part 17) - build: macOS build opens the output and /Applications in Finder
 
 ### What was done

@@ -17,6 +17,7 @@ import 'package:flutter/material.dart';
 
 import '../../blocs/export_blocs.dart';
 import '../../repositories/settings_repository.dart';
+import '../mobile_view/pages/chordpro_import_page.dart';
 import '../mobile_view/pages/edit_pages/edit_chords.dart';
 import '../mobile_view/pages/edit_pages/edit_lyrics.dart';
 import '../mobile_view/pages/edit_pages/edit_page.dart';
@@ -111,6 +112,12 @@ class AppRouter {
       case '/webPageMobile':
         if (!Features.webImport) return MaterialPageRoute(builder: (_) => Container());
         return MaterialPageRoute(builder: (_) => const PageResponsive(pageMobile: WebPageMobile(), pageTablet: WebPageMobile(), pageDesktop: WebPageMobile()));
+
+      // Every flavour — see ChordProImportView.
+      case '/chordProImportPage':
+        return MaterialPageRoute(
+            builder: (_) => const PageResponsive(
+                pageMobile: ChordProImportPageMobile(), pageTablet: ChordProImportPageMobile(), pageDesktop: ChordProImportPageMobile()));
 
       case '/editPlaylistPage':
         return MaterialPageRoute(builder: (_) => const PageResponsive(pageMobile: EditPlaylistTablet(), pageTablet: EditPlaylistTablet(), pageDesktop: EditPlaylistTablet()));

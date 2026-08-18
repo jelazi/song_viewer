@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:default_project/config/features.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -10,6 +11,7 @@ import '../../widgets/ribbon_menu.dart';
 import 'home_bodies/backup_restore_body.dart';
 import 'home_bodies/browse_sheets_body.dart';
 import 'home_bodies/browse_youtube_body.dart';
+import 'home_bodies/chordpro_import_body.dart';
 import 'home_bodies/edit_parts_body/edit_body.dart';
 import 'home_bodies/general_settings_body.dart';
 import 'home_bodies/groups_body.dart';
@@ -491,8 +493,16 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
                     case 'playlist':
                       homeBody = const PlaylistBody();
                       break;
+                    case 'chordpro_import':
+                      homeBody = const ChordProImportBody();
+                      break;
                     case 'song_enrichment':
-                      homeBody = const SongEnrichmentBody();
+                      // Personal flavour only. The ribbon hides the segment in
+                      // the store build, and this guard is what lets the
+                      // compiler drop SongEnrichmentBody with it (§10).
+                      if (Features.aiEnrichment) {
+                        homeBody = const SongEnrichmentBody();
+                      }
                       break;
                     case 'browse_youtube':
                       homeBody = PreviewBody(

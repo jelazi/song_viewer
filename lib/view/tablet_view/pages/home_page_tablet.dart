@@ -2,6 +2,7 @@ import 'package:default_project/config/features.dart';
 import 'package:default_project/model/web_interpret.dart';
 import 'package:default_project/repositories/settings_repository.dart';
 import 'package:default_project/view/mobile_view/widgets/dialogs/edit_dialog.dart';
+import 'package:default_project/view/widgets/chordpro_import_view.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -188,7 +189,9 @@ class _HomePageTabletState extends State<HomePageTablet> {
                         ? getWebBody(state)
                         : state.selectedPage == 'playlists'
                             ? getPlaylistsBody()
-                            : Container(),
+                            : state.selectedPage == 'chordpro_import'
+                                ? const ChordProImportView()
+                                : Container(),
               )
             ]),
           ),
@@ -857,6 +860,20 @@ class _HomePageTabletState extends State<HomePageTablet> {
                       const Icon(Icons.playlist_play, color: AppColor.grey1Color),
                       const SizedBox(width: 8),
                       Text('playlists'.tr()),
+                    ],
+                  ),
+                ),
+              ),
+              // Every flavour — the user imports files they already have.
+              DropdownMenuItem(
+                value: 'chordpro_import',
+                child: SizedBox(
+                  width: 200,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.file_download, color: AppColor.grey1Color),
+                      const SizedBox(width: 8),
+                      Text('chordProImport'.tr()),
                     ],
                   ),
                 ),

@@ -361,6 +361,17 @@ class MockSongsRepository extends _i1.Mock implements _i8.SongsRepository {
       ) as _i3.Future<void>);
 
   @override
+  _i3.Future<int> addImportedSongs(List<_i10.Song>? newSongs) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #addImportedSongs,
+          [newSongs],
+        ),
+        returnValue: _i3.Future<int>.value(0),
+        returnValueForMissingStub: _i3.Future<int>.value(0),
+      ) as _i3.Future<int>);
+
+  @override
   void changeTransposeChord(
     _i10.Song? song,
     int? transpose,

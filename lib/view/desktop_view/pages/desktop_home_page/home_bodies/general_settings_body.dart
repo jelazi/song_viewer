@@ -1,3 +1,4 @@
+import 'package:default_project/config/features.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -64,11 +65,16 @@ class _GeneralSettingsBodyState extends State<GeneralSettingsBody> {
               const SizedBox(height: 8),
               _buildQrUrlSettings(context, state),
               const SizedBox(height: 24),
-              // AI enrichment API keys
-              _buildSectionTitle('enrichApiKeysTitle'.tr()),
-              const SizedBox(height: 8),
-              _buildApiKeySettings(context, state),
-              const SizedBox(height: 24),
+              // AI enrichment API keys — personal flavour only. The store build
+              // has no enrichment screen, so offering the keys there would ask
+              // the user to configure a feature that is not in the artifact
+              // (§10, blocker B2 item 3).
+              if (Features.aiEnrichment) ...[
+                _buildSectionTitle('enrichApiKeysTitle'.tr()),
+                const SizedBox(height: 8),
+                _buildApiKeySettings(context, state),
+                const SizedBox(height: 24),
+              ],
               // Bracket error scanner
               _buildSectionTitle('bracketScanTitle'.tr()),
               const SizedBox(height: 8),

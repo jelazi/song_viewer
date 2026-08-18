@@ -141,6 +141,9 @@ class RibbonMenu extends StatelessWidget {
         // Personal flavour only — see plans/store-release-plan.md §10.
         if (Features.webImport) ToolbarSegment(label: 'web'.tr(), icon: const Icon(Icons.web), value: 'web'),
         ToolbarSegment(label: 'playlist'.tr(), icon: const Icon(Icons.playlist_play), value: 'playlist'),
+        // Every flavour — importing a file the user already has is not
+        // content distribution, so this is not behind a feature flag.
+        ToolbarSegment(label: 'chordProImport'.tr(), icon: const Icon(Icons.file_download), value: 'chordpro_import'),
         if (Features.aiEnrichment)
           ToolbarSegment(label: 'song_enrichment'.tr(), icon: const Icon(Icons.auto_awesome), value: 'song_enrichment'),
       ],
