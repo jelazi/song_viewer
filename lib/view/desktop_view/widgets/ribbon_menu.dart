@@ -265,26 +265,35 @@ class RibbonMenu extends StatelessWidget {
   }
 
   Widget _buildSettingsActions(BuildContext context, DesktopRibbonMenuState state) {
+    // Users and groups are server records. A local-first build has neither
+    // until the user configures a server of their own, and offering the
+    // administration of something that does not exist is worse than hiding it.
+    final showServerAdmin = Features.serverAdminVisible(
+      context.read<SettingsBloc>().settingsRepository.pocketBaseProvider.isConnected,
+    );
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         _buildExportButton(context),
         _buildExportLyricsButton(context),
         const ToolbarDivider(),
-        _buildSettingsNavButton(
-          context: context,
-          text: 'groups'.tr(),
-          icon: const Icon(Icons.group, color: Colors.teal),
-          bodyName: 'groups',
-          isSelected: state.bodyName == 'groups',
-        ),
-        _buildSettingsNavButton(
-          context: context,
-          text: 'users'.tr(),
-          icon: const Icon(Icons.person, color: Colors.indigo),
-          bodyName: 'users',
-          isSelected: state.bodyName == 'users',
-        ),
+        if (showServerAdmin) ...[
+          _buildSettingsNavButton(
+            context: context,
+            text: 'groups'.tr(),
+            icon: const Icon(Icons.group, color: Colors.teal),
+            bodyName: 'groups',
+            isSelected: state.bodyName == 'groups',
+          ),
+          _buildSettingsNavButton(
+            context: context,
+            text: 'users'.tr(),
+            icon: const Icon(Icons.person, color: Colors.indigo),
+            bodyName: 'users',
+            isSelected: state.bodyName == 'users',
+          ),
+        ],
         _buildSettingsNavButton(
           context: context,
           text: 'presentationBtn'.tr(),

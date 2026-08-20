@@ -134,6 +134,15 @@ Náprava:
 5. Rozhodnout model synchronizace — **celý rozbor je v §9.** Ve zkratce: lokálně first jako výchozí
    stav, PocketBase přesunutý do pokročilého nastavení „mám vlastní server". Hostované účty
    provozované tebou se pro jednorázově placenou aplikaci nedoporučují.
+   **V UI implementováno 20. 8. 2026.** `Features.sharedServer` dřív hlídal jen start
+   (`main.part.dart:40`), takže store build sice nastartoval lokálně, ale pořád zobrazoval celou
+   serverovou vrstvu. Nyní: přihlašování k účtu se odkompiluje pryč (`state_login.dart`,
+   `app_router.dart` — stránky mizí z artefaktu), správa uživatelů a skupin se objeví, jen když je
+   server skutečně připojený (`Features.serverAdminVisible`), a nastavení PocketBase je ve všech
+   třech rozvrženích sníženo na sbalenou sekci „vlastní server (pokročilé)". Server tedy zůstává
+   zachovaný, jen není výchozí cesta — přesně jak žádá §9. Zároveň to opravilo díru, kterou ten flag
+   otevřel: kontrola práv ke zpěvníku četla roli vydanou serverem, kterou lokálně-first build nikdy
+   nemá, takže čerstvá store instalace nemohla vytvořit první píseň (`UsersState.canManageLibrary`).
 6. Tajemství, která se musí distribuovat, přesunout do `--dart-define` / `String.fromEnvironment`,
    nikdy do assetů.
 7. **Repozitář na GitHubu je veřejný.** Není to blokátor pro obchody, ale obchodní rozhodnutí, které

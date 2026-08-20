@@ -1,3 +1,4 @@
+import 'package:default_project/config/features.dart';
 import 'package:default_project/repositories/settings_repository.dart';
 import 'package:default_project/view/mobile_view/pages/home_page.dart';
 import 'package:default_project/view/mobile_view/pages/login_page.dart';
@@ -15,23 +16,35 @@ class StateLogin extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Account login belongs to a build wired to a shared server. A local-first
+    // build never authenticates, so `currentUser` would stay null forever and
+    // this screen would park the user on a login form for a server that does
+    // not exist. Because the condition is a compile-time constant, the branch
+    // below is provably dead in a store build and the login pages are stripped
+    // from the artifact with it — see plans/store-release-plan.md §10.
+    if (!Features.sharedServer) return _buildHome(context);
+
     return BlocBuilder<UsersBloc, UsersState>(
       builder: (context, state) {
         return LayoutBuilder(builder: (context, constraints) {
           if (state.currentUser == null) {
             return PageResponsive(pageMobile: LoginPageMobile(), pageTablet: LoginPageTablet(), pageDesktop: const DesktopHomePage());
           } else {
-            return PageResponsive(
-                pageMobile: HomePageMobile(
-                  settingsRepository: settingsRepository,
-                ),
-                pageTablet: HomePageTablet(
-                  settingsRepository: settingsRepository,
-                ),
-                pageDesktop: const DesktopHomePage());
+            return _buildHome(context);
           }
         });
       },
     );
+  }
+
+  Widget _buildHome(BuildContext context) {
+    return PageResponsive(
+        pageMobile: HomePageMobile(
+          settingsRepository: settingsRepository,
+        ),
+        pageTablet: HomePageTablet(
+          settingsRepository: settingsRepository,
+        ),
+        pageDesktop: const DesktopHomePage());
   }
 }

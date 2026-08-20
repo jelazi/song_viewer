@@ -52,6 +52,21 @@ class Features {
   /// existing behaviour — authenticate during boot and pull server counts.
   static const bool sharedServer = bool.fromEnvironment('FEATURE_SHARED_SERVER');
 
+  /// Whether server administration — the user and group screens — should be
+  /// offered.
+  ///
+  /// Deliberately **not** a plain `sharedServer` check. §9 keeps self-hosted
+  /// PocketBase as the advanced "I run my own server" option in every build, so
+  /// a store user who has configured a server of their own must still be able
+  /// to administer it. A buyer who never touches the setting never sees any of
+  /// it, which is the point.
+  ///
+  /// [isConnected] is `PocketBaseProvider.isConnected`. When [sharedServer] is
+  /// false the compiler cannot fold this away, and that is correct — here the
+  /// answer genuinely depends on runtime state, and no forbidden code is
+  /// involved either way.
+  static bool serverAdminVisible(bool isConnected) => sharedServer || isConnected;
+
   /// True when this build carries the full personal feature set.
   static const bool isPersonalBuild = webImport && sharedServer;
 

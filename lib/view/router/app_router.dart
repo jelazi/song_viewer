@@ -85,8 +85,12 @@ class AppRouter {
         return MaterialPageRoute(
             builder: (_) => PageResponsive(
                 pageMobile: const EditChordsPageMobile(isOriginalLyrics: true), pageTablet: const EditChordsPageTablet(isOriginalLyrics: true), pageDesktop: Container()));
+      // Account login exists only in a build wired to a shared server. In a
+      // local-first build the constant is false, so the LoginPageMobile branch
+      // is compile-time dead and the page leaves the artifact (§10); the route
+      // then simply lands on the library.
       case '/loginPage':
-        if (settingsRepository.currentUser.name == '') {
+        if (Features.sharedServer && settingsRepository.currentUser.name == '') {
           return MaterialPageRoute(builder: (_) => LoginPageMobile());
         } else {
           return MaterialPageRoute(

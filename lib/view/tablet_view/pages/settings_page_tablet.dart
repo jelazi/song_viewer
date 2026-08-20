@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:default_project/config/features.dart';
 import 'package:default_project/providers/pocketbase_provider.dart';
 import 'package:default_project/services/constants.dart';
 import 'package:default_project/view/mobile_view/widgets/settings_ui/settings_list.dart';
@@ -238,40 +239,67 @@ class _SettingsPageTabletState extends State<SettingsPageTablet> {
                     ),
                   ],
                 ),
-                SettingsSection(
-                  title: 'pbSettingsTitle'.tr(),
-                  tiles: [
-                    SettingsTile(
-                      title: 'pbUrl'.tr(),
-                      onPressed: (BuildContext context) {
-                        _showPbSettingsDialog(context);
-                      },
-                      iconData: Icons.dns,
-                      value: context.read<SettingsBloc>().settingsRepository.pocketBaseProvider.config?.pocketbaseUrl ?? '',
-                    ),
-                    SettingsTile(
-                      title: 'pbEmail'.tr(),
-                      onPressed: (BuildContext context) {
-                        _showPbSettingsDialog(context);
-                      },
-                      iconData: Icons.email,
-                      value: context.read<SettingsBloc>().settingsRepository.pocketBaseProvider.config?.email ?? '',
-                    ),
-                    SettingsTile(
-                      title: 'serverStatus'.tr(),
-                      onPressed: (BuildContext context) {
-                        _showPbSettingsDialog(context);
-                      },
-                      iconData: context.read<SettingsBloc>().settingsRepository.pocketBaseProvider.isConnected ? Icons.cloud_done : Icons.cloud_off,
-                      value: context.read<SettingsBloc>().settingsRepository.pocketBaseProvider.isConnected ? 'pbConnectionSuccess'.tr() : 'pbConnectionFailed'.tr(),
-                      iconColor: context.read<SettingsBloc>().settingsRepository.pocketBaseProvider.isConnected ? AppColor.alertSuccessColor : AppColor.alertErrorColor,
-                    ),
-                  ],
-                ),
+                _buildServerSection(context),
               ],
             );
           },
         ));
+  }
+
+  /// Server settings, presented according to how this build is meant to be
+  /// used — see the identical method in `settings_page.dart` (mobile) for the
+  /// reasoning. Kept in both files because the two screens do not share a
+  /// widget tree.
+  SettingsSection _buildServerSection(BuildContext context) {
+    final pbProvider = context.read<SettingsBloc>().settingsRepository.pocketBaseProvider;
+
+    if (!Features.sharedServer) {
+      return SettingsSection(
+        title: 'ownServerTitle'.tr(),
+        tiles: [
+          SettingsTile(
+            title: 'pbUrl'.tr(),
+            onPressed: (BuildContext context) {
+              _showPbSettingsDialog(context);
+            },
+            iconData: pbProvider.isConnected ? Icons.cloud_done : Icons.cloud_off,
+            value: pbProvider.isConnected ? (pbProvider.config?.pocketbaseUrl ?? '') : 'ownServerNotConnected'.tr(),
+            iconColor: pbProvider.isConnected ? AppColor.alertSuccessColor : AppColor.grey2Color,
+          ),
+        ],
+      );
+    }
+
+    return SettingsSection(
+      title: 'pbSettingsTitle'.tr(),
+      tiles: [
+        SettingsTile(
+          title: 'pbUrl'.tr(),
+          onPressed: (BuildContext context) {
+            _showPbSettingsDialog(context);
+          },
+          iconData: Icons.dns,
+          value: pbProvider.config?.pocketbaseUrl ?? '',
+        ),
+        SettingsTile(
+          title: 'pbEmail'.tr(),
+          onPressed: (BuildContext context) {
+            _showPbSettingsDialog(context);
+          },
+          iconData: Icons.email,
+          value: pbProvider.config?.email ?? '',
+        ),
+        SettingsTile(
+          title: 'serverStatus'.tr(),
+          onPressed: (BuildContext context) {
+            _showPbSettingsDialog(context);
+          },
+          iconData: pbProvider.isConnected ? Icons.cloud_done : Icons.cloud_off,
+          value: pbProvider.isConnected ? 'pbConnectionSuccess'.tr() : 'pbConnectionFailed'.tr(),
+          iconColor: pbProvider.isConnected ? AppColor.alertSuccessColor : AppColor.alertErrorColor,
+        ),
+      ],
+    );
   }
 
   void _onShareTextAsXFile(BuildContext context, String text, String fileName) async {

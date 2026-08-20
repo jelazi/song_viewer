@@ -35,6 +35,14 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
 
   static const _navigationChannel = MethodChannel('com.songviewer/navigation');
 
+  /// Users and groups are server records — see [Features.serverAdminVisible].
+  /// The ribbon already hides the buttons, so this only stops a stale
+  /// `bodyName` from rendering an administration screen for a server that is
+  /// not there.
+  bool _showServerAdmin(BuildContext context) => Features.serverAdminVisible(
+        context.read<SettingsBloc>().settingsRepository.pocketBaseProvider.isConnected,
+      );
+
   @override
   void initState() {
     super.initState();
@@ -476,13 +484,23 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
                       homeBody = const EditBody();
                       break;
                     case 'web':
-                      homeBody = const WebBody();
+                      // Personal and desktop-store flavours only. The ribbon
+                      // hides the segment elsewhere; this guard is what keeps a
+                      // stale bodyName from reaching WebBody and its missing
+                      // WebBloc (§10) — same reasoning as 'song_enrichment'.
+                      if (Features.webImport) {
+                        homeBody = const WebBody();
+                      }
                       break;
                     case 'groups':
-                      homeBody = const GroupsBody();
+                      if (_showServerAdmin(context)) {
+                        homeBody = const GroupsBody();
+                      }
                       break;
                     case 'users':
-                      homeBody = const UsersBody();
+                      if (_showServerAdmin(context)) {
+                        homeBody = const UsersBody();
+                      }
                       break;
                     case 'presentation_settings':
                       homeBody = const PresentationSettingsBody();

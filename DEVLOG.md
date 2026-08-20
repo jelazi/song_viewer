@@ -1,5 +1,96 @@
 # Development Log
 
+## 2026-08-20 - feat(store): the server layer follows the sharedServer flag into the UI
+
+### What was done
+`Features.sharedServer` had exactly one call site — `main.part.dart:40`, the startup
+authentication. A store build therefore *started* local-first but still presented the entire
+PocketBase layer: an account login screen, user and group administration, and a server settings
+section headed as if configuring it were expected. This closes that gap across all three layouts.
+
+The flag is read as **"this build is wired to a shared band server out of the box"**, not as
+"PocketBase is compiled out" — §9 keeps self-hosted PocketBase as the advanced option in *every*
+build, so a store buyer who runs their own server must still be able to use and administer it.
+
+- **`UsersState.canManageLibrary`** (new, `users_state.dart`) — see "What was fixed". `users_bloc.dart`
+  gained the `config/features.dart` import.
+- **`Features.serverAdminVisible(bool isConnected)`** (new, `features.dart`) — `sharedServer || isConnected`.
+  Deliberately *not* a plain compile-time check: the answer genuinely depends on runtime state here,
+  and no forbidden code is on either side of it, unlike `webImport`.
+- **Login compiles out** — `state_login.dart` returns the library directly when `!Features.sharedServer`
+  (home construction extracted into `_buildHome` so both paths share it), and `app_router.dart`'s
+  `/loginPage` case now guards on the same constant. Both conditions are compile-time constants, so
+  the login pages are unreachable in a store build and leave the artifact. They were already dead
+  code in *both* flavours — `initialRoute` is `/`, and nothing navigates to `/loginPage` or
+  `/stateLogin` — so this removes a screen no one could reach rather than changing behaviour.
+- **Users and groups only when a server is present** — `ribbon_menu.dart` wraps the two nav buttons in
+  `showServerAdmin`, and `desktop_home_page.dart` guards the `'groups'` / `'users'` body cases with
+  `_showServerAdmin()` so a stale `bodyName` cannot render administration for an absent server.
+- **Server settings demoted** — `general_settings_body.dart` shows the PocketBase block at the top for
+  `sharedServer` builds and, for local-first builds, as a new `_buildOwnServerSection()`: a collapsed
+  `ExpansionTile` at the *bottom*, titled "own server (advanced)", subtitled with the connected URL or
+  "not configured", and led by a sentence saying the app works fully without a server.
+  `settings_page.dart` and `settings_page_tablet.dart` got a `_buildServerSection()` each that returns
+  the full three-tile section for `sharedServer` builds and a single opt-in row otherwise. The method
+  is duplicated in the two files rather than shared, because the mobile and tablet settings screens
+  do not share a widget tree.
+- **`desktop_home_page.dart`, `case 'web'`** — guarded with `Features.webImport`, matching the
+  `'song_enrichment'` case. Unrelated to this change but it was the last unguarded body case, and it
+  was one stale `bodyName` away from a `ProviderNotFoundException` on the missing `WebBloc`.
+- 3 translation keys added to `cs.json` and `en.json` (`ownServerTitle`, `ownServerDescription`,
+  `ownServerNotConnected`).
+
+### What was fixed
+**A fresh store install could not create its first song.** `home_drawer.dart:76` gated the
+"add new song" entry on `currentUser.typeUser` being `admin` or `superuser`. In a local-first build
+nothing ever authenticates, so `UsersRepository.getCurrentUser()` reads a null out of Hive forever
+and every role check failed closed. It was the only *live* role check in the app, so the blast
+radius was one drawer entry — but that entry is the only way to add a song from the mobile drawer.
+Replaced with `state.canManageLibrary`, which returns true whenever there is no shared server: there
+is no server to issue roles and nobody to protect the library from, so the owner of the device owns
+the library.
+
+### Current state
+- `flutter analyze lib`: **0 errors, 0 warnings, 181 infos — the unchanged baseline.**
+- `flutter test test/unit_tests`: **352 pass, 10 fail.** The 10 are the same pre-existing
+  `LateInitializationError` failures in `settings_repository_test.dart` / `songs_repository_test.dart`
+  documented since 2026-08-18; 348 passed before this change, +4 from the new file.
+- **`test/unit_tests/blocs/users_state_test.dart`** (new, 4 tests) — a regression test for the fix
+  above. Tests run with no `--dart-define`, so they exercise the local-first branch; the first test
+  asserts `Features.sharedServer` is false so the suite cannot silently pass for the wrong reason.
+  The shared-server branch was verified separately by running the same file with
+  `--dart-define-from-file=config/personal.json`: 3 of the 4 tests then fail with `Actual: <false>`,
+  which is exactly right — it proves the role check is still enforced in the personal build.
+- Builds, all green: `./build.sh macos store release` (58.3 MB), `./build.sh macos personal release`
+  (62.5 MB), `./build.sh android-aab store release` (61.1 MB). The AAB's B1 scan passed its positive
+  control and reported only the known identifier residue (`ProScholy` ×6, `superMusic`,
+  `velkyZpevnik`) — unchanged.
+- **Verified on the artifacts with `strings`, both directions**, on `App.framework/Versions/A/App`:
+  - store macOS → `LoginPageMobile` **0**, `ownServerTitle` 2
+  - personal macOS → `LoginPageMobile` 4, `LoginPageTablet` 2, `ownServerTitle` **0**
+
+  So the login pages really are absent from the store build and the advanced section really is
+  absent from the personal one.
+- **Known residue:** `pbSettingsTitle` is 2 in *both* builds. The label literal survives in the
+  runtime-dead branch of `_buildServerSection` — string literals inside a method body are not shaken
+  as reliably as class references are. It is a UI label with no capability behind it, unlike the B1
+  source hosts, so it was left alone.
+
+### Pending / next steps
+- **Nothing was verified visually.** No build was launched to look at the demoted settings section,
+  the drawer entry, or the missing users/groups buttons. The evidence above is compile-time and
+  artifact-level only.
+- Mobile and tablet layouts were compiled but never run; only the macOS and Android *builds* were
+  produced, and only macOS was ever launched in earlier sessions.
+- `backup_service.dart` still backs up and restores users and groups unconditionally. In a store
+  build those lists are empty, so nothing breaks, but the backup format still carries the fields.
+- The `SyncScreen` is still reachable in principle (`main.dart:709`), gated on
+  `syncInfo.isAuthenticated`, which a local-first build never sets. Left as-is: the guard is correct,
+  it is just now unreachable for a second reason.
+- Unchanged from earlier parts: rotate the PocketBase password and the API keys, delete the token at
+  `web_provider.dart:15`, iOS/macOS Xcode schemes, the unbuildable web target, and `updatedAt` on
+  song/playlist records (plan §Phase 1 — still absent from the model entirely).
+
 ## 2026-08-18 (part 2) - feat: ChordPro import, in every flavour
 
 ### What was done

@@ -1,3 +1,4 @@
+import 'package:default_project/config/features.dart';
 import 'package:default_project/providers/pocketbase_provider.dart';
 import 'package:default_project/services/constants.dart';
 import 'package:default_project/view/mobile_view/widgets/settings_ui/settings_list.dart';
@@ -221,40 +222,72 @@ class _SettingsPageMobileState extends State<SettingsPageMobile> {
                     ),
                   ],
                 ),
-                SettingsSection(
-                  title: 'pbSettingsTitle'.tr(),
-                  tiles: [
-                    SettingsTile(
-                      title: 'pbUrl'.tr(),
-                      onPressed: (BuildContext context) {
-                        _showPbSettingsDialog(context);
-                      },
-                      iconData: Icons.dns,
-                      value: context.read<SettingsBloc>().settingsRepository.pocketBaseProvider.config?.pocketbaseUrl ?? '',
-                    ),
-                    SettingsTile(
-                      title: 'pbEmail'.tr(),
-                      onPressed: (BuildContext context) {
-                        _showPbSettingsDialog(context);
-                      },
-                      iconData: Icons.email,
-                      value: context.read<SettingsBloc>().settingsRepository.pocketBaseProvider.config?.email ?? '',
-                    ),
-                    SettingsTile(
-                      title: 'serverStatus'.tr(),
-                      onPressed: (BuildContext context) {
-                        _showPbSettingsDialog(context);
-                      },
-                      iconData: context.read<SettingsBloc>().settingsRepository.pocketBaseProvider.isConnected ? Icons.cloud_done : Icons.cloud_off,
-                      value: context.read<SettingsBloc>().settingsRepository.pocketBaseProvider.isConnected ? 'pbConnectionSuccess'.tr() : 'pbConnectionFailed'.tr(),
-                      iconColor: context.read<SettingsBloc>().settingsRepository.pocketBaseProvider.isConnected ? AppColor.alertSuccessColor : AppColor.alertErrorColor,
-                    ),
-                  ],
-                ),
+                _buildServerSection(context),
               ],
             );
           },
         ));
+  }
+
+  /// Server settings, presented according to how this build is meant to be
+  /// used.
+  ///
+  /// A build wired to a shared server shows the full section — URL, account and
+  /// live status — because connecting is the normal state there. A local-first
+  /// build shows a single opt-in row headed "own server (advanced)": the app is
+  /// meant to work with no server at all, so three tiles about a connection
+  /// that is deliberately absent would read as something the user forgot to set
+  /// up. Both open the same dialog. See plans/store-release-plan.md §9.
+  SettingsSection _buildServerSection(BuildContext context) {
+    final pbProvider = context.read<SettingsBloc>().settingsRepository.pocketBaseProvider;
+
+    if (!Features.sharedServer) {
+      return SettingsSection(
+        title: 'ownServerTitle'.tr(),
+        tiles: [
+          SettingsTile(
+            title: 'pbUrl'.tr(),
+            onPressed: (BuildContext context) {
+              _showPbSettingsDialog(context);
+            },
+            iconData: pbProvider.isConnected ? Icons.cloud_done : Icons.cloud_off,
+            value: pbProvider.isConnected ? (pbProvider.config?.pocketbaseUrl ?? '') : 'ownServerNotConnected'.tr(),
+            iconColor: pbProvider.isConnected ? AppColor.alertSuccessColor : AppColor.grey2Color,
+          ),
+        ],
+      );
+    }
+
+    return SettingsSection(
+      title: 'pbSettingsTitle'.tr(),
+      tiles: [
+        SettingsTile(
+          title: 'pbUrl'.tr(),
+          onPressed: (BuildContext context) {
+            _showPbSettingsDialog(context);
+          },
+          iconData: Icons.dns,
+          value: pbProvider.config?.pocketbaseUrl ?? '',
+        ),
+        SettingsTile(
+          title: 'pbEmail'.tr(),
+          onPressed: (BuildContext context) {
+            _showPbSettingsDialog(context);
+          },
+          iconData: Icons.email,
+          value: pbProvider.config?.email ?? '',
+        ),
+        SettingsTile(
+          title: 'serverStatus'.tr(),
+          onPressed: (BuildContext context) {
+            _showPbSettingsDialog(context);
+          },
+          iconData: pbProvider.isConnected ? Icons.cloud_done : Icons.cloud_off,
+          value: pbProvider.isConnected ? 'pbConnectionSuccess'.tr() : 'pbConnectionFailed'.tr(),
+          iconColor: pbProvider.isConnected ? AppColor.alertSuccessColor : AppColor.alertErrorColor,
+        ),
+      ],
+    );
   }
 
   Widget getColorFont({

@@ -55,11 +55,18 @@ class _GeneralSettingsBodyState extends State<GeneralSettingsBody> {
                 style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 24),
-              // PocketBase settings
-              _buildSectionTitle('pbSettingsTitle'.tr()),
-              const SizedBox(height: 8),
-              _buildPocketBaseSettings(context),
-              const SizedBox(height: 24),
+              // PocketBase settings. A build wired to a shared server leads
+              // with them — that is the point of that build. A local-first
+              // build must not: the app is meant to work with no server at all,
+              // so the section is demoted to a collapsed "advanced" block at
+              // the bottom instead (§9 — self-hosted PocketBase stays available
+              // as the pro option, it just is not the default path).
+              if (Features.sharedServer) ...[
+                _buildSectionTitle('pbSettingsTitle'.tr()),
+                const SizedBox(height: 8),
+                _buildPocketBaseSettings(context),
+                const SizedBox(height: 24),
+              ],
               // QR code URLs
               _buildSectionTitle('qrCodeTitle'.tr()),
               const SizedBox(height: 8),
@@ -84,6 +91,12 @@ class _GeneralSettingsBodyState extends State<GeneralSettingsBody> {
               _buildSectionTitle('superuserMode'.tr()),
               const SizedBox(height: 8),
               _buildSuperuserModeToggle(context, state),
+              // The demoted server section — last, collapsed, and explaining
+              // that nothing here is required.
+              if (!Features.sharedServer) ...[
+                const SizedBox(height: 24),
+                _buildOwnServerSection(context),
+              ],
             ],
           ),
         );
@@ -95,6 +108,42 @@ class _GeneralSettingsBodyState extends State<GeneralSettingsBody> {
     return Text(
       title,
       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+    );
+  }
+
+  /// The server settings as an opt-in, for builds that are not wired to a
+  /// shared server. Collapsed by default and headed by the fact that matters
+  /// most to someone who just bought the app: none of this is required.
+  Widget _buildOwnServerSection(BuildContext context) {
+    final pbProvider = context.read<SettingsBloc>().settingsRepository.pocketBaseProvider;
+    return Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        tilePadding: EdgeInsets.zero,
+        childrenPadding: const EdgeInsets.only(top: 8),
+        leading: Icon(
+          pbProvider.isConnected ? Icons.cloud_done : Icons.cloud_off,
+          color: pbProvider.isConnected ? AppColor.alertSuccessColor : AppColor.grey2Color,
+        ),
+        title: Text(
+          'ownServerTitle'.tr(),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+        subtitle: Text(
+          pbProvider.isConnected ? (pbProvider.config?.pocketbaseUrl ?? '') : 'ownServerNotConnected'.tr(),
+          style: const TextStyle(fontSize: 12, color: AppColor.grey2Color),
+        ),
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(
+              'ownServerDescription'.tr(),
+              style: const TextStyle(fontSize: 12, color: AppColor.grey2Color),
+            ),
+          ),
+          _buildPocketBaseSettings(context),
+        ],
+      ),
     );
   }
 

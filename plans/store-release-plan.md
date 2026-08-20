@@ -129,6 +129,15 @@ Fix:
 5. Decide the sync model — **see §9 for the full analysis.** In short: local-first by default, with
    PocketBase demoted to an advanced "I run my own server" setting. Hosted accounts operated by you
    are not recommended for a one-time-purchase app.
+   **Implemented in the UI on 2026-08-20.** `Features.sharedServer` previously gated only startup
+   (`main.part.dart:40`), so a store build started local-first but still showed the whole server
+   layer. Now: account login compiles out (`state_login.dart`, `app_router.dart` — the pages leave
+   the artifact), user and group administration appears only when a server is actually connected
+   (`Features.serverAdminVisible`), and the PocketBase settings are demoted to a collapsed
+   "own server (advanced)" section in all three layouts. The server is kept, not removed, exactly as
+   §9 requires. This also fixed a hole the flag had opened: the library-permission check read a
+   server-issued role, which a local-first build never has, so a fresh store install could not
+   create its first song (`UsersState.canManageLibrary`).
 6. Move any secrets that must ship to `--dart-define` / `String.fromEnvironment`, never assets.
 7. **The GitHub repository is public.** Not a store blocker, but a commercial decision worth making
    consciously: anyone can clone and build the app for free, and the source documents your server
