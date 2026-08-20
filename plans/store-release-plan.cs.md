@@ -275,9 +275,18 @@ Doporučení pro v1: **placené předem**, přehodnotit podle skutečných dat o
 - [ ] Zavést zvolený model synchronizace (§9): pro v1.0 to znamená přesunout PocketBase do
       pokročilého nastavení „mám vlastní server" a udělat z lokálního režimu výchozí cestu. Zpřísnit
       pravidla kolekcí v PocketBase.
-- [ ] Přidat časové razítko `updatedAt` ke každé písni a playlistu už teď, ještě než bude existovat
+- [x] ~~Přidat časové razítko `updatedAt` ke každé písni a playlistu už teď, ještě než bude existovat
       jakýkoli cloudový sync — last-write-wins po jednotlivých záznamech (§9) nejde zpětně dodělat
-      nad daty, která razítko nemají.
+      nad daty, která razítko nemají.~~ **Hotovo 20. 8. 2026.** `DateTime? updatedAt` na `Song` a
+      `Playlist`, razítkuje se při každém lokálním zápisu. **Zatím jen lokálně**: kolekce
+      `songs`/`playlists` v PocketBase takové pole nemají, takže záznam, který projde přes server, o
+      razítko přijde. Než bude moci řídit synchronizaci, je potřeba migrace schématu.
+- [x] ~~Zprovoznit zápisové cesty bez serveru.~~ **Hotovo 20. 8. 2026** a ukázalo se, že to není
+      drobnost, ale blokátor: každý zápis šel nejdřív na PocketBase a neúspěšné kolečko po síti bral
+      jako neúspěch operace. Ve store buildu tedy nešlo smazat píseň, nešlo vytvořit, uložit ani
+      smazat playlist a obnova zálohy neudělala vůbec nic. Všechno teď zapisuje nejdřív lokálně a na
+      server sahá, jen když je připojený. `PlaylistRepository` navíc dostal Hive cache, kterou nikdy
+      neměl — playlisty se dřív po restartu ztratily.
 - [ ] Přesunout klíč ke Gemini do zabezpečeného úložiště a odstranit ho z exportu nastavení.
 - [ ] Udělat `initProvidersAndCheckSync()` neblokující a s timeoutem; aplikace musí být při prvním
       spuštění plně použitelná offline.

@@ -210,7 +210,9 @@ void main() {
 
         expect(result, equals('userName'));
         verifyNever(mockSettingsRepository.setCurrentUser(any));
-        verifyNever(mockHiveProvider.setCurrentUser(any));
+        // A failed login clears the stored user rather than leaving the
+        // previous one behind.
+        verify(mockHiveProvider.setCurrentUser(null)).called(1);
       });
 
       test('should return "usersPassword" when password is wrong', () {
@@ -221,7 +223,7 @@ void main() {
 
         expect(result, equals('usersPassword'));
         verifyNever(mockSettingsRepository.setCurrentUser(any));
-        verifyNever(mockHiveProvider.setCurrentUser(any));
+        verify(mockHiveProvider.setCurrentUser(null)).called(1);
       });
 
       test('should not call setCurrentUser when isFromHive is true', () {

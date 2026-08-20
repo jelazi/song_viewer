@@ -8,6 +8,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
+import '../../test_helpers/test_logger.dart';
+
 @GenerateMocks([WebProvider])
 import 'web_repository_test.mocks.dart';
 
@@ -17,6 +19,7 @@ void main() {
     late MockWebProvider mockWebProvider;
 
     setUp(() {
+      initTestLogger();
       mockWebProvider = MockWebProvider();
       webRepository = WebRepository(webProvider: mockWebProvider);
     });

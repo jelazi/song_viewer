@@ -9,6 +9,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
+import '../../test_helpers/test_logger.dart';
+
 @GenerateMocks([PocketBaseProvider, HiveProvider])
 import 'songs_repository_test.mocks.dart';
 
@@ -22,6 +24,7 @@ void main() {
     late StreamController<RealtimeChangeEvent<String>> groupChangeController;
 
     setUp(() {
+      initTestLogger();
       mockPocketBaseProvider = MockPocketBaseProvider();
       mockHiveProvider = MockHiveProvider();
       selectedSongController = StreamController<Map<String, dynamic>?>.broadcast();
@@ -95,6 +98,7 @@ void main() {
       test('should delete song successfully', () async {
         final song = Song(id: '1', title: 'Song 1', lyrics: 'Lyrics 1');
 
+        when(mockPocketBaseProvider.isConnected).thenReturn(true);
         when(mockPocketBaseProvider.getListSongs()).thenAnswer((_) async => [song]);
         await songsRepository.loadSongsFromServer();
 
@@ -107,7 +111,26 @@ void main() {
         verify(mockPocketBaseProvider.deleteSong('1')).called(1);
       });
 
-      test('should return false when server delete fails', () async {
+      test('should delete locally with no server at all', () async {
+        final song = Song(id: '1', title: 'Song 1', lyrics: 'Lyrics 1');
+
+        when(mockPocketBaseProvider.isConnected).thenReturn(true);
+        when(mockPocketBaseProvider.getListSongs()).thenAnswer((_) async => [song]);
+        await songsRepository.loadSongsFromServer();
+
+        // No server: the delete must still take effect locally, and must not
+        // reach for the network at all.
+        when(mockPocketBaseProvider.isConnected).thenReturn(false);
+
+        final result = await songsRepository.deleteSong('1');
+
+        expect(result, isTrue);
+        expect(songsRepository.songs, isEmpty);
+        verifyNever(mockPocketBaseProvider.deleteSong(any));
+      });
+
+      test('should return false when a connected server refuses the delete', () async {
+        when(mockPocketBaseProvider.isConnected).thenReturn(true);
         when(mockPocketBaseProvider.deleteSong('1')).thenAnswer((_) async => false);
 
         final result = await songsRepository.deleteSong('1');

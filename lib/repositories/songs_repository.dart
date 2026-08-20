@@ -215,9 +215,13 @@ class SongsRepository {
 
   Future<bool> deleteSong(String id) async {
     try {
-      final result = await _pocketBaseProvider.deleteSong(id);
-      if (result == false) {
-        return false;
+      if (_pocketBaseProvider.isConnected) {
+        final result = await _pocketBaseProvider.deleteSong(id);
+        // With a server present it stays the source of truth: a refused delete
+        // must not leave the two sides disagreeing.
+        if (result == false) {
+          return false;
+        }
       }
       _songs.removeWhere((element) => element.id == id);
       await _saveSongsToCache();
@@ -284,11 +288,20 @@ class SongsRepository {
     return false;
   }
 
+  /// Writes locally first, then to the server when there is one.
+  ///
+  /// Without the `isConnected` guard every save paid a full network timeout in
+  /// a build that has no server configured.
   Future<void> updateSong(Song song) async {
-    await _pocketBaseProvider.addOrUpdateSong(song);
+    song.updatedAt = DateTime.now().toUtc();
     _songs.removeWhere((element) => element.id == song.id);
     _songs.add(song.copyWith());
     await _saveSongsToCache();
+
+    if (_pocketBaseProvider.isConnected) {
+      final ok = await _pocketBaseProvider.addOrUpdateSong(song);
+      if (!ok) logger.w('Song saved locally but not pushed to server: ${song.title}');
+    }
   }
 
   /// Stores a batch of newly imported songs.
@@ -303,10 +316,12 @@ class SongsRepository {
   Future<int> addImportedSongs(List<Song> newSongs) async {
     if (newSongs.isEmpty) return 0;
 
+    final now = DateTime.now().toUtc();
     var added = 0;
     for (final song in newSongs) {
       song.generateId();
       if (_songs.any((s) => s.id == song.id)) continue;
+      song.updatedAt = now;
       _songs.add(song);
       added++;
     }
@@ -322,6 +337,33 @@ class SongsRepository {
     await _saveSongsToCache();
     isChangedListSongController.sink.add(isChangedListSongValue++);
     return added;
+  }
+
+  /// Restores songs from a backup: upserts every one, unlike
+  /// [addImportedSongs], which skips ids it already has.
+  ///
+  /// Goes through the local list rather than straight to the server, so a
+  /// backup restores into a build that has no server at all.
+  Future<int> restoreSongs(List<Song> restored) async {
+    if (restored.isEmpty) return 0;
+
+    final now = DateTime.now().toUtc();
+    for (final song in restored) {
+      song.updatedAt = now;
+      _songs.removeWhere((s) => s.id == song.id);
+      _songs.add(song);
+    }
+    await _saveSongsToCache();
+
+    if (_pocketBaseProvider.isConnected) {
+      for (final song in restored) {
+        final ok = await _pocketBaseProvider.addOrUpdateSong(song);
+        if (!ok) logger.w('Restored song not pushed to server: ${song.title}');
+      }
+    }
+
+    isChangedListSongController.sink.add(isChangedListSongValue++);
+    return restored.length;
   }
 
   void changeTransposeChord(Song song, int transpose) {

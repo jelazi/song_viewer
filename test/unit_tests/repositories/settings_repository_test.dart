@@ -8,6 +8,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
+import '../../test_helpers/test_logger.dart';
+
 @GenerateMocks([HiveProvider, PocketBaseProvider])
 import 'settings_repository_test.mocks.dart';
 
@@ -18,6 +20,7 @@ void main() {
     late MockPocketBaseProvider mockPocketBaseProvider;
 
     setUp(() {
+      initTestLogger();
       mockHiveProvider = MockHiveProvider();
       mockPocketBaseProvider = MockPocketBaseProvider();
       settingsRepository = SettingsRepository(hiveProvider: mockHiveProvider, pocketBaseProvider: mockPocketBaseProvider);
@@ -25,6 +28,12 @@ void main() {
 
     group('Load Settings', () {
       test('should load all settings from Hive', () async {
+        // Catch-all first, so the specific stubs below still win: the
+        // repository reads more keys than this test asserts on, and each one it
+        // does not read here falls back to its own default. Without it, every
+        // new setting breaks this test.
+        when(mockHiveProvider.getSettingsValue(any)).thenAnswer((_) async => null);
+
         // Mock all settings values
         when(mockHiveProvider.getSettingsValue('previewFontTextSize')).thenAnswer((_) async => 20.0);
         when(mockHiveProvider.getSettingsValue('previewFontChordSize')).thenAnswer((_) async => 20.0);

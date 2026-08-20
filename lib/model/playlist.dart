@@ -12,7 +12,13 @@ class Playlist {
   String? id;
   List<String> listSongIds = [];
 
-  Playlist({required this.id, required this.name}) {
+  /// UTC time of the last local write, set by [PlaylistRepository] on every
+  /// save. Basis for per-record last-write-wins. **Not stored on the PocketBase
+  /// server** — the `playlists` collection has no such field, so a playlist
+  /// that round-trips through the server comes back with this null.
+  DateTime? updatedAt;
+
+  Playlist({required this.id, required this.name, this.updatedAt}) {
     _generateId();
   }
 

@@ -265,8 +265,18 @@ Recommendation for v1: **paid upfront**, revisit after real download data.
 - [ ] Implement the chosen sync model (§9): for v1.0 that means demoting PocketBase to an advanced
       "I run my own server" setting and making local-first the default path. Harden PocketBase
       collection rules.
-- [ ] Add an `updatedAt` timestamp to every song/playlist record now, even before any cloud sync
-      exists — per-record last-write-wins (§9) is impossible to retrofit onto data written without it.
+- [x] ~~Add an `updatedAt` timestamp to every song/playlist record now, even before any cloud sync
+      exists — per-record last-write-wins (§9) is impossible to retrofit onto data written without it.~~
+      **Done 2026-08-20.** `DateTime? updatedAt` on `Song` and `Playlist`, stamped on every local
+      write. **Local-only for now**: the PocketBase `songs`/`playlists` collections have no such
+      field, so a record that round-trips through the server loses it. A schema migration is needed
+      before the timestamp can drive sync.
+- [x] ~~Make the write paths work with no server.~~ **Done 2026-08-20**, and it turned out to be a
+      blocker rather than a nicety: every write went to PocketBase first and treated a failed
+      round-trip as a failed operation, so in a store build songs could not be deleted, playlists
+      could not be created, saved or deleted, and restoring a backup did nothing. All now write
+      locally first and contact the server only when connected. `PlaylistRepository` also gained the
+      Hive cache it never had — playlists used to be lost on restart.
 - [ ] Move the Gemini key to secure storage and strip it from settings export.
 - [ ] Make `initProvidersAndCheckSync()` non-blocking with a timeout; app must be fully usable
       offline on first launch.

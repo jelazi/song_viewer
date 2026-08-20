@@ -1,5 +1,91 @@
 # Development Log
 
+## 2026-08-20 (part 4) - feat: local-first write paths and per-record updatedAt
+
+### What was done
+Part 1 made the store build *look* local-first. It was not: every write path still went to
+PocketBase first and treated a failed round-trip as a failed operation. Without a server that means
+the operation simply did not happen. This is the "A + B" work from the split plan.
+
+**Write paths, all now local-first** — write locally, persist, then talk to the server only
+`if (isConnected)`. The pattern already existed in `addImportedSongs`; it just had not been applied
+anywhere else.
+
+- `SongsRepository.deleteSong` — the server call is now inside an `isConnected` guard. With a server
+  present it stays the source of truth (a refused delete still returns false, so the two sides cannot
+  disagree); without one the song is removed locally and the call reports success.
+- `SongsRepository.updateSong` — local write and cache first, server after, result logged instead of
+  ignored. Also removes a full network timeout from every save in a build with no server.
+- `PlaylistRepository.savePlaylist` — writes locally and returns true even when a connected server
+  refuses. **Deliberate asymmetry with delete:** dropping the user's edit because a server said no is
+  worse than the two sides disagreeing, whereas a resurrected deleted record is worse than a failed
+  delete.
+- `PlaylistRepository.deletePlaylist` — same guard as `deleteSong`.
+- `SongsRepository.restoreSongs` and `PlaylistRepository.restorePlaylists` (both new) — upsert, unlike
+  `addImportedSongs`, which skips ids it already has. `backup_service.dart` restore now goes through
+  these instead of calling `pocketBaseProvider.addOrUpdateSong/Playlist` directly.
+
+**`PlaylistRepository` gained local persistence** — it had none at all, so playlists lived in memory
+and were lost on restart. New `HiveProvider.savePlaylistsCache` / `loadPlaylistsCache` (same
+`songsCacheBox`, mirroring the songs and groups caches), `_loadFromCache` / `_saveToCache`, and
+`_init()` is now cache-first: it shows the cached playlists immediately and only queries the server
+when connected.
+
+**`updatedAt` on `Song` and `Playlist`** — `DateTime?`, set on every local write
+(`updateSong`, `addImportedSongs`, `savePlaylist`, both restore methods). This is the timestamp §9
+calls for: per-record last-write-wins cannot be retrofitted onto data written without it.
+`checkModifiedSong` compares fields explicitly and does **not** include it, which is correct — a
+metadata stamp is not a content change.
+
+### What was fixed
+Three ways the store build was unusable, all the same bug class, all confirmed against
+`pocketbase_provider.dart` (every one of those methods catches the network exception and returns
+`false`):
+
+1. **Songs could not be deleted.** `deleteSong` returned early on `result == false`, so the local
+   removal never ran.
+2. **Playlists could not be created, saved or deleted**, and never persisted anyway.
+3. **Restoring a backup did nothing.** It wrote only to PocketBase — found while fixing the other
+   two, and it is the store build's main route for an existing library besides ChordPro import.
+
+Also fixed the test suite's root cause: `logger` is a `late` global assigned in `bootstrap()`, which
+tests never run, so any repository code that logged threw `LateInitializationError`. New
+`test/test_helpers/test_logger.dart` (`initTestLogger()`, writes nothing) called from the repository
+suites. That alone cleared 6 of the 10 long-standing failures.
+
+Two more test failures were **wrong tests, not wrong code**:
+- `users_repository_test` asserted `verifyNever(setCurrentUser(any))` on a failed login, but
+  `checkUser` deliberately calls `setCurrentUser(null)` to clear the stored user. Assertion corrected
+  to expect that call.
+- `settings_repository_test` stubbed each settings key by hand and had not been updated since
+  `superuserMode` and the presentation/QR/API keys were added. Given a catch-all `any` stub first, so
+  the specific stubs still win and a new setting no longer breaks the test.
+
+### Current state
+- **`flutter test test/unit_tests`: 369 pass, 0 fail — the suite is green for the first time.**
+  Was 352 pass / 10 fail at the start of the day. 13 new tests, covering both branches of every
+  changed path: connected, refused-by-server, and no-server-at-all, plus cache loading and the
+  `updatedAt` stamp.
+- `flutter analyze`: `No issues found!` — still zero.
+- Builds green: `./build.sh macos personal release`, `./build.sh android-aab store release`
+  (61.1 MB), B1 scan passed with the unchanged identifier residue.
+- `dart run build_runner build` regenerated `song.g.dart`, `playlist.g.dart` and the mocks;
+  `updatedAt` verified present in both directions of the generated JSON.
+
+### Pending / next steps
+- **`updatedAt` is local-only.** The PocketBase `songs` and `playlists` collections have no such
+  field (`pocketbase_collections.json`), so a record that round-trips through the server comes back
+  with it null. Adding it to the body without a schema migration risks breaking the personal build's
+  sync, so it was left out — documented on both model fields. **A schema migration is needed before
+  the timestamp can drive any real sync.**
+- Nothing here was verified at runtime. No build was launched, no playlist created offline, no
+  backup restored. The evidence is unit tests and compilation.
+- The existing per-record server timestamps in `realtime_state` (`songs_updated`) overlap
+  conceptually with `updatedAt`; they record *server* writes only. Which one wins is a decision for
+  when sync is actually built.
+- Unchanged from earlier parts: Xcode schemes, macOS `PRODUCT_NAME`, the unbuildable web target, the
+  `PreviewChordBloc` identifier residue, CI, and the identity/metadata blocker B4.
+
 ## 2026-08-20 (part 3) - chore: strip explanatory comments, remove all TODO/FIXME
 
 ### What was done

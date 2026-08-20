@@ -35,6 +35,14 @@ class Song {
   /// Key = chord name (e.g. "Am"), Value = list of position strings.
   Map<String, List<String>>? chordOverrides;
 
+  /// UTC time of the last local write, set by [SongsRepository] on every save.
+  ///
+  /// It is the basis for per-record last-write-wins once two devices can edit
+  /// the same library offline. **Not stored on the PocketBase server** — the
+  /// `songs` collection has no such field, so a song that round-trips through
+  /// the server comes back with this null.
+  DateTime? updatedAt;
+
   Song({
     required this.id,
     required this.title,
@@ -51,6 +59,7 @@ class Song {
     this.notes,
     this.youtubeVideos,
     this.chordOverrides,
+    this.updatedAt,
   });
 
   Song.empty()
@@ -85,6 +94,7 @@ class Song {
     List<Note>? notes,
     List<YoutubeVideo>? youtubeVideos,
     Map<String, List<String>>? chordOverrides,
+    DateTime? updatedAt,
   }) {
     return Song(
       id: id ?? this.id,
@@ -102,6 +112,7 @@ class Song {
       notes: notes ?? this.notes,
       youtubeVideos: youtubeVideos ?? this.youtubeVideos,
       chordOverrides: chordOverrides ?? this.chordOverrides,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 

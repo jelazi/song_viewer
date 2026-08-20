@@ -285,7 +285,7 @@ class BackupService {
       // --- Songs ---
       final songsJson = data['songs'] as List? ?? [];
       onProgress('backupRestoringSongs'.tr(args: [songsJson.length.toString()]));
-      int songCount = 0;
+      final restoredSongs = <Song>[];
       for (final sj in songsJson) {
         final song = Song.fromJson(Map<String, dynamic>.from(sj as Map));
         // Remap sheet URLs to newly uploaded files
@@ -294,23 +294,21 @@ class BackupService {
             return reverseFileMapping[url] ?? url;
           }).toList();
         }
-        await pocketBaseProvider.addOrUpdateSong(song);
-        songCount++;
-        if (songCount % 20 == 0) {
-          onProgress('backupRestoringSongsProgress'.tr(args: [songCount.toString(), songsJson.length.toString()]));
+        restoredSongs.add(song);
+        if (restoredSongs.length % 20 == 0) {
+          onProgress('backupRestoringSongsProgress'.tr(args: [restoredSongs.length.toString(), songsJson.length.toString()]));
         }
       }
+      // Through the repository, not the provider: restoring has to work in a
+      // build with no server, and the local library is what the user sees.
+      final songCount = await songsRepository.restoreSongs(restoredSongs);
       counts['songs'] = songCount;
 
       // --- Playlists ---
       final playlistsJson = data['playlists'] as List? ?? [];
       onProgress('backupRestoringPlaylists'.tr(args: [playlistsJson.length.toString()]));
-      int playlistCount = 0;
-      for (final pj in playlistsJson) {
-        final playlist = Playlist.fromJson(Map<String, dynamic>.from(pj as Map));
-        await pocketBaseProvider.addOrUpdatePlaylist(playlist);
-        playlistCount++;
-      }
+      final restoredPlaylists = playlistsJson.map((pj) => Playlist.fromJson(Map<String, dynamic>.from(pj as Map))).toList();
+      final playlistCount = await playlistRepository.restorePlaylists(restoredPlaylists);
       counts['playlists'] = playlistCount;
 
       // --- Groups ---

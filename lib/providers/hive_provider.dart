@@ -170,6 +170,18 @@ class HiveProvider {
     return songsCacheBox.get('lastSyncTimestamp') as String?;
   }
 
+  void savePlaylistsCache(List<Map<String, dynamic>> playlistsJson) {
+    songsCacheBox.put('playlists', playlistsJson);
+  }
+
+  List<Map<String, dynamic>>? loadPlaylistsCache() {
+    final data = songsCacheBox.get('playlists');
+    if (data is List) {
+      return data.map((e) => _deepCastMap(e as Map)).toList();
+    }
+    return null;
+  }
+
   void saveGroupsCache(List<String> groups) {
     songsCacheBox.put('groups', groups);
   }

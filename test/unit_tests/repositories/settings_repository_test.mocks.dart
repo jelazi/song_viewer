@@ -338,6 +338,16 @@ class MockHiveProvider extends _i1.Mock implements _i4.HiveProvider {
       );
 
   @override
+  void savePlaylistsCache(List<Map<String, dynamic>>? playlistsJson) =>
+      super.noSuchMethod(
+        Invocation.method(
+          #savePlaylistsCache,
+          [playlistsJson],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
   void saveGroupsCache(List<String>? groups) => super.noSuchMethod(
         Invocation.method(
           #saveGroupsCache,
