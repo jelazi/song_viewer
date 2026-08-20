@@ -85,10 +85,9 @@ class AppRouter {
         return MaterialPageRoute(
             builder: (_) => PageResponsive(
                 pageMobile: const EditChordsPageMobile(isOriginalLyrics: true), pageTablet: const EditChordsPageTablet(isOriginalLyrics: true), pageDesktop: Container()));
-      // Account login exists only in a build wired to a shared server. In a
-      // local-first build the constant is false, so the LoginPageMobile branch
-      // is compile-time dead and the page leaves the artifact (§10); the route
-      // then simply lands on the library.
+      // The Features.sharedServer term must stay first and compile-time: it is
+      // what keeps LoginPageMobile out of a store artifact (§10). Without a
+      // server the route lands on the library instead.
       case '/loginPage':
         if (Features.sharedServer && settingsRepository.currentUser.name == '') {
           return MaterialPageRoute(builder: (_) => LoginPageMobile());

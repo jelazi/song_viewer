@@ -61,7 +61,7 @@ class User {
 
   Map<String, dynamic> toJson() => _$UserToJson(this);
 
-  copy(User newUser) {
+  void copy(User newUser) {
     name = newUser.name;
     password = newUser.password;
     typeUser = newUser.typeUser;

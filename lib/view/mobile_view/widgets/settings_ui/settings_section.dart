@@ -15,7 +15,7 @@ class SettingsSection extends StatelessWidget {
   Color? tileBorderColor;
   Color? tileValueColor;
   SettingsSection({
-    Key? key,
+    super.key,
     this.title,
     this.tiles,
     this.tileIconColor,
@@ -26,7 +26,7 @@ class SettingsSection extends StatelessWidget {
     this.sectionBackgroundColor,
     this.sectionTextColor,
     this.sectionBorderColor,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

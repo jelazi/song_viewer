@@ -1,4 +1,4 @@
-library flutter_chord;
+library;
 
 export './chord_parser.dart';
 export './lyrics_renderer.dart';

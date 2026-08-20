@@ -10,7 +10,7 @@ import '../../../../../services/constants.dart';
 import '../../../../widgets/web_search_history_menu.dart';
 
 class ListWebSong extends StatefulWidget {
-  ListWebSong({
+  const ListWebSong({
     super.key,
   });
 
@@ -101,7 +101,6 @@ class _ListWebSongState extends State<ListWebSong> {
       },
       child: BlocBuilder<WebBloc, WebState>(
         builder: (context, state) {
-        final isSongMode = state.searchType == 0;
         return Container(
             width: 400,
             height: MediaQuery.of(context).size.height - 150,
@@ -261,7 +260,7 @@ class _ListWebSongState extends State<ListWebSong> {
                           children: [
                             ...state.filteredInterprets
                                 .map((interpret) => _buildDesktopInterpretCard(state, interpret))
-                                .toList(),
+                                ,
                             if (state.filteredSongs.isNotEmpty && state.currentInterpret.title.isEmpty) ...[
                               const SizedBox(height: 6),
                               if (state.filteredInterprets.isNotEmpty)
@@ -426,7 +425,7 @@ class _ListWebSongState extends State<ListWebSong> {
                           children: [
                             ...state.filteredInterprets
                                 .map((interpret) => _buildDesktopInterpretCard(state, interpret))
-                                .toList(),
+                                ,
                             if (state.filteredSongs.isNotEmpty && state.currentInterpret.title.isEmpty) ...[
                               const SizedBox(height: 6),
                               if (state.filteredInterprets.isNotEmpty)

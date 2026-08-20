@@ -55,12 +55,8 @@ class _GeneralSettingsBodyState extends State<GeneralSettingsBody> {
                 style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 24),
-              // PocketBase settings. A build wired to a shared server leads
-              // with them — that is the point of that build. A local-first
-              // build must not: the app is meant to work with no server at all,
-              // so the section is demoted to a collapsed "advanced" block at
-              // the bottom instead (§9 — self-hosted PocketBase stays available
-              // as the pro option, it just is not the default path).
+              // Local-first builds get this section at the bottom instead, as a
+              // collapsed advanced block — see _buildOwnServerSection.
               if (Features.sharedServer) ...[
                 _buildSectionTitle('pbSettingsTitle'.tr()),
                 const SizedBox(height: 8),
@@ -91,8 +87,6 @@ class _GeneralSettingsBodyState extends State<GeneralSettingsBody> {
               _buildSectionTitle('superuserMode'.tr()),
               const SizedBox(height: 8),
               _buildSuperuserModeToggle(context, state),
-              // The demoted server section — last, collapsed, and explaining
-              // that nothing here is required.
               if (!Features.sharedServer) ...[
                 const SizedBox(height: 24),
                 _buildOwnServerSection(context),
@@ -111,9 +105,8 @@ class _GeneralSettingsBodyState extends State<GeneralSettingsBody> {
     );
   }
 
-  /// The server settings as an opt-in, for builds that are not wired to a
-  /// shared server. Collapsed by default and headed by the fact that matters
-  /// most to someone who just bought the app: none of this is required.
+  /// The server settings as a collapsed opt-in, for builds that are not wired
+  /// to a shared server.
   Widget _buildOwnServerSection(BuildContext context) {
     final pbProvider = context.read<SettingsBloc>().settingsRepository.pocketBaseProvider;
     return Theme(
@@ -538,7 +531,7 @@ class _GeneralSettingsBodyState extends State<GeneralSettingsBody> {
       password: _pbPasswordController.text,
     );
     final success = await pbProvider.reconnect(newConfig);
-    if (mounted) {
+    if (context.mounted) {
       setState(() {
         _pbConnectionResult = success ? 'pbConnectionSuccess'.tr() : 'pbConnectionFailed'.tr();
       });

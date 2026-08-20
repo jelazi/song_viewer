@@ -197,7 +197,7 @@ class WebProvider {
   }
 
   Future<Response> searchPisnickyAkordy(String searchString) async {
-    return dio.Dio().post('${pisnickyAkordy}/meilisearch/indexes/pa_hlavni_index/search',
+    return dio.Dio().post('$pisnickyAkordy/meilisearch/indexes/pa_hlavni_index/search',
         data: {
           'q': searchString,
           'limit': 10,

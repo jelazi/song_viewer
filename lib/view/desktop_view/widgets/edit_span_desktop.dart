@@ -15,7 +15,7 @@ class EditSpanDesktop extends StatefulWidget {
   final TypeSongItem typeSongItem;
   OverlayEntry overlayEntry;
 
-  EditSpanDesktop(this.index, this.char, this.typeSongItem, this.style, this.overlayEntry, {Key? key}) : super(key: key);
+  EditSpanDesktop(this.index, this.char, this.typeSongItem, this.style, this.overlayEntry, {super.key});
 
   @override
   State<EditSpanDesktop> createState() => _EditSpanDesktopState();
@@ -166,7 +166,7 @@ class _EditSpanDesktopState extends State<EditSpanDesktop> {
                                   Navigator.pop(context, 'changeChord');
                                 },
                               ))
-                          .toList()
+                          
                     ];
                   },
                   child: Row(
@@ -260,7 +260,7 @@ class _EditSpanDesktopState extends State<EditSpanDesktop> {
                                   Navigator.pop(context, 'createChord');
                                 },
                               ))
-                          .toList()
+                          
                     ];
                   },
                   child: Row(

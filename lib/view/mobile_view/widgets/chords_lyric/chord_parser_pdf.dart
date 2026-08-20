@@ -82,7 +82,7 @@ class ChordProcessorPDF {
     return (TextPainter(
       text: TextSpan(text: text, style: textStyle),
       maxLines: 1,
-      textScaleFactor: MediaQuery.of(context).textScaleFactor,
+      textScaler: MediaQuery.textScalerOf(context),
       textDirection: TextDirection.ltr,
     )..layout())
         .size
@@ -92,9 +92,6 @@ class ChordProcessorPDF {
   /// Transpose the chord text by the given increment
   static String transposeChord(String chord, int increment, TypeTranspose typeTranspose) {
     if (chord.isEmpty || increment == 0) return chord;
-    if (chord == 'Bmi/G#') {
-      //FIXME: prroblem with transponse chord
-    }
     var cycle = [];
     if (typeTranspose == TypeTranspose.german) {
       cycle = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];

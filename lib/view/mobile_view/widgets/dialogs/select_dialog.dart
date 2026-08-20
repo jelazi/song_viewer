@@ -9,14 +9,14 @@ class SelectDialog extends StatelessWidget {
   Function firstSelectFunction;
   Function secondSelectFunction;
   SelectDialog({
-    Key? key,
+    super.key,
     required this.title,
     required this.selectQuestion,
     required this.firstSelectTitle,
     required this.secondSelectTitle,
     required this.firstSelectFunction,
     required this.secondSelectFunction,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

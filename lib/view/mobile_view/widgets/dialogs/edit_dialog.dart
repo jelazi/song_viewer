@@ -14,14 +14,14 @@ class EditDialog extends StatelessWidget {
   double width = 300;
   bool okBack = true;
   EditDialog({
-    Key? key,
+    super.key,
     required this.title,
     required this.okClick,
     required this.widgetContent,
     this.height = 200,
     this.width = 300,
     this.okBack = true,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

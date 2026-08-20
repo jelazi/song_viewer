@@ -85,6 +85,7 @@ class PresentationWindowManager {
         }
 
         if (_presentationWindowController != null) {
+          if (!context.mounted) return;
           // Send the page data — engine is already ready, no buffering needed
           await sendPageToPresentation(
             context,

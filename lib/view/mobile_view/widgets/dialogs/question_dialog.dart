@@ -15,7 +15,7 @@ class QuestionDialog extends StatelessWidget {
   double width = 400;
   bool okBack = true;
   QuestionDialog({
-    Key? key,
+    super.key,
     required this.title,
     required this.okClick,
     this.cancelClick,
@@ -23,7 +23,7 @@ class QuestionDialog extends StatelessWidget {
     this.height = 200,
     this.width = 400,
     this.okBack = true,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

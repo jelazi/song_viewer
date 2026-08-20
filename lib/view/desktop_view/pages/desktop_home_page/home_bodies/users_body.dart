@@ -26,7 +26,7 @@ class _UsersBodyState extends State<UsersBody> {
   Widget build(BuildContext context) {
     return BlocBuilder<UsersBloc, UsersState>(
       builder: (context, state) {
-        return Container(
+        return SizedBox(
           width: MediaQuery.of(context).size.width,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -150,7 +150,7 @@ class _UsersBodyState extends State<UsersBody> {
                               ),
                             ),
                           )))
-                      .toList()
+                      
                 ]),
               ),
             ],

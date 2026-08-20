@@ -1,4 +1,4 @@
-import 'package:bloc/bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:default_project/config/features.dart';
 import 'package:default_project/repositories/user_repository.dart';
 import 'package:default_project/view/desktop_view/widgets/my_toast.dart';

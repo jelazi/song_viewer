@@ -10,12 +10,12 @@ class EditTextDialog extends StatefulWidget {
   bool okBack = true;
   late TextEditingController textEditingController;
   EditTextDialog({
-    Key? key,
+    super.key,
     required this.title,
     required this.value,
     required this.okClick,
     this.okBack = true,
-  }) : super(key: key) {
+  }) {
     textEditingController = TextEditingController(text: value);
   }
 

@@ -1,6 +1,5 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:async';
-import 'dart:io';
 
 import 'package:beautiful_soup_dart/beautiful_soup.dart';
 import 'package:collection/collection.dart';
@@ -83,9 +82,6 @@ class WebRepository {
     return '';
   }
 
-  void _dp(String msg) {
-    debugPrint('[PA_TEST] $msg');
-  }
 
   Future<List<WebSong>> findSongByInterpretFromVelkyZpevnik(WebInterpret interpret) async {
     List<WebSong> songs = [];
@@ -1036,7 +1032,6 @@ class WebRepository {
         }
         break;
       case WebAddress.proScholy:
-        // TODO: Handle this case.
         break;
     }
     return name;

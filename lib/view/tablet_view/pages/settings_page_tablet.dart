@@ -246,10 +246,9 @@ class _SettingsPageTabletState extends State<SettingsPageTablet> {
         ));
   }
 
-  /// Server settings, presented according to how this build is meant to be
-  /// used — see the identical method in `settings_page.dart` (mobile) for the
-  /// reasoning. Kept in both files because the two screens do not share a
-  /// widget tree.
+  /// Full section for a shared-server build, a single "own server (advanced)"
+  /// opt-in row otherwise. Duplicated in `settings_page.dart` — the mobile and
+  /// tablet settings screens do not share a widget tree.
   SettingsSection _buildServerSection(BuildContext context) {
     final pbProvider = context.read<SettingsBloc>().settingsRepository.pocketBaseProvider;
 
@@ -306,16 +305,18 @@ class _SettingsPageTabletState extends State<SettingsPageTablet> {
     final box = context.findRenderObject() as RenderBox?;
     final scaffoldMessenger = ScaffoldMessenger.of(context);
     final data = utf8.encode(text);
-    final shareResult = await Share.shareXFiles(
-      [
-        XFile.fromData(
-          data,
-          // name: fileName, // Notice, how setting the name here does not work.
-          mimeType: 'text/plain',
-        ),
-      ],
-      sharePositionOrigin: box!.localToGlobal(Offset.zero) & box.size,
-      fileNameOverrides: [fileName],
+    final shareResult = await SharePlus.instance.share(
+      ShareParams(
+        files: [
+          XFile.fromData(
+            data,
+            // name: fileName, // Notice, how setting the name here does not work.
+            mimeType: 'text/plain',
+          ),
+        ],
+        sharePositionOrigin: box!.localToGlobal(Offset.zero) & box.size,
+        fileNameOverrides: [fileName],
+      ),
     );
 
     scaffoldMessenger.showSnackBar(getResultSnackBar(shareResult));

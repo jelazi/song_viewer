@@ -125,7 +125,7 @@ class _ListSongState extends State<ListSong> {
                                     height: 40,
                                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                     decoration: BoxDecoration(
-                                      color: AppColor.primaryColor.withOpacity(0.9),
+                                      color: AppColor.primaryColor.withValues(alpha: 0.9),
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: Row(

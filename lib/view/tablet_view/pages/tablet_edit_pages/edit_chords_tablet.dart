@@ -8,9 +8,9 @@ import '../../widgets/edit_span_tablet.dart';
 class EditChordsPageTablet extends StatefulWidget {
   final bool isOriginalLyrics;
   const EditChordsPageTablet({
-    Key? key,
+    super.key,
     required this.isOriginalLyrics,
-  }) : super(key: key);
+  });
 
   @override
   State<EditChordsPageTablet> createState() => _EditChordsPageTabletState();

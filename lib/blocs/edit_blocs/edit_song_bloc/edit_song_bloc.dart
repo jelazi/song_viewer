@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import '../../../model/song/song.dart';
 import '../../../model/youtube_video.dart';
 import '../../../services/enums.dart';
-import '../../../view/mobile_view/widgets/chords_lyric/chord_parser.dart' as chordParser;
+import '../../../view/mobile_view/widgets/chords_lyric/chord_parser.dart' as chord_parser;
 
 part 'edit_song_event.dart';
 part 'edit_song_state.dart';
@@ -263,7 +263,7 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
     if (oldSong != null) {
       final listModified = oldSong.checkModifiedSong(state.currentEditSong, false);
       if (listModified.isNotEmpty) {
-        print('Modified: $listModified');
+        debugPrint('Modified: $listModified');
       }
     }
   }
@@ -306,11 +306,15 @@ class EditSongBloc extends Bloc<EditSongEvent, EditSongState> {
         if (result == null) return '';
         result = result.replaceFirst(RegExp(r'\['), '');
         result = result.replaceFirst(RegExp(r'\]'), '');
-        result = chordParser.ChordProcessor.transposeChord(result, event.transposeIncrement, TypeTranspose.czech);
+        result = chord_parser.ChordProcessor.transposeChord(result, event.transposeIncrement, TypeTranspose.czech);
         result = '[$result]';
         return result;
       });
-    } catch (e) {}
+    } catch (e) {
+      // WARNING: `newLyric` is still '' here, so the copyWith below writes
+      // *empty* lyrics over the song. Data loss on any transpose failure.
+      debugPrint('Transpose failed, lyrics will be written empty: $e');
+    }
 
     final Song newSong = state.currentEditSong.copyWith(
       lyrics: event.isOriginalLyric ? state.currentEditSong.lyrics : newLyric,

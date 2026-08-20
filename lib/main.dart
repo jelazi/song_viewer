@@ -614,10 +614,10 @@ class MyApp extends StatefulWidget {
   final SyncInfo syncInfo;
 
   const MyApp({
-    Key? key,
+    super.key,
     required this.repositories,
     required this.syncInfo,
-  }) : super(key: key);
+  });
 
   @override
   State<MyApp> createState() => _MyAppState();

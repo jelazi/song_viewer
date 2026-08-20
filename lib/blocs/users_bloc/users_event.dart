@@ -15,7 +15,7 @@ class LoginUser extends UsersEvent {
   final String nameUser;
   final String passwordUser;
 
-  LoginUser({required this.nameUser, required this.passwordUser});
+  const LoginUser({required this.nameUser, required this.passwordUser});
 
   @override
   List<Object> get props => [nameUser, passwordUser];
@@ -24,7 +24,7 @@ class LoginUser extends UsersEvent {
 class LogoutUser extends UsersEvent {
   final User typeUser;
 
-  LogoutUser({required this.typeUser});
+  const LogoutUser({required this.typeUser});
 
   @override
   List<Object> get props => [typeUser];
@@ -33,7 +33,7 @@ class LogoutUser extends UsersEvent {
 class AddUser extends UsersEvent {
   final User user;
 
-  AddUser({required this.user});
+  const AddUser({required this.user});
 
   @override
   List<Object> get props => [user];
@@ -42,7 +42,7 @@ class AddUser extends UsersEvent {
 class DeleteUser extends UsersEvent {
   final User user;
 
-  DeleteUser({required this.user});
+  const DeleteUser({required this.user});
 
   @override
   List<Object> get props => [user];
@@ -51,7 +51,7 @@ class DeleteUser extends UsersEvent {
 class UpdateUser extends UsersEvent {
   final User user;
 
-  UpdateUser({required this.user});
+  const UpdateUser({required this.user});
 
   @override
   List<Object> get props => [user];

@@ -8,7 +8,6 @@ import '../providers/hive_provider.dart';
 import '../providers/pocketbase_provider.dart';
 
 class PlaylistRepository {
-  final HiveProvider _hiveProvider;
   final PocketBaseProvider _pocketBaseProvider;
 
   var _playlists = <Playlist>[];
@@ -17,11 +16,14 @@ class PlaylistRepository {
   Stream<int> get isChangedPlaylist => isChangedPlaylistController.stream.asBroadcastStream();
   int _isChangedPlaylistValue = 0;
 
+  /// WARNING: this repository has **no local persistence**. Playlists are read
+  /// from and written to PocketBase only, so in a build with no server they
+  /// live in memory and are lost on restart. [hiveProvider] is accepted but
+  /// unused — it is where that cache belongs.
   PlaylistRepository({
     required HiveProvider hiveProvider,
     required PocketBaseProvider pocketBaseProvider,
-  })  : _hiveProvider = hiveProvider,
-        _pocketBaseProvider = pocketBaseProvider {
+  }) : _pocketBaseProvider = pocketBaseProvider {
     _init();
   }
 

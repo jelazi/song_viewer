@@ -35,10 +35,7 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
 
   static const _navigationChannel = MethodChannel('com.songviewer/navigation');
 
-  /// Users and groups are server records — see [Features.serverAdminVisible].
-  /// The ribbon already hides the buttons, so this only stops a stale
-  /// `bodyName` from rendering an administration screen for a server that is
-  /// not there.
+  /// See [Features.serverAdminVisible].
   bool _showServerAdmin(BuildContext context) => Features.serverAdminVisible(
         context.read<SettingsBloc>().settingsRepository.pocketBaseProvider.isConnected,
       );
@@ -273,6 +270,7 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
         // Move to previous song so that when they press back again, they see its last page
         playlistBloc.add(const PreviousPresentationSong());
         Future.delayed(const Duration(milliseconds: 50), () {
+          if (!mounted) return;
           final prevSong = playlistBloc.state.currentSong;
           if (prevSong != null) {
             // Set to last page so next backward press shows that page correctly
@@ -303,6 +301,7 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
   ) {
     playlistBloc.add(const NextPresentationSong());
     Future.delayed(const Duration(milliseconds: 50), () {
+      if (!mounted) return;
       final nextSong = playlistBloc.state.currentSong;
       if (nextSong != null) {
         presentationBloc.add(UpdatePresentationSong(song: nextSong));
@@ -327,6 +326,7 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
     _isBlackScreen = true;
     playlistBloc.add(const NextPresentationSong());
     Future.delayed(const Duration(milliseconds: 50), () {
+      if (!mounted) return;
       final nextSong = playlistBloc.state.currentSong;
       if (nextSong != null) {
         presentationBloc.add(UpdatePresentationSong(song: nextSong));
@@ -343,6 +343,7 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
   ) {
     playlistBloc.add(const PreviousPresentationSong());
     Future.delayed(const Duration(milliseconds: 50), () {
+      if (!mounted) return;
       final prevSong = playlistBloc.state.currentSong;
       if (prevSong != null) {
         final lastPageResult = PresentationBloc.computePageContent(
@@ -484,10 +485,8 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
                       homeBody = const EditBody();
                       break;
                     case 'web':
-                      // Personal and desktop-store flavours only. The ribbon
-                      // hides the segment elsewhere; this guard is what keeps a
-                      // stale bodyName from reaching WebBody and its missing
-                      // WebBloc (§10) — same reasoning as 'song_enrichment'.
+                      // Without the guard a stale bodyName reaches WebBody and
+                      // throws on the WebBloc that this build does not provide.
                       if (Features.webImport) {
                         homeBody = const WebBody();
                       }

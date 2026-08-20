@@ -265,9 +265,6 @@ class RibbonMenu extends StatelessWidget {
   }
 
   Widget _buildSettingsActions(BuildContext context, DesktopRibbonMenuState state) {
-    // Users and groups are server records. A local-first build has neither
-    // until the user configures a server of their own, and offering the
-    // administration of something that does not exist is worse than hiding it.
     final showServerAdmin = Features.serverAdminVisible(
       context.read<SettingsBloc>().settingsRepository.pocketBaseProvider.isConnected,
     );
@@ -906,7 +903,7 @@ class RibbonMenu extends StatelessWidget {
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                                       decoration: BoxDecoration(
-                                        color: isExpanded ? Colors.blue.withOpacity(0.08) : null,
+                                        color: isExpanded ? Colors.blue.withValues(alpha: 0.08) : null,
                                         border: const Border(bottom: BorderSide(color: Colors.black12)),
                                       ),
                                       child: Row(
@@ -968,7 +965,7 @@ class RibbonMenu extends StatelessWidget {
                                     Container(
                                       constraints: const BoxConstraints(maxHeight: 250),
                                       decoration: BoxDecoration(
-                                        color: Colors.grey.withOpacity(0.05),
+                                        color: Colors.grey.withValues(alpha: 0.05),
                                         border: const Border(bottom: BorderSide(color: Colors.black12)),
                                       ),
                                       child: songs.isEmpty
@@ -980,8 +977,9 @@ class RibbonMenu extends StatelessWidget {
                                           : ReorderableListView.builder(
                                               shrinkWrap: true,
                                               itemCount: songs.length,
-                                              onReorder: (oldIdx, newIdx) {
-                                                if (newIdx > oldIdx) newIdx--;
+                                              // newIdx is already adjusted for
+                                              // the removal — do not decrement.
+                                              onReorderItem: (oldIdx, newIdx) {
                                                 final ids = List<String>.from(playlist.listSongIds);
                                                 final movedId = ids.removeAt(oldIdx);
                                                 ids.insert(newIdx, movedId);

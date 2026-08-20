@@ -14,7 +14,7 @@ class SettingsList extends StatefulWidget {
   Color? sectionBorderColor;
   Color? sectionTextColor;
   SettingsList({
-    Key? key,
+    super.key,
     required this.sections,
     this.sectionBackgroundColor,
     this.sectionTextColor,
@@ -24,7 +24,7 @@ class SettingsList extends StatefulWidget {
     this.tileValueColor,
     this.tileBackgroundColor,
     this.tileBorderColor,
-  }) : super(key: key);
+  });
 
   @override
   State<SettingsList> createState() => _SettingsListState();

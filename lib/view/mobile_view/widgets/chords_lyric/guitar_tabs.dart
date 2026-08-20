@@ -35,7 +35,7 @@ class FlutterGuitarTab extends StatelessWidget {
   /// The color of the tab. Defaults to `Colors.black`.
   final Color color;
 
-  FlutterGuitarTab({this.name = '', required this.tab, this.size = 9, this.color = Colors.black, Key? key}) : super(key: key) {
+  FlutterGuitarTab({this.name = '', required this.tab, this.size = 9, this.color = Colors.black, super.key}) {
     assert(size <= 10 && size >= 1, 'Size has to be between 1 and 10 inclusive.');
   }
 
@@ -78,11 +78,11 @@ class TabWidget extends StatefulWidget {
   /// The color of the tab. Defaults to `Colors.black`.
   final Color color;
 
-  const TabWidget({required this.name, required this.tabs, this.size = 9, this.color = Colors.black, Key? key}) : super(key: key);
+  const TabWidget({required this.name, required this.tabs, this.size = 9, this.color = Colors.black, super.key});
 
   @override
   // ignore: no_logic_in_create_state
-  _TabWidgetState createState() => _TabWidgetState(name, tabs, size: size);
+  State<TabWidget> createState() => _TabWidgetState(name, tabs, size: size);
 }
 
 class _Renderer {
@@ -201,7 +201,7 @@ class _MyPainter extends CustomPainter {
     );
   }
 
-  parse(String frets, String fingers) {
+  void parse(String frets, String fingers) {
     positions = [];
     var raw = [];
     if (frets.contains(RegExp(r"^[0-9xX]{1,6}$"))) {
@@ -253,7 +253,7 @@ class _MyPainter extends CustomPainter {
     }
   }
 
-  drawMutedAndOpenStrings(info) {
+  void drawMutedAndOpenStrings(Map<String, dynamic> info) {
     var r = renderer;
     for (int i = 0; i < positions.length; i++) {
       var pos = positions[i];
@@ -270,7 +270,7 @@ class _MyPainter extends CustomPainter {
     }
   }
 
-  drawPositions(info) {
+  void drawPositions(Map<String, dynamic> info) {
     var r = renderer;
     for (int i = 0; i < positions.length; i++) {
       var pos = positions[i] ?? 0;
@@ -285,7 +285,7 @@ class _MyPainter extends CustomPainter {
     }
   }
 
-  drawFretGrid(info) {
+  void drawFretGrid(Map<String, dynamic> info) {
     var r = renderer;
     var width = (stringCount! - 1) * info['cellWidth'];
     for (var i = 0; i <= stringCount! - 1; i++) {
@@ -299,7 +299,7 @@ class _MyPainter extends CustomPainter {
     }
   }
 
-  drawNut(info) {
+  void drawNut(Map<String, dynamic> info) {
     var r = renderer;
     if (startFret == 1) {
       r!.rect!(info['boxStartX'], info['boxStartY'] - info['nutSize'], info['boxWidth'], info['nutSize'], info['lineWidth']);
@@ -308,7 +308,7 @@ class _MyPainter extends CustomPainter {
     }
   }
 
-  drawName(info) {
+  void drawName(Map<String, dynamic> info) {
     var r = renderer!;
     r.text!(info['width'] / 2.0, info['nameFontSize'] + info['lineWidth'] * 3, name, info['font'], info['nameFontSize']);
   }
@@ -330,7 +330,7 @@ class _MyPainter extends CustomPainter {
     "fretFontSize": [6, 8, 10, 12, 14, 14, 16, 17, 18, 19]
   };
 
-  calculateDimensions(scale) {
+  Map<String, dynamic> calculateDimensions(int scale) {
     Map<String, dynamic> info = {};
     scale--;
     for (var name in sizes.keys) {
@@ -353,7 +353,7 @@ class _MyPainter extends CustomPainter {
     return info;
   }
 
-  draw(scale) {
+  void draw(int scale) {
     var info = calculateDimensions(scale);
     drawFretGrid(info);
     drawNut(info);
@@ -364,7 +364,7 @@ class _MyPainter extends CustomPainter {
     drawBars(info);
   }
 
-  drawBars(info) {
+  void drawBars(Map<String, dynamic> info) {
     var r = renderer;
     // ignore: prefer_is_empty
     if (fingerings.length > 0) {
@@ -423,7 +423,7 @@ class _MyPainter extends CustomPainter {
     }
   }
 
-  drawCross(info, x, y, radius, lineWidth) {
+  void drawCross(Map<String, dynamic> info, num x, num y, num radius, num lineWidth) {
     var r = renderer;
     var angle = math.pi / 4;
     for (var i = 0; i < 2; i++) {
@@ -439,7 +439,7 @@ class _MyPainter extends CustomPainter {
     }
   }
 
-  drawFingerings(info) {
+  void drawFingerings(Map<String, dynamic> info) {
     var r = renderer;
     var fontSize = info['fingerFontSize'];
     for (var i in fingerings) {

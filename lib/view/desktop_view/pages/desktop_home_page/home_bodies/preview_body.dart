@@ -43,7 +43,6 @@ class _PreviewBodyState extends State<PreviewBody> {
 
   @override
   void dispose() {
-    // TODO: implement dispose
     super.dispose();
     scrollController.dispose();
     disableAllOverlay();
@@ -213,10 +212,8 @@ class _PreviewBodyState extends State<PreviewBody> {
 
   Widget _getLyricsRenderer(PreviewChordState state, ScrollController scrollController) {
     String lyric = state.data.song?.lyrics ?? '';
-    //TODO: controller.notes.value = List.generate(list.length + 1, (index) => RxString(''));
     if (state.twoColumns) {
       List<String> splittedLyric = state.lyricWithColumns(true, true, TypeLyric.translate);
-      //TODO:  controller.maxColumns.value = splittedLyric.length;
 
       if (splittedLyric.length == 1) {
         return LyricsRenderer(
@@ -296,7 +293,6 @@ class _PreviewBodyState extends State<PreviewBody> {
         ]);
       }
     } else {
-      //TODO: state.maxColumns.value = 0;
       return LyricsRenderer(
         scrollController: scrollController,
         isVisibleNote: true,

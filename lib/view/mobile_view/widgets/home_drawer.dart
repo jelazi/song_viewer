@@ -72,9 +72,6 @@ class _HomeDrawerState extends State<HomeDrawer> {
             BlocBuilder<UsersBloc, UsersState>(
               builder: (context, state) {
                 return Visibility(
-                  // Not a raw role check: without a shared server there is no
-                  // role to read and this entry would be hidden forever — see
-                  // UsersState.canManageLibrary.
                   visible: state.canManageLibrary,
                   child: ListTile(
                     title: Row(children: [

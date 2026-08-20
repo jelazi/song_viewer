@@ -41,7 +41,6 @@ class _PreviewPageMobileState extends State<PreviewPageMobile> {
 
   @override
   void dispose() {
-    // TODO: implement dispose
     super.dispose();
     scrollController.dispose();
     disableAllOverlay();
@@ -427,7 +426,6 @@ class _PreviewPageMobileState extends State<PreviewPageMobile> {
         ]);
       }
     } else {
-      //TODO: state.maxColumns.value = 0;
       return LyricsRenderer(
         scrollController: scrollController,
         isVisibleNote: true,

@@ -160,7 +160,7 @@ class _PlaylistTabletState extends State<PlaylistTablet> {
                                   color: AppColor.primaryColor,
                                 )),
                           ),
-                          Container(
+                          SizedBox(
                             height: MediaQuery.of(context).size.height - 120,
                             child: _isMobile(context) ? _getSingleColumnRenderer(state, scrollController) : _getLyricsTwoColumnsRenderer(state, scrollController),
                           ),
@@ -186,8 +186,8 @@ class _PlaylistTabletState extends State<PlaylistTablet> {
                                 child: ElevatedButton(
                                   style: ButtonStyle(
                                     backgroundColor: WidgetStateProperty.all<Color>(state.currentColumn > 0 || state.indexCurrentSongInPlaylist != 0
-                                        ? AppColor.primaryColor.withOpacity(0.7)
-                                        : AppColor.grey4Color.withOpacity(0.7)),
+                                        ? AppColor.primaryColor.withValues(alpha: 0.7)
+                                        : AppColor.grey4Color.withValues(alpha: 0.7)),
                                   ),
                                   onPressed: () {
                                     if (state.currentColumn <= 0 && state.indexCurrentSongInPlaylist == 0) {
@@ -210,8 +210,8 @@ class _PlaylistTabletState extends State<PlaylistTablet> {
                                     backgroundColor: WidgetStateProperty.all<Color>(
                                         state.currentColumn + 2 < state.lyricWithColumns(true, true, TypeLyric.translate, state.currentSong).length ||
                                                 state.indexCurrentSongInPlaylist != state.currentSongs.length - 1
-                                            ? AppColor.primaryColor.withOpacity(0.7)
-                                            : AppColor.grey4Color.withOpacity(0.7)),
+                                            ? AppColor.primaryColor.withValues(alpha: 0.7)
+                                            : AppColor.grey4Color.withValues(alpha: 0.7)),
                                   ),
                                   onPressed: () {
                                     if (state.currentColumn + 2 >= state.lyricWithColumns(true, true, TypeLyric.translate, state.currentSong).length &&
@@ -235,7 +235,7 @@ class _PlaylistTabletState extends State<PlaylistTablet> {
                             padding: const EdgeInsets.all(8.0),
                             child: ElevatedButton(
                               style: ButtonStyle(
-                                backgroundColor: WidgetStateProperty.all<Color>(AppColor.primaryColor.withOpacity(0.7)),
+                                backgroundColor: WidgetStateProperty.all<Color>(AppColor.primaryColor.withValues(alpha: 0.7)),
                               ),
                               onPressed: () {
                                 context.read<PlaylistsBloc>().add(ChangeCurrentColumnPlaylist(column: -1));
@@ -251,7 +251,7 @@ class _PlaylistTabletState extends State<PlaylistTablet> {
                             padding: const EdgeInsets.all(8.0),
                             child: ElevatedButton(
                               style: ButtonStyle(
-                                backgroundColor: WidgetStateProperty.all<Color>(AppColor.primaryColor.withOpacity(0.7)),
+                                backgroundColor: WidgetStateProperty.all<Color>(AppColor.primaryColor.withValues(alpha: 0.7)),
                               ),
                               onPressed: () {
                                 // Jump past all columns to trigger next song

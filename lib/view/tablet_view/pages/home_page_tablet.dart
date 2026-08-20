@@ -200,7 +200,7 @@ class _HomePageTabletState extends State<HomePageTablet> {
     );
   }
 
-  Widget getPlaylistsBody() => Container(child: BlocBuilder<PlaylistsBloc, PlaylistsState>(
+  Widget getPlaylistsBody() => BlocBuilder<PlaylistsBloc, PlaylistsState>(
         buildWhen: (previous, current) =>
             previous.playlists != current.playlists,
         builder: (context, state) {
@@ -327,7 +327,7 @@ class _HomePageTabletState extends State<HomePageTablet> {
             ],
           );
         },
-      ));
+      );
 
   Container newMethod() {
     return Container(

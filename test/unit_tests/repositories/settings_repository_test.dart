@@ -30,10 +30,10 @@ void main() {
         when(mockHiveProvider.getSettingsValue('previewFontChordSize')).thenAnswer((_) async => 20.0);
         when(mockHiveProvider.getSettingsValue('editFontTextSize')).thenAnswer((_) async => 20.0);
         when(mockHiveProvider.getSettingsValue('editFontChordSize')).thenAnswer((_) async => 20.0);
-        when(mockHiveProvider.getSettingsValue('previewColorText')).thenAnswer((_) async => Colors.black.value);
-        when(mockHiveProvider.getSettingsValue('previewColorChord')).thenAnswer((_) async => Colors.red.value);
-        when(mockHiveProvider.getSettingsValue('editColorText')).thenAnswer((_) async => Colors.black.value);
-        when(mockHiveProvider.getSettingsValue('editColorChord')).thenAnswer((_) async => Colors.red.value);
+        when(mockHiveProvider.getSettingsValue('previewColorText')).thenAnswer((_) async => Colors.black.toARGB32());
+        when(mockHiveProvider.getSettingsValue('previewColorChord')).thenAnswer((_) async => Colors.red.toARGB32());
+        when(mockHiveProvider.getSettingsValue('editColorText')).thenAnswer((_) async => Colors.black.toARGB32());
+        when(mockHiveProvider.getSettingsValue('editColorChord')).thenAnswer((_) async => Colors.red.toARGB32());
         when(mockHiveProvider.getSettingsValue('isEditIconVisible')).thenAnswer((_) async => true);
         when(mockHiveProvider.getSettingsValue('autoHideTopBar')).thenAnswer((_) async => false);
         when(mockHiveProvider.getSettingsValue('currentUser')).thenAnswer((_) async => User.empty());
@@ -144,14 +144,14 @@ void main() {
         settingsRepository.changeSettingsValue('previewColorText', Colors.blue);
 
         expect(settingsRepository.previewColorText, equals(Colors.blue));
-        verify(mockHiveProvider.setSettingsValue('previewColorText', Colors.blue.value)).called(1);
+        verify(mockHiveProvider.setSettingsValue('previewColorText', Colors.blue.toARGB32())).called(1);
       });
 
       test('should change preview color chord', () {
         settingsRepository.changeSettingsValue('previewColorChord', Colors.green);
 
         expect(settingsRepository.previewColorChord, equals(Colors.green));
-        verify(mockHiveProvider.setSettingsValue('previewColorChord', Colors.green.value)).called(1);
+        verify(mockHiveProvider.setSettingsValue('previewColorChord', Colors.green.toARGB32())).called(1);
       });
 
       test('should change isEditIconVisible', () {

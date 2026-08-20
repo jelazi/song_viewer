@@ -30,7 +30,7 @@ class LyricsRenderer extends StatefulWidget {
   final double baseFontSize;
 
   LyricsRenderer({
-    Key? key,
+    super.key,
     required this.lyrics,
     required this.textStyle,
     required this.chordStyle,
@@ -46,7 +46,7 @@ class LyricsRenderer extends StatefulWidget {
     this.transposeIncrement = 0,
     this.scrollSpeed = 20,
     this.typeTranspose = TypeTranspose.czech,
-  }) : super(key: key);
+  });
 
   @override
   State<LyricsRenderer> createState() => _LyricsRendererState();
@@ -162,7 +162,7 @@ class _LyricsRendererState extends State<LyricsRenderer> {
                                           child: Text(
                                             e,
                                             //superscript is usually smaller in size
-                                            textScaleFactor: 0.6,
+                                            textScaler: const TextScaler.linear(0.6),
                                             style: widget.chordStyle,
                                           ),
                                         ));
@@ -205,44 +205,6 @@ class _LyricsRendererState extends State<LyricsRenderer> {
                     scrollDirection: Axis.horizontal,
                     controller: _scrollControllerHorizontal,
                     child: GestureDetector(
-                      onLongPress: () {
-                        //TODO:
-                        /*    if (Get.find<UserController>().currentUser.value?.typeUser != TypeUser.superuser || !settingsController.editNotes.value) {
-                          return;
-                        }
-                      
-                        String currentNote = '';
-                        for (Note note in widget.listNotes!) {
-                          if (note.index == index) {
-                            currentNote = note.noteText.value;
-                            break;
-                          }
-                        }
-                        TextEditingController textEditingController = TextEditingController(text: currentNote);
-                      
-                        Get.dialog(CustomDialogView(
-                            titleString: 'note'.tr,
-                            contentWidget: TextField(
-                              autofocus: true,
-                              controller: textEditingController,
-                            ),
-                            actionsWidget: [
-                              ElevatedButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      Get.find<ChordLyricsController>().addNotes(index + widget.startIndex, textEditingController.text);
-                                    });
-                      
-                                    Get.back();
-                                  },
-                                  child: Text('ok'.tr())),
-                              ElevatedButton(
-                                  onPressed: () {
-                                    Get.back();
-                                  },
-                                  child: Text('cancel'.tr())),
-                            ]));*/
-                      },
                       child: Row(
                         children: [
                           RichText(
@@ -270,21 +232,15 @@ class _LyricsRendererState extends State<LyricsRenderer> {
   Widget getNote(int index) {
     GlobalKey key = GlobalKey();
 
-    if (widget.isVisibleNote && widget.listNotes.isNotEmpty
-        //TODO:
-        //&& Get.find<ChordLyricsController>().notes[index + widget.startIndex].value.isNotEmpty
-        ) {
+    if (widget.isVisibleNote && widget.listNotes.isNotEmpty) {
       return SizedBox(
         height: 18,
         child: IconButton(
             padding: const EdgeInsets.all(0),
             key: key,
-            onPressed: () {
-              //TODO:
-              /*   RenderBox box = key.currentContext!.findRenderObject() as RenderBox;
-              Offset position = box.localToGlobal(Offset.zero);
-              Get.find<ChordLyricsController>().openNoteOverlay(index + widget.startIndex, Get.find<ChordLyricsController>().notes[index + widget.startIndex].value, position);*/
-            },
+            // The note overlay this button used to open has no implementation
+            // in the current state management; tapping it does nothing.
+            onPressed: () {},
             icon: Stack(
               children: [
                 const Align(

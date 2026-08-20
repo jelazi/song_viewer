@@ -18,8 +18,8 @@ import '../../../../model/youtube_video.dart';
 
 class EditPageMobile extends StatefulWidget {
   const EditPageMobile({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<EditPageMobile> createState() => _EditPageMobileState();
@@ -489,6 +489,7 @@ Future<void> _uploadSheetImageMobile(BuildContext context) async {
       fileBytes = await File(file.path!).readAsBytes();
     }
     if (fileBytes == null) return;
+    if (!context.mounted) return;
 
     final fileName = '${DateTime.now().millisecondsSinceEpoch}_${file.name}';
 
@@ -595,14 +596,14 @@ class EditRow extends StatelessWidget {
   int maxLines = 3;
 
   EditRow({
-    Key? key,
+    super.key,
     required this.typeValue,
     required this.title,
     required this.editFunction,
     required this.titleTextStyle,
     this.chordEditFunction,
     this.maxLines = 3,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

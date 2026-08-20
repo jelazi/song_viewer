@@ -17,13 +17,13 @@ class SongCardTablet extends StatefulWidget {
   final bool superuserMode;
 
   const SongCardTablet({
-    Key? key,
+    super.key,
     required this.song,
     required this.index,
     required this.isEditIconVisible,
     required this.superuserMode,
     required this.isSelectedSong,
-  }) : super(key: key);
+  });
 
   @override
   State<SongCardTablet> createState() => _SongCardTabletState();

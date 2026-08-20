@@ -12,7 +12,7 @@ class EditSpan extends StatelessWidget {
   final Function copyChords;
   final TypeSongItem typeSongItem;
   Offset? lastPosition;
-  EditSpan(this.index, this.char, this.typeSongItem, this.openChords, this.copyChords, this.pasteChords, this.style, {Key? key}) : super(key: key);
+  EditSpan(this.index, this.char, this.typeSongItem, this.openChords, this.copyChords, this.pasteChords, this.style, {super.key});
 
   @override
   Widget build(BuildContext context) {

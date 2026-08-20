@@ -299,6 +299,7 @@ class _EditSheetsBodyState extends State<EditSheetsBody> {
         fileBytes = await File(file.path!).readAsBytes();
       }
       if (fileBytes == null) return;
+      if (!context.mounted) return;
 
       final fileName = '${DateTime.now().millisecondsSinceEpoch}_${file.name}';
 
@@ -309,13 +310,13 @@ class _EditSheetsBodyState extends State<EditSheetsBody> {
 
       final downloadUrl = await context.read<EditSongBloc>().songsRepository.uploadFile(fileName, fileBytes);
 
-      if (mounted && downloadUrl != null) {
+      if (context.mounted && downloadUrl != null) {
         context.read<EditSongBloc>().add(AddSheet(sheetUrl: downloadUrl));
         setState(() {
           _isUploading = false;
           _uploadStatus = '';
         });
-      } else if (mounted) {
+      } else if (context.mounted) {
         setState(() {
           _isUploading = false;
           _uploadStatus = '';
@@ -325,7 +326,7 @@ class _EditSheetsBodyState extends State<EditSheetsBody> {
         );
       }
     } catch (e) {
-      if (mounted) {
+      if (context.mounted) {
         setState(() {
           _isUploading = false;
           _uploadStatus = '';

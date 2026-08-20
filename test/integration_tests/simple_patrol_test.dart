@@ -114,7 +114,7 @@ void main() {
       expect($('Second Page'), findsOneWidget);
 
       // Go back
-      await $.native.pressBack();
+      await $.platformAutomator.android.pressBack();
       await $.pumpAndSettle();
 
       // We're back on first page

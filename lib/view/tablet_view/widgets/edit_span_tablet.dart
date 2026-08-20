@@ -14,7 +14,7 @@ class EditSpanTablet extends StatefulWidget {
   final TypeSongItem typeSongItem;
   OverlayEntry overlayEntry;
 
-  EditSpanTablet(this.index, this.char, this.typeSongItem, this.style, this.overlayEntry, {Key? key}) : super(key: key);
+  EditSpanTablet(this.index, this.char, this.typeSongItem, this.style, this.overlayEntry, {super.key});
 
   @override
   State<EditSpanTablet> createState() => _EditSpanTabletState();
@@ -159,7 +159,7 @@ class _EditSpanTabletState extends State<EditSpanTablet> {
                                   Navigator.pop(context, 'changeChord');
                                 },
                               ))
-                          .toList()
+                          
                     ];
                   },
                   child: Row(
@@ -253,7 +253,7 @@ class _EditSpanTabletState extends State<EditSpanTablet> {
                                   Navigator.pop(context, 'createChord');
                                 },
                               ))
-                          .toList()
+                          
                     ];
                   },
                   child: Row(

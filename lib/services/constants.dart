@@ -98,9 +98,9 @@ void resizeFontsForWeb() {
 }
 
 MaterialColor getMaterialColor(Color color) {
-  final int red = color.red;
-  final int green = color.green;
-  final int blue = color.blue;
+  final int red = (color.r * 255.0).round().clamp(0, 255);
+  final int green = (color.g * 255.0).round().clamp(0, 255);
+  final int blue = (color.b * 255.0).round().clamp(0, 255);
 
   final Map<int, Color> shades = {
     50: Color.fromRGBO(red, green, blue, .1),
@@ -115,5 +115,5 @@ MaterialColor getMaterialColor(Color color) {
     900: Color.fromRGBO(red, green, blue, 1),
   };
 
-  return MaterialColor(color.value, shades);
+  return MaterialColor(color.toARGB32(), shades);
 }

@@ -3,19 +3,12 @@ import 'package:default_project/config/features.dart';
 import 'package:default_project/model/user.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Regression tests for [UsersState.canManageLibrary].
+/// Tests for [UsersState.canManageLibrary].
 ///
-/// Tests run without `--dart-define`, so `Features.sharedServer` is false here
-/// — the store build's local-first configuration. That is exactly the case the
-/// getter exists for, and the case a plain role check got wrong: a build that
-/// never authenticates has no `currentUser`, so every role check failed closed
-/// and a fresh install could not create its first song.
-///
-/// The shared-server branch cannot be exercised from this suite: the flag is a
-/// compile-time constant, so covering it would need a second test run built
-/// with `FEATURE_SHARED_SERVER=true`. The guard below states that assumption
-/// out loud rather than letting the other tests silently pass for the wrong
-/// reason if the default ever changes.
+/// `Features.sharedServer` is a compile-time constant and these run without
+/// `--dart-define`, so only the local-first branch is covered here. The
+/// shared-server branch needs a separate run with
+/// `--dart-define-from-file=config/personal.json`.
 void main() {
   group('UsersState.canManageLibrary', () {
     UsersState stateWith(User? user) => UsersState(users: const [], currentUser: user);

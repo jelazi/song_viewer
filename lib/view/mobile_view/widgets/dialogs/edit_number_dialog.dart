@@ -13,14 +13,14 @@ class EditNumberDialog extends StatefulWidget {
   final Function okClick;
   late TextEditingController textEditingController;
   EditNumberDialog({
-    Key? key,
+    super.key,
     required this.title,
     required this.value,
     required this.okClick,
     this.minValue,
     this.maxValue,
     this.okBack = true,
-  }) : super(key: key) {
+  }) {
     textEditingController = TextEditingController(text: value.toString());
   }
 

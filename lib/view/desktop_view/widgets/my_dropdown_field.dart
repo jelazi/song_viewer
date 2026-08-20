@@ -19,7 +19,7 @@ class MyDropDownField extends StatefulWidget {
   String selectedItem;
 
   MyDropDownField({
-    Key? key,
+    super.key,
     this.label,
     this.margin,
     this.width,
@@ -31,7 +31,7 @@ class MyDropDownField extends StatefulWidget {
     this.required = false,
     required this.items,
     required this.selectedItem,
-  }) : super(key: key);
+  });
 
   @override
   State<MyDropDownField> createState() => _MyDropDownFieldState();

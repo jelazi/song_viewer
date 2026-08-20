@@ -25,7 +25,7 @@ class PresentationPlaylistWidget extends StatelessWidget {
             color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
             ),
           ),
           child: Column(
@@ -73,7 +73,7 @@ class PresentationPlaylistWidget extends StatelessWidget {
           Text(
             '${state.songCount}',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
           ),
           if (state.isNotEmpty) ...[
@@ -105,7 +105,7 @@ class PresentationPlaylistWidget extends StatelessWidget {
         final isHovering = candidateData.isNotEmpty;
         return Container(
           decoration: BoxDecoration(
-            color: isHovering ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.1) : null,
+            color: isHovering ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.1) : null,
             border: isHovering
                 ? Border.all(
                     color: Theme.of(context).colorScheme.primary,
@@ -125,20 +125,20 @@ class PresentationPlaylistWidget extends StatelessWidget {
                 Icon(
                   Icons.playlist_add,
                   size: 48,
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'dragSongsHere'.tr(),
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                       ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'toCreatePlaylist'.tr(),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
                       ),
                 ),
               ],
@@ -161,17 +161,15 @@ class PresentationPlaylistWidget extends StatelessWidget {
         final isHovering = candidateData.isNotEmpty;
         return Container(
           decoration: BoxDecoration(
-            color: isHovering ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.05) : null,
+            color: isHovering ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.05) : null,
           ),
           child: ReorderableListView.builder(
             buildDefaultDragHandles: false, // Disable default drag handles
             padding: const EdgeInsets.all(8),
             itemCount: state.playlist.songs.length,
-            onReorder: (oldIndex, newIndex) {
-              // ReorderableListView requires adjustment when moving down
-              if (newIndex > oldIndex) {
-                newIndex -= 1;
-              }
+            // newIndex is already adjusted for the removal at oldIndex — do
+            // not decrement it.
+            onReorderItem: (oldIndex, newIndex) {
               context.read<PresentationPlaylistBloc>().add(
                     ReorderPresentationSongs(
                       oldIndex: oldIndex,
@@ -273,7 +271,7 @@ class PresentationPlaylistWidget extends StatelessWidget {
                       Text(
                         song.interpret!,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: isSelected ? Theme.of(context).colorScheme.onPrimaryContainer.withOpacity(0.7) : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                              color: isSelected ? Theme.of(context).colorScheme.onPrimaryContainer.withValues(alpha: 0.7) : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                             ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -286,7 +284,7 @@ class PresentationPlaylistWidget extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
                   child: Icon(
                     Icons.drag_indicator,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                     size: 20,
                   ),
                 ),
@@ -296,7 +294,7 @@ class PresentationPlaylistWidget extends StatelessWidget {
                 icon: Icon(
                   Icons.close,
                   size: 16,
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                 ),
                 tooltip: 'removeBtn'.tr(),
                 padding: EdgeInsets.zero,

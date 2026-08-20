@@ -330,7 +330,7 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
                       padding: const EdgeInsets.all(8.0),
                       child: ElevatedButton(
                         style: ButtonStyle(
-                          backgroundColor: WidgetStateProperty.all<Color>(state.currentColumn > 0 ? AppColor.primaryColor.withOpacity(0.7) : AppColor.grey4Color.withOpacity(0.7)),
+                          backgroundColor: WidgetStateProperty.all<Color>(state.currentColumn > 0 ? AppColor.primaryColor.withValues(alpha: 0.7) : AppColor.grey4Color.withValues(alpha: 0.7)),
                         ),
                         onPressed: () {
                           if (state.currentColumn <= 0) {
@@ -351,9 +351,9 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
                       padding: const EdgeInsets.all(8.0),
                       child: ElevatedButton(
                         style: ButtonStyle(
-                          backgroundColor: MaterialStateProperty.all<Color>(state.currentColumn + 2 < state.lyricWithColumns(true, true, TypeLyric.translate).length
-                              ? AppColor.primaryColor.withOpacity(0.7)
-                              : AppColor.grey4Color.withOpacity(0.7)),
+                          backgroundColor: WidgetStateProperty.all<Color>(state.currentColumn + 2 < state.lyricWithColumns(true, true, TypeLyric.translate).length
+                              ? AppColor.primaryColor.withValues(alpha: 0.7)
+                              : AppColor.grey4Color.withValues(alpha: 0.7)),
                         ),
                         onPressed: () {
                           if (state.currentColumn + 2 >= state.lyricWithColumns(true, true, TypeLyric.translate).length) {

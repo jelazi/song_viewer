@@ -1,6 +1,144 @@
 # Development Log
 
-## 2026-08-20 - feat(store): the server layer follows the sharedServer flag into the UI
+## 2026-08-20 (part 3) - chore: strip explanatory comments, remove all TODO/FIXME
+
+### What was done
+Per the user's rule: a comment must tell the reader something works unusually or that they need to
+watch out for something. Commentary about *how a bug was fixed* describes code that is no longer
+there and was removed.
+
+- **Comments from parts 1 and 2 trimmed or deleted.** Removed outright: the `mounted` /
+  `context.mounted` async-gap explanations (5 sites — the guard is standard Flutter idiom and the
+  analyzer enforces it), the `Color.red/green/blue` deprecation note, the `pressBack` API note, the
+  "a dead list of hostnames used to live here" note in `web_page_mobile.dart`, and the "not a raw
+  role check" note in `home_drawer.dart`. Trimmed to one or two lines: the `canManageLibrary` and
+  `serverAdminVisible` doc comments, the `state_login.dart` / `app_router.dart` compile-time notes,
+  the three `_buildServerSection` / `_buildOwnServerSection` docs, `_showServerAdmin`, and the
+  `users_state_test.dart` header.
+- **Three warnings kept**, reworded to describe the present state rather than the edit:
+  `PlaylistRepository` has no local persistence, the `catch` in `edit_song_bloc.dart` writes empty
+  lyrics on a transpose failure, and `draggedItem` / `dragIndex` in `edit_playlist_tablet.dart` are
+  never assigned. Also kept, shortened: the three `onReorderItem` notes ("newIndex is already
+  adjusted — do not decrement"), because re-adding the decrement is the easy mistake there, and the
+  guard notes on `Features.sharedServer` in `state_login.dart` / `app_router.dart`, because turning
+  those into runtime checks would silently ship the login pages into a store artifact.
+- **All 12 TODO/FIXME removed**, together with the dead code they marked — all of it left over from
+  the pre-BLoC GetX era:
+  - `preview_page.dart` / `preview_body.dart` — two `// TODO: implement dispose` in already
+    implemented `dispose()` methods (IDE template noise) and four commented-out
+    `controller.maxColumns.value = …` lines.
+  - `chord_parser.dart` / `chord_parser_pdf.dart` — an empty `if (chord == 'Bmi/G#') {}` block
+    holding a `//FIXME: prroblem with transponse chord`. The whole dead branch went.
+  - `lyrics_renderer.dart` — a 36-line commented-out `Get.dialog` note editor in `onLongPress`, and
+    a commented-out `Get.find<ChordLyricsController>()` term inside an `if` condition. Removing the
+    first left an empty `onLongPress: () {}`, which would still have swallowed the gesture, so the
+    parameter was dropped entirely. The note `IconButton` keeps an empty `onPressed` with a comment
+    saying so — it is visible in the UI and does nothing.
+  - `web_repository.dart` — `// TODO: Handle this case.` on the `WebAddress.proScholy` branch.
+
+### Current state
+- **`flutter analyze`: `No issues found!`** — still zero, and `grep -rn "TODO\|FIXME" lib/ test/`
+  returns nothing.
+- `flutter test test/unit_tests`: **352 pass, 10 fail** — the same pre-existing 10, unchanged.
+- Builds green: `./build.sh macos personal release` and `./build.sh android-aab store release`; the
+  AAB's B1 scan passed with the unchanged identifier residue.
+
+### Pending / next steps
+- Removing the `onLongPress` from the lyrics `GestureDetector` means long presses on a lyric line
+  are no longer swallowed. Previously they were caught and discarded, so nothing *did* anything
+  either way, but the gesture now propagates to ancestors — **unverified at runtime**.
+- The part 2 item still stands: nobody has dragged a playlist song to confirm `onReorderItem` drops
+  in the right place.
+
+## 2026-08-20 (part 2) - chore: analyzer clean, 195 issues to zero
+
+### What was done
+The analyzer baseline had been carried since the project started (181 in `lib`, 195 across the
+whole project). Cleared it completely.
+
+- **`dart fix --apply`** — 99 fixes in 44 files, all mechanical: `use_super_parameters` (27),
+  `deprecated_member_use` (41), `strict_top_level_inference` (13), `unnecessary_to_list_in_spreads`,
+  `prefer_const_constructors_in_immutables`, `sized_box_for_whitespace`, one `unused_import`.
+- **`depend_on_referenced_packages` (19)** — three packages were imported without being declared:
+  - `json_annotation` moved from `dev_dependencies` to `dependencies`. It is a runtime dependency:
+    the `@JsonSerializable` annotations live in `lib/`. `json_serializable` (the generator) stays a
+    dev dependency.
+  - `http` added to `dependencies` — used directly for `MultipartFile` in `pocketbase_provider.dart`,
+    previously borrowed from `pocketbase`'s dependency tree.
+  - `package:bloc/bloc.dart` → `package:flutter_bloc/flutter_bloc.dart` in the four blocs that still
+    used the bare import, matching the house style recorded on 2026-08-18 part 2.
+- **Generated files excluded** — `analysis_options.yaml` now excludes `**/*.g.dart` and
+  `**/*.mocks.dart`. That removed 6 `unused_element` warnings in `web_interpret.g.dart`,
+  `web_item.g.dart` and `web_song.g.dart`. Editing them would be undone by the next
+  `build_runner build`, so linting them can only produce unfixable noise.
+- **`use_build_context_synchronously` (14)** — real crash risks, fixed per site, not suppressed.
+  Three patterns: `if (!mounted) return;` after an await in a `State` (`playlist_body.dart` ×2,
+  `desktop_home_page.dart` ×4 `Future.delayed` callbacks); `context.mounted` where the method takes
+  its **own** `BuildContext` parameter that shadows `State.context`, which is why the pre-existing
+  `mounted` checks in `edit_sheets_body.dart` and `general_settings_body.dart` did not satisfy the
+  analyzer — they were guarding the wrong thing; and `context.mounted` in
+  `presentation_window_manager.dart`, a plain service with no `State` at all.
+- **`onReorder` → `onReorderItem`** (3 sites: `playlist_body.dart`, `presentation_playlist_widget.dart`,
+  `ribbon_menu.dart`) — **a behaviour change, not a rename.** The new callback adjusts `newIndex`
+  itself, so the manual `if (newIndex > oldIndex) newIndex--;` had to be deleted at every site;
+  keeping it would have made every downward drag land one position short. Verified against the
+  Flutter SDK source that `onReorderItem` exists in 3.44 and that exactly one of the two may be
+  non-null.
+- **`textScaleFactor` → `textScaler`** — `MediaQuery.textScalerOf(context)` in the two chord
+  parsers, `const TextScaler.linear(0.6)` for the superscript in `lyrics_renderer.dart`.
+- **`Share.shareXFiles` → `SharePlus.instance.share(ShareParams(...))`** in `settings_page_tablet.dart`,
+  matching the call style already used in `qr_code_dialog.dart`.
+- **`Color.red/green/blue`** in `getMaterialColor` → the `(c.r * 255.0).round().clamp(0, 255)` form
+  the deprecation prescribes; two stray `Colors.red.value` → `toARGB32()`.
+- Assorted: `library_prefixes` (`chordParser` → `chord_parser`, `pathProvider` → `path_provider`),
+  `avoid_print` → `debugPrint` (7), two unnecessary `Container` wrappers removed,
+  `library_private_types_in_public_api` (`_TabWidgetState createState()` → `State<TabWidget>`),
+  `RemoveSongFromPlaylist.index` typed `int`, 13 untyped parameters in `guitar_tabs.dart` annotated
+  (`Map<String, dynamic> info`, `int scale`, `num x/y/radius/lineWidth`).
+- **Test files**: `$.native` → `$.platformAutomator.android.pressBack()` — the first attempt used
+  `$.platformAutomator.pressBack()`, which does not exist; `pressBack` is Android-only and lives on
+  the Android automator in the new API. Caught by the analyzer, not assumed.
+
+### What was fixed
+Three findings that were hiding behind the lints and are **not** cosmetic:
+
+1. **`PlaylistRepository` has no local persistence at all.** The `_hiveProvider` field was stored and
+   never read; playlists are read from and written to PocketBase only. In a local-first store build
+   they therefore live in memory and are **lost on restart**. Removed the misleading field and
+   documented the gap on the constructor; the `hiveProvider` parameter is kept so the call site does
+   not have to change when the cache is actually written. **Not fixed here** — writing the cache is
+   a feature, not a lint.
+2. **An empty `catch` in `edit_song_bloc.dart` could wipe a song's lyrics.** If transposition throws,
+   `newLyric` is still `''` and gets written over the song. Now logged with an explicit warning
+   comment. **Behaviour deliberately unchanged** — switching the fallback to the original `lyric`
+   belongs in its own commit.
+3. **A dead list of the five source hostnames** sat in `web_page_mobile.dart` (`_listSearchWeb`),
+   never read. Deleting it removes those hostnames from the source of a file the store build's B1
+   scan cares about (§2).
+
+Also noted but left alone: `draggedItem` / `dragIndex` in `edit_playlist_tablet.dart` are never
+assigned, so `draggedItem` is permanently null and its placeholder branch is dead. Typed rather than
+deleted, because removing them means touching that branch.
+
+### Current state
+- **`flutter analyze`: `No issues found!`** — down from 195 (181 in `lib`). 0 errors, 0 warnings,
+  0 infos, whole project including tests.
+- `flutter test test/unit_tests`: **352 pass, 10 fail** — byte-for-byte the same 10 pre-existing
+  `LateInitializationError` failures as before this work. No test changed its result.
+- Builds, all green: `./build.sh macos personal release`, `./build.sh macos store release`,
+  `./build.sh android-aab store release` (61.1 MB). The AAB's B1 scan passed its positive control
+  and reported the unchanged identifier residue (`ProScholy` ×6, `superMusic`, `velkyZpevnik`).
+
+### Pending / next steps
+- **The `onReorder` → `onReorderItem` change is not runtime-verified.** It compiles and the semantics
+  are documented in the SDK, but nobody has dragged a song in a playlist to confirm the drop lands
+  where it should. **This is the one change in this entry that should be clicked through**, because
+  a wrong index is silent — the song simply ends up one place off.
+- The two removed `Container` wrappers and the `textScaler` changes are also visual and unverified.
+- The three findings above are open by design: playlist local persistence, the lyrics-wiping catch,
+  and the dead drag state.
+
+## 2026-08-20 (part 1) - feat(store): the server layer follows the sharedServer flag into the UI
 
 ### What was done
 `Features.sharedServer` had exactly one call site — `main.part.dart:40`, the startup

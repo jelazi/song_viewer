@@ -12,7 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:logger_pkg/logger_pkg.dart';
-import 'package:path_provider/path_provider.dart' as pathProvider;
+import 'package:path_provider/path_provider.dart' as path_provider;
 import 'package:patrol/patrol.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -33,7 +33,7 @@ void main() {
       await EasyLocalization.ensureInitialized();
 
       // Initialize Hive - same as in main.dart
-      Directory directory = await pathProvider.getApplicationDocumentsDirectory();
+      Directory directory = await path_provider.getApplicationDocumentsDirectory();
       Hive.init(directory.path);
       Hive.registerAdapter(TypeUserAdapter());
       Hive.registerAdapter(UserAdapter());
@@ -55,7 +55,7 @@ void main() {
         WindowManager.instance.setSize(const Size(1024, 800));
       }
 
-      print('🚀 Launching application...');
+      debugPrint('🚀 Launching application...');
 
       // Launch app
       await $.pumpWidget(
@@ -68,22 +68,22 @@ void main() {
         ),
       );
 
-      print('⏳ Waiting for application to load...');
+      debugPrint('⏳ Waiting for application to load...');
 
       // Wait for loading
       await $.pumpAndSettle(timeout: const Duration(seconds: 60));
 
-      print('✅ Application launched successfully!');
-      print('📱 Songs Viewer BLoC with Patrol');
+      debugPrint('✅ Application launched successfully!');
+      debugPrint('📱 Songs Viewer BLoC with Patrol');
 
       // Verify app is running
       expect(find.byType(MaterialApp), findsOneWidget);
 
       // Let app run for visual verification
-      print('👀 Letting app run for 5 seconds...');
+      debugPrint('👀 Letting app run for 5 seconds...');
       await Future.delayed(const Duration(seconds: 5));
 
-      print('✅ Test completed - app running correctly!');
+      debugPrint('✅ Test completed - app running correctly!');
     },
   );
 }

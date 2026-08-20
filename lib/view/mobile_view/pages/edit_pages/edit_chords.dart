@@ -10,9 +10,9 @@ import '../../widgets/edit_span.dart';
 class EditChordsPageMobile extends StatefulWidget {
   final bool isOriginalLyrics;
   const EditChordsPageMobile({
-    Key? key,
+    super.key,
     required this.isOriginalLyrics,
-  }) : super(key: key);
+  });
 
   @override
   State<EditChordsPageMobile> createState() => _EditChordsPageMobileState();

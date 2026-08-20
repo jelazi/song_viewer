@@ -18,8 +18,10 @@ class _EditPlaylistTabletState extends State<EditPlaylistTablet> {
   final TextEditingController _filter = TextEditingController();
   final TextEditingController _playlistName = TextEditingController();
   final _scrollController = ScrollController();
-  var draggedItem;
-  var dragIndex;
+  // Unfinished drag implementation: neither is ever assigned, so `draggedItem`
+  // is permanently null and the placeholder branch that reads it is dead.
+  Map<String, dynamic>? draggedItem;
+  int? dragIndex;
   bool _isFilterActive = false;
 
   bool get _isDesktop => Platform.isLinux || Platform.isWindows || Platform.isMacOS;
@@ -98,7 +100,7 @@ class _EditPlaylistTabletState extends State<EditPlaylistTablet> {
                             if (draggedItem != null && index == state.currentSongs.length) {
                               return RepaintBoundary(
                                 child: CurrentSongCard(
-                                  song: draggedItem['song'],
+                                  song: draggedItem!['song'],
                                   index: index,
                                   key: const ValueKey('drag-placeholder'),
                                 ),
@@ -213,8 +215,7 @@ class CurrentSongCard extends StatelessWidget {
         onTap: () {
           //   context.read<PlaylistsBloc>().add(DeleteSongFromPlaylist(song: e));
         },
-        child: Container(
-            child: Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Padding(
@@ -271,7 +272,7 @@ class CurrentSongCard extends StatelessWidget {
               ],
             ),
           ],
-        )),
+        ),
       ),
     );
   }

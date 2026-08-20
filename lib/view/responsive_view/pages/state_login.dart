@@ -16,12 +16,8 @@ class StateLogin extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Account login belongs to a build wired to a shared server. A local-first
-    // build never authenticates, so `currentUser` would stay null forever and
-    // this screen would park the user on a login form for a server that does
-    // not exist. Because the condition is a compile-time constant, the branch
-    // below is provably dead in a store build and the login pages are stripped
-    // from the artifact with it — see plans/store-release-plan.md §10.
+    // Must stay a compile-time constant: this is what keeps the login pages
+    // out of a store artifact. A runtime check would ship them (§10).
     if (!Features.sharedServer) return _buildHome(context);
 
     return BlocBuilder<UsersBloc, UsersState>(

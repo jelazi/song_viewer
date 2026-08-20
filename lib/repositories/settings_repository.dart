@@ -140,10 +140,10 @@ class SettingsRepository {
     _previewFontChordSize = await hiveProvider.getSettingsValue('previewFontChordSize') ?? 20;
     _editFontTextSize = await hiveProvider.getSettingsValue('editFontTextSize') ?? 20;
     _editFontChordSize = await hiveProvider.getSettingsValue('editFontChordSize') ?? 20;
-    _previewColorText = Color(await hiveProvider.getSettingsValue('previewColorText') ?? Colors.black.value);
-    _previewColorChord = Color(await hiveProvider.getSettingsValue('previewColorChord') ?? Colors.red.value);
-    _editColorText = Color(await hiveProvider.getSettingsValue('editColorText') ?? Colors.black.value);
-    _editColorChord = Color(await hiveProvider.getSettingsValue('editColorChord') ?? Colors.red.value);
+    _previewColorText = Color(await hiveProvider.getSettingsValue('previewColorText') ?? Colors.black.toARGB32());
+    _previewColorChord = Color(await hiveProvider.getSettingsValue('previewColorChord') ?? Colors.red.toARGB32());
+    _editColorText = Color(await hiveProvider.getSettingsValue('editColorText') ?? Colors.black.toARGB32());
+    _editColorChord = Color(await hiveProvider.getSettingsValue('editColorChord') ?? Colors.red.toARGB32());
     _isEditIconVisible = await hiveProvider.getSettingsValue('isEditIconVisible') ?? true;
     _autoHideTopBar = await hiveProvider.getSettingsValue('autoHideTopBar') ?? false;
     _superuserMode = await hiveProvider.getSettingsValue('superuserMode') ?? false;
@@ -329,7 +329,7 @@ class SettingsRepository {
       case 'presentationFontColor':
         {
           _presentationFontColor = value;
-          hiveProvider.setSettingsValue('presentationFontColor', (value as Color).value);
+          hiveProvider.setSettingsValue('presentationFontColor', (value as Color).toARGB32());
           break;
         }
       case 'presentationShowChords':

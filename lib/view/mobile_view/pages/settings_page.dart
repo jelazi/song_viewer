@@ -229,15 +229,8 @@ class _SettingsPageMobileState extends State<SettingsPageMobile> {
         ));
   }
 
-  /// Server settings, presented according to how this build is meant to be
-  /// used.
-  ///
-  /// A build wired to a shared server shows the full section — URL, account and
-  /// live status — because connecting is the normal state there. A local-first
-  /// build shows a single opt-in row headed "own server (advanced)": the app is
-  /// meant to work with no server at all, so three tiles about a connection
-  /// that is deliberately absent would read as something the user forgot to set
-  /// up. Both open the same dialog. See plans/store-release-plan.md §9.
+  /// Full section for a shared-server build, a single "own server (advanced)"
+  /// opt-in row otherwise. Both open the same dialog.
   SettingsSection _buildServerSection(BuildContext context) {
     final pbProvider = context.read<SettingsBloc>().settingsRepository.pocketBaseProvider;
 

@@ -21,7 +21,7 @@ class SettingsTile extends StatefulWidget {
   bool isSwitch = false;
   bool? switchValue = false;
   SettingsTile({
-    Key? key,
+    super.key,
     required this.title,
     required this.iconData,
     required this.value,
@@ -36,7 +36,7 @@ class SettingsTile extends StatefulWidget {
     this.valueColor,
     this.isSwitch = false,
     this.switchValue,
-  }) : super(key: key);
+  });
 
   SettingsTile.switched({
     super.key,
@@ -118,7 +118,7 @@ class _SettingsTileState extends State<SettingsTile> {
   Widget getSwitchValue(BuildContext context) {
     return CupertinoSwitch(
       // thumbColor: myBottomTabBackgroundColor,
-      activeColor: AppColor.primaryColor,
+      activeTrackColor: AppColor.primaryColor,
       onChanged: (bool value) {
         setState(() {
           //  widget.switchValue = value;

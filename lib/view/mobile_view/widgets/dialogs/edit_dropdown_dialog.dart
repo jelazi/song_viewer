@@ -9,12 +9,12 @@ class EditDropdownDialog extends StatefulWidget {
   String selectedValue;
   Function okClick;
   EditDropdownDialog({
-    Key? key,
+    super.key,
     required this.title,
     required this.values,
     required this.selectedValue,
     required this.okClick,
-  }) : super(key: key);
+  });
 
   @override
   State<EditDropdownDialog> createState() => _EditDropdownDialogState();
@@ -33,7 +33,7 @@ class _EditDropdownDialogState extends State<EditDropdownDialog> {
         child: ButtonTheme(
           alignedDropdown: true,
           child: DropdownButtonFormField(
-            value: widget.selectedValue,
+            initialValue: widget.selectedValue,
             icon: const Icon(Icons.arrow_back),
             elevation: 16,
             style: const TextStyle(color: Colors.deepPurple),

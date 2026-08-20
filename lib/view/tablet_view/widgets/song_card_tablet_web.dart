@@ -10,10 +10,10 @@ class SongCardTabletWeb extends StatefulWidget {
   final int index;
 
   const SongCardTabletWeb({
-    Key? key,
+    super.key,
     required this.song,
     required this.index,
-  }) : super(key: key);
+  });
 
   @override
   State<SongCardTabletWeb> createState() => _SongCardTabletWebState();

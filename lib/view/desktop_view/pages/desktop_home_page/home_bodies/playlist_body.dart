@@ -86,6 +86,7 @@ class _PlaylistBodyState extends State<PlaylistBody> {
     playlist.listSongIds = _editSongs.map((s) => s.id).toList();
 
     final result = await context.read<PlaylistsBloc>().playlistRepository.savePlaylist(playlist);
+    if (!mounted) return;
     if (result) {
       MyToast.showText(text: 'playlistSaved'.tr(), typeNotification: TypeNotification.success);
       context.read<PlaylistsBloc>().add(const RefreshPlaylists());
@@ -119,6 +120,7 @@ class _PlaylistBodyState extends State<PlaylistBody> {
 
   Future<void> _deletePlaylist(Playlist playlist) async {
     final result = await context.read<PlaylistsBloc>().playlistRepository.deletePlaylist(playlist);
+    if (!mounted) return;
     if (result) {
       MyToast.showText(text: 'playlistDeleted'.tr(), typeNotification: TypeNotification.success);
       context.read<PlaylistsBloc>().add(const RefreshPlaylists());
@@ -227,7 +229,7 @@ class _PlaylistBodyState extends State<PlaylistBody> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppColor.primaryColor.withOpacity(0.08) : null,
+          color: isSelected ? AppColor.primaryColor.withValues(alpha: 0.08) : null,
           border: const Border(bottom: BorderSide(color: AppColor.grey3Color, width: 0.5)),
         ),
         child: Row(
@@ -513,9 +515,10 @@ class _PlaylistBodyState extends State<PlaylistBody> {
                     : ReorderableListView.builder(
                         padding: const EdgeInsets.all(8),
                         itemCount: _editSongs.length,
-                        onReorder: (oldIndex, newIndex) {
+                        // newIndex is already adjusted for the removal at
+                        // oldIndex — do not decrement it.
+                        onReorderItem: (oldIndex, newIndex) {
                           setState(() {
-                            if (newIndex > oldIndex) newIndex--;
                             final song = _editSongs.removeAt(oldIndex);
                             _editSongs.insert(newIndex, song);
                           });

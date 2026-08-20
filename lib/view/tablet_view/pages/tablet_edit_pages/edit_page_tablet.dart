@@ -18,8 +18,8 @@ import '../../../../model/youtube_video.dart';
 
 class EditPageTablet extends StatefulWidget {
   const EditPageTablet({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<EditPageTablet> createState() => _EditPageTabletState();
@@ -53,7 +53,7 @@ class _EditPageTabletState extends State<EditPageTablet> {
                   );
                 },
               );
-              if (result != null) {
+              if (result != null && context.mounted) {
                 Navigator.pushNamed(context, '/');
               }
             }
@@ -566,6 +566,7 @@ Future<void> _uploadSheetImage(BuildContext context) async {
       fileBytes = await File(file.path!).readAsBytes();
     }
     if (fileBytes == null) return;
+    if (!context.mounted) return;
 
     final fileName = '${DateTime.now().millisecondsSinceEpoch}_${file.name}';
 
@@ -716,14 +717,14 @@ class EditRow extends StatelessWidget {
   int maxLines = 3;
 
   EditRow({
-    Key? key,
+    super.key,
     required this.typeValue,
     required this.title,
     required this.editFunction,
     required this.titleTextStyle,
     this.chordEditFunction,
     this.maxLines = 3,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

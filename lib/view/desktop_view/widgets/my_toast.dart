@@ -16,7 +16,7 @@ enum TypeNotification {
 double myToastWidth = 350;
 
 class MyToast {
-  static showText({
+  static CancelFunc showText({
     required String text,
     required TypeNotification typeNotification,
     String typeNotificationString = 'Warning',

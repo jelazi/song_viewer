@@ -16,7 +16,7 @@ class SongCard extends StatefulWidget {
   final bool superuserMode;
   final bool isExpanded;
 
-  const SongCard({Key? key, required this.song, required this.index, required this.isSelectedSong, required this.isEditIconVisible, required this.superuserMode, required this.isExpanded}) : super(key: key);
+  const SongCard({super.key, required this.song, required this.index, required this.isSelectedSong, required this.isEditIconVisible, required this.superuserMode, required this.isExpanded});
 
   @override
   State<SongCard> createState() => _SongCardState();

@@ -7,11 +7,11 @@ class MyFloatingButton extends StatelessWidget {
   final bool enabled;
 
   const MyFloatingButton({
-    Key? key,
+    super.key,
     required this.onPressed,
     required this.icon,
     required this.enabled,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

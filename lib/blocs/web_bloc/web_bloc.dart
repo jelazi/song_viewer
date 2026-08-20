@@ -1,4 +1,4 @@
-import 'package:bloc/bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:default_project/model/web_interpret.dart';
 import 'package:default_project/providers/hive_provider.dart';
 import 'package:default_project/repositories/web_repository.dart';

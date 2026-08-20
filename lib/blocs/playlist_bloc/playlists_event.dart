@@ -55,7 +55,7 @@ class AddSongToPlaylist extends PlaylistsEvent {
 }
 
 class RemoveSongFromPlaylist extends PlaylistsEvent {
-  final index;
+  final int index;
   const RemoveSongFromPlaylist({required this.index});
   @override
   List<Object> get props => [index];
