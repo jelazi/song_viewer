@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import '../../model/web_item.dart';
 import '../../model/web_song.dart';
 import '../../repositories/settings_repository.dart';
+import '../../services/chord_notation_service.dart';
 
 part 'web_event.dart';
 part 'web_state.dart';
@@ -50,6 +51,7 @@ class WebBloc extends Bloc<WebEvent, WebState> {
     on<TestWebEvent>(_testWebEvent);
     on<ChangeWebFontSize>(_changeWebFontSize);
     on<TransposeWebChord>(_transposeWebChord);
+    on<ToggleChordNotation>(_toggleChordNotation);
     on<AddWebSearchHistory>(_addWebSearchHistory);
     on<ClearWebSearchHistory>(_clearWebSearchHistory);
     add(const _Init());
@@ -84,9 +86,15 @@ class WebBloc extends Bloc<WebEvent, WebState> {
   }
 
   void _changeCurrentWebSong(ChangeCurrentWebSong event, Emitter<WebState> emit) async {
-    // A new song starts untransposed — the increment belongs to the song that
-    // was on screen, not to the one being opened.
-    emit(state.copyWith(currentSong: event.song, downloadWebSong: true, transposeIncrement: 0));
+    // A new song starts untransposed and in the notation of its own site — both
+    // belong to the song that was on screen, not to the one being opened.
+    emit(state.copyWith(
+      currentSong: event.song,
+      downloadWebSong: true,
+      transposeIncrement: 0,
+      czechNotationLyric: null,
+      foreignNotationDetected: false,
+    ));
     final eventSong = event.song;
     if (eventSong != null) {
       WebSong currentSong = WebSong(title: eventSong.title, ref: eventSong.ref, interpret: eventSong.interpret);
@@ -166,9 +174,13 @@ class WebBloc extends Bloc<WebEvent, WebState> {
         debugPrint('[WEB_ERROR] Failed to load web song: $e');
       }
 
-      emit(state.copyWith(currentSong: currentSong, downloadWebSong: false));
+      emit(state.copyWith(
+        currentSong: currentSong,
+        downloadWebSong: false,
+        foreignNotationDetected: ChordNotationService.looksInternational(currentSong.lyric),
+      ));
     } else {
-      emit(state.copyWith(currentSong: null, downloadWebSong: false));
+      emit(state.copyWith(currentSong: null, downloadWebSong: false, foreignNotationDetected: false));
     }
   }
 
@@ -197,6 +209,8 @@ class WebBloc extends Bloc<WebEvent, WebState> {
             filteredSongs: songs,
             currentSong: null,
             transposeIncrement: 0,
+            czechNotationLyric: null,
+            foreignNotationDetected: false,
             searchWebSongs: false,
             historyInterprets: getLastTenInterpretsReverse(historyInterprets)));
       }
@@ -315,6 +329,8 @@ class WebBloc extends Bloc<WebEvent, WebState> {
         searchWeb: event.searchWeb,
         currentSong: null,
         transposeIncrement: 0,
+        czechNotationLyric: null,
+        foreignNotationDetected: false,
         songs: [],
         filteredSongs: [],
         filteredInterprets: [],
@@ -357,6 +373,18 @@ class WebBloc extends Bloc<WebEvent, WebState> {
       textStyle: state.textStyle.copyWith(fontSize: fontSize),
       chordStyle: state.chordStyle.copyWith(fontSize: chordSize),
     ));
+  }
+
+  void _toggleChordNotation(ToggleChordNotation event, Emitter<WebState> emit) {
+    if (state.isNotationConverted) {
+      // Back to the spelling the site published — the fetched lyric was never
+      // overwritten, so this is exact.
+      emit(state.copyWith(czechNotationLyric: null));
+      return;
+    }
+    final lyric = state.currentSong?.lyric ?? '';
+    if (lyric.isEmpty) return;
+    emit(state.copyWith(czechNotationLyric: ChordNotationService.toCzech(lyric)));
   }
 
   void _transposeWebChord(TransposeWebChord event, Emitter<WebState> emit) {

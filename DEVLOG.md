@@ -1,5 +1,62 @@
 # Development Log
 
+## 2026-08-30 (part 2) — feat: one-click chord notation conversion for web songs
+
+### What was done
+Foreign songbooks spell chords the international way — `B` is what Czech calls `H`, and the black
+keys come out as flats (`Bb`, `Eb`, `Ab`). The app reads and transposes in the Czech spelling: the
+cycle in `ChordProcessor.transposeChord` is `C C# D D# E F F# G G# A B H`, so an imported `Eb` or
+`Bb` is not even found there and silently refuses to transpose.
+
+- `lib/services/chord_notation_service.dart` (new) — pure conversion service.
+  - `looksInternational(lyrics)` — true when a chord root is spelled differently than Czech would.
+    A single `H` anywhere settles it the other way and returns false: the international notation has
+    no such note, so the song is already Czech and its `B` means B flat.
+  - `toCzech(lyrics)` — rewrites the roots (`B`→`H`, `Bb`/`A#`→`B`, `Db`/`Eb`/`Gb`/`Ab`→
+    `C#`/`D#`/`F#`/`G#`, plus `Cb`/`Fb`/`E#`/`B#`), bass notes after a slash included, leaving
+    lyrics and chord qualities alone. Guarded by `looksInternational`, because the mapping is not
+    idempotent on its own — `B` means B flat here and B natural there, so a second pass over its own
+    output would turn `B` into `H`.
+  - Bracket contents are only treated as chords when the root is followed by a known suffix
+    (`m`, `maj`, `sus`, digits, …). That is what keeps `[Bridge]`, `[Chorus]` and `[Coda]` out of
+    both the detection and the rewrite — without it `[Bridge]` became `[Hridge]`.
+- `lib/blocs/web_bloc/web_state.dart` — `foreignNotationDetected` (computed once when the song
+  finishes downloading) and `czechNotationLyric`, the converted text held **beside** the fetched
+  one rather than replacing it, so switching back restores the site's spelling verbatim. Getters
+  `displayedLyric` and `isNotationConverted`; `copyWith` takes the nullable lyric through the
+  existing `_sentinel` trick.
+- `lib/blocs/web_bloc/web_bloc.dart` — `ToggleChordNotation` event and `_toggleChordNotation`
+  handler; detection runs in `_changeCurrentWebSong` after the fetch, and both fields are cleared
+  wherever `currentSong` is (new song, new interpret, new server).
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/web_body.dart` — a *Převést na H
+  stupnici* button in the song's action row, shown only when the notation looks foreign (and while
+  it is converted, so it can be switched off). The renderer and the save dialog both read
+  `state.displayedLyric`, so what is saved is what is on screen. `_convertOverrideKeys` renames
+  chord-diagram overrides along with their chords when converting; switching back leaves the keys
+  alone (the reverse map is ambiguous and an unused override is harmless).
+- `assets/lang/{cs,en}.json` — `convertChordNotation`, `convertChordNotationHint`,
+  `revertChordNotation`, `revertChordNotationHint`.
+- `test/unit_tests/services/chord_notation_service_test.dart` (new, 14 tests) — detection on
+  international / Czech / flats-only / marker-only lyrics, and conversion of roots, qualities, bass
+  notes, flats and the idempotence guard.
+- `test/unit_tests/blocs/web_bloc_test.dart` — 4 more tests: the flag is raised on load for a
+  foreign song and not for a Czech one, the toggle converts and switches back while
+  `currentSong.lyric` stays untouched, and opening another song drops the conversion.
+
+### What was fixed
+Songs found on English sites showed `B` where the user reads `H` (and `Bb` where they read `B`), and
+their flat chords would not transpose at all, because the transposer's cycle only knows sharps.
+
+### Current state
+`flutter analyze`: no issues found. `flutter test test/unit_tests`: 392 passed (18 new), 2 skipped.
+
+### Pending / next steps
+Manual check in the desktop app: open a song on worshipchords.com / worshipleaderapp.com, confirm
+the button appears, that one click rewrites the chords, that transposing then works on the
+converted chords, and that saving stores the converted text. The button is desktop-only for now —
+the tablet and mobile web pages do not offer it. Songs already in the library are also out of scope:
+this converts what is being read from the web, before it is saved.
+
 ## 2026-08-30 — feat: transpose, zoom and sharing for songs found on the web (desktop)
 
 ### What was done

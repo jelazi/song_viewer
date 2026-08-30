@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:default_project/model/song/song.dart';
 import 'package:default_project/model/web_song.dart';
 import 'package:default_project/model/youtube_video.dart';
+import 'package:default_project/services/chord_notation_service.dart';
 import 'package:default_project/services/constants.dart';
 import 'package:default_project/view/desktop_view/widgets/my_toast.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -45,15 +46,26 @@ class _WebBodyState extends State<WebBody> {
     disableAllOverlay();
   }
 
-  Song _buildSongFromWeb(WebSong web) {
+  Song _buildSongFromWeb(WebSong web, String lyrics) {
     final song = Song.empty();
     song.title = web.title;
     song.interpret = web.interpret;
-    song.lyrics = web.lyric;
+    song.lyrics = lyrics;
     if (web.youtube.isNotEmpty) {
       song.youtubeVideos = [YoutubeVideo(name: web.title, path: web.youtube)];
     }
     return song;
+  }
+
+  /// Renames chord-diagram overrides along with the chords they belong to when
+  /// the lyrics are switched to the Czech notation, so an override edited for
+  /// `Bb` still applies once that chord reads `B`.
+  ///
+  /// Switching back leaves the keys alone: `H` and `B` both map back ambiguously
+  /// and an override that matches no chord is merely unused, never wrong.
+  Map<String, List<String>>? _convertOverrideKeys(Map<String, List<String>>? overrides, bool toCzech) {
+    if (!toCzech || overrides == null || overrides.isEmpty) return overrides;
+    return overrides.map((chord, positions) => MapEntry(ChordNotationService.convertChord(chord), positions));
   }
 
   @override
@@ -62,11 +74,13 @@ class _WebBodyState extends State<WebBody> {
       // Also react to the lyric arriving: the song is emitted first with an empty
       // lyric (download in progress) and again once the text is fetched. Without
       // watching the lyric, _webSong would keep the empty version and saving would
-      // store only title/interpret.
+      // store only title/interpret. The converted lyric is watched for the same
+      // reason — switching the notation has to reach the copy that gets saved.
       listenWhen: (previous, current) =>
           previous.currentSong?.server != current.currentSong?.server ||
           previous.currentSong?.ref != current.currentSong?.ref ||
-          previous.currentSong?.lyric != current.currentSong?.lyric,
+          previous.currentSong?.lyric != current.currentSong?.lyric ||
+          previous.czechNotationLyric != current.czechNotationLyric,
       listener: (context, state) {
         disableAllOverlay();
         final web = state.currentSong;
@@ -74,16 +88,20 @@ class _WebBodyState extends State<WebBody> {
         if (key != _webSongKey) {
           setState(() {
             _webSongKey = key;
-            _webSong = web == null ? null : _buildSongFromWeb(web);
+            _webSong = web == null ? null : _buildSongFromWeb(web, state.displayedLyric);
             // Another song is on screen now; the saved id belonged to the
             // previous one.
             _savedSongId = null;
           });
-        } else if (web != null && (_webSong?.lyrics ?? '').isEmpty && web.lyric.isNotEmpty) {
-          // Same song, lyrics just finished downloading — refresh the cached
-          // song so the save dialog stores the actual text.
+        } else if (web != null && state.displayedLyric.isNotEmpty && state.displayedLyric != _webSong?.lyrics) {
+          // Same song, but its text changed: the download finished, or the
+          // notation was switched. Keep the chord overrides edited so far and
+          // rename their keys along with the chords they belong to.
           setState(() {
-            _webSong = _buildSongFromWeb(web);
+            final song = _webSong ?? _buildSongFromWeb(web, state.displayedLyric);
+            song.lyrics = state.displayedLyric;
+            song.chordOverrides = _convertOverrideKeys(song.chordOverrides, state.isNotationConverted);
+            _webSong = song;
           });
         }
       },
@@ -145,7 +163,7 @@ class _WebBodyState extends State<WebBody> {
                               : LyricsRenderer(
                               scrollController: scrollController,
                               isVisibleNote: true,
-                              lyrics: state.currentSong!.lyric,
+                              lyrics: state.displayedLyric,
                               textStyle: state.textStyle,
                               chordStyle: state.chordStyle,
                               appBarStatus: state.appBarStatus,
@@ -176,6 +194,23 @@ class _WebBodyState extends State<WebBody> {
           child: const Icon(Icons.info_outline, size: 18, color: AppColor.grey2Color),
         ),
         const SizedBox(width: 8),
+        // Offered only when the site's spelling differs from the Czech one, or
+        // once it has been converted, so that it can be switched back.
+        if (state.foreignNotationDetected || state.isNotationConverted)
+          Tooltip(
+            message: state.isNotationConverted ? 'revertChordNotationHint'.tr() : 'convertChordNotationHint'.tr(),
+            child: TextButton.icon(
+              onPressed: () => context.read<WebBloc>().add(const ToggleChordNotation()),
+              icon: Icon(
+                state.isNotationConverted ? Icons.undo : Icons.published_with_changes,
+                color: state.isNotationConverted ? AppColor.alertSuccessColor : AppColor.primaryDarkColor,
+              ),
+              label: Text(
+                state.isNotationConverted ? 'revertChordNotation'.tr() : 'convertChordNotation'.tr(),
+                style: TextStyle(color: state.isNotationConverted ? AppColor.alertSuccessColor : AppColor.primaryDarkColor),
+              ),
+            ),
+          ),
         BlocBuilder<HomePageBloc, HomePageState>(
           buildWhen: (previous, current) => previous.selectedSongId != current.selectedSongId,
           builder: (context, homeState) {
@@ -242,11 +277,11 @@ class _WebBodyState extends State<WebBody> {
   void _openSaveDialog(BuildContext context, WebState state, {bool shareAfterSave = false}) {
     final web = state.currentSong;
     if (web == null) return;
-    final base = _webSong ?? _buildSongFromWeb(web);
-    // The downloaded text is the source of truth; fall back to it if the cached
+    final base = _webSong ?? _buildSongFromWeb(web, state.displayedLyric);
+    // The text on screen is the source of truth; fall back to it if the cached
     // edit copy is still empty (e.g. lyrics finished loading after _webSong was
     // first built). Without this the song could be saved with only title/interpret.
-    final lyrics = base.lyrics.isNotEmpty ? base.lyrics : web.lyric;
+    final lyrics = base.lyrics.isNotEmpty ? base.lyrics : state.displayedLyric;
     final nameSongController = TextEditingController(text: base.title);
     final interpretController = TextEditingController(text: base.interpret ?? '');
     final listAllGroups = context.read<HomePageBloc>().state.listAllGroups;

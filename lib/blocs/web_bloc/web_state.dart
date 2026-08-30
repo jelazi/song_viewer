@@ -26,6 +26,17 @@ class WebState extends Equatable {
   final bool searchWebSongs;
   final bool downloadWebSong;
 
+  /// Lyric of [currentSong] rewritten into the Czech notation, or null while
+  /// the song is shown exactly as the site published it.
+  ///
+  /// Kept beside the fetched song instead of replacing its lyric, so switching
+  /// the notation off restores the original spelling verbatim.
+  final String? czechNotationLyric;
+
+  /// True when the fetched lyric looks like it uses the international notation
+  /// (`B` for what Czech calls `H`, flats instead of sharps).
+  final bool foreignNotationDetected;
+
   /// Persisted search-query history for the current server (most recent first).
   final List<String> searchHistory;
 
@@ -62,6 +73,8 @@ class WebState extends Equatable {
     required this.searchWebSongs,
     required this.downloadWebSong,
     required this.historyInterprets,
+    this.czechNotationLyric,
+    this.foreignNotationDetected = false,
     this.searchHistory = const [],
     this.allSearchHistory = const [],
   });
@@ -72,6 +85,13 @@ class WebState extends Equatable {
     if (transposeIncrement == 0) return 0;
     return transposeIncrement < 0 ? -transposeIncrement : 12 - transposeIncrement;
   }
+
+  /// Lyric to render and to save: the converted one when the Czech notation is
+  /// switched on, the fetched one otherwise.
+  String get displayedLyric => czechNotationLyric ?? currentSong?.lyric ?? '';
+
+  /// True while the song is shown in the Czech notation.
+  bool get isNotationConverted => czechNotationLyric != null;
 
   @override
   List<Object> get props => [
@@ -93,6 +113,8 @@ class WebState extends Equatable {
         searchWebSongs,
         downloadWebSong,
         historyInterprets,
+        czechNotationLyric ?? '',
+        foreignNotationDetected,
         searchHistory,
         allSearchHistory,
       ];
@@ -116,6 +138,8 @@ class WebState extends Equatable {
     bool? searchWebInterprets,
     bool? searchWebSongs,
     bool? downloadWebSong,
+    Object? czechNotationLyric = _sentinel,
+    bool? foreignNotationDetected,
     List<String>? searchHistory,
     List<String>? allSearchHistory,
   }) {
@@ -138,6 +162,8 @@ class WebState extends Equatable {
       searchWebInterprets: searchWebInterprets ?? this.searchWebInterprets,
       searchWebSongs: searchWebSongs ?? this.searchWebSongs,
       downloadWebSong: downloadWebSong ?? this.downloadWebSong,
+      czechNotationLyric: identical(czechNotationLyric, _sentinel) ? this.czechNotationLyric : czechNotationLyric as String?,
+      foreignNotationDetected: foreignNotationDetected ?? this.foreignNotationDetected,
       searchHistory: searchHistory ?? this.searchHistory,
       allSearchHistory: allSearchHistory ?? this.allSearchHistory,
     );

@@ -67,6 +67,12 @@ class ChangeWebFontSize extends WebEvent {
   List<Object> get props => [isIncrease];
 }
 
+/// Switch the previewed web song between the notation the site published and
+/// the Czech one (`B` → `H`, `Bb` → `B`, flats to sharps).
+class ToggleChordNotation extends WebEvent {
+  const ToggleChordNotation();
+}
+
 /// Transpose the chords of the previewed web song.
 ///
 /// The increment lives in the state only: a web song has no library id yet, so
