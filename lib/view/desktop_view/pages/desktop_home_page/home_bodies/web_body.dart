@@ -32,6 +32,12 @@ class _WebBodyState extends State<WebBody> {
   Song? _webSong;
   String? _webSongKey;
 
+  /// Library id of the web song once it has been saved in this session.
+  ///
+  /// Sharing a song with the other devices broadcasts an id, so a song that is
+  /// not in the library yet has to be saved before it can be shared.
+  String? _savedSongId;
+
   @override
   void dispose() {
     super.dispose();
@@ -69,6 +75,9 @@ class _WebBodyState extends State<WebBody> {
           setState(() {
             _webSongKey = key;
             _webSong = web == null ? null : _buildSongFromWeb(web);
+            // Another song is on screen now; the saved id belonged to the
+            // previous one.
+            _savedSongId = null;
           });
         } else if (web != null && (_webSong?.lyrics ?? '').isEmpty && web.lyric.isNotEmpty) {
           // Same song, lyrics just finished downloading — refresh the cached
@@ -100,7 +109,18 @@ class _WebBodyState extends State<WebBody> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(state.currentSong?.title ?? '', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                              Text(state.currentInterpret.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColor.grey2Color)),
+                              Row(
+                                children: [
+                                  Text(state.currentInterpret.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColor.grey2Color)),
+                                  if (hasSong && state.transposeIncrement != 0) ...[
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      'cap: ${state.cap}',
+                                      style: const TextStyle(fontSize: 13, color: AppColor.primaryColor),
+                                    ),
+                                  ],
+                                ],
+                              ),
                             ],
                           ),
                         ),
@@ -156,6 +176,23 @@ class _WebBodyState extends State<WebBody> {
           child: const Icon(Icons.info_outline, size: 18, color: AppColor.grey2Color),
         ),
         const SizedBox(width: 8),
+        BlocBuilder<HomePageBloc, HomePageState>(
+          buildWhen: (previous, current) => previous.selectedSongId != current.selectedSongId,
+          builder: (context, homeState) {
+            final isShared = _savedSongId != null && homeState.selectedSongId == _savedSongId;
+            return Tooltip(
+              message: _savedSongId == null ? 'shareWebSongHint'.tr() : '',
+              child: TextButton.icon(
+                onPressed: () => _shareSong(context, state),
+                icon: Icon(isShared ? Icons.cloud_done : Icons.cloud_upload, color: isShared ? AppColor.alertSuccessColor : AppColor.primaryDarkColor),
+                label: Text(
+                  'currentSong'.tr(),
+                  style: TextStyle(color: isShared ? AppColor.alertSuccessColor : AppColor.primaryDarkColor),
+                ),
+              ),
+            );
+          },
+        ),
         TextButton.icon(
           onPressed: () => _openSaveDialog(context, state),
           icon: const Icon(Icons.save, color: AppColor.primaryDarkColor),
@@ -165,7 +202,44 @@ class _WebBodyState extends State<WebBody> {
     );
   }
 
-  void _openSaveDialog(BuildContext context, WebState state) {
+  /// Broadcasts the web song as the current song for the other devices.
+  ///
+  /// Only an id travels over the realtime channel, so a song that is not in the
+  /// library yet is saved first — the save dialog then shares it on success.
+  void _shareSong(BuildContext context, WebState state) {
+    final savedId = _savedSongId;
+    if (savedId == null) {
+      _openSaveDialog(context, state, shareAfterSave: true);
+      return;
+    }
+    final homeBloc = context.read<HomePageBloc>();
+    final song = homeBloc.songsRepository.getSongById(savedId);
+    if (song == null) {
+      // Deleted meanwhile — fall back to saving it again.
+      setState(() => _savedSongId = null);
+      _openSaveDialog(context, state, shareAfterSave: true);
+      return;
+    }
+    _selectSongForOthers(homeBloc, song);
+  }
+
+  void _selectSongForOthers(HomePageBloc homeBloc, Song song) {
+    homeBloc.add(SelectSong(
+      selectedSongId: song.id,
+      title: song.title,
+      interpret: song.interpret ?? '',
+      lyricsWithoutChords: song.lyricsWithoutChords,
+      lyricsWithChords: song.lyrics,
+    ));
+  }
+
+  /// Remembers the id the web song was stored under; kept out of the save
+  /// dialog because `StatefulBuilder` shadows [setState] there.
+  void _markSaved(String songId) {
+    setState(() => _savedSongId = songId);
+  }
+
+  void _openSaveDialog(BuildContext context, WebState state, {bool shareAfterSave = false}) {
     final web = state.currentSong;
     if (web == null) return;
     final base = _webSong ?? _buildSongFromWeb(web);
@@ -208,7 +282,20 @@ class _WebBodyState extends State<WebBody> {
             song.youtubeVideos = base.youtubeVideos ?? [];
             song.chordOverrides = base.chordOverrides ?? {};
             song.groups = selectedGroups;
-            context.read<HomePageBloc>().songsRepository.updateSong(song);
+            final homeBloc = context.read<HomePageBloc>();
+            final songsRepository = homeBloc.songsRepository;
+            final saved = songsRepository.updateSong(song);
+            // Carry the transposition made in the web preview over to the saved
+            // song, so reopening it in the library shows the same key.
+            if (state.transposeIncrement != 0) {
+              songsRepository.changeTransposeChord(song, state.transposeIncrement);
+            }
+            _markSaved(song.id);
+            if (shareAfterSave) {
+              // Only an id is broadcast, so wait until the song has actually
+              // been written (and pushed to the server, when there is one).
+              saved.then((_) => _selectSongForOthers(homeBloc, song));
+            }
             Navigator.of(context).pop();
             MyToast.showText(text: 'songSaved'.tr(), typeNotification: TypeNotification.success);
           },

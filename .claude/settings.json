@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "WebFetch(domain:support.atlassian.com)"
+      "WebFetch(domain:support.atlassian.com)",
+      "Bash(python3 -c ' *)",
+      "Bash(flutter test *)"
     ]
   }
 }

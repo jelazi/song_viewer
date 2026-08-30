@@ -48,6 +48,8 @@ class WebBloc extends Bloc<WebEvent, WebState> {
     on<ChangeSearchWeb>(_changeSearchWeb);
     on<ChangeSearchType>(_changeSearchType);
     on<TestWebEvent>(_testWebEvent);
+    on<ChangeWebFontSize>(_changeWebFontSize);
+    on<TransposeWebChord>(_transposeWebChord);
     on<AddWebSearchHistory>(_addWebSearchHistory);
     on<ClearWebSearchHistory>(_clearWebSearchHistory);
     add(const _Init());
@@ -82,7 +84,9 @@ class WebBloc extends Bloc<WebEvent, WebState> {
   }
 
   void _changeCurrentWebSong(ChangeCurrentWebSong event, Emitter<WebState> emit) async {
-    emit(state.copyWith(currentSong: event.song, downloadWebSong: true));
+    // A new song starts untransposed — the increment belongs to the song that
+    // was on screen, not to the one being opened.
+    emit(state.copyWith(currentSong: event.song, downloadWebSong: true, transposeIncrement: 0));
     final eventSong = event.song;
     if (eventSong != null) {
       WebSong currentSong = WebSong(title: eventSong.title, ref: eventSong.ref, interpret: eventSong.interpret);
@@ -192,6 +196,7 @@ class WebBloc extends Bloc<WebEvent, WebState> {
             songs: songs,
             filteredSongs: songs,
             currentSong: null,
+            transposeIncrement: 0,
             searchWebSongs: false,
             historyInterprets: getLastTenInterpretsReverse(historyInterprets)));
       }
@@ -309,6 +314,7 @@ class WebBloc extends Bloc<WebEvent, WebState> {
     emit(state.copyWith(
         searchWeb: event.searchWeb,
         currentSong: null,
+        transposeIncrement: 0,
         songs: [],
         filteredSongs: [],
         filteredInterprets: [],
@@ -329,6 +335,39 @@ class WebBloc extends Bloc<WebEvent, WebState> {
 
   void _testWebEvent(TestWebEvent event, Emitter<WebState> emit) async {
     await webRepository.testGetSong();
+  }
+
+  void _changeWebFontSize(ChangeWebFontSize event, Emitter<WebState> emit) {
+    double fontSize = state.textStyle.fontSize ?? settingsRepository.previewFontTextSize;
+    double chordSize = state.chordStyle.fontSize ?? settingsRepository.previewFontChordSize;
+    if (event.isIncrease) {
+      fontSize++;
+      chordSize++;
+    } else {
+      fontSize--;
+      chordSize--;
+    }
+    // Same bounds the preview buttons enforce; keeps the text readable and the
+    // renderer from laying out at absurd sizes.
+    if (fontSize < minPreviewFontSize || fontSize > maxPreviewFontSize) return;
+
+    settingsRepository.changeSettingsValue('previewFontTextSize', fontSize);
+    settingsRepository.changeSettingsValue('previewFontChordSize', chordSize);
+    emit(state.copyWith(
+      textStyle: state.textStyle.copyWith(fontSize: fontSize),
+      chordStyle: state.chordStyle.copyWith(fontSize: chordSize),
+    ));
+  }
+
+  void _transposeWebChord(TransposeWebChord event, Emitter<WebState> emit) {
+    int newIncrement = state.transposeIncrement + event.increment;
+    if (newIncrement >= 12) {
+      newIncrement = newIncrement - 12;
+    }
+    if (newIncrement <= -12) {
+      newIncrement = newIncrement + 12;
+    }
+    emit(state.copyWith(transposeIncrement: newIncrement));
   }
 
   void _addWebSearchHistory(AddWebSearchHistory event, Emitter<WebState> emit) {

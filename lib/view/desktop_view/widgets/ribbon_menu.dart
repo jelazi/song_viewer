@@ -206,23 +206,86 @@ class RibbonMenu extends StatelessWidget {
       builder: (context, webState) {
         return Row(
           mainAxisSize: MainAxisSize.min,
-          children: List.generate(webNames.length, (index) {
-            final isSelected = webState.searchWeb == index;
-            return Padding(
-              padding: const EdgeInsets.only(right: 4),
-              child: RibbonButton(
-                text: webNames[index],
-                isEnabled: true,
-                isSelected: isSelected,
-                icon: Icon(webIcons[index]),
-                onPressed: () {
-                  context.read<WebBloc>().add(ChangeSearchWeb(searchWeb: index));
-                },
-              ),
-            );
-          }),
+          children: [
+            ...List.generate(webNames.length, (index) {
+              final isSelected = webState.searchWeb == index;
+              return Padding(
+                padding: const EdgeInsets.only(right: 4),
+                child: RibbonButton(
+                  text: webNames[index],
+                  isEnabled: true,
+                  isSelected: isSelected,
+                  icon: Icon(webIcons[index]),
+                  onPressed: () {
+                    context.read<WebBloc>().add(ChangeSearchWeb(searchWeb: index));
+                  },
+                ),
+              );
+            }),
+            const ToolbarDivider(),
+            _buildWebZoomTransposeGroup(context, webState),
+          ],
         );
       },
+    );
+  }
+
+  /// Zoom and transpose for the song shown in the web tab — the same actions
+  /// the preview offers, so a found song can be adjusted before it is saved.
+  Widget _buildWebZoomTransposeGroup(BuildContext context, WebState webState) {
+    final hasSong = (webState.currentSong?.lyric ?? '').isNotEmpty;
+    final fontSize = webState.textStyle.fontSize ?? minPreviewFontSize;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        RibbonButton(
+          text: 'zoomIn'.tr(),
+          isEnabled: hasSong && fontSize < maxPreviewFontSize,
+          icon: const Icon(Icons.zoom_in, color: Colors.blue),
+          onPressed: () {
+            context.read<WebBloc>().add(const ChangeWebFontSize(isIncrease: true));
+          },
+        ),
+        RibbonButton(
+          text: 'zoomOut'.tr(),
+          isEnabled: hasSong && fontSize > minPreviewFontSize,
+          icon: const Icon(Icons.zoom_out, color: Colors.blue),
+          onPressed: () {
+            context.read<WebBloc>().add(const ChangeWebFontSize(isIncrease: false));
+          },
+        ),
+        const SizedBox(width: 2),
+        RibbonButton(
+          text: '+1',
+          isEnabled: hasSong,
+          showText: false,
+          icon: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.add, size: 14, color: Colors.orange),
+              Icon(Icons.music_note, size: 14, color: Colors.orange),
+            ],
+          ),
+          onPressed: () {
+            context.read<WebBloc>().add(const TransposeWebChord(increment: 1));
+          },
+        ),
+        RibbonButton(
+          text: '−1',
+          isEnabled: hasSong,
+          showText: false,
+          icon: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.remove, size: 14, color: Colors.orange),
+              Icon(Icons.music_note, size: 14, color: Colors.orange),
+            ],
+          ),
+          onPressed: () {
+            context.read<WebBloc>().add(const TransposeWebChord(increment: -1));
+          },
+        ),
+      ],
     );
   }
 

@@ -3,6 +3,10 @@ part of 'web_bloc.dart';
 
 const _sentinel = Object();
 
+/// Font-size bounds for the web song preview, mirroring the library preview.
+const double minPreviewFontSize = 10;
+const double maxPreviewFontSize = 40;
+
 class WebState extends Equatable {
   final WebSong? currentSong;
   final List<WebSong> songs;
@@ -61,6 +65,13 @@ class WebState extends Equatable {
     this.searchHistory = const [],
     this.allSearchHistory = const [],
   });
+
+  /// Capo position matching [transposeIncrement], the same reading the library
+  /// preview shows in its song header.
+  int get cap {
+    if (transposeIncrement == 0) return 0;
+    return transposeIncrement < 0 ? -transposeIncrement : 12 - transposeIncrement;
+  }
 
   @override
   List<Object> get props => [

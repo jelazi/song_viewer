@@ -55,6 +55,30 @@ class TestWebEvent extends WebEvent {
   const TestWebEvent();
 }
 
+/// Zoom the previewed web song in or out.
+///
+/// Writes the same settings keys as the library preview, so both views keep a
+/// single font size instead of drifting apart.
+class ChangeWebFontSize extends WebEvent {
+  final bool isIncrease;
+  const ChangeWebFontSize({required this.isIncrease});
+
+  @override
+  List<Object> get props => [isIncrease];
+}
+
+/// Transpose the chords of the previewed web song.
+///
+/// The increment lives in the state only: a web song has no library id yet, so
+/// there is nothing to persist it against until the song is saved.
+class TransposeWebChord extends WebEvent {
+  final int increment;
+  const TransposeWebChord({required this.increment});
+
+  @override
+  List<Object> get props => [increment];
+}
+
 /// Persist a search query into the history for the current server.
 class AddWebSearchHistory extends WebEvent {
   final String query;

@@ -1,5 +1,58 @@
 # Development Log
 
+## 2026-08-30 — feat: transpose, zoom and sharing for songs found on the web (desktop)
+
+### What was done
+The desktop **Web** tab rendered a found song read-only: `LyricsRenderer` was already wired to
+`state.textStyle` / `state.transposeIncrement`, but nothing could change them, and the only action
+was *Save song*. The library preview has had zoom, transpose and "current song" (share to the other
+devices) all along — this brings the same three to the web tab.
+
+- `lib/blocs/web_bloc/web_event.dart` — new `ChangeWebFontSize(isIncrease)` and
+  `TransposeWebChord(increment)` events.
+- `lib/blocs/web_bloc/web_bloc.dart` — handlers `_changeWebFontSize` and `_transposeWebChord`.
+  Zoom writes the same `previewFontTextSize` / `previewFontChordSize` settings the library preview
+  uses (the web state already *read* them at init, so anything else would have made the two views
+  drift apart) and refuses to leave the 10–40 range. Transpose wraps at ±12 exactly like
+  `PreviewChordBloc._transposeChord`. `transposeIncrement` is now reset to 0 in
+  `_changeCurrentWebSong`, `_changeCurrentInterpret` and `_changeSearchWeb` — the increment belongs
+  to the song that was on screen, not to the next one.
+- `lib/blocs/web_bloc/web_state.dart` — `minPreviewFontSize` / `maxPreviewFontSize` constants (shared
+  with the ribbon, which uses them to disable the zoom buttons at the bounds) and a `cap` getter
+  mirroring the preview's capo reading.
+- `lib/view/desktop_view/widgets/ribbon_menu.dart` — `_buildWebActions` now ends with a divider and
+  a new `_buildWebZoomTransposeGroup`: zoom in/out and ±1 semitone, enabled only while a downloaded
+  web song is on screen.
+- `lib/view/desktop_view/pages/desktop_home_page/home_bodies/web_body.dart` — a *Current song*
+  button next to *Save song*, and a `cap: N` reading next to the interpret while the song is
+  transposed. Sharing broadcasts only a song **id** (`saveNewSelectedSong` → `realtime_state`), so a
+  web song that is not in the library yet cannot be shared as-is: the button opens the save dialog
+  with `shareAfterSave: true` and shares once `updateSong` has completed (awaited via the returned
+  future, so the id cannot reach the other devices before the record does). The saved id is kept in
+  `_savedSongId` for the session, so a second click toggles sharing off, and it is cleared when
+  another web song is opened. Saving also carries the preview transposition over to the stored song
+  via `songsRepository.changeTransposeChord`, so reopening it in the library shows the same key.
+- `assets/lang/{cs,en}.json` — new `shareWebSongHint`; `zoomIn` / `zoomOut` added to `en.json`,
+  which was missing them (the preview ribbon has been showing the raw keys in English).
+- `test/unit_tests/blocs/web_bloc_test.dart` (+ generated `.mocks.dart`) — new `WebBloc` tests:
+  zoom changes both styles and persists them, both font-size bounds hold, transpose accumulates and
+  wraps around the octave, and opening another song resets it.
+
+### What was fixed
+A song found on the web could not be transposed or zoomed while it was being read, and there was no
+way to push it to the other devices as the current song — both were possible only after saving it
+and switching to the preview tab.
+
+### Current state
+`flutter analyze`: no issues found. `flutter test test/unit_tests`: 374 passed (5 of them new), 2
+skipped — the same 2 skips as before this change.
+
+### Pending / next steps
+Manual check on the desktop app: transpose/zoom in the Web tab, then *Current song* on an unsaved
+find (should ask to save first, then light up green) and on the same song again (should toggle
+off). The equivalent controls on the tablet/mobile web pages were left untouched — this change was
+scoped to the desktop app.
+
 ## 2026-08-20 (part 4) - feat: local-first write paths and per-record updatedAt
 
 ### What was done
