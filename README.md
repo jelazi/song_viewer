@@ -48,8 +48,11 @@ with Czech selected, on a Czech songbook.</sub>
 ## Presentation
 
 - **Second window** on desktop through `desktop_multi_window`: the operator keeps the editor,
-  the audience sees only the lyrics
+  the audience sees only the lyrics. Pick which display it opens on.
 - **Presentation playlists** — walk a set list front to back without leaving the projection
+- **Tuned for the room** — font size and colour, lines per page, automatic paging by paragraph,
+  and toggles for chords, song title and page number in the projection
+- **Black first and last page**, so the screen starts and ends dark instead of on a stray verse
 - **Live state** — the current song is shared through the PocketBase `realtime_state`
   collection, so another device can follow along
 
@@ -69,11 +72,20 @@ account, no installation, nothing leaving the network.
   *Build flavours*.
 - **AI enrichment** — fill in missing metadata for a song. Compile-time optional as well.
 
+## Export and backup
+
+- **Export the whole songbook** to JSON, or a single song's lyrics to a plain text file
+- **Full backup to a folder** — `backup.json` with all structured data next to a `files/`
+  directory holding the sheet music and uploads, downloaded from the server so the backup stands
+  on its own
+- **Preview before restoring** — an import is inspected and reported first, not applied blindly
+
 ## Sync
 
 PocketBase is the backend for songs, playlists, users, groups, uploads and live state. Users
-have roles (viewer, editor, admin, superuser), and write paths are local-first with per-record
-timestamps, so the app stays usable offline and reconciles afterwards.
+have roles (viewer, editor, admin, superuser) and are managed from inside the app, as are the
+groups the songbook is divided into. Write paths are local-first with per-record timestamps, so
+the app stays usable offline and reconciles afterwards.
 
 Credentials never live in the repository or in the app bundle. They are read from
 `~/.songviewer/pocketbase_config.json`, an owner-only file outside the project, or typed into
@@ -86,7 +98,8 @@ the app's settings — which writes that same file.
   `chordpro_import`, `song_enrichment`, `notification`, `desktop_ribbon_menu` and the edit blocs)
 - **Repositories** over PocketBase and local Hive storage
 - **Responsive views** — `mobile_view`, `tablet_view` and `desktop_view` are separate widget
-  trees behind one router, not breakpoints on a shared layout
+  trees behind one router, not breakpoints on a shared layout. The desktop build uses a ribbon
+  menu rather than a phone-style navigation bar.
 - **Hive** for offline storage, **easy_localization** for English and Czech
 
 ```
