@@ -1,5 +1,62 @@
 # Development Log
 
+## 2026-09-04 (part 2) — chore: publish logger_pkg, rewrite the README, scrub the history
+
+### What was done
+
+- **Published `logger_pkg` as its own public repository** at
+  https://github.com/jelazi/logger_pkg, with a **fresh single-commit history** rather than an
+  import of the old one — the previous repository lived on a company GitLab and its commit
+  metadata carried colleagues' work e-mail addresses and an internal ticket id. Before
+  committing: translated the Czech comments to English, replaced the four-line README with a
+  real one (levels table, constructor table, log-file and web behaviour), gave the pubspec a
+  description, `repository` and `issue_tracker`, bumped the SDK constraint from
+  `>=2.18.2 <3.0.0` to `>=3.0.0 <4.0.0` and the version to `0.1.0`, and added the MIT licence.
+  `dart analyze`: no issues.
+- **Switched the dependency to that repository** and deleted `packages/logger_pkg`. The
+  vendored copy from earlier today is gone, so there is nothing left to drift.
+- **Rewrote the README for a public audience.** Replaced the "App for musicians." opener,
+  added CI/Flutter/platform/licence badges, and documented the features by area: songbook,
+  presentation, LAN sharing, ChordPro and web import, PocketBase sync. Added a section on the
+  compile-time build flavours and why the store build strips the web import rather than hiding
+  it behind a runtime setting. Kept the PocketBase setup instructions.
+- **Deleted the five screenshots.** They were captured in August 2023, no longer match the UI,
+  and one still carried a debug banner. They remain in the history.
+- **Rewrote the git history with `git filter-repo`** to remove three references to a client
+  project from the DEVLOG, replacing them with neutral wording. All 189 commits were preserved;
+  only the affected blobs changed. A mirror backup was taken first to
+  `../songs_viewer_bloc_backup.git`.
+
+### What was fixed
+
+- The working tree had already been redacted in the previous entry, but the original wording
+  survived in the diffs of older commits. Since this repository is going public, that had to be
+  removed from the history rather than only from `HEAD`.
+
+### Current state
+
+- `flutter analyze`: no issues. `flutter test`: **423 passed, 2 skipped, 0 failed**, verified
+  after switching to the git dependency.
+- History scan for the client project name, the company domain, colleagues' names and the
+  ticket prefix: **zero matches across all commits**.
+- CI on the rewritten `main`: `analyze-and-test` green, which also proves the git dependency
+  resolves on a clean runner.
+- Repository is `jelazi/song_viewer`, still private, single branch `main`, 189 commits.
+
+### Pending / next steps
+
+- **New screenshots** are needed before the repository goes public — the README has no images.
+- Native bundle identifiers still say `default_project`: `PRODUCT_NAME` in
+  `macos/Runner/Configs/AppInfo.xcconfig`, `BINARY_NAME` and
+  `APPLICATION_ID=com.example.default_project` in `linux/CMakeLists.txt`, and the Xcode project
+  references. `build.sh` locates the macOS bundle by `default_project.app`, so they have to
+  change together.
+- `logger_pkg` contains roughly 95 lines contributed by a colleague in December 2025 (the
+  conditional IO/web split). Published on the owner's instruction; worth confirming with them.
+- `lib/services/presentation_window_manager_old.dart` looks like dead code.
+- God files remain: `ribbon_menu.dart` 47K, `web_repository.dart` 41K, `list_web_song.dart` 41K,
+  `pocketbase_provider.dart` 40K, `home_page_tablet.dart` 40K.
+
 ## 2026-09-04 — chore: prepare the repository for public release
 
 ### What was done
