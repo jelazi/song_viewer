@@ -1,5 +1,55 @@
 # Development Log
 
+## 2026-09-04 (part 4) — chore: go public
+
+### What was done
+
+- **Reviewed the README against `lib/`** and filled the gaps it had: export of the whole
+  songbook to JSON and of a single song's lyrics to TXT; the folder backup (`backup.json` plus a
+  `files/` directory of downloaded sheet music) with its preview-before-restore step; the
+  presentation settings (font size and colour, lines per page, automatic paging by paragraph,
+  black first and last page, toggles for chords, title and page number, target display); that
+  users and groups are managed inside the app; and the desktop ribbon menu.
+- **Removed personal deployment addresses from the source.** `tools/setup_pb_chords.py`
+  defaulted `--url` to the live PocketBase instance — the argument is now required. The
+  "Current Song" QR link defaulted to a personal Firebase site in `settings_repository`,
+  `settings_bloc` and `qr_link`; it now defaults to an empty URL, and existing installs keep
+  whatever is stored in Hive.
+- **Rewrote the history again** with `git filter-repo` to replace the server hostname, its IP
+  and the Firebase site with placeholders across the four commits that carried them. A mirror
+  backup was taken first.
+- **Made the repository public.**
+
+### What was fixed
+
+- The PocketBase server's public address (`sslip.io` maps a hostname onto the IP) was committed
+  as a script default and sat in four commits of history. Publishing the repository would have
+  advertised the server. One reference remains by design: a comment in `setup_pb_chords.py`
+  explaining that sslip.io certificates are not in Python's default trust store — it names no
+  host.
+
+### Current state
+
+- `flutter analyze`: no issues. `flutter test`: 423 passed, 2 skipped, 0 failed.
+- CI run 33885275090: both jobs green.
+- Sweep for the client project name, company domain, ticket prefix, Claude trailers, server
+  addresses and credential literals: clean in both the working tree and the full history.
+- `jelazi/song_viewer` is **public**, `main`, MIT, ten topics, 196 commits.
+
+### Pending / next steps
+
+- No presentation screenshot yet; the projection is the most distinctive feature and is not
+  pictured.
+- Native bundle identifiers still say `default_project` (macOS `PRODUCT_NAME`, Linux
+  `BINARY_NAME` and `APPLICATION_ID`); `build.sh` finds the macOS bundle by that name, so they
+  have to change together.
+- Dead code found while reviewing: `lib/services/presentation_window_manager_old.dart`, and
+  `lib/view/mobile_view/widgets/chords_lyric/lyrics_renderer_pdf.dart` plus `chord_parser_pdf.dart`
+  are referenced nowhere — they are the only importers of the `pdf` dependency, which is
+  therefore also unused.
+- God files remain: `ribbon_menu.dart` 47K, `web_repository.dart` 41K, `list_web_song.dart` 41K,
+  `pocketbase_provider.dart` 40K, `home_page_tablet.dart` 40K.
+
 ## 2026-09-04 (part 3) — docs: capture README screenshots from the running app
 
 ### What was done
