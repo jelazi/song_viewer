@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  FLUTTER_VERSION: '3.44.3'
+
+jobs:
+  analyze-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate code
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Run tests
+        run: flutter test
+
+  build:
+    name: build (android)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate code
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      # Mirrors what ./build.sh does for the store flavour on Android.
+      - name: Build debug APK
+        run: >-
+          flutter build apk --debug --flavor store
+          -t lib/main_store.dart
+          --dart-define-from-file=config/store_mobile.json
