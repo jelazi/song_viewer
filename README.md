@@ -80,9 +80,10 @@ lib/
 ├── services/       # chordpro, presentation_bridge, local_web, enums
 ├── view/           # mobile_view | tablet_view | desktop_view | router
 └── main.dart       # plus main_personal.dart / main_store.dart
-packages/
-└── logger_pkg/     # small logging package used across the app
 ```
+
+Logging goes through [logger_pkg](https://github.com/jelazi/logger_pkg), a small package of mine
+pulled in as a git dependency.
 
 ## Build flavours
 
