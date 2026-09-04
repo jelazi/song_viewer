@@ -13,6 +13,25 @@ list from a phone browser over the local network.
 One codebase for iOS, Android, macOS, Windows, Linux and the web, with separate mobile, tablet
 and desktop layouts rather than one stretched layout.
 
+<p align="center">
+  <img src="screenshots/song.png" alt="A song with chords above the lyrics" width="820">
+</p>
+
+<table>
+  <tr>
+    <td width="50%"><img src="screenshots/editor.png" alt="Song editor"><br><sub><b>Editor</b> — the source text with inline <code>[C]</code> chords, the same markup ChordPro uses</sub></td>
+    <td width="50%"><img src="screenshots/playlists.png" alt="Playlists"><br><sub><b>Playlists</b> — set lists that load straight into the projection</sub></td>
+  </tr>
+</table>
+
+<p align="center">
+  <img src="screenshots/lan-sharing.png" alt="Sharing the songbook over the local network" width="820"><br>
+  <sub><b>LAN sharing</b> — the band scans the QR code and reads the set list in a browser. Addresses blurred.</sub>
+</p>
+
+<sub>Screenshots are from the macOS build. The interface ships in English and Czech; these were taken
+with Czech selected, on a Czech songbook.</sub>
+
 ## The songbook
 
 - **Lyrics with inline chords** — `[Am]` markup in the text, rendered above the syllable it
@@ -48,6 +67,7 @@ account, no installation, nothing leaving the network.
   directives, the app spends it on notes.
 - **Web import** — pull a song from the web and clean it up. Compile-time optional; see
   *Build flavours*.
+- **AI enrichment** — fill in missing metadata for a song. Compile-time optional as well.
 
 ## Sync
 
