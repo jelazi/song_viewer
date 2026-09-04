@@ -135,7 +135,7 @@ def add_chord_overrides_to_songs(base_url: str, token: str,
 
 def main():
     parser = argparse.ArgumentParser(description="Setup PocketBase chord support")
-    parser.add_argument("--url", default="https://your-pocketbase-url.example",
+    parser.add_argument("--url", default=None, required=True,
                         help="PocketBase URL")
     parser.add_argument("--email", help="Superuser email")
     parser.add_argument("--password", help="Superuser password")

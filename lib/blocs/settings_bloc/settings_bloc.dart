@@ -43,7 +43,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
           presentationShowTitle: true,
           presentationAutoPageByParagraphs: false,
           qrLinks: [
-            QrLink(label: 'Current Song', url: 'https://your-site.example/'),
+            QrLink(label: 'Current Song', url: ''),
             QrLink(label: 'Web App', url: 'https://songsviewerweb.web.app/'),
             QrLink(label: 'Žižkovi', url: 'https://www.zizkovi.online/'),
           ],

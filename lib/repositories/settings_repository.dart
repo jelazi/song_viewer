@@ -194,7 +194,7 @@ class SettingsRepository {
       final oldZizkovi = await hiveProvider.getSettingsValue('qrZizkoviUrl');
       if (oldCurrent != null || oldWebApp != null || oldZizkovi != null) {
         _qrLinks = [
-          QrLink(label: 'Current Song', url: oldCurrent ?? 'https://your-site.example/'),
+          QrLink(label: 'Current Song', url: oldCurrent ?? ''),
           QrLink(label: 'Web App', url: oldWebApp ?? 'https://songsviewerweb.web.app/'),
           QrLink(label: 'Žižkovi', url: oldZizkovi ?? 'https://www.zizkovi.online/'),
         ];
