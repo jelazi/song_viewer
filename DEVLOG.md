@@ -57,7 +57,8 @@
   `APPLICATION_ID=com.example.default_project` in `linux/CMakeLists.txt`, and the Xcode
   project references. `build.sh` finds the macOS bundle by the name `default_project.app`, so
   these have to be changed together with it.
-- The vendored `logger_pkg` is a copy of a package shared with another project and can drift. Publishing it to
+- The vendored `logger_pkg` is a copy of a package shared with another project and can drift.
+  Publishing it to
   pub.dev would give both a single source; it would first need a real README, licence and
   description.
 - `packages/logger_pkg/pubspec.yaml` still declares `sdk: '>=2.18.2 <3.0.0'`.
