@@ -1,5 +1,69 @@
 # Development Log
 
+## 2026-09-04 — chore: prepare the repository for public release
+
+### What was done
+
+- **Renamed the Dart package from `default_project` to `song_viewer`.** Set the pubspec `name`
+  and replaced the `A new Flutter project.` placeholder description. Rewrote all 347
+  `package:default_project/...` imports across 87 files in `lib/` and `test/`, then reran
+  `build_runner` so the generated `.g.dart` and `.mocks.dart` headers match.
+- Renamed the user-visible titles in `web/manifest.json`, `web/index.html` and
+  `linux/my_application.cc` to "Song Viewer".
+- **Moved the Patrol tests** from `test/integration_tests/` to `integration_test/`, and deleted
+  `test/integration_tests/app_test.dart`, a placeholder asserting `expect(true, isTrue)`.
+- **Vendored `logger_pkg` into `packages/logger_pkg`** (3 files, 24 KB, no dependencies) and
+  repointed the dependency there. Gave the copy the repository's MIT licence, replaced its
+  `analysis_options.yaml` — which included `flutter_lints` without depending on it — with one
+  that only disables `avoid_print`, and made `_initializationPathDirectory` final.
+- **Added `LICENSE` (MIT) and `.github/workflows/ci.yml`**: an `analyze-and-test` job and an
+  Android `build` job, both running `build_runner` first because the generated files are not
+  committed.
+- **Branches:** renamed `develop` to `main` and made it the default; deleted `master`
+  (165 commits behind, its one unique commit contained only regenerable `.g.dart` files) and
+  the local `supabase` branch (one WIP commit, never pushed).
+- **Renamed the GitHub repository** from `songs_viewer_bloc` to `song_viewer`, and the 2022
+  predecessor that held the name to `song_viewer_2022`. Set the repository description and ten
+  topics.
+
+### What was fixed
+
+- **A clean clone could not build at all.** The pubspec depended on `logger_pkg` through
+  `path: ../logger`, a sibling directory that exists only on the author's machine — the package
+  lives in a separate private GitLab repository. Both CI jobs failed at `flutter pub get` with
+  `could not find package logger_pkg at "../logger"`.
+- **Five failing tests.** The Patrol tests sat under `test/`, where `flutter test` collects them
+  but Patrol cannot run them. Moving them to `integration_test/` leaves them runnable via
+  `patrol test` without breaking the default test run.
+- The Android CI build initially failed with `Gradle build failed to produce an .apk file`:
+  the project has `personal` and `store` Android flavours, so a plain `flutter build apk`
+  produces `app-store-debug.apk` while the tool looks for `app-debug.apk`. The workflow now
+  mirrors `build.sh` with `--flavor store -t lib/main_store.dart
+  --dart-define-from-file=config/store_mobile.json`.
+
+### Current state
+
+- `flutter analyze`: no issues. `flutter test`: **423 passed, 2 skipped, 0 failed**.
+- `flutter build apk --debug --flavor store` verified locally before the workflow was pushed.
+- CI run 33873317254 on `568b3b8`: **both jobs green**.
+- Repository is `jelazi/song_viewer`, still private, single branch `main`.
+
+### Pending / next steps
+
+- **README** still opens with "App for musicians." and does not use any of the five images in
+  `screenshots/`. Needs a rewrite with badges and screenshots before the repository goes public.
+- Native bundle identifiers still say `default_project`: `PRODUCT_NAME` in
+  `macos/Runner/Configs/AppInfo.xcconfig`, `BINARY_NAME` and
+  `APPLICATION_ID=com.example.default_project` in `linux/CMakeLists.txt`, and the Xcode
+  project references. `build.sh` finds the macOS bundle by the name `default_project.app`, so
+  these have to be changed together with it.
+- The vendored `logger_pkg` is a copy of a package shared with another project and can drift. Publishing it to
+  pub.dev would give both a single source; it would first need a real README, licence and
+  description.
+- `packages/logger_pkg/pubspec.yaml` still declares `sdk: '>=2.18.2 <3.0.0'`.
+- God files remain: `ribbon_menu.dart` 47K, `web_repository.dart` 41K, `list_web_song.dart` 41K,
+  `pocketbase_provider.dart` 40K, `home_page_tablet.dart` 40K.
+
 ## 2026-09-02 — feat(desktop): serve the songbook on the local network
 
 ### What was done
