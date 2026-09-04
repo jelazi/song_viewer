@@ -71,6 +71,8 @@ flutter:
     - assets/lang/en.json
     - assets/logos/ic_launcher.png
     - assets/icons/
+    # Static page served by the built-in local web server (desktop only).
+    - assets/local_web/
   # NOTE: pocketbase_config.json is deliberately NOT bundled — it holds the
   # server credentials in plain text. It is read at runtime from
   # ~/.songviewer/pocketbase_config.json (see pocketbase_config.example.json).

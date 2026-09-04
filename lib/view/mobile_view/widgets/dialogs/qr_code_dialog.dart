@@ -9,7 +9,9 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../blocs/export_blocs.dart';
+import '../../../../model/qr_link.dart';
 import '../../../../services/constants.dart';
+import '../../../../services/local_web/local_web_server.dart';
 
 class QrCodeDialog extends StatefulWidget {
   const QrCodeDialog({super.key});
@@ -178,11 +180,23 @@ class _QrCodeDialogState extends State<QrCodeDialog> {
     );
   }
 
+  /// The address of the built-in server, offered first when it is running.
+  ///
+  /// It is not stored with the configured links: the address depends on the
+  /// network the machine is on right now, so persisting it would hand out a
+  /// stale one at the next rehearsal.
+  List<QrLink> _localWebLinks(BuildContext context) {
+    if (!LocalWebServer.isSupportedPlatform) return const [];
+    final state = context.watch<LocalWebBloc>().state;
+    if (!state.isRunning) return const [];
+    return state.addresses.map((address) => QrLink(label: 'localWebQrLabel'.tr(), url: address.url(state.port))).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<SettingsBloc, SettingsState>(
       builder: (context, state) {
-        final links = state.qrLinks;
+        final links = [..._localWebLinks(context), ...state.qrLinks];
 
         return AlertDialog(
           titlePadding: EdgeInsets.zero,

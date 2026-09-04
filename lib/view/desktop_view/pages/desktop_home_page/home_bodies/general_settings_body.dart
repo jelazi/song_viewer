@@ -7,7 +7,9 @@ import '../../../../../blocs/export_blocs.dart';
 import '../../../../../model/qr_link.dart';
 import '../../../../../providers/pocketbase_provider.dart';
 import '../../../../../services/constants.dart';
+import '../../../../../services/local_web/local_web_server.dart';
 import 'bracket_error_scanner.dart';
+import 'local_web_settings.dart';
 
 class GeneralSettingsBody extends StatefulWidget {
   const GeneralSettingsBody({super.key});
@@ -61,6 +63,13 @@ class _GeneralSettingsBodyState extends State<GeneralSettingsBody> {
                 _buildSectionTitle('pbSettingsTitle'.tr()),
                 const SizedBox(height: 8),
                 _buildPocketBaseSettings(context),
+                const SizedBox(height: 24),
+              ],
+              // Local web server — desktop only, so the bloc may be absent.
+              if (LocalWebServer.isSupportedPlatform) ...[
+                _buildSectionTitle('localWebTitle'.tr()),
+                const SizedBox(height: 8),
+                const LocalWebSettings(),
                 const SizedBox(height: 24),
               ],
               // QR code URLs

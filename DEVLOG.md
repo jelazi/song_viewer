@@ -1,5 +1,97 @@
 # Development Log
 
+## 2026-09-02 — feat(desktop): serve the songbook on the local network
+
+### What was done
+The desktop app now runs its own web server. Anyone on the same Wi-Fi scans a QR code, opens a LAN
+address, and sees whatever song the desktop has marked as current — updating live as the desktop
+moves on. The page is a local reimplementation of the `/prave-hrajeme` view from
+`hudebni-web` (zizkovi.online), down to the zinc/amber palette and the chord-over-lyrics layout.
+
+**No external database.** Everything is read from the local Hive repositories. PocketBase is not
+consulted on any path here, so this works on a church Wi-Fi with no uplink and in a store build
+that has never been configured with a server.
+
+- **`lib/services/local_web/local_web_server.dart`** (new) — `dart:io` `HttpServer`, no new package.
+  Routes: `/api/current-song`, `/api/songs`, `/api/song/<id>`, `/api/playlists`,
+  `/api/playlist/<id>`, `/api/chord-diagrams`, an SSE stream at `/events`, and the static page.
+  Any other path returns the shell so the client-side router owns navigation.
+  `isSupportedPlatform` is the single guard for "desktop only" — the composition root, the settings
+  section and the QR dialog all read it, so they cannot drift apart.
+- **`lib/services/local_web/local_web_addresses.dart`** (new) — `rankAddresses` keeps private IPv4
+  only and orders 192.168 before 10.x. Loopback and 169.254 are dropped: both would produce a QR
+  code that silently does not work.
+- **`lib/services/local_web/local_web_payload.dart`** (new) — the JSON shapes, named to match what
+  the hudebni-web client already expects. `{...}` line notes are stripped from the lyrics; the
+  app's `Song.notes` become the page's `performanceNotes`.
+- **`assets/local_web/{index.html,styles.css,app.js}`** (new) — the page itself, hand-written with
+  no CDN and no build step, because the machine serving it usually has no internet. Full parity with
+  the reference `SongViewer`: chord toggle, ±1 semitone transposition with capo readout, eight font
+  sizes, fullscreen reading mode, clickable chord diagrams (SVG, multiple voicings), attachments,
+  performance notes and YouTube embeds — plus song search and playlist browsing.
+- **`lib/blocs/local_web_bloc/`** (new, bloc/event/state) — start/stop, port changes, address
+  refresh. Errors are surfaced as translation keys rather than raw exceptions.
+- **`lib/view/desktop_view/.../local_web_settings.dart`** (new) — toggle, port field, QR code and
+  every reachable address with a copy button. Wired into `general_settings_body.dart`.
+- **`qr_code_dialog.dart`** — the running server's addresses are prepended to the configured QR
+  links. Deliberately not persisted: the address depends on the network the machine is on right now.
+- **`settings_repository.dart`** — `localWebEnabled` / `localWebPort`, so the server comes back up
+  on the next start.
+- **`assets/lang/{cs,en}.json`** — 14 new keys.
+- Tests: `local_web_server_test.dart` (13, real HTTP against a server bound on port 0),
+  `local_web_payload_test.dart` (11), `local_web_addresses_test.dart` (6).
+
+### What was fixed
+- **`SongsRepository.selectSong` never told anyone locally.** The selection was only pushed to
+  PocketBase and reached the app's own blocs when the server echoed it back. With no server — a
+  store build, or simply offline — the current song was never broadcast at all. It now emits into
+  the existing `selectSongController` as well, which is what makes the local server work without a
+  database and also fixes the local-first build's own current-song handling.
+- **Chord diagrams were wrong under transposition.** The first cut sent only the chords a song
+  contained and remapped their names when transposing, which showed the *original* grip under a
+  *transposed* name — musically wrong. The server now serves the whole diagram library
+  (`/api/chord-diagrams`, synced library plus the built-in grips) and the page looks chords up by
+  their displayed name, matching what hudebni-web does.
+- **Chords drifted left of their syllables.** The offset is expressed in `ch` units, which resolve
+  against the element's own font size; the chord span also carried the smaller chord font, so every
+  offset was scaled by 0.85. Split into a positioned `.chord-slot` at the lyric font size with the
+  chord styling on an inner span.
+
+### Current state
+- `flutter analyze lib test`: no issues found.
+- `flutter test test/unit_tests`: **423 passed** (30 new), 2 skipped — the same 2 skips as before.
+- `./build.sh macos personal debug`: builds clean with the new asset directory.
+- **Verified in a real browser.** The three page assets were served with stub data and rendered in
+  headless Chrome. Confirmed by screenshot: the now-playing page in the phone layout (icon-only nav
+  below 640px), chords sitting over the correct syllables with dotted underlines where a diagram
+  exists, transposition `C→D` / `Am→Hm` (Czech notation) with capo 10 and diagrams still resolving,
+  the song list with the playing song outlined green and badged, and the playlist detail. Focus mode
+  was verified by measured geometry rather than pixels — headless Chrome will not screenshot a
+  full-viewport `position: fixed` overlay — `.focus` covers the viewport exactly (49 + 71 + 493 =
+  613) and all 9 chords sit in 9 slots.
+- macOS already ships `com.apple.security.network.server` in both entitlement files, so no
+  entitlement change was needed.
+
+### Design decisions
+- **`dart:io HttpServer`, not `shelf`.** Eight routes do not justify a dependency, and the store
+  build's artifact scan is easier to reason about with nothing added.
+- **SSE, not polling.** The desktop already has the change; pushing it costs one open socket per
+  viewer and removes the latency a poll interval would add mid-service.
+- **Viewer preferences survive a song change.** When the leader moves to the next song, the reader
+  keeps their font size and chord setting; only the transposition resets, since a new song is in its
+  own key.
+
+### Pending / next steps
+- **Never run from inside the app.** The server was exercised through tests and the page through a
+  stub of the same endpoints; nobody has yet switched it on in the running desktop app and scanned
+  the QR code with a real phone. That is the remaining verification.
+- The first bind will trigger the macOS firewall prompt for incoming connections.
+- The song list and playlist list are cached in the page for the session, so a song edited on the
+  desktop is not reflected until reload. The current song is live; the library is not.
+- HTTP only, no authentication: anyone on the network who knows the address can read the library.
+  Acceptable for a rehearsal LAN, worth stating before this is offered as a store feature.
+- Windows and Linux were not built or run; only macOS was.
+
 ## 2026-08-30 (part 2) — feat: one-click chord notation conversion for web songs
 
 ### What was done

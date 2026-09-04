@@ -81,6 +81,14 @@ Future<({AppRepositories repositories, SyncInfo syncInfo})> initProvidersAndChec
     );
   }
 
+  LocalWebServer? localWebServer;
+  if (LocalWebServer.isSupportedPlatform) {
+    localWebServer = LocalWebServer(
+      songsRepository: songsRepository,
+      playlistRepository: playlistRepository,
+    );
+  }
+
   // Check server data counts
   int songCount = 0;
   int playlistCount = 0;
@@ -108,6 +116,7 @@ Future<({AppRepositories repositories, SyncInfo syncInfo})> initProvidersAndChec
     usersRepository: usersRepository,
     songsRepository: songsRepository,
     webRepository: webRepository,
+    localWebServer: localWebServer,
     hiveProvider: hiveProvider,
   );
 

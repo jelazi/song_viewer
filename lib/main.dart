@@ -15,6 +15,7 @@ import 'package:default_project/repositories/user_repository.dart';
 import 'package:default_project/services/chordpro_service.dart';
 import 'package:default_project/services/constants.dart';
 import 'package:default_project/services/enums.dart';
+import 'package:default_project/services/local_web/local_web_server.dart';
 import 'package:default_project/services/presentation_bridge.dart';
 import 'package:default_project/services/presentation_window_manager.dart';
 import 'package:default_project/services/win32_fullscreen.dart';
@@ -51,6 +52,11 @@ class AppRepositories {
 
   /// Null in the store build — web import is compiled out entirely (§10).
   final WebRepository? webRepository;
+
+  /// Null on mobile: serving a page to other devices only makes sense from the
+  /// machine running the service, and `HttpServer` has no place in a phone
+  /// build.
+  final LocalWebServer? localWebServer;
   final HiveProvider hiveProvider;
 
   AppRepositories({
@@ -60,6 +66,7 @@ class AppRepositories {
     required this.songsRepository,
     required this.hiveProvider,
     this.webRepository,
+    this.localWebServer,
   });
 }
 
@@ -824,6 +831,14 @@ class _MyAppState extends State<MyApp> with WindowListener {
           BlocProvider(
             create: (context) => PresentationBloc(),
           ),
+          // Desktop only — [AppRepositories.localWebServer] is null elsewhere.
+          if (widget.repositories.localWebServer != null)
+            BlocProvider(
+              create: (context) => LocalWebBloc(
+                localWebServer: widget.repositories.localWebServer!,
+                settingsRepository: widget.repositories.settingsRepository,
+              ),
+            ),
           BlocProvider(
             create: (context) => PresentationPlaylistBloc(
               playlistRepository: widget.repositories.playlistRepository,

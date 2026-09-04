@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="cs">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#09090b">
+    <title>Hudební archív</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎵</text></svg>">
+</head>
+
+<body>
+    <header class="header">
+        <div class="header-inner">
+            <a class="brand" href="#/" data-link>
+                <span class="brand-icon">🎵</span>
+                <span class="brand-name">Hudební archív</span>
+            </a>
+            <nav class="nav">
+                <a class="nav-link nav-live" href="#/" data-link data-nav="now">
+                    <span class="nav-short">▶</span>
+                    <span class="nav-long">▶ Právě hrajeme</span>
+                </a>
+                <a class="nav-link" href="#/pisne" data-link data-nav="songs">
+                    <span class="nav-short">🎶</span>
+                    <span class="nav-long">Písně</span>
+                </a>
+                <a class="nav-link" href="#/playlisty" data-link data-nav="playlists">
+                    <span class="nav-short">📋</span>
+                    <span class="nav-long">Playlisty</span>
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <main id="view" class="main"></main>
+
+    <footer class="footer">
+        <span id="connection" class="connection">Připojuji se…</span>
+    </footer>
+
+    <script src="/app.js"></script>
+</body>
+
+</html>

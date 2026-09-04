@@ -1177,6 +1177,18 @@ class MockSettingsRepository extends _i1.Mock
       ) as _i19.TypeClickCard);
 
   @override
+  bool get localWebEnabled => (super.noSuchMethod(
+        Invocation.getter(#localWebEnabled),
+        returnValue: false,
+      ) as bool);
+
+  @override
+  int get localWebPort => (super.noSuchMethod(
+        Invocation.getter(#localWebPort),
+        returnValue: 0,
+      ) as int);
+
+  @override
   int get presentationScreenIndex => (super.noSuchMethod(
         Invocation.getter(#presentationScreenIndex),
         returnValue: 0,

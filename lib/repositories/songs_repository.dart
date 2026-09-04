@@ -234,13 +234,21 @@ class SongsRepository {
     }
   }
 
+  /// Marks the song everyone should be looking at.
+  ///
+  /// The choice is broadcast locally as well as pushed to PocketBase. Without
+  /// the local emission the selection would only reach listeners after the
+  /// server echoed it back, so a build with no server — or one that is offline
+  /// — would never see its own current song.
   void selectSong(String songId, String title, String interpret, String lyricsWithoutChords, String lyricsWithChords) {
     if (selectedSongId == songId) {
       selectedSongId = '';
+      selectSongController.sink.add('');
       _pocketBaseProvider.removeSelectedSong();
       return;
     }
     selectedSongId = songId;
+    selectSongController.sink.add(songId);
     _pocketBaseProvider.saveNewSelectedSong(songId, title, interpret, lyricsWithoutChords, lyricsWithChords);
   }
 

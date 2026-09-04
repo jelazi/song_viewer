@@ -43,6 +43,10 @@ class SettingsRepository {
   bool _presentationShowTitle = true;
   bool _presentationAutoPageByParagraphs = false;
 
+  // Local web server (desktop only)
+  bool _localWebEnabled = false;
+  int _localWebPort = 8080;
+
   // QR code URLs — dynamic list
   List<QrLink> _qrLinks = QrLink.defaults;
 
@@ -118,6 +122,14 @@ class SettingsRepository {
     return _typeClickCard;
   }
 
+  bool get localWebEnabled {
+    return _localWebEnabled;
+  }
+
+  int get localWebPort {
+    return _localWebPort;
+  }
+
   int get presentationScreenIndex => _presentationScreenIndex;
   int get presentationLinesPerPage => _presentationLinesPerPage;
   double get presentationFontSize => _presentationFontSize;
@@ -150,6 +162,8 @@ class SettingsRepository {
     _currentUser = await hiveProvider.getSettingsValue('currentUser') ?? User.empty();
     _typeClickCard = await hiveProvider.getSettingsValue('typeClickCard') ?? TypeClickCard.none;
     _twoColumns = await hiveProvider.getSettingsValue('twoColumns') ?? false;
+    _localWebEnabled = await hiveProvider.getSettingsValue('localWebEnabled') ?? false;
+    _localWebPort = await hiveProvider.getSettingsValue('localWebPort') ?? 8080;
 
     // Presentation settings
     _presentationScreenIndex = await hiveProvider.getSettingsValue('presentationScreenIndex') ?? 0;
@@ -306,6 +320,18 @@ class SettingsRepository {
         {
           _twoColumns = value;
           hiveProvider.setSettingsValue('twoColumns', value);
+          break;
+        }
+      case 'localWebEnabled':
+        {
+          _localWebEnabled = value;
+          hiveProvider.setSettingsValue('localWebEnabled', value);
+          break;
+        }
+      case 'localWebPort':
+        {
+          _localWebPort = value;
+          hiveProvider.setSettingsValue('localWebPort', value);
           break;
         }
       case 'presentationScreenIndex':
