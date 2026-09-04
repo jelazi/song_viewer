@@ -30,7 +30,7 @@ dependencies:
   flutter_colorpicker: ^1.0.3
   flutter_launcher_icons: ^0.14.1
   logger_pkg:
-    path: ../logger
+    path: packages/logger_pkg
   window_manager: ^0.5.1
   screen_retriever: ^0.2.0
   desktop_multi_window: ^0.3.0

@@ -1,0 +1,4 @@
+linter:
+  rules:
+    # This package is the logging framework, so writing to stdout is its job.
+    avoid_print: false

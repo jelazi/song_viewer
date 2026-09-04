@@ -1,0 +1,14 @@
+name: logger_pkg
+description: "Logger"
+version: 0.0.8+6
+homepage:
+
+environment:
+  sdk: '>=2.18.2 <3.0.0'
+
+dependencies:
+
+dev_dependencies:
+
+
+
