@@ -1,5 +1,52 @@
 # Development Log
 
+## 2026-09-04 (part 3) — docs: capture README screenshots from the running app
+
+### What was done
+
+- **Ran the app** (`flutter run -d macos -t lib/main_personal.dart
+  --dart-define-from-file=config/personal.json`) against the live PocketBase server and drove it
+  to capture four screenshots: the song view with chords above the lyrics, the editor showing
+  the raw inline `[C]` markup, an opened playlist, and the local-network sharing panel.
+- **Redacted the sharing capture.** It is composed of the title bar and ribbon rows stacked
+  directly onto the "Zpěvník v místní síti" section, so the PocketBase block — server URL,
+  e-mail and password — never appears at all. The QR code is blurred at radius 45 and the four
+  LAN addresses at radius 14. A first attempt blurred the QR at radius 12, which left it
+  plausibly decodable given QR error correction; that version was discarded.
+- **Added the four images to `screenshots/`** (484 KB total) and a screenshot block to the
+  README: one wide hero image, a two-column table for the editor and playlists, and the sharing
+  panel with a caption noting the addresses are blurred.
+- **Documented the AI enrichment feature.** The ribbon exposes an "AI Obohacení" tab backed by
+  `song_enrichment_bloc` and the `FEATURE_AI` flag; the README had no mention of it.
+
+### What was fixed
+
+- The previous entry listed screenshots as the last thing blocking a public release. The five
+  images deleted earlier today were from August 2023 and no longer matched the interface; these
+  replace them.
+
+### Current state
+
+- `screenshots/` holds `song.png`, `editor.png`, `playlists.png` and `lan-sharing.png`, all
+  captured today from the macOS build at a 1280×860 window.
+- Reviewed each image for personal data before committing. The three unredacted ones show only
+  song titles, lyrics and playlist dates.
+- Repository is `jelazi/song_viewer`, private, `main` at `b195fb0`.
+
+### Pending / next steps
+
+- **No presentation screenshot.** The "Prezentace (F5)" action stays disabled until the
+  presentation playlist has songs in it, and filling it would have meant changing live data.
+  Worth capturing by hand later — the second-window projection is a distinctive feature.
+- The interface in the screenshots is Czech. The app ships English too; the language switch was
+  not found under **Nastavení → Obecná nastavení**, so this was left alone rather than dug
+  through in live settings.
+- `cliclick` was installed via Homebrew to drive the app: neither AppleScript `click at` nor
+  `keystroke` reaches a Flutter macOS window, which renders into a single canvas with no
+  accessibility tree. Worth capturing as a project skill if the app gets driven again.
+- Native bundle identifiers still say `default_project` (macOS `PRODUCT_NAME`, Linux
+  `BINARY_NAME` and `APPLICATION_ID`), and `build.sh` finds the macOS bundle by that name.
+
 ## 2026-09-04 (part 2) — chore: publish logger_pkg, rewrite the README, scrub the history
 
 ### What was done
