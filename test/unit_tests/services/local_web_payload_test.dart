@@ -1,9 +1,9 @@
-import 'package:default_project/model/note.dart';
-import 'package:default_project/model/playlist.dart';
-import 'package:default_project/model/song/song.dart';
-import 'package:default_project/model/youtube_video.dart';
-import 'package:default_project/services/enums.dart';
-import 'package:default_project/services/local_web/local_web_payload.dart';
+import 'package:song_viewer/model/note.dart';
+import 'package:song_viewer/model/playlist.dart';
+import 'package:song_viewer/model/song/song.dart';
+import 'package:song_viewer/model/youtube_video.dart';
+import 'package:song_viewer/services/enums.dart';
+import 'package:song_viewer/services/local_web/local_web_payload.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Song _song({

@@ -2,10 +2,10 @@
 
 import 'dart:async';
 
-import 'package:default_project/model/qr_link.dart';
-import 'package:default_project/repositories/settings_repository.dart';
-import 'package:default_project/repositories/songs_repository.dart';
-import 'package:default_project/services/enums.dart';
+import 'package:song_viewer/model/qr_link.dart';
+import 'package:song_viewer/repositories/settings_repository.dart';
+import 'package:song_viewer/repositories/songs_repository.dart';
+import 'package:song_viewer/services/enums.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

@@ -1,12 +1,12 @@
 import 'dart:io';
 
-import 'package:default_project/main.dart';
+import 'package:song_viewer/main.dart';
 // Import adapters
-import 'package:default_project/model/user.dart';
-import 'package:default_project/model/web_interpret.dart';
-import 'package:default_project/model/web_item.dart';
-import 'package:default_project/model/web_song.dart';
-import 'package:default_project/services/enums.dart';
+import 'package:song_viewer/model/user.dart';
+import 'package:song_viewer/model/web_interpret.dart';
+import 'package:song_viewer/model/web_item.dart';
+import 'package:song_viewer/model/web_song.dart';
+import 'package:song_viewer/services/enums.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

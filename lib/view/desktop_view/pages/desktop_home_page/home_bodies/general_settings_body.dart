@@ -1,4 +1,4 @@
-import 'package:default_project/config/features.dart';
+import 'package:song_viewer/config/features.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

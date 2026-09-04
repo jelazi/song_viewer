@@ -1,9 +1,9 @@
 import 'dart:convert';
 
-import 'package:default_project/config/features.dart';
-import 'package:default_project/providers/pocketbase_provider.dart';
-import 'package:default_project/services/constants.dart';
-import 'package:default_project/view/mobile_view/widgets/settings_ui/settings_list.dart';
+import 'package:song_viewer/config/features.dart';
+import 'package:song_viewer/providers/pocketbase_provider.dart';
+import 'package:song_viewer/services/constants.dart';
+import 'package:song_viewer/view/mobile_view/widgets/settings_ui/settings_list.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';

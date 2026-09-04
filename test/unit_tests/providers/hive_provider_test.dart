@@ -1,9 +1,9 @@
 import 'dart:io';
 
-import 'package:default_project/model/user.dart';
-import 'package:default_project/model/web_interpret.dart';
-import 'package:default_project/model/web_song.dart';
-import 'package:default_project/providers/hive_provider.dart';
+import 'package:song_viewer/model/user.dart';
+import 'package:song_viewer/model/web_interpret.dart';
+import 'package:song_viewer/model/web_song.dart';
+import 'package:song_viewer/providers/hive_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 

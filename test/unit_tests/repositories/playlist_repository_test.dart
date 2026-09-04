@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:default_project/model/playlist.dart';
-import 'package:default_project/model/song/song.dart';
-import 'package:default_project/providers/hive_provider.dart';
-import 'package:default_project/providers/pocketbase_provider.dart';
-import 'package:default_project/repositories/playlist_repository.dart';
+import 'package:song_viewer/model/playlist.dart';
+import 'package:song_viewer/model/song/song.dart';
+import 'package:song_viewer/providers/hive_provider.dart';
+import 'package:song_viewer/providers/pocketbase_provider.dart';
+import 'package:song_viewer/repositories/playlist_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';

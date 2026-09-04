@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:collection/collection.dart';
-import 'package:default_project/repositories/settings_repository.dart';
+import 'package:song_viewer/repositories/settings_repository.dart';
 import 'package:logger_pkg/logger_pkg.dart';
 
 import '../model/user.dart';

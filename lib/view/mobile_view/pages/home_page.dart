@@ -1,5 +1,5 @@
-import 'package:default_project/repositories/settings_repository.dart';
-import 'package:default_project/view/mobile_view/widgets/song_card.dart';
+import 'package:song_viewer/repositories/settings_repository.dart';
+import 'package:song_viewer/view/mobile_view/widgets/song_card.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';

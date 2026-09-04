@@ -1,6 +1,6 @@
-import 'package:default_project/blocs/export_blocs.dart';
-import 'package:default_project/repositories/settings_repository.dart';
-import 'package:default_project/repositories/songs_repository.dart';
+import 'package:song_viewer/blocs/export_blocs.dart';
+import 'package:song_viewer/repositories/settings_repository.dart';
+import 'package:song_viewer/repositories/songs_repository.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 

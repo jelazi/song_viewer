@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:default_project/services/local_web/local_web_addresses.dart';
+import 'package:song_viewer/services/local_web/local_web_addresses.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// [NetworkInterface] cannot be constructed, so the ranking is exercised

@@ -1,4 +1,4 @@
-import 'package:default_project/model/user.dart';
+import 'package:song_viewer/model/user.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

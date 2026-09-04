@@ -1,9 +1,9 @@
 import 'dart:math';
 
-import 'package:default_project/model/song/song.dart';
-import 'package:default_project/services/constants.dart';
-import 'package:default_project/view/desktop_view/widgets/my_toast.dart';
-import 'package:default_project/view/mobile_view/widgets/dialogs/dialogs_export.dart';
+import 'package:song_viewer/model/song/song.dart';
+import 'package:song_viewer/services/constants.dart';
+import 'package:song_viewer/view/desktop_view/widgets/my_toast.dart';
+import 'package:song_viewer/view/mobile_view/widgets/dialogs/dialogs_export.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';

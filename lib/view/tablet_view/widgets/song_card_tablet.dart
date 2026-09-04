@@ -1,7 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
-import 'package:default_project/blocs/export_blocs.dart';
-import 'package:default_project/services/enums.dart';
-import 'package:default_project/view/mobile_view/widgets/dialogs/question_dialog.dart';
+import 'package:song_viewer/blocs/export_blocs.dart';
+import 'package:song_viewer/services/enums.dart';
+import 'package:song_viewer/view/mobile_view/widgets/dialogs/question_dialog.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 

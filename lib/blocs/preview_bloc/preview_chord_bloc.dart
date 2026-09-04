@@ -1,6 +1,6 @@
-import 'package:default_project/config/features.dart';
-import 'package:default_project/model/web_song.dart';
-import 'package:default_project/model/youtube_video.dart';
+import 'package:song_viewer/config/features.dart';
+import 'package:song_viewer/model/web_song.dart';
+import 'package:song_viewer/model/youtube_video.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

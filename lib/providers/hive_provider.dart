@@ -1,10 +1,10 @@
 import 'dart:io';
 
-import 'package:default_project/model/update_playlist_data.dart';
-import 'package:default_project/model/update_songlist_data.dart';
-import 'package:default_project/model/user.dart';
-import 'package:default_project/model/web_interpret.dart';
-import 'package:default_project/model/web_song.dart';
+import 'package:song_viewer/model/update_playlist_data.dart';
+import 'package:song_viewer/model/update_songlist_data.dart';
+import 'package:song_viewer/model/user.dart';
+import 'package:song_viewer/model/web_interpret.dart';
+import 'package:song_viewer/model/web_song.dart';
 import 'package:hive/hive.dart';
 import 'package:logger_pkg/logger_pkg.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;

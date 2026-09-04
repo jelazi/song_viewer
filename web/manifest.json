@@ -1,6 +1,6 @@
 {
-    "name": "default_project",
-    "short_name": "default_project",
+    "name": "Song Viewer",
+    "short_name": "Song Viewer",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

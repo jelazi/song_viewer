@@ -1,5 +1,5 @@
-name: default_project
-description: A new Flutter project.
+name: song_viewer
+description: Songbook for musicians — write songs with chords, present lyrics, and sync across devices via PocketBase.
 publish_to: none
 version: 1.2.3+43
 

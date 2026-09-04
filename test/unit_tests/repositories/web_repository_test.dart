@@ -1,8 +1,8 @@
-import 'package:default_project/model/web_interpret.dart';
-import 'package:default_project/model/web_song.dart';
-import 'package:default_project/providers/web_provider.dart';
-import 'package:default_project/repositories/web_repository.dart';
-import 'package:default_project/services/enums.dart';
+import 'package:song_viewer/model/web_interpret.dart';
+import 'package:song_viewer/model/web_song.dart';
+import 'package:song_viewer/providers/web_provider.dart';
+import 'package:song_viewer/repositories/web_repository.dart';
+import 'package:song_viewer/services/enums.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';

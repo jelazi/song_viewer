@@ -1,4 +1,4 @@
-import 'package:default_project/core/youtube_helper.dart';
+import 'package:song_viewer/core/youtube_helper.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';

@@ -1,7 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 
-import 'package:default_project/repositories/settings_repository.dart';
-import 'package:default_project/repositories/songs_repository.dart';
+import 'package:song_viewer/repositories/settings_repository.dart';
+import 'package:song_viewer/repositories/songs_repository.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

@@ -1,10 +1,10 @@
-import 'package:default_project/config/features.dart';
-import 'package:default_project/repositories/settings_repository.dart';
-import 'package:default_project/view/mobile_view/pages/home_page.dart';
-import 'package:default_project/view/mobile_view/pages/login_page.dart';
-import 'package:default_project/view/responsive_view/pages/page_responsive.dart';
-import 'package:default_project/view/tablet_view/pages/home_page_tablet.dart';
-import 'package:default_project/view/tablet_view/pages/login_page_tablet.dart';
+import 'package:song_viewer/config/features.dart';
+import 'package:song_viewer/repositories/settings_repository.dart';
+import 'package:song_viewer/view/mobile_view/pages/home_page.dart';
+import 'package:song_viewer/view/mobile_view/pages/login_page.dart';
+import 'package:song_viewer/view/responsive_view/pages/page_responsive.dart';
+import 'package:song_viewer/view/tablet_view/pages/home_page_tablet.dart';
+import 'package:song_viewer/view/tablet_view/pages/login_page_tablet.dart';
 import 'package:flutter/material.dart';
 
 import '../../../blocs/export_blocs.dart';

@@ -1,4 +1,4 @@
-import 'package:default_project/model/web_item.dart';
+import 'package:song_viewer/model/web_item.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

@@ -1,7 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:collection/collection.dart';
-import 'package:default_project/model/youtube_video.dart';
-import 'package:default_project/services/enums.dart';
+import 'package:song_viewer/model/youtube_video.dart';
+import 'package:song_viewer/services/enums.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:uuid/uuid.dart';
 

@@ -1,8 +1,8 @@
-import 'package:default_project/config/features.dart';
-import 'package:default_project/model/web_interpret.dart';
-import 'package:default_project/repositories/settings_repository.dart';
-import 'package:default_project/view/mobile_view/widgets/dialogs/edit_dialog.dart';
-import 'package:default_project/view/widgets/chordpro_import_view.dart';
+import 'package:song_viewer/config/features.dart';
+import 'package:song_viewer/model/web_interpret.dart';
+import 'package:song_viewer/repositories/settings_repository.dart';
+import 'package:song_viewer/view/mobile_view/widgets/dialogs/edit_dialog.dart';
+import 'package:song_viewer/view/widgets/chordpro_import_view.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';

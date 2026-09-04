@@ -1,9 +1,9 @@
-import 'package:default_project/view/desktop_view/pages/desktop_home_page/home_bodies/edit_parts_body/edit_chords_body.dart';
-import 'package:default_project/view/desktop_view/pages/desktop_home_page/home_bodies/edit_parts_body/edit_lyrics_body.dart';
-import 'package:default_project/view/desktop_view/pages/desktop_home_page/home_bodies/edit_parts_body/edit_lyrics_preview_column.dart';
-import 'package:default_project/view/desktop_view/pages/desktop_home_page/home_bodies/edit_parts_body/edit_settings_body.dart';
-import 'package:default_project/view/desktop_view/pages/desktop_home_page/home_bodies/edit_parts_body/edit_sheets_body.dart';
-import 'package:default_project/view/desktop_view/pages/desktop_home_page/home_bodies/edit_parts_body/edit_youtube_body.dart';
+import 'package:song_viewer/view/desktop_view/pages/desktop_home_page/home_bodies/edit_parts_body/edit_chords_body.dart';
+import 'package:song_viewer/view/desktop_view/pages/desktop_home_page/home_bodies/edit_parts_body/edit_lyrics_body.dart';
+import 'package:song_viewer/view/desktop_view/pages/desktop_home_page/home_bodies/edit_parts_body/edit_lyrics_preview_column.dart';
+import 'package:song_viewer/view/desktop_view/pages/desktop_home_page/home_bodies/edit_parts_body/edit_settings_body.dart';
+import 'package:song_viewer/view/desktop_view/pages/desktop_home_page/home_bodies/edit_parts_body/edit_sheets_body.dart';
+import 'package:song_viewer/view/desktop_view/pages/desktop_home_page/home_bodies/edit_parts_body/edit_youtube_body.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../../blocs/export_blocs.dart';

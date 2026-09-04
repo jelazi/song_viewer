@@ -1,5 +1,5 @@
-import 'package:default_project/blocs/export_blocs.dart';
-import 'package:default_project/view/mobile_view/widgets/chords_lyric/flutter_chord.dart';
+import 'package:song_viewer/blocs/export_blocs.dart';
+import 'package:song_viewer/view/mobile_view/widgets/chords_lyric/flutter_chord.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:split_view/split_view.dart';

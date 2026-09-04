@@ -1,5 +1,5 @@
-import 'package:default_project/blocs/export_blocs.dart';
-import 'package:default_project/services/constants.dart';
+import 'package:song_viewer/blocs/export_blocs.dart';
+import 'package:song_viewer/services/constants.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';

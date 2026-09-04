@@ -3,7 +3,7 @@ import 'dart:async';
 
 import 'package:beautiful_soup_dart/beautiful_soup.dart';
 import 'package:collection/collection.dart';
-import 'package:default_project/services/auxiliary_functions.dart';
+import 'package:song_viewer/services/auxiliary_functions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:html/dom.dart';
 import 'package:html/parser.dart';

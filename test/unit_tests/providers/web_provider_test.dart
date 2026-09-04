@@ -1,4 +1,4 @@
-import 'package:default_project/providers/web_provider.dart';
+import 'package:song_viewer/providers/web_provider.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';

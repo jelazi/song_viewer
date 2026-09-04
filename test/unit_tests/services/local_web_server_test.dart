@@ -2,12 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:default_project/model/playlist.dart';
-import 'package:default_project/model/song/song.dart';
-import 'package:default_project/repositories/playlist_repository.dart';
-import 'package:default_project/repositories/songs_repository.dart';
-import 'package:default_project/services/chord_service.dart';
-import 'package:default_project/services/local_web/local_web_server.dart';
+import 'package:song_viewer/model/playlist.dart';
+import 'package:song_viewer/model/song/song.dart';
+import 'package:song_viewer/repositories/playlist_repository.dart';
+import 'package:song_viewer/repositories/songs_repository.dart';
+import 'package:song_viewer/services/chord_service.dart';
+import 'package:song_viewer/services/local_web/local_web_server.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:logger_pkg/logger_pkg.dart';
 import 'package:mockito/annotations.dart';

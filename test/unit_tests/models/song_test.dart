@@ -1,8 +1,8 @@
-import 'package:default_project/model/note.dart';
-import 'package:default_project/model/song/song.dart';
-import 'package:default_project/model/song/song_item.dart';
-import 'package:default_project/model/youtube_video.dart';
-import 'package:default_project/services/enums.dart';
+import 'package:song_viewer/model/note.dart';
+import 'package:song_viewer/model/song/song.dart';
+import 'package:song_viewer/model/song/song_item.dart';
+import 'package:song_viewer/model/youtube_video.dart';
+import 'package:song_viewer/services/enums.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

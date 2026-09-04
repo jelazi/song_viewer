@@ -1,8 +1,8 @@
 import 'package:collection/collection.dart';
-import 'package:default_project/blocs/export_blocs.dart';
-import 'package:default_project/repositories/playlist_repository.dart';
-import 'package:default_project/repositories/songs_repository.dart';
-import 'package:default_project/view/desktop_view/widgets/my_toast.dart';
+import 'package:song_viewer/blocs/export_blocs.dart';
+import 'package:song_viewer/repositories/playlist_repository.dart';
+import 'package:song_viewer/repositories/songs_repository.dart';
+import 'package:song_viewer/view/desktop_view/widgets/my_toast.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' hide TextDirection;

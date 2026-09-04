@@ -3,11 +3,11 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:default_project/core/youtube_helper.dart';
-import 'package:default_project/services/constants.dart';
-import 'package:default_project/services/enums.dart';
-import 'package:default_project/view/mobile_view/widgets/dialogs/dialogs_export.dart';
-import 'package:default_project/view/mobile_view/widgets/dialogs/question_dialog.dart';
+import 'package:song_viewer/core/youtube_helper.dart';
+import 'package:song_viewer/services/constants.dart';
+import 'package:song_viewer/services/enums.dart';
+import 'package:song_viewer/view/mobile_view/widgets/dialogs/dialogs_export.dart';
+import 'package:song_viewer/view/mobile_view/widgets/dialogs/question_dialog.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';

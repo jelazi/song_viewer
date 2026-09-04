@@ -1,5 +1,5 @@
-import 'package:default_project/services/chordpro_service.dart';
-import 'package:default_project/services/enums.dart';
+import 'package:song_viewer/services/chordpro_service.dart';
+import 'package:song_viewer/services/enums.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

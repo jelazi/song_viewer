@@ -1,4 +1,4 @@
-import 'package:default_project/model/youtube_video.dart';
+import 'package:song_viewer/model/youtube_video.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

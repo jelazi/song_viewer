@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:default_project/model/user.dart';
-import 'package:default_project/providers/hive_provider.dart';
-import 'package:default_project/providers/pocketbase_provider.dart';
-import 'package:default_project/repositories/settings_repository.dart';
-import 'package:default_project/repositories/user_repository.dart';
+import 'package:song_viewer/model/user.dart';
+import 'package:song_viewer/providers/hive_provider.dart';
+import 'package:song_viewer/providers/pocketbase_provider.dart';
+import 'package:song_viewer/repositories/settings_repository.dart';
+import 'package:song_viewer/repositories/user_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:logger_pkg/logger_pkg.dart';
 import 'package:mockito/annotations.dart';

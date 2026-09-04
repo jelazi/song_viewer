@@ -1,5 +1,5 @@
-import 'package:default_project/model/playlist.dart';
-import 'package:default_project/model/song/song.dart';
+import 'package:song_viewer/model/playlist.dart';
+import 'package:song_viewer/model/song/song.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:logger_pkg/logger_pkg.dart';
 

@@ -1,6 +1,6 @@
-import 'package:default_project/services/constants.dart';
-import 'package:default_project/view/mobile_view/widgets/dialogs/dialogs_export.dart';
-import 'package:default_project/view/mobile_view/widgets/dialogs/question_dialog.dart';
+import 'package:song_viewer/services/constants.dart';
+import 'package:song_viewer/view/mobile_view/widgets/dialogs/dialogs_export.dart';
+import 'package:song_viewer/view/mobile_view/widgets/dialogs/question_dialog.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 

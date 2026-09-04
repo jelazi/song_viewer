@@ -1,10 +1,10 @@
-import 'package:default_project/blocs/export_blocs.dart';
-import 'package:default_project/config/features.dart';
-import 'package:default_project/services/constants.dart';
-import 'package:default_project/services/enums.dart';
-import 'package:default_project/view/desktop_view/widgets/my_dropdown_field.dart';
-import 'package:default_project/view/mobile_view/widgets/dialogs/dialogs_export.dart';
-import 'package:default_project/view/mobile_view/widgets/dialogs/qr_code_dialog.dart';
+import 'package:song_viewer/blocs/export_blocs.dart';
+import 'package:song_viewer/config/features.dart';
+import 'package:song_viewer/services/constants.dart';
+import 'package:song_viewer/services/enums.dart';
+import 'package:song_viewer/view/desktop_view/widgets/my_dropdown_field.dart';
+import 'package:song_viewer/view/mobile_view/widgets/dialogs/dialogs_export.dart';
+import 'package:song_viewer/view/mobile_view/widgets/dialogs/qr_code_dialog.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 

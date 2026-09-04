@@ -1,6 +1,6 @@
-import 'package:default_project/blocs/export_blocs.dart';
-import 'package:default_project/config/features.dart';
-import 'package:default_project/model/user.dart';
+import 'package:song_viewer/blocs/export_blocs.dart';
+import 'package:song_viewer/config/features.dart';
+import 'package:song_viewer/model/user.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Tests for [UsersState.canManageLibrary].

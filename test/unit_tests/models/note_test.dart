@@ -1,4 +1,4 @@
-import 'package:default_project/model/note.dart';
+import 'package:song_viewer/model/note.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

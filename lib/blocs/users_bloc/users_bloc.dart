@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:default_project/config/features.dart';
-import 'package:default_project/repositories/user_repository.dart';
-import 'package:default_project/view/desktop_view/widgets/my_toast.dart';
+import 'package:song_viewer/config/features.dart';
+import 'package:song_viewer/repositories/user_repository.dart';
+import 'package:song_viewer/view/desktop_view/widgets/my_toast.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:equatable/equatable.dart';
 

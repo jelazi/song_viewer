@@ -1,8 +1,8 @@
-import 'package:default_project/blocs/export_blocs.dart';
-import 'package:default_project/model/web_song.dart';
-import 'package:default_project/providers/hive_provider.dart';
-import 'package:default_project/repositories/settings_repository.dart';
-import 'package:default_project/repositories/web_repository.dart';
+import 'package:song_viewer/blocs/export_blocs.dart';
+import 'package:song_viewer/model/web_song.dart';
+import 'package:song_viewer/providers/hive_provider.dart';
+import 'package:song_viewer/repositories/settings_repository.dart';
+import 'package:song_viewer/repositories/web_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';

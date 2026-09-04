@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:default_project/services/constants.dart';
+import 'package:song_viewer/services/constants.dart';
 import 'package:flutter/material.dart';
 
 class FilterFieldTablet extends StatefulWidget {

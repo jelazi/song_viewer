@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:default_project/services/enums.dart';
+import 'package:song_viewer/services/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:logger_pkg/logger_pkg.dart';
 

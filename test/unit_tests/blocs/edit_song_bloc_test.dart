@@ -1,7 +1,7 @@
-import 'package:default_project/blocs/export_blocs.dart';
-import 'package:default_project/model/song/song.dart';
-import 'package:default_project/repositories/settings_repository.dart';
-import 'package:default_project/repositories/songs_repository.dart';
+import 'package:song_viewer/blocs/export_blocs.dart';
+import 'package:song_viewer/model/song/song.dart';
+import 'package:song_viewer/repositories/settings_repository.dart';
+import 'package:song_viewer/repositories/songs_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';

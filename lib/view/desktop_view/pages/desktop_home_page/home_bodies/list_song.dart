@@ -1,5 +1,5 @@
-import 'package:default_project/model/song/song.dart';
-import 'package:default_project/services/presentation_window_manager.dart';
+import 'package:song_viewer/model/song/song.dart';
+import 'package:song_viewer/services/presentation_window_manager.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
