@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:logger_pkg/logger_pkg.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:pocketbase/pocketbase.dart';
 
 import '../model/chord/chord_diagram.dart';
@@ -142,6 +143,10 @@ class PocketBaseProvider {
   }
 
   Future<String> _getConfigDir() async {
+    // On iOS `HOME` is the sandbox root, which the app cannot write to.
+    if (Platform.isIOS) {
+      return (await getApplicationSupportDirectory()).path;
+    }
     // Use platform-specific documents directory
     final dir = Directory.systemTemp.parent; // fallback
     try {

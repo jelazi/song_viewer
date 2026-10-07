@@ -1,5 +1,106 @@
 # Development Log
 
+## 2026-10-06 (part 2) — fix: PocketBase config location on iOS, tablet install
+
+### What was done
+
+- `lib/providers/pocketbase_provider.dart` — `_getConfigDir()` returns
+  `getApplicationSupportDirectory()` on iOS; other platforms keep `$HOME/.songviewer` with the
+  existing fallback.
+- iPhone: rebuilt, reinstalled over the fresh install, and copied the Mac's
+  `~/.songviewer/pocketbase_config.json` into the app container at
+  `Library/Application Support/pocketbase_config.json` with `devicectl device copy to`.
+- Samsung SM-X200 (Android 14): built `app-personal-release.apk` (1.2.3+43) with
+  `./build.sh android-apk personal release`. The installed 1.2.1+41 was signed with this Mac's
+  Android debug key, so the release-signed APK was rejected
+  (`INSTALL_FAILED_UPDATE_INCOMPATIBLE`); a copy re-signed with `~/.android/debug.keystore` via
+  `apksigner` installed as an in-place update, keeping the app data.
+- The tablet showed "0 písní" for the same missing-config reason. A release build is not
+  debuggable, so `app-personal-debug.apk` was installed over it and the config was written to
+  the app data root (`/data/user/0/<package>/pocketbase_config.json`, the `systemTemp.parent`
+  fallback, since `HOME=/` on Android) through `adb shell run-as`.
+
+### What was fixed
+
+- **The iPhone loaded no songs after the reinstall.** On iOS `HOME` is the sandbox root, which
+  is read-only for the app, so `.songviewer` could never be created: the config could be neither
+  read nor saved from the settings screen. Older builds hid this because the config was bundled
+  as an asset; the installs on both devices predated its removal.
+
+### Current state
+
+- `flutter analyze lib/providers/pocketbase_provider.dart`: no issues. The full analyzer and the
+  test suite were not run.
+- iPhone: after the relaunch `Documents/songscachebox.hive` grew from 0 to 301 KB, i.e. songs
+  were fetched from the server. The UI was not inspected.
+- Tablet: **not finished.** The adb connection dropped right after the config file was written
+  (`ls` confirmed the 124-byte file). The debug build is what is currently installed; whether it
+  loads songs was not verified.
+
+### Pending / next steps
+
+- Tablet: reconnect, confirm the song list loads, then reinstall the debug-key-signed release
+  APK over the debug build (`adb install -r`).
+- The tablet stays on the debug signing key; moving it to the release key needs an uninstall,
+  which wipes its local data.
+- Android only reaches a writable config directory through the `systemTemp.parent` fallback;
+  it should use `path_provider` explicitly like iOS, with a migration of the existing file.
+- Changes are uncommitted.
+
+## 2026-10-06 — fix: iOS device build on Xcode 27, reinstall on the iPhone
+
+### What was done
+
+- The development build on "Lubomír Žižka's iPhone" (iPhone 14 Pro, iOS 27.0) had expired. Both
+  installs found on the device were removed with `xcrun devicectl device uninstall app` —
+  `com.lzizka.songviewer` (Songs Viewer 1.2.3+43) and the legacy `com.lzizka.songsviewer.ios`
+  (Songs Viewer Bloc 1.1.7+21) — and a fresh 1.2.3+43 personal build was installed with
+  `xcrun devicectl device install app`.
+- Both app data containers were copied off the device with `devicectl device copy from` before
+  the uninstall (62 MB and 1.7 MB, Hive boxes included). The copy lives in the session scratchpad
+  only and was not restored into the new install.
+- `ios/Podfile` — `post_install` now forces `IPHONEOS_DEPLOYMENT_TARGET = 15.0` on every pod
+  target.
+- `pubspec.lock` (not tracked) — `logger_pkg` relocked from `02703e8` to `e46cb48` with
+  `flutter pub upgrade logger_pkg`.
+- `ios/Runner.xcodeproj/project.pbxproj`, `Runner.xcscheme` and the new
+  `xcshareddata/swiftpm/` directories were changed by Flutter itself: it added its Swift Package
+  Manager integration (`FlutterGeneratedPluginSwiftPackage`) during the build.
+
+### What was fixed
+
+- **Xcode 27 refused the Pods project**: "The iOS deployment target is set to 13.0, but the range
+  of supported deployment target versions is 15.0 to 27.0.x". The `Flutter` podspec declares 13.0
+  and `flutter_additional_ios_build_settings` does not raise it, so the `platform :ios, '15.0'`
+  line alone was not enough.
+- **`flutter pub get` could not resolve `logger_pkg`**: the history of
+  `github.com/jelazi/logger_pkg` was rewritten for its public release, so the locked commit no
+  longer exists on the remote ("Could not find a file named pubspec.yaml"). With the pub cache
+  incomplete this surfaced as hundreds of unrelated Dart errors (`Dio`, `Hive`, `logger`
+  undefined).
+
+### Current state
+
+- `flutter build ios --release -t lib/main_personal.dart --dart-define-from-file=config/personal.json`
+  → `✓ Built build/ios/iphoneos/Runner.app (29.4MB)`.
+- Signed by `Apple Development: Lubomír Žižka (R79Y34SX3Q)`, team `BZF32VC6NQ`, profile
+  `iOS Team Provisioning Profile: com.lzizka.songviewer`, valid until 2027-10-06, device UDID
+  present in the profile.
+- `devicectl device info apps` lists only `Songs Viewer 1.2.3 (43)`; launching it with
+  `devicectl device process launch` succeeded and the `Runner` process was running afterwards.
+  The UI itself was not inspected.
+- `flutter analyze` and the test suite were not run in this session.
+
+### Pending / next steps
+
+- The new install starts with empty local data; settings (server address etc.) have to be
+  entered again or restored from the container backup.
+- `./build.sh ios personal release` runs `flutter build ipa`, which is the App Store archive
+  path; a device install needs `flutter build ios --release` as above.
+- Flutter reports that the project still carries CocoaPods integration although every iOS
+  plugin is now a Swift Package; `pod deintegrate` and the Podfile cleanup are still open.
+- Changes are uncommitted.
+
 ## 2026-09-04 (part 4) — chore: go public
 
 ### What was done

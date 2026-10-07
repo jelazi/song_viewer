@@ -40,6 +40,10 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
+    # The Flutter podspec still declares iOS 13.0, which Xcode 27 rejects (minimum 15.0).
+    target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+    end
   end
 
   # Add a build phase to strip simulator architectures from
