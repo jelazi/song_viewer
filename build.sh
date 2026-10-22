@@ -226,6 +226,12 @@ build_one() {
     config="$(config_for "$flavor" "$platform")"
     obfuscate="$(obfuscation_args_for "$flavor" "$mode")"
 
+    # Untracked server settings that seed a fresh install (personal only).
+    local server_config=""
+    if [ "$flavor" = "personal" ] && [ -f config/server.local.json ]; then
+        server_config="--dart-define-from-file=config/server.local.json"
+    fi
+
     flavor_arg=""
     if supports_flavor "$platform" "$flavor"; then
         flavor_arg="--flavor $flavor"
@@ -258,32 +264,48 @@ build_one() {
         echo "      overwrite each other."
     fi
 
+    # Gradle was seen packaging a libapp.so from an older build although Flutter
+    # had just recompiled it (merge task stayed "up to date"), so drop its output.
+    case "$platform" in
+        android-aab|android-apk)
+            local variant
+            case "$platform:$mode" in
+                android-aab:*|*:release) variant="${flavor}Release" ;;
+                *:profile) variant="${flavor}Profile" ;;
+                *) variant="${flavor}Debug" ;;
+            esac
+            rm -rf build/app/intermediates/merged_jni_libs/"$variant" \
+                   build/app/intermediates/merged_native_libs/"$variant" \
+                   build/app/intermediates/stripped_native_libs/"$variant"
+            ;;
+    esac
+
     # shellcheck disable=SC2086
     case "$platform" in
         macos)
-            flutter build macos --"$mode" $flavor_arg -t "$entry" --dart-define-from-file="$config" $obfuscate
+            flutter build macos --"$mode" $flavor_arg -t "$entry" --dart-define-from-file="$config" $server_config $obfuscate
             ;;
         ios)
             if [ "$mode" = "release" ]; then
-                flutter build ipa $flavor_arg -t "$entry" --dart-define-from-file="$config" $obfuscate
+                flutter build ipa $flavor_arg -t "$entry" --dart-define-from-file="$config" $server_config $obfuscate
             else
-                flutter build ios --debug $flavor_arg -t "$entry" --dart-define-from-file="$config"
+                flutter build ios --debug $flavor_arg -t "$entry" --dart-define-from-file="$config" $server_config
             fi
             ;;
         android-aab)
-            flutter build appbundle --release $flavor_arg -t "$entry" --dart-define-from-file="$config" $obfuscate
+            flutter build appbundle --release $flavor_arg -t "$entry" --dart-define-from-file="$config" $server_config $obfuscate
             ;;
         android-apk)
-            flutter build apk --"$mode" $flavor_arg -t "$entry" --dart-define-from-file="$config" $obfuscate
+            flutter build apk --"$mode" $flavor_arg -t "$entry" --dart-define-from-file="$config" $server_config $obfuscate
             ;;
         windows)
-            flutter build windows --"$mode" -t "$entry" --dart-define-from-file="$config" $obfuscate
+            flutter build windows --"$mode" -t "$entry" --dart-define-from-file="$config" $server_config $obfuscate
             ;;
         linux)
-            flutter build linux --"$mode" -t "$entry" --dart-define-from-file="$config" $obfuscate
+            flutter build linux --"$mode" -t "$entry" --dart-define-from-file="$config" $server_config $obfuscate
             ;;
         web)
-            flutter build web -t "$entry" --dart-define-from-file="$config"
+            flutter build web -t "$entry" --dart-define-from-file="$config" $server_config
             ;;
     esac
 

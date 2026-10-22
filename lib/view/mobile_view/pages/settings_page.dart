@@ -12,6 +12,7 @@ import '../../../model/qr_link.dart';
 import '../widgets/dialogs/edit_dialog.dart';
 import '../widgets/settings_ui/settings_section.dart';
 import '../widgets/settings_ui/settings_tile.dart';
+import '../../widgets/server_config_file.dart';
 
 class SettingsPageMobile extends StatefulWidget {
   const SettingsPageMobile({super.key});
@@ -486,6 +487,15 @@ class _SettingsPageMobileState extends State<SettingsPageMobile> {
                         prefixIcon: const Icon(Icons.lock),
                       ),
                       obscureText: true,
+                    ),
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        icon: const Icon(Icons.file_open),
+                        label: Text('pbImportFromFile'.tr()),
+                        onPressed: () => importServerConfigInto(ctx, url: urlController, email: emailController, password: passwordController),
+                      ),
                     ),
                   ],
                 ),

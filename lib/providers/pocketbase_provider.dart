@@ -59,11 +59,27 @@ class PocketBaseConfig {
         password: json['password'] as String? ?? '',
       );
 
+  /// Parses a settings file exported by the desktop app; throws
+  /// [FormatException] when it is not a complete server config.
+  factory PocketBaseConfig.fromFileContent(String content) {
+    final json = jsonDecode(content);
+    if (json is! Map<String, dynamic>) throw const FormatException('Not a server config');
+    final config = PocketBaseConfig(
+      pocketbaseUrl: '${json['pocketbaseUrl'] ?? ''}'.trim(),
+      email: '${json['email'] ?? ''}'.trim(),
+      password: '${json['password'] ?? ''}',
+    );
+    if (!config.isValid) throw const FormatException('Incomplete server config');
+    return config;
+  }
+
   Map<String, dynamic> toJson() => {
         'pocketbaseUrl': pocketbaseUrl,
         'email': email,
         'password': password,
       };
+
+  String toFileContent() => const JsonEncoder.withIndent('    ').convert(toJson());
 
   bool get isValid => pocketbaseUrl.isNotEmpty && email.isNotEmpty && password.isNotEmpty;
 }
@@ -106,13 +122,21 @@ class PocketBaseProvider {
 
   PocketBaseProvider();
 
+  /// Optional build-time server settings from the untracked
+  /// `config/server.local.json`, passed with `--dart-define-from-file`.
+  static const _seedUrl = String.fromEnvironment('POCKETBASE_URL');
+  static const _seedEmail = String.fromEnvironment('POCKETBASE_EMAIL');
+  static const _seedPassword = String.fromEnvironment('POCKETBASE_PASSWORD');
+
   /// Loads config from pocketbase_config.json in the user config directory
   /// (`~/.songviewer`).
   ///
   /// The config holds the server credentials in plain text, so it is never
-  /// bundled with the app: there is no asset fallback on purpose. When no
-  /// config exists the app starts unconnected and the credentials have to be
-  /// entered in the settings, which writes them to the same file.
+  /// bundled as an asset. When no config exists, a build made with
+  /// `config/server.local.json` seeds it from the dart-defines, so a reinstall
+  /// does not need the settings entered again. Otherwise the app starts
+  /// unconnected and the credentials have to be entered in the settings,
+  /// which writes them to the same file.
   Future<PocketBaseConfig?> loadConfig() async {
     try {
       final dir = await _getConfigDir();
@@ -120,6 +144,12 @@ class PocketBaseProvider {
       if (await file.exists()) {
         final content = await file.readAsString();
         _config = PocketBaseConfig.fromJson(jsonDecode(content));
+        return _config;
+      }
+      final seed = PocketBaseConfig(pocketbaseUrl: _seedUrl, email: _seedEmail, password: _seedPassword);
+      if (seed.isValid) {
+        await saveConfig(seed);
+        logger.i('No pocketbase_config.json in $dir — created it from the build-time server settings');
         return _config;
       }
       logger.w('No pocketbase_config.json in $dir — configure the server in the app settings');

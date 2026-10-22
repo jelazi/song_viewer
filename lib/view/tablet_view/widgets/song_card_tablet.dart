@@ -93,6 +93,14 @@ class _SongCardTabletState extends State<SongCardTablet> with TickerProviderStat
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        if (widget.song.youtubeVideos?.isNotEmpty ?? false)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Tooltip(
+                              message: 'youtube'.tr(),
+                              child: const Icon(Icons.ondemand_video_outlined, size: 20, color: AppColor.primaryColor),
+                            ),
+                          ),
                         Visibility(
                           visible: widget.song.indexSongBook != null,
                           child: Padding(

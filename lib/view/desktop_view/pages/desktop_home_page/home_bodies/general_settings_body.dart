@@ -8,6 +8,7 @@ import '../../../../../model/qr_link.dart';
 import '../../../../../providers/pocketbase_provider.dart';
 import '../../../../../services/constants.dart';
 import '../../../../../services/local_web/local_web_server.dart';
+import '../../../../widgets/server_config_file.dart';
 import 'bracket_error_scanner.dart';
 import 'local_web_settings.dart';
 
@@ -497,6 +498,12 @@ class _GeneralSettingsBodyState extends State<GeneralSettingsBody> {
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 ),
               ),
+              const SizedBox(width: 12),
+              OutlinedButton.icon(
+                onPressed: () => _exportPbSettings(context),
+                icon: const Icon(Icons.upload_file, size: 16),
+                label: Text('pbExportToFile'.tr(), style: const TextStyle(fontSize: 13)),
+              ),
             ],
           ),
           if (_pbConnectionResult != null) ...[
@@ -530,6 +537,22 @@ class _GeneralSettingsBodyState extends State<GeneralSettingsBody> {
       _pbTestingConnection = false;
       _pbConnectionResult = success ? 'pbConnectionSuccess'.tr() : 'pbConnectionFailed'.tr();
     });
+  }
+
+  Future<void> _exportPbSettings(BuildContext context) async {
+    final config = PocketBaseConfig(
+      pocketbaseUrl: _pbUrlController.text.trim(),
+      email: _pbEmailController.text.trim(),
+      password: _pbPasswordController.text,
+    );
+    if (!config.isValid) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('pbExportIncomplete'.tr()), duration: const Duration(seconds: 2)));
+      return;
+    }
+    final exported = await exportServerConfigFile(config);
+    if (exported && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('pbExportDone'.tr()), duration: const Duration(seconds: 2)));
+    }
   }
 
   Future<void> _savePbSettings(BuildContext context) async {

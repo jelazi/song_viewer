@@ -125,3 +125,5 @@ tools/firebase_backup/
 
 # Firebase service account private key — never commit
 **/firebase_service_account.json
+# Server credentials compiled into personal builds — see config/server.local.example.json
+config/server.local.json

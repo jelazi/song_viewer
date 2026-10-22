@@ -13,6 +13,7 @@ import '../../../services/enums.dart';
 import '../../desktop_view/widgets/chord_editor_dialog.dart';
 import '../../mobile_view/widgets/chords_lyric/flutter_chord.dart';
 import '../../mobile_view/widgets/chords_lyric/guitar_tabs.dart';
+import '../widgets/floating_video_player.dart';
 
 class PreviewPageTablet extends StatefulWidget {
   const PreviewPageTablet({super.key});
@@ -24,6 +25,7 @@ class PreviewPageTablet extends StatefulWidget {
 class _PreviewPageTabletState extends State<PreviewPageTablet> {
   ScrollController scrollController = ScrollController();
   OverlayEntry? overlayChord;
+  bool _showVideo = false;
 
   @override
   void initState() {
@@ -242,6 +244,18 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
           ),
           BlocBuilder<PreviewChordBloc, PreviewChordState>(
             builder: (context, state) {
+              return Visibility(
+                visible: state.data.song?.youtubeVideos?.isNotEmpty ?? false,
+                child: IconButton(
+                  tooltip: 'youtube'.tr(),
+                  onPressed: () => setState(() => _showVideo = !_showVideo),
+                  icon: Icon(_showVideo ? Icons.videocam_off : Icons.smart_display, color: AppColor.primaryDarkColor),
+                ),
+              );
+            },
+          ),
+          BlocBuilder<PreviewChordBloc, PreviewChordState>(
+            builder: (context, state) {
               return IconButton(
                 onPressed: () {
                   context.read<PreviewChordBloc>().add(ChangeColumnStatus(status: !state.twoColumns));
@@ -367,6 +381,14 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
                     ),
                   ),
                 ),
+                if (_showVideo && (state.data.song?.youtubeVideos?.isNotEmpty ?? false))
+                  Positioned.fill(
+                    child: FloatingVideoPlayer(
+                      key: ValueKey(state.data.song?.id),
+                      videos: state.data.song!.youtubeVideos!,
+                      onClose: () => setState(() => _showVideo = false),
+                    ),
+                  ),
               ],
             ),
           );

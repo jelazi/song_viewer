@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
@@ -28,6 +29,7 @@ class _FloatingVideoPlayerState extends State<FloatingVideoPlayer> {
   int _currentIndex = 0;
   bool _isLarge = false;
   Offset? _position;
+  final ValueNotifier<Offset?> _dragPosition = ValueNotifier(null);
 
   @override
   void initState() {
@@ -40,6 +42,7 @@ class _FloatingVideoPlayerState extends State<FloatingVideoPlayer> {
     // Stops playback and frees the video decoder now instead of whenever the
     // native web view is garbage collected; matters on low-memory tablets.
     _controller.loadHtmlString('');
+    _dragPosition.dispose();
     super.dispose();
   }
 
@@ -110,9 +113,14 @@ class _FloatingVideoPlayerState extends State<FloatingVideoPlayer> {
                   children: [
                     GestureDetector(
                       behavior: HitTestBehavior.opaque,
+                      dragStartBehavior: DragStartBehavior.down,
+                      onPanStart: (_) => _dragPosition.value = position,
                       onPanUpdate: (details) {
-                        setState(() => _position = _clampPosition(position + details.delta, window, area));
+                        final current = _dragPosition.value ?? position;
+                        _dragPosition.value = _clampPosition(current + details.delta, window, area);
                       },
+                      onPanEnd: (_) => _finishDrag(),
+                      onPanCancel: _finishDrag,
                       child: _buildHeader(context),
                     ),
                     Expanded(child: WebViewWidget(controller: _controller)),
@@ -120,9 +128,43 @@ class _FloatingVideoPlayerState extends State<FloatingVideoPlayer> {
                 ),
               ),
             ),
+            // Moving the native web view lags far behind the finger on slow
+            // tablets, so only this Flutter-drawn outline follows the drag.
+            ValueListenableBuilder<Offset?>(
+              valueListenable: _dragPosition,
+              builder: (context, dragPosition, _) {
+                if (dragPosition == null) return const SizedBox.shrink();
+                return Positioned(
+                  left: dragPosition.dx,
+                  top: dragPosition.dy,
+                  width: window.width,
+                  height: window.height,
+                  child: IgnorePointer(child: _buildDragOutline(context)),
+                );
+              },
+            ),
           ],
         );
       },
+    );
+  }
+
+  void _finishDrag() {
+    final target = _dragPosition.value;
+    if (target == null) return;
+    _dragPosition.value = null;
+    setState(() => _position = target);
+  }
+
+  Widget _buildDragOutline(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: primary.withValues(alpha: 0.15),
+        border: Border.all(color: primary, width: 2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Center(child: Icon(Icons.open_with, size: 32, color: primary)),
     );
   }
 
@@ -157,12 +199,14 @@ class _FloatingVideoPlayerState extends State<FloatingVideoPlayer> {
           IconButton(
             visualDensity: VisualDensity.compact,
             iconSize: 20,
+            color: colorScheme.onSurface,
             icon: Icon(_isLarge ? Icons.close_fullscreen : Icons.open_in_full),
             onPressed: () => setState(() => _isLarge = !_isLarge),
           ),
           IconButton(
             visualDensity: VisualDensity.compact,
             iconSize: 20,
+            color: colorScheme.onSurface,
             icon: const Icon(Icons.close),
             onPressed: widget.onClose,
           ),

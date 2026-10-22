@@ -15,6 +15,7 @@ import '../../../model/qr_link.dart';
 import '../../mobile_view/widgets/dialogs/edit_dialog.dart';
 import '../../mobile_view/widgets/settings_ui/settings_section.dart';
 import '../../mobile_view/widgets/settings_ui/settings_tile.dart';
+import '../../widgets/server_config_file.dart';
 
 class SettingsPageTablet extends StatefulWidget {
   const SettingsPageTablet({super.key});
@@ -541,6 +542,15 @@ class _SettingsPageTabletState extends State<SettingsPageTablet> {
                         prefixIcon: const Icon(Icons.lock),
                       ),
                       obscureText: true,
+                    ),
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        icon: const Icon(Icons.file_open),
+                        label: Text('pbImportFromFile'.tr()),
+                        onPressed: () => importServerConfigInto(ctx, url: urlController, email: emailController, password: passwordController),
+                      ),
                     ),
                   ],
                 ),

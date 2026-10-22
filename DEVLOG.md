@@ -1,5 +1,154 @@
 # Development Log
 
+## 2026-10-22 (part 7) — chore: install the current build on the iPad Air 2
+
+### What was done
+
+- Built `flutter build ios --release -t lib/main_personal.dart
+  --dart-define-from-file=config/personal.json --dart-define-from-file=config/server.local.json`
+  → `build/ios/iphoneos/Runner.app` (29.4 MB, `com.lzizka.songviewer` 1.2.3 (43), signed
+  `Apple Development: Lubomír Žižka (R79Y34SX3Q)`, team `BZF32VC6NQ`).
+- Installed on "Lubomír - iPad" (iPad Air 2, iPadOS 15.8.8, USB) with
+  `ios-deploy --id <udid> --no-wifi --bundle build/ios/iphoneos/Runner.app` as an in-place update.
+- No source files were changed.
+
+### Current state
+
+- `App.framework/App` contains `_buildDragOutline`, `pbImportLoaded`, `iv_load_policy` and the
+  seeded server e-mail, i.e. everything from parts 1–6 plus the build-time server settings.
+- After the install the container still holds `Library/Application Support/pocketbase_config.json`
+  (from 2026-10-07, so the seed is not used) and the Hive boxes in `Documents/`.
+- **The app was not launched and the UI was not inspected** — remote launch is still impossible
+  (no iOS 15 developer disk image, see 2026-10-07).
+
+### Pending / next steps
+
+- On the iPad: check that the video plays **inside** the floating window (WKWebView
+  `allowsInlineMediaPlayback`, not fullscreen), dragging, the card video icon, and memory with a
+  sheet and a playing video at the same time.
+
+## 2026-10-22 (part 6) — fix: floating video window lagged behind the finger
+
+### What was done
+
+- `lib/view/tablet_view/widgets/floating_video_player.dart` — dragging the header no longer
+  moves the window itself. A `ValueNotifier<Offset?> _dragPosition` drives a
+  `ValueListenableBuilder` that draws a Flutter-only outline (`_buildDragOutline()`: translucent
+  primary fill, 2 px border, `Icons.open_with`) at the drag position; `_finishDrag()` (on pan end
+  and cancel) moves the real window there in one step. `DragStartBehavior.down`, so the drag
+  starts at the touch point instead of after the touch slop.
+- Header `IconButton`s (size toggle, close) get `colorScheme.onSurface`; they were barely
+  visible on the header background.
+
+### What was fixed
+
+- **The window trailed far behind a fast finger on the Samsung SM-X200.** Every pan update
+  repositioned the native web view, which on Android is slow with a playing video. The outline
+  needs only a Flutter repaint, and the web view moves once per drag.
+
+### Current state
+
+- `flutter analyze lib/view/tablet_view`: no issues.
+- Samsung, personal release APK via `build.sh` + `adb install -r`, song "Ať požehnán je Bůh":
+  `adb shell input swipe` over the header for 1.5 s; a screenshot at 0.9 s showed the outline
+  mid-way while the video stayed put, and after the swipe the window sat at the end point. The
+  user then dragged it by hand as well; no outline was left behind. Header icons are now dark.
+- The video jumping on release instead of moving live is the intended trade-off; not checked on
+  the iPad.
+
+## 2026-10-22 (part 5) — feat: video indicator on tablet song cards, floating player in song preview
+
+### What was done
+
+- `lib/view/tablet_view/widgets/song_card_tablet.dart` — songs with YouTube videos show an
+  `Icons.ondemand_video_outlined` icon (primary colour, tooltip `youtube`) right after the title,
+  the same icon the card's popup menu uses for "Youtube videa".
+- `lib/view/tablet_view/pages/preview_page_tablet.dart` — app bar button (`smart_display` /
+  `videocam_off`, only when the song has videos) toggles `FloatingVideoPlayer` over the lyrics, as
+  on the sheet page. Keyed by the song id, so a song change in the preview rebuilds the player
+  with that song's videos.
+
+### What was fixed
+
+- A song with videos but no sheet music had no way to the floating player: it was reachable only
+  from the sheet page, and the card menu hides "Noty" when there are no sheets.
+
+### Current state
+
+- `flutter analyze lib/view/tablet_view`: no issues.
+- Samsung SM-X200, personal release APK via `build.sh`, `adb install -r`: in the preview of
+  "Ať požehnán je Bůh" the new button opened the floating window, the embed loaded
+  (title, 3:53 duration, YouTube controls) and the header showed the video picker. The card icon
+  in the song list was not screenshotted.
+
+## 2026-10-22 (part 4) — feat: server settings survive reinstalls; fix stale Android release packaging
+
+### What was done
+
+- **Build-time seed.** `lib/providers/pocketbase_provider.dart` — `loadConfig()` falls back to
+  `POCKETBASE_URL` / `POCKETBASE_EMAIL` / `POCKETBASE_PASSWORD` (`String.fromEnvironment`) when
+  no `pocketbase_config.json` exists, and writes them to that file via `saveConfig()`. Only runs
+  under `Features.sharedServer`, so store builds are untouched.
+  - The values come from the new **untracked** `config/server.local.json` (added to `.gitignore`;
+    template `config/server.local.example.json`). It was generated on this Mac from
+    `~/.songviewer/pocketbase_config.json`.
+  - `build.sh` — `build_one()` adds `--dart-define-from-file=config/server.local.json` for the
+    personal flavour when the file exists.
+  - `.vscode/launch.json` (untracked) — every Personal configuration passes the same second
+    define file.
+- **Import / export.** `PocketBaseConfig.fromFileContent()` (throws `FormatException` on an
+  incomplete or non-object file) and `toFileContent()`. New `lib/view/widgets/server_config_file.dart`
+  with `pickServerConfigFile()`, `importServerConfigInto()` and `exportServerConfigFile()`.
+  - Desktop `general_settings_body.dart`: "Exportovat do souboru" button saves
+    `pocketbase_config.json`.
+  - Mobile `settings_page.dart` and tablet `settings_page_tablet.dart`: the server dialog gets an
+    "Importovat ze souboru" button that fills the three fields; the user then saves as before.
+  - Six new translation keys (`pbImportFromFile`, `pbImportLoaded`, `pbImportInvalid`,
+    `pbExportToFile`, `pbExportDone`, `pbExportIncomplete`) in `assets/lang/cs.json` and `en.json`.
+  - `test/unit_tests/models/pocketbase_config_test.dart` — round trip, trimming, rejection.
+- **Samsung SM-X200** (`R9YT2024LDD`): installed the new personal release APK with
+  `adb install -r` (in-place update, data kept).
+
+### What was fixed
+
+- **Why the tablet kept losing its server settings:** it had been freshly installed at 11:28
+  today (`firstInstallTime`). The previous install was signed with the debug key, a release run
+  uses the release key, and `flutter run` resolves the signature mismatch by uninstalling first,
+  which wipes the app data including `pocketbase_config.json`. Any debug↔release switch on a
+  device does this. With the seed, a wiped install now reconfigures itself.
+- **Android release APKs shipped the Dart code from 2026-10-06.** Flutter recompiled
+  `build/app/intermediates/flutter/personalRelease/jniLibs/*/libapp.so`, but Gradle's
+  `mergePersonalReleaseJniLibFolders` stayed "up to date" and `merged_jni_libs` /
+  `stripped_native_libs` still held the 2026-10-06 `libapp.so`, so the APK lacked the floating
+  player and every later change. This was found because the first seeded APK showed no server.
+  `build.sh` now deletes `merged_jni_libs`, `merged_native_libs` and `stripped_native_libs` for
+  the variant before every Android build. Root cause in Gradle/AGP not identified.
+
+### Current state
+
+- `flutter analyze`: no issues. `flutter test test/unit_tests`: 427 passed, 2 skipped.
+- A temporary test run with both `--dart-define-from-file` flags confirmed both files are
+  applied (`FEATURE_SHARED_SERVER` true, all three server defines non-empty).
+- APK check: the arm64 `libapp.so` in `app-personal-release.apk` contains `iv_load_policy`,
+  `pbImportLoaded` and the configured e-mail; after the `build.sh` fix a rebuild refreshed
+  `stripped_native_libs` (11:41:52).
+- Samsung after the install, without entering anything: home screen shows **204 písní**, i.e.
+  the seeded config connected and synced.
+- Not tested: the import button on a device, the desktop export dialog, the iPad.
+
+### Pending / next steps
+
+- **Seeded builds contain the server credentials in the binary.** Fine for own devices; do not
+  distribute a personal build made with `config/server.local.json` (e.g. TestFlight to others).
+  For those, use the desktop export + import instead.
+- The Samsung now runs the release-signed build; switching it back to a debug run will uninstall
+  it again (the seed recovers the server, but local-only data is lost). Signing debug builds with
+  the release key would stop that; not done.
+- `flutter run --release` from VS Code does not go through `build.sh`, so it can still package a
+  stale `libapp.so`; delete the three intermediates (or `flutter clean`) if a release run looks
+  old.
+- iPad Air 2: not rebuilt in this session; it still has the config copied on 2026-10-07.
+
 ## 2026-10-22 (part 3) — fix: Android launch configs ignored the selected device
 
 ### What was done

@@ -1,0 +1,6 @@
+{
+    "_comment": "Copy to config/server.local.json (gitignored). Personal builds then create the server settings on a fresh install. The values are compiled into the app: do not hand such a build to anyone else.",
+    "POCKETBASE_URL": "https://your-pocketbase-url.example",
+    "POCKETBASE_EMAIL": "your-user@example.com",
+    "POCKETBASE_PASSWORD": "your-password"
+}
