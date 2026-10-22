@@ -52,6 +52,9 @@ dependencies:
   # json_serializable (the generator) stays a dev dependency.
   json_annotation: ^4.8.0
   http: ^1.2.0
+  just_audio: ^0.10.6
+  audio_session: ^0.2.4
+  wakelock_plus: ^1.5.2
 
 dev_dependencies:
   flutter_test:

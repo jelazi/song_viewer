@@ -6,6 +6,7 @@ export './edit_blocs/edit_song_bloc/edit_song_bloc.dart';
 export './home_page_bloc/home_page_bloc.dart';
 export './local_web_bloc/local_web_bloc.dart';
 export './notification_bloc/notification_bloc.dart';
+export './pad_bloc/pad_bloc.dart';
 export './playlist_bloc/playlists_bloc.dart';
 export './presentation_bloc/presentation_bloc.dart';
 export './presentation_playlist_bloc/presentation_playlist_bloc.dart';

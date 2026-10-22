@@ -1,3 +1,4 @@
+import 'package:song_viewer/config/features.dart';
 import 'dart:io';
 
 import 'package:song_viewer/core/youtube_helper.dart';
@@ -8,6 +9,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../../blocs/export_blocs.dart';
 import '../../../model/youtube_video.dart';
+import '../../widgets/pad_window.dart';
 
 class YoutubeVideoPageMobile extends StatefulWidget {
   const YoutubeVideoPageMobile({super.key});
@@ -88,6 +90,7 @@ class _YoutubeVideoPageMobileState extends State<YoutubeVideoPageMobile> {
         return Scaffold(
           appBar: AppBar(
             title: Text(song?.title ?? 'youtube'.tr()),
+            actions: [if (Features.pads) const PadOpenButton(color: Colors.white),],
           ),
           body: videos.isEmpty
               ? Center(

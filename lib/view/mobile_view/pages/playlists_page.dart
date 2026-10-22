@@ -1,3 +1,4 @@
+import 'package:song_viewer/config/features.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -5,6 +6,7 @@ import 'package:flutter/services.dart';
 import '../../../blocs/export_blocs.dart';
 import '../../../model/playlist.dart';
 import '../../../services/constants.dart';
+import '../../widgets/pad_window.dart';
 
 class PlaylistsPageMobile extends StatelessWidget {
   const PlaylistsPageMobile({super.key});
@@ -15,6 +17,7 @@ class PlaylistsPageMobile extends StatelessWidget {
       appBar: AppBar(
         title: Text('playlists'.tr()),
         actions: [
+          if (Features.pads) const PadOpenButton(color: Colors.white),
           IconButton(
             icon: const Icon(Icons.add),
             tooltip: 'createPlaylist'.tr(),

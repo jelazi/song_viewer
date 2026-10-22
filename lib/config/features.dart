@@ -52,6 +52,12 @@ class Features {
   /// existing behaviour — authenticate during boot and pull server counts.
   static const bool sharedServer = bool.fromEnvironment('FEATURE_SHARED_SERVER');
 
+  /// Worship pads: looped key pads downloaded from the own PocketBase server.
+  ///
+  /// The recordings are not licensed for redistribution, so this stays off in
+  /// store builds.
+  static const bool pads = bool.fromEnvironment('FEATURE_PADS');
+
   /// Whether server administration — the user and group screens — should be
   /// offered.
   ///

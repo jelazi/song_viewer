@@ -36,11 +36,13 @@ import 'model/web_interpret.dart';
 import 'model/web_song.dart';
 import 'providers/hive_provider.dart';
 import 'providers/pocketbase_provider.dart';
+import 'repositories/pads_repository.dart';
 import 'repositories/web_repository.dart';
 import 'services/ai_search_service.dart';
 import 'view/desktop_view/widgets/my_toast.dart';
 import 'view/router/app_router.dart';
 import 'view/sync_screen.dart';
+import 'view/widgets/pad_window.dart';
 
 part 'main.part.dart';
 
@@ -632,6 +634,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> with WindowListener {
   late final AppRouter _appRouter;
+  final TransitionBuilder _botToastBuilder = BotToastInit();
   bool _syncComplete = false;
   bool _isLoading = false;
 
@@ -647,7 +650,8 @@ class _MyAppState extends State<MyApp> with WindowListener {
     if (widget.syncInfo.isAuthenticated && !widget.syncInfo.isServerEmpty) {
       _loadDataAndProceed();
     } else if (!widget.syncInfo.isAuthenticated) {
-      // Not authenticated — skip sync, proceed with empty data
+      // Not authenticated — skip sync, proceed with the cached data
+      loadDataFromCache(widget.repositories);
       _syncComplete = true;
     }
   }
@@ -853,6 +857,14 @@ class _MyAppState extends State<MyApp> with WindowListener {
               ),
             ),
           BlocProvider(
+            create: (context) => PadBloc(
+              padsRepository: PadsRepository(
+                pocketBaseProvider: widget.repositories.settingsRepository.pocketBaseProvider,
+                hiveProvider: widget.repositories.hiveProvider,
+              ),
+            ),
+          ),
+          BlocProvider(
             create: (context) => YoutubeSearchBloc(
               aiSearchService: AiSearchService(),
               settingsRepository: widget.repositories.settingsRepository,
@@ -866,7 +878,7 @@ class _MyAppState extends State<MyApp> with WindowListener {
             primarySwatch: getMaterialColor(AppColor.primaryColor),
             iconTheme: const IconThemeData(color: AppColor.whiteColor),
           ),
-          builder: BotToastInit(),
+          builder: (context, child) => _botToastBuilder(context, PadWindowHost(child: child ?? const SizedBox.shrink())),
           navigatorObservers: [BotToastNavigatorObserver()],
           debugShowCheckedModeBanner: false,
           supportedLocales: context.supportedLocales,

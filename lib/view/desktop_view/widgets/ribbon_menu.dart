@@ -14,6 +14,8 @@ import 'package:flutter/material.dart';
 import '../../../blocs/export_blocs.dart';
 import '../../../model/playlist.dart';
 import '../../../model/song/song.dart';
+import '../../../services/song_key_service.dart';
+import '../../widgets/pad_window.dart';
 import 'my_toast.dart';
 import 'ribbon_button.dart';
 
@@ -119,6 +121,10 @@ class RibbonMenu extends StatelessWidget {
             context.read<DesktopRibbonMenuBloc>().add(const ChangeHomeBody(bodyName: 'general_settings'));
           },
         ),
+        if (padsSupported) ...[
+          const SizedBox(width: 2),
+          const _PadRibbonButton(),
+        ],
       ],
     );
   }
@@ -1183,6 +1189,31 @@ class RibbonMenu extends StatelessWidget {
               ],
             );
           },
+        );
+      },
+    );
+  }
+}
+
+/// Opens the pad window, then switches it between full size and minimized;
+/// shows the playing key.
+class _PadRibbonButton extends StatelessWidget {
+  const _PadRibbonButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<PadBloc, PadState>(
+      buildWhen: (previous, current) =>
+          previous.isWindowOpen != current.isWindowOpen || previous.isMinimized != current.isMinimized || previous.playingKey != current.playingKey,
+      builder: (context, state) {
+        final playing = state.playingKey;
+        final isOpen = state.isWindowOpen && !state.isMinimized;
+        return RibbonButton(
+          text: playing == null ? 'pads'.tr() : '${'pads'.tr()} · ${SongKeyService.keyNames[playing]}',
+          icon: Icon(Icons.graphic_eq, size: 16, color: isOpen ? AppColor.whiteColor : (playing != null ? AppColor.alertWarningColor : AppColor.grey1Color)),
+          isEnabled: true,
+          isSelected: isOpen,
+          onPressed: () => context.read<PadBloc>().add(const TogglePadWindow()),
         );
       },
     );

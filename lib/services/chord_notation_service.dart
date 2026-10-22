@@ -81,7 +81,7 @@ class ChordNotationService {
   ///
   /// Returns the input unchanged when it is not a chord.
   static String convertChord(String chord) {
-    if (!_isChord(chord)) return chord;
+    if (!isChord(chord)) return chord;
     return chord.split('/').map(_convertPart).join('/');
   }
 
@@ -95,7 +95,7 @@ class ChordNotationService {
 
   /// Roots of a chord, bass note included; empty when it is not a chord.
   static Iterable<String> _rootsOf(String chord) {
-    if (!_isChord(chord)) return const [];
+    if (!isChord(chord)) return const [];
     return chord.split('/').map((part) => _root.stringMatch(part)).whereType<String>();
   }
 
@@ -104,7 +104,7 @@ class ChordNotationService {
   /// Every slash-separated part has to be a known root followed by a suffix
   /// built only from [_suffixParts]; `[Bridge]` fails on `ridge`, `[Bb/D]`
   /// passes.
-  static bool _isChord(String text) {
+  static bool isChord(String text) {
     if (text.isEmpty) return false;
     for (final part in text.split('/')) {
       final root = _root.stringMatch(part);

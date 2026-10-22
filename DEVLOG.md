@@ -1,5 +1,221 @@
 # Development Log
 
+## 2026-10-22 (part 14) — feat: pads on macOS, pad saved per song; fix: offline start showed no songs
+
+### What was done
+
+- **Desktop (macOS).** `padsSupported` (`pad_window.dart`) = `Features.pads` and Android, iOS or
+  macOS — `just_audio`, `audio_session` and `wakelock_plus` have no Windows/Linux backend
+  (`just_audio_media_kit` + libmpv would be needed). `PadWindowHost` uses it, so the window works
+  in the desktop app too. `ribbon_menu.dart` — `_PadRibbonButton` next to Nastavení ("Pady · A"
+  while playing, selected while the window is open). `PadDesktopSettings` in
+  `pad_settings_section.dart`, shown as a "Pady" section in `general_settings_body.dart`.
+- **`TogglePadWindow`** event: open → minimize → restore, used by `PadOpenButton` and the ribbon.
+- **Pad saved per song.** `SongPadPreference` (semitone + set id) in `model/pad_set.dart`;
+  `PocketBaseProvider.getSongPadPreferences()` / `saveSongPadPreferences()` keep them in
+  `realtime_state` under `padPreferences` (no schema change, shared by all devices).
+  `PadsRepository.loadSongPreferences()` (Hive cache fallback) and `saveSongPreference()`, which
+  re-reads the server copy before writing so entries saved on another device survive. `PadBloc`:
+  `SaveSongPad` (playing key + selected set), `RemoveSongPad`, preferences loaded with the sets
+  and refreshed whenever the window opens; `PadState.songPreferences`.
+  Window: the song line shows "Uložený pad: D · Warm" and a filled bookmark when a pad is saved,
+  otherwise the computed suggestion and an outlined bookmark (enabled while a pad plays);
+  `_padSuggestion()` prefers the saved key for the amber highlight. Three translation keys.
+- Tests: `pad_bloc_test.dart` +4 (save with set and remove, no save without a playing pad,
+  preferences loaded with the sets, toggle open/minimize/restore never stops).
+
+### What was fixed
+
+- **An app that could not sign in at startup showed 0 songs**, even with a full local cache:
+  `_MyAppState.initState` only set `_syncComplete` when `isAuthenticated` was false and never
+  loaded the Hive cache. New `loadDataFromCache()` (`main.part.dart`: songs, groups, chord
+  diagrams) runs on that path. Found on the emulator, where a release install showed
+  "0 písní" while the server was healthy (204 songs, auth ok); a fresh debug install loaded fine.
+- **An empty tablet song list could not be pulled to refresh**: `getPreviewBody()`'s `ListView`
+  had `shrinkWrap: true`, so with no songs it had zero height. Removed; the list fills its box.
+
+### Current state
+
+- `flutter analyze`: no issues. `flutter test test/unit_tests`: 464 passed, 2 skipped.
+- macOS: a temporary integration test (`flutter test integration_test/... -d macos`, deleted
+  afterwards) downloaded a pad from the server, `AudioPlayer` reported 2:00, `PadAudioEngine` was
+  playing after 3 s and not after stop. The installed `/Applications/Songs Viewer.app` (previous
+  bundle backed up in the scratchpad as `mac_prev/`) showed the "Pady" ribbon button; clicking
+  it opened the window with "Návrh tóniny: A" for "Ať požehnán je Bůh". Window captures only
+  (`screencapture -l`); nothing was played through the speakers. The app was quit afterwards.
+- Android emulator: playing D in Warm and tapping the bookmark showed "Uložený pad: D · Warm"
+  and moved the amber highlight to D; `realtime_state.padPreferences` on the server then held
+  that entry plus "Apoštolská" → D · Hillsong saved by the user on another device. Removing the
+  test entry left the user's entry intact. Offline (`svc wifi/data disable`) the release started
+  with 204 cached songs; pull → "Připojení se nezdařilo"; back online, pull → "Písně
+  aktualizovány ze serveru".
+- Installed on iPad Air 2 (USB) and iPhone 14 Pro (launched); not inspected. Samsung not
+  connected.
+
+### Pending / next steps
+
+- Windows/Linux pads would need `just_audio_media_kit` (adds libmpv, tens of MB).
+- A pad saved while offline stays on that device until it is saved again online (the next
+  server load replaces the local copy).
+
+## 2026-10-22 (part 13) — feat: pads live on the server, minimizable window, capo-aware key
+
+### What was done
+
+- **Pads uploaded.** The user created the `pads` collection with `tools/setup_pb_pads.py`; then
+  `tools/upload_pads.py` prepared and uploaded 24 records. Check over the API: both sets have
+  semitones 0–11 (C stored as 0), and a file fetched without auth from
+  `/api/files/<collection>/<id>/<file>` is byte-identical to the prepared one (1 914 229 B).
+- **Minimize** (`MinimizePadWindow` / `RestorePadWindow`, `PadState.isMinimized`, persisted as
+  `padWindowMinimized`; closing clears it). Window header has a `remove` button.
+  - Tablet / iPad (width ≥ 600): `_PadMiniBar`, a 210×40 draggable pill with its own position:
+    playing key and set ("A · Warm"), stop, expand; tapping the pill restores.
+  - Phone: the window disappears; `PadOpenButton` carries a `Badge` with the playing key. The
+    button now opens → restores → minimizes, never stops (only the window's close does).
+  - `PadOpenButton` added to the phone song list (`home_page.dart`), playlists, sheet view and
+    YouTube pages, so minimized pads stay reachable.
+- **Key suggestion follows the sounding key.** The preview shows chords transposed by
+  `transposeIncrement` and `cap = −transposeIncrement mod 12`, i.e. the transposition is for
+  playing the original key with a capo. `SongKeyService.detectKey` was split into
+  `displayedKey()` (shown first chord) and `soundingKey()` (shown + capo); the window uses the
+  sounding key and adds "(F# + cap 3)" when a capo is set.
+- Tests: `pad_bloc_test.dart` +2 (minimize keeps playing and persists; restored minimized,
+  close clears), `song_key_service_test.dart` +3 (capo).
+
+### What was fixed
+
+- With a capo the suggestion pointed at the shown chord: "Ať požehnán je Bůh" (A) transposed
+  −3 showed F# chords with cap 3 and suggested F#, although it sounds in A.
+
+### Current state
+
+- `flutter analyze`: no issues. `flutter test test/unit_tests`: 460 passed, 2 skipped.
+- Android tablet emulator (`Medium_Tablet`, personal release APK; it had a debug build with
+  another signature, so the app was reinstalled there): the app seeded its server config
+  (204 songs); "Ať požehnán je Bůh" suggested A; A played (`dumpsys audio`: one started
+  AudioTrack, USAGE_MEDIA); A→D and D→A crossfades showed two players 1.5 s in and one after
+  7 s; the loop started a second player ~107 s after A and the first was gone 5 s later;
+  switching to Warm continued A with a new player; app PSS while playing ≈ 108 MB. After a
+  restart the window came back open, then minimized, with the set remembered. Minimized pill
+  showed "A · Warm". Transposed −3 → F# chords, cap 3 → "Návrh tóniny: A (F# + cap 3)".
+  Phone layout (`wm size 1080x2340`, density 420, reset afterwards): badge "A" in the song list
+  app bar, minimizing hid the window while the pad kept playing, the icon restored it, closing
+  stopped playback.
+- Audio was verified through Android's player list, not by listening.
+- iPad Air 2 (USB, `ios-deploy`) and iPhone 14 Pro (`devicectl`, launched): new build installed,
+  not inspected. Samsung SM-X200 not connected. Mac not reinstalled (no pad UI on desktop).
+
+### Pending / next steps
+
+- Listen on real devices: loop seam, fade shapes, pad together with the YouTube window, iOS
+  silent switch, memory on the iPad Air 2.
+- Install on the Samsung when it is connected.
+
+## 2026-10-22 (part 12) — chore: install the current build on the iPad, iPhone and Mac
+
+### What was done
+
+- iPad Air 2 (USB): `build/ios/iphoneos/Runner.app` from part 11 (contains `padSuggestedKey`)
+  installed with `ios-deploy --no-wifi`.
+- iPhone 14 Pro: same bundle via `xcrun devicectl device install app`, launched with
+  `devicectl device process launch`.
+- Mac: `./build.sh macos personal release` → `build/macos/Build/Products/Release/Songs Viewer.app`
+  (com.lzizka.songsviewer.macos 1.2.3 (43), `codesign --verify --deep` ok, contains the new
+  translation keys) copied over `/Applications/Songs Viewer.app` (previous copy from
+  2026-08-30). The old bundle is backed up in the session scratchpad (`mac_backup/`).
+- Samsung SM-X200: not connected to `adb` (only the emulator was listed), so not updated.
+
+### What was fixed
+
+- During the first Mac attempt the build's `Songs Viewer.app` was missing from `Release/` when it
+  was about to be copied although `build.sh` had printed it as its output, so the old app had
+  already been removed from `/Applications` before the copy failed. It was restored from the
+  backup (signature verified) and then replaced with a second, verified build. Why the first
+  bundle disappeared was not found.
+
+### Current state
+
+- The `pads` collection still does not exist on the server (`GET /api/collections/pads/records`
+  → 404), so the pad window shows "Pady nejsou k dispozici" everywhere.
+- Desktop has no pad UI (the pad button is only in the phone and tablet song pages).
+
+### Pending / next steps
+
+- User: `python3 tools/setup_pb_pads.py`, then upload the pads (see part 11).
+- Connect the Samsung and install `build/app/outputs/flutter-apk/app-personal-release.apk`.
+
+## 2026-10-22 (part 11) — feat: worship pads (personal build), served from PocketBase
+
+### What was done
+
+- **Source material analysed** (two folders in `~/Downloads`, "Worship the One Music" Warm and
+  Hillsong pads): 12 keys each, ~10 min per file, 226 MB in total; Warm mixes AAC and Ogg Opus
+  (Opus does not play on iOS 15). Goertzel analysis of every file confirmed the labelled key (root
+  and fifth dominate, no third, so one pad serves major and minor). Loudness differed a lot: Warm
+  −9.8…−14.2 LUFS, Hillsong −17.5…−19.2 LUFS.
+- **`tools/upload_pads.py`** — per source file: 120 s loop from 60 s on, gain to −18 LUFS
+  (`ebur128`), 20 ms edge ramps, limiter, AAC-LC 128 kbps via `afconvert`; uploads one record per
+  pad to the `pads` collection (set, setName, semitone 0 = C, file) and replaces the set's older
+  records. Key comes from the file name (`PAD - A#`) mapped to a semitone, so the B/H ambiguity
+  never reaches the app. Dry run produced 24 files of ~1.83 MB (43.9 MB); spot checks: 120.07 s,
+  −18.0 LUFS, key unchanged.
+- **`tools/setup_pb_pads.py`** — creates the `pads` collection (audio MIME types, 20 MB max,
+  auth-only rules; `semitone` not required because PocketBase treats 0 as empty). Needs the
+  superuser account; reads the password with `getpass`.
+- **Feature flag** `Features.pads` / `FEATURE_PADS`: true in `config/personal.json`, false in
+  both store configs (the recordings are not licensed for redistribution).
+- **Data**: `lib/model/pad_set.dart` (`PadSet`), `PocketBaseProvider.getPadSets()` (throws on
+  failure), `lib/repositories/pads_repository.dart` — sets with a Hive JSON cache for offline
+  use, per-key download with Dio into `<app support>/pads/<set>/<semitone>_<server file name>`
+  (`.part` then rename, older versions removed), persisted preferences (window open, set, volume,
+  fade-in/out seconds, curve).
+- **Audio**: `lib/services/pad_audio_engine.dart` with `just_audio` (streams from the file, no
+  full decode in RAM). Every key change fades the old voice out and the new one in; each voice
+  loops by starting a fresh voice 6 s before its end with an equal-power crossfade. Fades are
+  timer-driven volume ramps (40 ms tick) with `PadFadeCurve.linear / smooth (equal-power) /
+  gentle (quadratic)`. `audio_session` configures playback + `mixWithOthers` and the players do
+  not handle interruptions or session activation, so the YouTube window does not pause a pad and
+  the iOS silent switch does not mute it. `wakelock_plus` keeps the screen on while a pad plays.
+  No iOS background-audio mode was added: a locked screen stops the pad on iOS.
+- **Key suggestion**: `lib/services/song_key_service.dart` — root of the first chord (section
+  markers skipped via the now public `ChordNotationService.isChord`, international notation
+  converted to Czech first), shifted by the current transposition.
+- **Bloc**: `lib/blocs/pad_bloc/` — open/close (persisted), load sets, select set (continues
+  the playing key in the new set), toggle key (download → play; a key tapped meanwhile wins),
+  stop, volume, download whole set, fade settings.
+- **UI**: `lib/view/widgets/pad_window.dart` — `PadWindowHost` in `MaterialApp.builder` (inside
+  BotToast) puts a draggable window above every route, with its own `Overlay`; header with the
+  set chips (Warm / Hillsong) and close, a line with the open song and the suggested key, 12 key
+  buttons in Czech names (playing = filled, suggested = amber border, spinner while downloading),
+  stop, volume slider and download-set button. `PadOpenButton` in the tablet and phone song app
+  bars. `lib/view/widgets/pad_settings_section.dart` — "Pady" section in both settings pages:
+  fade-in, fade-out (0–20 s slider dialogs) and the curve (dialog with a drawn curve per option).
+- 12 translation keys; packages `just_audio ^0.10.6`, `audio_session ^0.2.4`,
+  `wakelock_plus ^1.5.2`.
+- Tests: `song_key_service_test.dart` (6), `pad_fade_curve_test.dart` (8), `pad_bloc_test.dart`
+  (6, fake repository and engine).
+
+### What was fixed
+
+- First upload attempt failed: the `uploads` collection only accepts images and PDF
+  (`validation_invalid_mime_type`), hence the dedicated `pads` collection. Nothing was uploaded.
+
+### Current state
+
+- `flutter analyze`: no issues. `flutter test test/unit_tests`: 455 passed, 2 skipped.
+- `./build.sh android-apk personal release` → 68.0 MB (was 66.4 MB);
+  `flutter build ios --release` → 30.0 MB (was 29.5 MB). Pads add nothing to the app size.
+- **The `pads` collection does not exist yet** — creating it needs the superuser account, so
+  the pads cannot be uploaded and the window would show "Pady nejsou k dispozici".
+- Nothing was installed on a device in this step; playback is untested on hardware.
+
+### Pending / next steps
+
+- User: `python3 tools/setup_pb_pads.py`; then upload with
+  `python3 tools/upload_pads.py --set warm Warm "<Warm dir>" --set hillsong Hillsong "<Hillsong dir>"`.
+- Then install and check on the Samsung, iPad and iPhone: download, crossfade on key change,
+  loop seam after 2 min, pad + YouTube together, silent switch on iOS, memory on the iPad Air 2.
+
 ## 2026-10-22 (part 10) — feat: YouTube search with preview and "add to song" on the tablet song page
 
 ### What was done

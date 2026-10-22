@@ -9,6 +9,7 @@ import 'package:pocketbase/pocketbase.dart';
 
 import '../model/chord/chord_diagram.dart';
 import '../model/note.dart';
+import '../model/pad_set.dart';
 import '../model/playlist.dart';
 import '../model/qr_link.dart';
 import '../model/song/song.dart';
@@ -961,6 +962,49 @@ class PocketBaseProvider {
     } catch (e) {
       logger.e('Error uploading file: $e');
       return null;
+    }
+  }
+
+  /// All pad sets from the `pads` collection, keys in semitones (0 = C).
+  ///
+  /// Throws when the server cannot be read, so the caller can fall back to
+  /// its cached copy instead of treating the failure as "no pads".
+  Future<List<PadSet>> getPadSets() async {
+    final records = await _pb.collection('pads').getFullList(sort: 'set,semitone');
+    final names = <String, String>{};
+    final files = <String, Map<int, String>>{};
+    for (final record in records) {
+      final setId = record.getStringValue('set');
+      final semitone = record.getIntValue('semitone');
+      final fileName = record.getStringValue('file');
+      if (setId.isEmpty || fileName.isEmpty || semitone < 0 || semitone > 11) continue;
+      names.putIfAbsent(setId, () => record.getStringValue('setName').isNotEmpty ? record.getStringValue('setName') : setId);
+      files.putIfAbsent(setId, () => {})[semitone] = '${_config!.pocketbaseUrl}/api/files/${record.collectionId}/${record.id}/$fileName';
+    }
+    return [for (final setId in files.keys) PadSet(id: setId, name: names[setId]!, fileUrls: files[setId]!)];
+  }
+
+  /// Pads saved for individual songs, keyed by song id. Stored in
+  /// `realtime_state` so no schema change is needed and every device sees them.
+  /// Throws when the server cannot be read.
+  Future<Map<String, SongPadPreference>> getSongPadPreferences() async {
+    final results = await _pb.collection('realtime_state').getFullList(filter: 'key = "padPreferences"');
+    final data = results.isEmpty ? null : results.first.get<dynamic>('data');
+    if (data is! Map) return {};
+    return {
+      for (final entry in data.entries)
+        if (entry.value is Map) '${entry.key}': SongPadPreference.fromJson(Map<String, dynamic>.from(entry.value as Map)),
+    };
+  }
+
+  /// Replaces the saved per-song pads. Throws when the server refuses it.
+  Future<void> saveSongPadPreferences(Map<String, SongPadPreference> preferences) async {
+    final data = preferences.map((songId, preference) => MapEntry(songId, preference.toJson()));
+    final results = await _pb.collection('realtime_state').getFullList(filter: 'key = "padPreferences"');
+    if (results.isNotEmpty) {
+      await _pb.collection('realtime_state').update(results.first.id, body: {'data': data});
+    } else {
+      await _pb.collection('realtime_state').create(body: {'key': 'padPreferences', 'data': data});
     }
   }
 

@@ -8,6 +8,8 @@ import '../../../../../model/qr_link.dart';
 import '../../../../../providers/pocketbase_provider.dart';
 import '../../../../../services/constants.dart';
 import '../../../../../services/local_web/local_web_server.dart';
+import '../../../../widgets/pad_settings_section.dart';
+import '../../../../widgets/pad_window.dart';
 import '../../../../widgets/server_config_file.dart';
 import 'bracket_error_scanner.dart';
 import 'local_web_settings.dart';
@@ -78,6 +80,12 @@ class _GeneralSettingsBodyState extends State<GeneralSettingsBody> {
               const SizedBox(height: 8),
               _buildQrUrlSettings(context, state),
               const SizedBox(height: 24),
+              if (padsSupported) ...[
+                _buildSectionTitle('pads'.tr()),
+                const SizedBox(height: 8),
+                const PadDesktopSettings(),
+                const SizedBox(height: 24),
+              ],
               // AI enrichment API keys — personal flavour only. The store build
               // has no enrichment screen, so offering the keys there would ask
               // the user to configure a feature that is not in the artifact

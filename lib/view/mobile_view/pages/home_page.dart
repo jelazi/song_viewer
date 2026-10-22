@@ -1,3 +1,4 @@
+import 'package:song_viewer/config/features.dart';
 import 'package:song_viewer/repositories/settings_repository.dart';
 import 'package:song_viewer/view/mobile_view/widgets/song_card.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -7,6 +8,7 @@ import 'package:flutter/material.dart';
 import '../../../blocs/export_blocs.dart';
 import '../../../services/constants.dart';
 import '../widgets/home_drawer.dart';
+import '../../widgets/pad_window.dart';
 
 class HomePageMobile extends StatefulWidget {
   final SettingsRepository settingsRepository;
@@ -73,6 +75,7 @@ class _HomePageMobileState extends State<HomePageMobile> {
                   snap: false,
                   centerTitle: false,
                   title: Align(alignment: Alignment.centerRight, child: Text('songsViewer'.tr())),
+                  actions: [if (Features.pads) const PadOpenButton(color: Colors.white),],
                   bottom: PreferredSize(
                     preferredSize: const Size.fromHeight(50),
                     child: Column(

@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:song_viewer/config/features.dart';
 import 'package:song_viewer/model/song/song.dart';
 import 'package:song_viewer/services/constants.dart';
 import 'package:song_viewer/view/desktop_view/widgets/my_toast.dart';
@@ -18,6 +19,7 @@ import '../../../model/youtube_video.dart';
 import '../../../services/ai_search_service.dart';
 import '../widgets/floating_video_player.dart';
 import '../widgets/youtube_search_panel.dart';
+import '../../widgets/pad_window.dart';
 
 class PreviewPageTablet extends StatefulWidget {
   const PreviewPageTablet({super.key});
@@ -253,6 +255,7 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
               ],
             ),
           ),
+          if (Features.pads) const PadOpenButton(color: AppColor.primaryDarkColor),
           BlocBuilder<PreviewChordBloc, PreviewChordState>(
             builder: (context, state) {
               final canSearch = state.data.song != null && !state.isDataFromWeb && context.read<SettingsBloc>().state.youtubeApiKey.isNotEmpty;

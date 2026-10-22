@@ -16,6 +16,7 @@ import '../../mobile_view/widgets/dialogs/edit_dialog.dart';
 import '../../mobile_view/widgets/settings_ui/settings_section.dart';
 import '../../mobile_view/widgets/settings_ui/settings_tile.dart';
 import '../../widgets/server_config_file.dart';
+import '../../widgets/pad_settings_section.dart';
 
 class SettingsPageTablet extends StatefulWidget {
   const SettingsPageTablet({super.key});
@@ -211,6 +212,7 @@ class _SettingsPageTabletState extends State<SettingsPageTablet> {
                     ),
                   ],
                 ),
+                if (Features.pads) buildPadSettingsSection(context),
                 SettingsSection(
                   title: 'qrCodeTitle'.tr(),
                   tiles: [

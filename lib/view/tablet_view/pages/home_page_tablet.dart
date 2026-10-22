@@ -715,7 +715,6 @@ class _HomePageTabletState extends State<HomePageTablet> {
     return RefreshIndicator(
       onRefresh: () => context.read<HomePageBloc>().refreshFromServer(),
       child: ListView.builder(
-        shrinkWrap: true,
         physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
         itemCount: state.listSong.length,
         itemBuilder: (context, index) {

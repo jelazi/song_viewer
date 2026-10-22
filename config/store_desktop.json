@@ -2,5 +2,6 @@
   "_comment": "Store build for macOS, Windows, Linux and web. These are NOT distributed through an app store, so the store-policy restriction on web import does not apply and it stays enabled. Everything else matches the mobile store build.",
   "FEATURE_WEB_IMPORT": true,
   "FEATURE_AI": false,
-  "FEATURE_SHARED_SERVER": false
+  "FEATURE_SHARED_SERVER": false,
+  "FEATURE_PADS": false
 }

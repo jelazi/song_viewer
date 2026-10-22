@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:song_viewer/config/features.dart';
 import 'package:song_viewer/model/song/song.dart';
 import 'package:song_viewer/services/constants.dart';
 import 'package:song_viewer/view/desktop_view/widgets/my_toast.dart';
@@ -14,6 +15,7 @@ import '../../desktop_view/widgets/chord_editor_dialog.dart';
 import '../widgets/chords_lyric/flutter_chord.dart';
 import '../widgets/chords_lyric/guitar_tabs.dart';
 import '../widgets/my_floating_button.dart';
+import '../../widgets/pad_window.dart';
 
 class PreviewPageMobile extends StatefulWidget {
   const PreviewPageMobile({super.key});
@@ -74,6 +76,7 @@ class _PreviewPageMobileState extends State<PreviewPageMobile> {
                       ],
                     ),
                     actions: [
+                      if (Features.pads) const PadOpenButton(color: Colors.white),
                       if (state.isDataFromWeb)
                         IconButton(
                           icon: const Icon(Icons.save, color: Colors.white),

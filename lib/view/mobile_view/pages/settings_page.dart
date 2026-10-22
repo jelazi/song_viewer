@@ -13,6 +13,7 @@ import '../widgets/dialogs/edit_dialog.dart';
 import '../widgets/settings_ui/settings_section.dart';
 import '../widgets/settings_ui/settings_tile.dart';
 import '../../widgets/server_config_file.dart';
+import '../../widgets/pad_settings_section.dart';
 
 class SettingsPageMobile extends StatefulWidget {
   const SettingsPageMobile({super.key});
@@ -194,6 +195,7 @@ class _SettingsPageMobileState extends State<SettingsPageMobile> {
                         switchValue: state.autoHideTopBar),
                   ],
                 ),
+                if (Features.pads) buildPadSettingsSection(context),
                 SettingsSection(
                   title: 'qrCodeTitle'.tr(),
                   tiles: [

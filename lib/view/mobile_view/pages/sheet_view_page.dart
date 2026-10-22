@@ -1,8 +1,10 @@
+import 'package:song_viewer/config/features.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../../../blocs/export_blocs.dart';
+import '../../widgets/pad_window.dart';
 
 class SheetViewPageMobile extends StatefulWidget {
   const SheetViewPageMobile({super.key});
@@ -32,6 +34,7 @@ class _SheetViewPageMobileState extends State<SheetViewPageMobile> {
           appBar: AppBar(
             title: Text(song?.title ?? 'sheets'.tr()),
             actions: [
+              if (Features.pads) const PadOpenButton(color: Colors.white),
               if (sheets.length > 1)
                 Padding(
                   padding: const EdgeInsets.only(right: 16.0),

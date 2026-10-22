@@ -123,6 +123,14 @@ Future<({AppRepositories repositories, SyncInfo syncInfo})> initProvidersAndChec
   return (repositories: repositories, syncInfo: syncInfo);
 }
 
+/// Offline start (server unreachable or not configured): show what this
+/// device already has instead of an empty app.
+void loadDataFromCache(AppRepositories repositories) {
+  repositories.songsRepository.loadSongsFromCache();
+  repositories.songsRepository.loadGroupsFromCache();
+  repositories.songsRepository.chordService.loadFromCache();
+}
+
 /// Phase 2: Load data — cache-first with PocketBase sync when needed
 Future<void> loadDataFromServer(AppRepositories repositories) async {
   // 1. Load songs & groups from Hive cache first (instant)
