@@ -53,6 +53,10 @@ class SettingsRepository {
   // AI enrichment API keys
   String _groqApiKey = '';
   String _youtubeApiKey = '';
+
+  /// Optional build-time YouTube key from the untracked `config/server.local.json`;
+  /// fills an empty setting on a fresh install.
+  static const _seedYoutubeApiKey = String.fromEnvironment('YOUTUBE_API_KEY');
   String _geminiApiKey = '';
 
   SettingsRepository({
@@ -221,6 +225,10 @@ class SettingsRepository {
     // AI enrichment API keys
     _groqApiKey = await hiveProvider.getSettingsValue('groqApiKey') ?? '';
     _youtubeApiKey = await hiveProvider.getSettingsValue('youtubeApiKey') ?? '';
+    if (_youtubeApiKey.isEmpty && _seedYoutubeApiKey.isNotEmpty) {
+      _youtubeApiKey = _seedYoutubeApiKey;
+      hiveProvider.setSettingsValue('youtubeApiKey', _youtubeApiKey);
+    }
     _geminiApiKey = await hiveProvider.getSettingsValue('geminiApiKey') ?? '';
   }
 

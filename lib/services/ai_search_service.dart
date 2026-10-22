@@ -263,6 +263,7 @@ Return ONLY a valid JSON object (no markdown, no extra text):
     required String apiKey,
     required String query,
     int maxResults = 5,
+    bool throwOnError = false,
   }) async {
     if (apiKey.isEmpty) return [];
 
@@ -290,6 +291,7 @@ Return ONLY a valid JSON object (no markdown, no extra text):
       }).toList();
     } catch (e) {
       debugPrint('[AiSearchService] searchYoutube error: $e');
+      if (throwOnError) rethrow;
       return [];
     }
   }

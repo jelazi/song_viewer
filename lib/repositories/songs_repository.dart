@@ -208,6 +208,9 @@ class SongsRepository {
     isChangedListSongController.sink.add(isChangedListSongValue++);
   }
 
+  /// Tells listeners (e.g. HomePageBloc) that the song list changed.
+  void notifySongsChanged() => isChangedListSongController.sink.add(isChangedListSongValue++);
+
   bool get hasServer => _pocketBaseProvider.config?.isValid ?? false;
 
   /// Pulls songs and groups from the server, reconnecting first when the app

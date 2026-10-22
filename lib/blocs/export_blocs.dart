@@ -13,4 +13,5 @@ export './settings_bloc/settings_bloc.dart';
 export './song_enrichment_bloc/song_enrichment_bloc.dart';
 export './users_bloc/users_bloc.dart';
 export './web_bloc/web_bloc.dart';
+export './youtube_search_bloc/youtube_search_bloc.dart';
 export 'preview_bloc/preview_chord_bloc.dart';

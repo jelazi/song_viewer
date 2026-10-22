@@ -13,7 +13,11 @@ import '../../../services/enums.dart';
 import '../../desktop_view/widgets/chord_editor_dialog.dart';
 import '../../mobile_view/widgets/chords_lyric/flutter_chord.dart';
 import '../../mobile_view/widgets/chords_lyric/guitar_tabs.dart';
+import '../../../core/youtube_helper.dart';
+import '../../../model/youtube_video.dart';
+import '../../../services/ai_search_service.dart';
 import '../widgets/floating_video_player.dart';
+import '../widgets/youtube_search_panel.dart';
 
 class PreviewPageTablet extends StatefulWidget {
   const PreviewPageTablet({super.key});
@@ -26,6 +30,8 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
   ScrollController scrollController = ScrollController();
   OverlayEntry? overlayChord;
   bool _showVideo = false;
+  bool _showSearch = false;
+  YoutubeSearchResult? _candidate;
 
   @override
   void initState() {
@@ -66,7 +72,10 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
         }, builder: (context, state) {
           return state.data.song?.interpret != null
               ? Column(
-                  children: [Text(state.data.song?.title ?? ''), Text(state.data.song?.interpret ?? '', style: labelTextStyle.copyWith(color: AppColor.primaryDarkColor))],
+                  children: [
+                    Text(state.data.song?.title ?? ''),
+                    Text(state.data.song?.interpret ?? '', style: labelTextStyle.copyWith(color: AppColor.primaryDarkColor))
+                  ],
                 )
               : Text(state.data.song?.title ?? '');
         }),
@@ -169,7 +178,9 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
                                                                 });
                                                               },
                                                               selectedColor: AppColor.primaryColor,
-                                                              label: Text(e, style: TextStyle(color: selectedGroups.contains(e) ? AppColor.whiteColor : AppColor.primaryColor)),
+                                                              label: Text(e,
+                                                                  style: TextStyle(
+                                                                      color: selectedGroups.contains(e) ? AppColor.whiteColor : AppColor.primaryColor)),
                                                               selected: selectedGroups.contains(e)),
                                                         ))
                                                     .toList(),
@@ -244,11 +255,27 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
           ),
           BlocBuilder<PreviewChordBloc, PreviewChordState>(
             builder: (context, state) {
+              final canSearch = state.data.song != null && !state.isDataFromWeb && context.read<SettingsBloc>().state.youtubeApiKey.isNotEmpty;
+              return Visibility(
+                visible: canSearch,
+                child: IconButton(
+                  tooltip: 'youtubeSearch'.tr(),
+                  onPressed: () => setState(() => _showSearch = !_showSearch),
+                  icon: const Icon(Icons.youtube_searched_for, color: AppColor.primaryDarkColor),
+                ),
+              );
+            },
+          ),
+          BlocBuilder<PreviewChordBloc, PreviewChordState>(
+            builder: (context, state) {
               return Visibility(
                 visible: state.data.song?.youtubeVideos?.isNotEmpty ?? false,
                 child: IconButton(
                   tooltip: 'youtube'.tr(),
-                  onPressed: () => setState(() => _showVideo = !_showVideo),
+                  onPressed: () => setState(() {
+                    _candidate = null;
+                    _showVideo = !_showVideo;
+                  }),
                   icon: Icon(_showVideo ? Icons.videocam_off : Icons.smart_display, color: AppColor.primaryDarkColor),
                 ),
               );
@@ -287,114 +314,166 @@ class _PreviewPageTabletState extends State<PreviewPageTablet> {
           ),
         ],
       ),
-      body: BlocBuilder<PreviewChordBloc, PreviewChordState>(
-        builder: (context, state) {
-          return GestureDetector(
-            onTap: () {
-              disableAllOverlay();
-            },
-            child: Stack(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 10.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      BlocBuilder<PreviewChordBloc, PreviewChordState>(
-                        builder: (context, state) {
-                          return Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text('cap: ${state.cap}',
+      body: BlocListener<YoutubeSearchBloc, YoutubeSearchState>(
+        listenWhen: (previous, current) => current.updatedSong != null && previous.updatedSong != current.updatedSong,
+        listener: (context, state) {
+          context.read<PreviewChordBloc>().add(ChangeCurrentSong(song: state.updatedSong));
+          MyToast.showText(text: 'videoAddedToSong'.tr(), typeNotification: TypeNotification.success);
+        },
+        child: BlocBuilder<PreviewChordBloc, PreviewChordState>(
+          builder: (context, state) {
+            return GestureDetector(
+              onTap: () {
+                disableAllOverlay();
+              },
+              child: Stack(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 10.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        BlocBuilder<PreviewChordBloc, PreviewChordState>(
+                          builder: (context, state) {
+                            return Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text('cap: ${state.cap}',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: AppColor.primaryColor,
+                                  )),
+                            );
+                          },
+                        ),
+                        Expanded(
+                          child:
+                              state.twoColumns ? _getLyricsTwoColumnsRenderer(state, scrollController) : _getLyricsOneColumnRenderer(state, scrollController),
+                        ),
+                      ],
+                    ),
+                  ),
+                  BlocBuilder<PreviewChordBloc, PreviewChordState>(
+                    builder: (context, state) {
+                      return Visibility(
+                        visible: state.data.song?.indexSongBook != null,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Align(
+                            alignment: Alignment.topRight,
+                            child: Text('${'indexSongBook'.tr()}: ${state.data.song?.indexSongBook ?? ''}',
                                 style: const TextStyle(
                                   fontSize: 14,
                                   color: AppColor.primaryColor,
                                 )),
-                          );
-                        },
-                      ),
-                      Expanded(
-                        child: state.twoColumns ? _getLyricsTwoColumnsRenderer(state, scrollController) : _getLyricsOneColumnRenderer(state, scrollController),
-                      ),
-                    ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                ),
-                BlocBuilder<PreviewChordBloc, PreviewChordState>(
-                  builder: (context, state) {
-                    return Visibility(
-                      visible: state.data.song?.indexSongBook != null,
+                  Visibility(
+                    visible: state.twoColumns && state.lyricWithColumns(true, true, TypeLyric.translate).length > 2,
+                    child: Align(
+                      alignment: Alignment.bottomLeft,
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: Align(
-                          alignment: Alignment.topRight,
-                          child: Text('${'indexSongBook'.tr()}: ${state.data.song?.indexSongBook ?? ''}',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: AppColor.primaryColor,
-                              )),
+                        child: ElevatedButton(
+                          style: ButtonStyle(
+                            backgroundColor: WidgetStateProperty.all<Color>(
+                                state.currentColumn > 0 ? AppColor.primaryColor.withValues(alpha: 0.7) : AppColor.grey4Color.withValues(alpha: 0.7)),
+                          ),
+                          onPressed: () {
+                            if (state.currentColumn <= 0) {
+                              return;
+                            }
+                            context.read<PreviewChordBloc>().add(ChangeCurrentColumn(column: state.currentColumn - 2));
+                          },
+                          child: Icon(Icons.turn_left, color: state.currentColumn > 0 ? AppColor.whiteColor : AppColor.grey2Color),
                         ),
-                      ),
-                    );
-                  },
-                ),
-                Visibility(
-                  visible: state.twoColumns && state.lyricWithColumns(true, true, TypeLyric.translate).length > 2,
-                  child: Align(
-                    alignment: Alignment.bottomLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: ElevatedButton(
-                        style: ButtonStyle(
-                          backgroundColor: WidgetStateProperty.all<Color>(state.currentColumn > 0 ? AppColor.primaryColor.withValues(alpha: 0.7) : AppColor.grey4Color.withValues(alpha: 0.7)),
-                        ),
-                        onPressed: () {
-                          if (state.currentColumn <= 0) {
-                            return;
-                          }
-                          context.read<PreviewChordBloc>().add(ChangeCurrentColumn(column: state.currentColumn - 2));
-                        },
-                        child: Icon(Icons.turn_left, color: state.currentColumn > 0 ? AppColor.whiteColor : AppColor.grey2Color),
                       ),
                     ),
                   ),
-                ),
-                Visibility(
-                  visible: state.twoColumns && state.lyricWithColumns(true, true, TypeLyric.translate).length > 2,
-                  child: Align(
-                    alignment: Alignment.bottomRight,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: ElevatedButton(
-                        style: ButtonStyle(
-                          backgroundColor: WidgetStateProperty.all<Color>(state.currentColumn + 2 < state.lyricWithColumns(true, true, TypeLyric.translate).length
-                              ? AppColor.primaryColor.withValues(alpha: 0.7)
-                              : AppColor.grey4Color.withValues(alpha: 0.7)),
+                  Visibility(
+                    visible: state.twoColumns && state.lyricWithColumns(true, true, TypeLyric.translate).length > 2,
+                    child: Align(
+                      alignment: Alignment.bottomRight,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: ElevatedButton(
+                          style: ButtonStyle(
+                            backgroundColor: WidgetStateProperty.all<Color>(
+                                state.currentColumn + 2 < state.lyricWithColumns(true, true, TypeLyric.translate).length
+                                    ? AppColor.primaryColor.withValues(alpha: 0.7)
+                                    : AppColor.grey4Color.withValues(alpha: 0.7)),
+                          ),
+                          onPressed: () {
+                            if (state.currentColumn + 2 >= state.lyricWithColumns(true, true, TypeLyric.translate).length) {
+                              return;
+                            }
+                            context.read<PreviewChordBloc>().add(ChangeCurrentColumn(column: state.currentColumn + 2));
+                          },
+                          child: Icon(Icons.turn_right,
+                              color: state.currentColumn + 2 < state.lyricWithColumns(true, true, TypeLyric.translate).length
+                                  ? AppColor.whiteColor
+                                  : AppColor.grey2Color),
                         ),
-                        onPressed: () {
-                          if (state.currentColumn + 2 >= state.lyricWithColumns(true, true, TypeLyric.translate).length) {
-                            return;
-                          }
-                          context.read<PreviewChordBloc>().add(ChangeCurrentColumn(column: state.currentColumn + 2));
-                        },
-                        child: Icon(Icons.turn_right,
-                            color: state.currentColumn + 2 < state.lyricWithColumns(true, true, TypeLyric.translate).length ? AppColor.whiteColor : AppColor.grey2Color),
                       ),
                     ),
                   ),
-                ),
-                if (_showVideo && (state.data.song?.youtubeVideos?.isNotEmpty ?? false))
-                  Positioned.fill(
-                    child: FloatingVideoPlayer(
-                      key: ValueKey(state.data.song?.id),
-                      videos: state.data.song!.youtubeVideos!,
-                      onClose: () => setState(() => _showVideo = false),
+                  if (_showSearch && state.data.song != null)
+                    Positioned(
+                      key: const ValueKey('youtubeSearchPanel'),
+                      top: 0,
+                      bottom: 0,
+                      right: 0,
+                      width: (MediaQuery.of(context).size.width * 0.32).clamp(280.0, 380.0),
+                      child: YoutubeSearchPanel(
+                        key: ValueKey(state.data.song!.id),
+                        song: state.data.song!,
+                        previewVideoId: _candidate?.videoId,
+                        canAdd: _canEditSongs,
+                        onPreview: (result) => setState(() {
+                          _candidate = result;
+                          _showVideo = true;
+                        }),
+                        onClose: () => setState(() {
+                          _showSearch = false;
+                          _candidate = null;
+                        }),
+                      ),
                     ),
-                  ),
-              ],
-            ),
-          );
-        },
+                  if (_showVideo && (_candidate != null || (state.data.song?.youtubeVideos?.isNotEmpty ?? false)))
+                    Positioned.fill(
+                      key: const ValueKey('floatingVideoPlayer'),
+                      child: FloatingVideoPlayer(
+                        key: ValueKey(state.data.song?.id),
+                        videos: _candidate != null ? [YoutubeVideo(name: _candidate!.title, path: _candidate!.videoUrl)] : state.data.song!.youtubeVideos!,
+                        onAdd: _addCandidateCallback(state.data.song),
+                        onClose: () => setState(() {
+                          _showVideo = false;
+                          _candidate = null;
+                        }),
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
+  }
+
+  bool get _canEditSongs {
+    final homeState = context.read<HomePageBloc>().state;
+    return homeState.isEditIconVisible && homeState.superuserMode;
+  }
+
+  VoidCallback? _addCandidateCallback(Song? song) {
+    final candidate = _candidate;
+    if (song == null || candidate == null || !_canEditSongs) return null;
+    final alreadyInSong = (song.youtubeVideos ?? []).any((video) => extractYoutubeVideoId(video.path) == candidate.videoId);
+    if (alreadyInSong) return null;
+    return () => context.read<YoutubeSearchBloc>().add(AddYoutubeVideoToSong(song: song, result: candidate));
   }
 
   Widget _buildWebSongError() {

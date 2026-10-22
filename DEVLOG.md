@@ -1,5 +1,60 @@
 # Development Log
 
+## 2026-10-22 (part 10) — feat: YouTube search with preview and "add to song" on the tablet song page
+
+### What was done
+
+- New `lib/blocs/youtube_search_bloc/` (bloc / event / state): `SearchYoutube` (15 results via
+  `AiSearchService.searchYoutube()`, titles HTML-unescaped with `package:html`),
+  `AddYoutubeVideoToSong` (appends a `YoutubeVideo(name: title, path: watch URL)` unless the id is
+  already there, `SongsRepository.updateSong()` + `notifySongsChanged()`, exposes the result as
+  `state.updatedSong`), `ClearYoutubeSearch`. Registered globally in `lib/main.dart`, exported
+  from `export_blocs.dart`.
+- `AiSearchService.searchYoutube()` — new `throwOnError` flag so a quota or key error shows as
+  "search failed" instead of "nothing found"; the enrichment bloc keeps the old behaviour.
+- `SongsRepository.notifySongsChanged()` — public wrapper around `isChangedListSongController`
+  so the song cards (video icon) refresh after an add.
+- New `lib/view/tablet_view/widgets/youtube_search_panel.dart` — right-side panel (32 % of the
+  width, 280–380): query field pre-filled with the song title, search on submit or button,
+  results with a 64×36 thumbnail (`memCacheWidth` at device pixels), title, channel, a check mark
+  for videos already in the song, highlight for the one being previewed, and a hint when adding
+  is not allowed.
+- `floating_video_player.dart` — optional `onAdd` shows a `playlist_add` button in the header;
+  `didUpdateWidget()` switches videos in the existing web view (keeps the current one if it is
+  still in the list) instead of recreating it.
+- `preview_page_tablet.dart` — app bar button `youtube_searched_for` (only when the song is not a
+  web song and a YouTube key is set); `_candidate` plays in the floating window; `onAdd` only in
+  superuser mode with edit icons on (the same rule as editing a song from the card) and only for
+  a video not yet in the song. A `BlocListener<YoutubeSearchBloc>` pushes the updated song to
+  `PreviewChordBloc` (`ChangeCurrentSong`) and toasts `videoAddedToSong`. The panel and player
+  `Positioned`s have keys so opening the panel does not recreate the player.
+- YouTube key on tablets: `SettingsRepository` fills an empty `youtubeApiKey` from the new
+  build define `YOUTUBE_API_KEY`; it was added to the untracked `config/server.local.json` (taken
+  from the macOS app's settings box) and to `config/server.local.example.json`.
+- Seven new translation keys (`youtubeSearch`, `youtubeSearchHint`, `youtubeSearchFailed`,
+  `youtubeNoResults`, `addVideoToSong`, `videoAddedToSong`, `youtubeAddNeedsSuperuser`).
+- `test/unit_tests/blocs/youtube_search_bloc_test.dart` — 5 tests with hand-written fakes
+  (search success with unescaping, failure, empty query, add + save + notify, duplicate ignored).
+- `dart format -l 160` also rewrapped a handful of over-long, unrelated lines in
+  `preview_page_tablet.dart` (whitespace only).
+
+### Current state
+
+- `flutter analyze`: no issues. `flutter test test/unit_tests`: 435 passed, 2 skipped.
+- Samsung SM-X200 (personal release APK, `adb install -r`), song "Až se někdy": the search button
+  appeared (key seeded), the panel opened with "Až se někdy" pre-filled and the superuser hint,
+  the search returned results with thumbnails, and tapping "Žalman a spol - Až se někdy (1995)"
+  highlighted it and played it in the floating window.
+- **Adding to a song was not tried on a device** — superuser mode is off on the Samsung and an
+  add would change the real song on the server. Covered by the bloc tests only.
+- iPad Air 2: release build installed over USB with `ios-deploy`; not launched.
+
+### Pending / next steps
+
+- Each search costs 100 units of the YouTube Data API quota (10 000/day by default), so about
+  100 searches a day; there is no auto-search on opening the panel for that reason.
+- The added video is named after the YouTube title; renaming is only possible in the editor.
+
 ## 2026-10-22 (part 9) — feat: song lists bounce on pull on Android too
 
 ### What was done

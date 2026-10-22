@@ -852,6 +852,13 @@ class _MyAppState extends State<MyApp> with WindowListener {
                 settingsRepository: widget.repositories.settingsRepository,
               ),
             ),
+          BlocProvider(
+            create: (context) => YoutubeSearchBloc(
+              aiSearchService: AiSearchService(),
+              settingsRepository: widget.repositories.settingsRepository,
+              songsRepository: widget.repositories.songsRepository,
+            ),
+          ),
         ],
         child: MaterialApp(
           title: 'Songs viewer',

@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -14,7 +15,10 @@ class FloatingVideoPlayer extends StatefulWidget {
   final List<YoutubeVideo> videos;
   final VoidCallback onClose;
 
-  const FloatingVideoPlayer({super.key, required this.videos, required this.onClose});
+  /// Shows an "add to song" button in the header when set.
+  final VoidCallback? onAdd;
+
+  const FloatingVideoPlayer({super.key, required this.videos, required this.onClose, this.onAdd});
 
   @override
   State<FloatingVideoPlayer> createState() => _FloatingVideoPlayerState();
@@ -35,6 +39,22 @@ class _FloatingVideoPlayerState extends State<FloatingVideoPlayer> {
   void initState() {
     super.initState();
     _loadEmbed(0);
+  }
+
+  @override
+  void didUpdateWidget(FloatingVideoPlayer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final oldPaths = oldWidget.videos.map((video) => video.path).toList();
+    final newPaths = widget.videos.map((video) => video.path).toList();
+    if (oldPaths.join('\n') == newPaths.join('\n')) return;
+    final current = _currentIndex < oldPaths.length ? oldPaths[_currentIndex] : null;
+    final keptIndex = current == null ? -1 : newPaths.indexOf(current);
+    if (keptIndex >= 0) {
+      _currentIndex = keptIndex;
+    } else {
+      _currentIndex = 0;
+      _loadEmbed(0);
+    }
   }
 
   @override
@@ -196,6 +216,15 @@ class _FloatingVideoPlayerState extends State<FloatingVideoPlayer> {
                   )
                 : Text(_videoName(_currentIndex), style: textStyle, overflow: TextOverflow.ellipsis),
           ),
+          if (widget.onAdd != null)
+            IconButton(
+              visualDensity: VisualDensity.compact,
+              iconSize: 20,
+              color: colorScheme.primary,
+              tooltip: 'addVideoToSong'.tr(),
+              icon: const Icon(Icons.playlist_add),
+              onPressed: widget.onAdd,
+            ),
           IconButton(
             visualDensity: VisualDensity.compact,
             iconSize: 20,
