@@ -1,5 +1,49 @@
 # Development Log
 
+## 2026-10-22 (part 3) — fix: Android launch configs ignored the selected device
+
+### What was done
+
+- `.vscode/launch.json` (not tracked in git) — removed `"-d", "android"` from the four Android
+  configurations (personal/store × debug/release), so they run on the device selected in VS Code
+  like the iOS ones.
+
+### What was fixed
+
+- **Launching "Personal Android" failed** with "No supported devices found with name or id
+  matching 'android'" although the `Medium_Tablet` emulator (`emulator-5554`, reported as
+  "sdk gphone64 arm64") was selected: an explicit `-d` in `args` overrides the selected device,
+  and `-d` matches device ids/names, not platforms.
+
+### Current state
+
+- Not re-run from VS Code by me; the user is to retry the launch.
+
+## 2026-10-22 (part 2) — fix: macOS Pods deployment target on Xcode 27
+
+### What was done
+
+- `macos/Podfile` — `post_install` forces `MACOSX_DEPLOYMENT_TARGET = 14.0` on every pod
+  target (was `10.15`), matching `platform :osx, '14.0'` and the Runner project; re-ran
+  `pod install`.
+
+### What was fixed
+
+- **`flutter run -t lib/main_personal.dart` on macOS failed**: Xcode 27 rejects macOS
+  deployment targets below 12.0 ("set to 10.15, but the range of supported deployment target
+  versions is 12.0 to 27.0.x") for every pod (`FlutterMacOS`, `patrol`, `desktop_multi_window`,
+  `screen_retriever_macos`, …). The Podfile itself was pinning them to 10.15. Same root cause
+  as the iOS fix on 2026-10-06.
+
+### Current state
+
+- `flutter build macos --debug -t lib/main_personal.dart` → `✓ Built
+  build/macos/Build/Products/Debug/default_project.app`. The app was not launched.
+- `pod install` warns that it cannot set the Runner base configuration; this is pre-existing and
+  harmless, `macos/Flutter/Flutter-{Debug,Release}.xcconfig` include the Pods xcconfigs.
+- The Podfile change and the floating player from the previous entry were committed by the user
+  in `9d93df8`; this DEVLOG entry is uncommitted.
+
 ## 2026-10-22 — feat: floating mini video player over the sheet music on tablets
 
 ### What was done
