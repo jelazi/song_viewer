@@ -37,3 +37,28 @@ String? extractYoutubeVideoId(String? input) {
 
   return null;
 }
+
+/// Base URL the embed page is loaded from. YouTube rejects embeds without a
+/// referrer (player error 153), so the page must have an https origin.
+const String youtubeEmbedBaseUrl = 'https://com.lzizka.songviewer';
+
+/// Minimal HTML page with a full-size, inline-playing YouTube embed.
+String youtubeEmbedHtml(String videoId) => '''
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<style>
+html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+</style>
+</head>
+<body>
+<iframe
+  src="https://www.youtube.com/embed/$videoId?playsinline=1&rel=0&iv_load_policy=3"
+  referrerpolicy="strict-origin-when-cross-origin"
+  allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+  allowfullscreen></iframe>
+</body>
+</html>
+''';

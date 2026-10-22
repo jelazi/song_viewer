@@ -1,5 +1,93 @@
 # Development Log
 
+## 2026-10-22 — feat: floating mini video player over the sheet music on tablets
+
+### What was done
+
+- New `lib/view/tablet_view/widgets/floating_video_player.dart` — `FloatingVideoPlayer`, a small
+  YouTube window laid over the page in a `Stack`. Dragging its header bar moves it (position
+  clamped to the page, re-clamped on rotation); the header has a video picker (`PopupMenuButton`,
+  only with more than one video), a small/large toggle (30 % / 50 % of the page width, min 240,
+  16:9) and a close button. It starts in the bottom-right corner.
+- `lib/view/tablet_view/pages/sheet_view_page_tablet.dart` — app bar button (shown when the song
+  has YouTube videos) toggles the player; the sheet `PageView` moved to `_buildSheets()` and sits
+  under the player in a `Stack`. The overlay's `Stack` only hit-tests the window itself, so
+  swiping and zooming the sheets still work everywhere else. Tablet view only, so it applies to
+  both the iPad and the Android tablet; the phone sheet page is unchanged.
+- `lib/core/youtube_helper.dart` — `youtubeEmbedHtml()` and `youtubeEmbedBaseUrl`: the player
+  loads a minimal HTML page with the `/embed/` iframe (`playsinline=1&rel=0&iv_load_policy=3`)
+  via `loadHtmlString` with an https base URL, because YouTube refuses embeds without a referrer
+  (player error 153).
+- `pubspec.yaml` — `webview_flutter_wkwebview: ^3.25.1` is now a direct dependency (was
+  transitive) for `WebKitWebViewControllerCreationParams(allowsInlineMediaPlayback: true)`;
+  without it iOS opens every video fullscreen on play.
+
+### Design decisions
+
+- Kept light for the old devices (iPad Air 2 with 2 GB RAM, Samsung SM-X200): the web view
+  exists only while the window is open; the embed page is far lighter than the full
+  `youtube.com/watch` page the video page loads; the small default window lets YouTube pick a low
+  stream quality; `dispose()` loads an empty page so the decoder and audio stop immediately
+  instead of when the native view is garbage collected; dragging rebuilds only the player, not
+  the sheet page. Android keeps the default (texture-layer) platform view mode.
+- Ephemeral UI state (visibility, position, size, selected video) stays in widget state, like the
+  existing video and sheet pages; there is no business logic for a BLoC.
+
+### Current state
+
+- `flutter analyze`: no issues (whole project).
+- iPad Air 11-inch (M3) simulator, temporary preview entry point (since removed): the window
+  rendered bottom-right with header and the embed loaded the video thumbnail, no error 153.
+  Taps/drag could not be driven there (no scriptable Simulator window).
+- Android `Medium_Tablet` emulator (2560x1600): window and embed rendered the same way; the
+  emulator then hung (software GPU + video) and was closed by the user, so playback and
+  dragging were not verified there either.
+- Inline playback on iOS, dragging, and memory use on the real devices are **untested**.
+
+### Pending / next steps
+
+- Install on the iPad Air 2 (`ios-deploy`, see 2026-10-07) and the SM-X200 and check: inline
+  playback (no fullscreen jump), dragging, size toggle, sheet swiping/zoom under the window,
+  and that the app is not killed for memory with a large sheet open.
+- If memory is still tight: decode sheet images at a capped size (`memCacheWidth` on
+  `CachedNetworkImage`) — full-resolution scans cost tens of MB each once decoded.
+- Changes are uncommitted.
+
+## 2026-10-07 — chore: install the current build on the iPad Air 2
+
+### What was done
+
+- "Lubomír - iPad" (iPad Air 2, `iPad5,3`, iPadOS 15.8.8) carried `com.lzizka.songviewer`
+  1.2.3 (43) from TestFlight, i.e. a build predating `fd53e50`. The existing
+  `build/ios/iphoneos/Runner.app` (1.2.3+43, personal, built 2026-10-06 15:44, no source file
+  newer than it) was installed over it with
+  `ios-deploy --id <udid> --no-wifi --bundle build/ios/iphoneos/Runner.app`. No rebuild was needed.
+- Signing is the paid team: `Apple Development: Lubomír Žižka (R79Y34SX3Q)`, team
+  `BZF32VC6NQ` (Medutech s.r.o.), profile `iOS Team Provisioning Profile: com.lzizka.songviewer`,
+  valid until 2027-10-06; the iPad's UDID is in the profile.
+- The Mac's `~/.songviewer/pocketbase_config.json` was copied into the app container at
+  `Library/Application Support/pocketbase_config.json` with `ios-deploy --bundle_id … --upload`.
+- No source files were changed.
+
+### Current state
+
+- `pymobiledevice3 apps list` reports 1.2.3 (43) with signer
+  `Apple Development: Lubomír Žižka (R79Y34SX3Q)` (previously `TestFlight Beta Distribution`).
+- The install was an in-place update: the Hive boxes in `Documents/` and the old Firestore cache
+  are still in the container, and the config file is listed under `Library/Application Support/`.
+- **The app was not launched and the UI was not inspected**, so loading songs from the server
+  on the iPad is unverified.
+
+### Pending / next steps
+
+- Open the app on the iPad and confirm the song list loads.
+- Xcode 27 does not list this device at all (`devicectl` shows only an ECID, `flutter devices`
+  does not show it), so `flutter run` / `flutter install` cannot target it; use `ios-deploy`.
+  Remote launch failed too: there is no iOS 15 developer disk image for
+  `pymobiledevice3 mounter auto-mount`.
+- The development-signed build no longer updates through TestFlight; going back means
+  reinstalling from TestFlight.
+
 ## 2026-10-06 (part 2) — fix: PocketBase config location on iOS, tablet install
 
 ### What was done

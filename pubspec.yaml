@@ -45,6 +45,7 @@ dependencies:
   cached_network_image: ^3.3.1
   url_launcher: ^6.2.5
   webview_flutter: ^4.13.1
+  webview_flutter_wkwebview: ^3.25.1
   qr_flutter: ^4.1.0
   pocketbase: ^0.23.2
   # Runtime, not dev — the @JsonSerializable annotations live in lib/.

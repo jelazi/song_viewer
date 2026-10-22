@@ -3,6 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../../../blocs/export_blocs.dart';
+import '../widgets/floating_video_player.dart';
 
 class SheetViewPageTablet extends StatefulWidget {
   const SheetViewPageTablet({super.key});
@@ -14,6 +15,7 @@ class SheetViewPageTablet extends StatefulWidget {
 class _SheetViewPageTabletState extends State<SheetViewPageTablet> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
+  bool _showVideo = false;
 
   @override
   void dispose() {
@@ -27,11 +29,18 @@ class _SheetViewPageTabletState extends State<SheetViewPageTablet> {
       builder: (context, state) {
         final song = state.data.song;
         final sheets = song?.sheets ?? [];
+        final videos = song?.youtubeVideos ?? [];
 
         return Scaffold(
           appBar: AppBar(
             title: Text(song?.title ?? 'sheets'.tr()),
             actions: [
+              if (videos.isNotEmpty)
+                IconButton(
+                  tooltip: 'youtube'.tr(),
+                  icon: Icon(_showVideo ? Icons.videocam_off : Icons.smart_display),
+                  onPressed: () => setState(() => _showVideo = !_showVideo),
+                ),
               if (sheets.length > 1)
                 Padding(
                   padding: const EdgeInsets.only(right: 16.0),
@@ -44,39 +53,54 @@ class _SheetViewPageTabletState extends State<SheetViewPageTablet> {
                 ),
             ],
           ),
-          body: sheets.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.music_off, size: 64, color: Colors.grey),
-                      const SizedBox(height: 16),
-                      Text('noSheet'.tr(), style: const TextStyle(fontSize: 18, color: Colors.grey)),
-                      const SizedBox(height: 8),
-                      Text('noSheetMessage'.tr(), style: const TextStyle(color: Colors.grey)),
-                    ],
+          body: Stack(
+            children: [
+              _buildSheets(sheets),
+              if (_showVideo && videos.isNotEmpty)
+                Positioned.fill(
+                  child: FloatingVideoPlayer(
+                    videos: videos,
+                    onClose: () => setState(() => _showVideo = false),
                   ),
-                )
-              : PageView.builder(
-                  controller: _pageController,
-                  itemCount: sheets.length,
-                  onPageChanged: (index) {
-                    setState(() => _currentPage = index);
-                  },
-                  itemBuilder: (context, index) {
-                    final sheetUrl = sheets[index];
-                    return InteractiveViewer(
-                      minScale: 0.5,
-                      maxScale: 4.0,
-                      child: Center(
-                        child: _buildSheetImage(sheetUrl),
-                      ),
-                    );
-                  },
                 ),
+            ],
+          ),
         );
       },
     );
+  }
+
+  Widget _buildSheets(List<String> sheets) {
+    return sheets.isEmpty
+        ? Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.music_off, size: 64, color: Colors.grey),
+                const SizedBox(height: 16),
+                Text('noSheet'.tr(), style: const TextStyle(fontSize: 18, color: Colors.grey)),
+                const SizedBox(height: 8),
+                Text('noSheetMessage'.tr(), style: const TextStyle(color: Colors.grey)),
+              ],
+            ),
+          )
+        : PageView.builder(
+            controller: _pageController,
+            itemCount: sheets.length,
+            onPageChanged: (index) {
+              setState(() => _currentPage = index);
+            },
+            itemBuilder: (context, index) {
+              final sheetUrl = sheets[index];
+              return InteractiveViewer(
+                minScale: 0.5,
+                maxScale: 4.0,
+                child: Center(
+                  child: _buildSheetImage(sheetUrl),
+                ),
+              );
+            },
+          );
   }
 
   Widget _buildSheetImage(String sheetUrl) {
