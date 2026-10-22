@@ -1,5 +1,73 @@
 # Development Log
 
+## 2026-10-22 (part 9) — feat: song lists bounce on pull on Android too
+
+### What was done
+
+- `lib/view/tablet_view/pages/home_page_tablet.dart` (`getPreviewBody()`) and
+  `lib/view/mobile_view/pages/home_page.dart` (`CustomScrollView`) — physics changed from
+  `AlwaysScrollableScrollPhysics()` to
+  `AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics())`.
+
+### What was fixed
+
+- On Android the cards did not follow the finger during pull-to-refresh: the platform default is
+  clamping physics, and `RefreshIndicator` suppresses the stretch overscroll, so only the spinner
+  moved. iOS already bounced, which is why the iPhone looked right.
+
+### Current state
+
+- `flutter analyze lib/view`: no issues.
+- Samsung SM-X200, personal release APK installed with `adb install -r`: a screenshot 1.5 s into
+  a 2 s `adb shell input swipe` down from the top of the list showed the whole card list shifted
+  ~160 dp down with the refresh spinner above it.
+- No behaviour change on iOS (bouncing was already the platform default); iPad and iPhone were
+  not reinstalled.
+
+## 2026-10-22 (part 8) — feat: pull-to-refresh from the server on tablet and phone song lists
+
+### What was done
+
+- `lib/repositories/songs_repository.dart` — `hasServer` and `refreshFromServer()`: authenticates
+  first when `PocketBaseProvider.isConnected` is false (e.g. the app started offline), then runs
+  `updateSongsFromServer()` and `loadAllGroups()`; returns false when the server is unreachable.
+- `lib/blocs/home_page_bloc/` — new event `RefreshSongsFromServer`, state flag `isRefreshing`
+  (props + `copyWith`), handler `_refreshSongsFromServer()` (re-applies the current filter,
+  refreshes groups, toasts `songsRefreshed` or `pbConnectionFailed`; silent without a configured
+  server) and `refreshFromServer()`, which adds the event and completes when `isRefreshing`
+  goes true→false (60 s timeout), for `RefreshIndicator.onRefresh`.
+- `lib/view/tablet_view/pages/home_page_tablet.dart` — `getPreviewBody()` wrapped in a
+  `RefreshIndicator`, list gets `AlwaysScrollableScrollPhysics` so a short or filtered list can
+  still be pulled.
+- `lib/view/mobile_view/pages/home_page.dart` — the existing `RefreshIndicator` now calls
+  `refreshFromServer()`; `CustomScrollView` gets `AlwaysScrollableScrollPhysics`.
+- New key `songsRefreshed` in `assets/lang/cs.json` / `en.json`.
+- `test/unit_tests/repositories/songs_repository_test.dart` — group "Refresh From Server":
+  connected fetch, reconnect-first, unreachable server fetches nothing.
+
+### What was fixed
+
+- The phone's pull-to-refresh fired `UpdateSongData()` and returned at once, so the spinner
+  vanished before anything was downloaded and failures were silent; it also never reconnected.
+
+### Current state
+
+- `flutter analyze`: no issues. `flutter test test/unit_tests`: 430 passed, 2 skipped.
+- iPad Air 2: release build (`App.framework` contains `songsRefreshed`) installed over Wi-Fi with
+  `ios-deploy`. Not launched by me.
+- Samsung SM-X200: personal release APK installed with `adb install -r`; after the user pulled the
+  list, the screen showed the toast "Písně aktualizovány ze serveru" over the 204-song list.
+- iPhone 14 Pro (iOS 27.0.1): same `Runner.app` installed with `xcrun devicectl device install app`
+  (in-place update), launched with `devicectl device process launch`; the `Runner` process was
+  running and `Library/Application Support/pocketbase_config.json` is present. UI not inspected.
+
+### Pending / next steps
+
+- Try the pull on the iPad and the iPhone after changing a song on macOS.
+- Songs deleted on the server are not removed by a pull (`updateSongsFromServer()` only adds and
+  replaces); deletions still arrive only through the realtime subscription. Pruning would need
+  `getListSongs()` to tell a failed fetch from an empty server first.
+
 ## 2026-10-22 (part 7) — chore: install the current build on the iPad Air 2
 
 ### What was done

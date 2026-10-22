@@ -304,6 +304,7 @@
     "pbConnectionFailed": "Connection failed",
     "pbSaveSettings": "Save settings",
     "pbSettingsSaved": "Settings saved",
+    "songsRefreshed": "Songs updated from the server",
     "pbImportFromFile": "Import from file",
     "pbImportLoaded": "Settings loaded from the file – save them",
     "pbImportInvalid": "The file does not contain server settings",

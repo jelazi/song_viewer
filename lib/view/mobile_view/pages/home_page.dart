@@ -64,12 +64,8 @@ class _HomePageMobileState extends State<HomePageMobile> {
         return Scaffold(
           drawer: const HomeDrawer(),
           body: RefreshIndicator(
-            onRefresh: () async {
-              // context.read<HomePageBloc>().add(const LoadSongs());
-              // wait 10 seconds
-              context.read<HomePageBloc>().add(const UpdateSongData());
-            },
-            child: CustomScrollView(slivers: [
+            onRefresh: () => context.read<HomePageBloc>().refreshFromServer(),
+            child: CustomScrollView(physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()), slivers: [
               SliverLayoutBuilder(builder: ((context, constraints) {
                 return SliverAppBar(
                   floating: true,

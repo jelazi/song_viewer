@@ -46,6 +46,7 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
     on<SelectGroups>(_selectGroups);
     on<SelectPage>(_selectPage);
     on<DeleteSong>(_deleteSong);
+    on<RefreshSongsFromServer>(_refreshSongsFromServer);
     songsRepository.selectSongData.listen((event) {
       add(ChangeSelectedSong(selectedSongId: event));
     });
@@ -81,6 +82,31 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
     emit(state.copyWith(
       listSong: songsRepository.getSongByFilter(state.currentFilter),
     ));
+  }
+
+  /// Starts a server refresh and completes once it has finished, for
+  /// `RefreshIndicator.onRefresh`.
+  Future<void> refreshFromServer() {
+    final done = stream.skipWhile((state) => !state.isRefreshing).firstWhere((state) => !state.isRefreshing);
+    add(const RefreshSongsFromServer());
+    return done.timeout(const Duration(seconds: 60), onTimeout: () => state);
+  }
+
+  Future<void> _refreshSongsFromServer(RefreshSongsFromServer event, Emitter<HomePageState> emit) async {
+    if (state.isRefreshing) return;
+    emit(state.copyWith(isRefreshing: true));
+    final hasServer = songsRepository.hasServer;
+    final success = hasServer && await songsRepository.refreshFromServer();
+    emit(state.copyWith(
+      isRefreshing: false,
+      listSong: songsRepository.getSongByFilter(state.currentFilter),
+      listAllGroups: List<String>.from(songsRepository.listAllGroups),
+    ));
+    if (!hasServer) return;
+    MyToast.showText(
+      text: success ? 'songsRefreshed'.tr() : 'pbConnectionFailed'.tr(),
+      typeNotification: success ? TypeNotification.success : TypeNotification.error,
+    );
   }
 
   void _updateSettingsData(UpdateSettingsData event, Emitter<HomePageState> emit) {

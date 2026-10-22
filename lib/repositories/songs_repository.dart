@@ -208,6 +208,20 @@ class SongsRepository {
     isChangedListSongController.sink.add(isChangedListSongValue++);
   }
 
+  bool get hasServer => _pocketBaseProvider.config?.isValid ?? false;
+
+  /// Pulls songs and groups from the server, reconnecting first when the app
+  /// is not connected (e.g. it was started offline). Returns false when the
+  /// server cannot be reached.
+  Future<bool> refreshFromServer() async {
+    if (!_pocketBaseProvider.isConnected && !await _pocketBaseProvider.authenticate()) {
+      return false;
+    }
+    await updateSongsFromServer();
+    await loadAllGroups();
+    return true;
+  }
+
   Future<void> loadAllGroups() async {
     listAllGroups = await _pocketBaseProvider.getListGroups();
     _hiveProvider.saveGroupsCache(listAllGroups);

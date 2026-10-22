@@ -400,6 +400,7 @@
     "pbConnectionFailed": "Připojení se nezdařilo",
     "pbSaveSettings": "Uložit nastavení",
     "pbSettingsSaved": "Nastavení uloženo",
+    "songsRefreshed": "Písně aktualizovány ze serveru",
     "pbImportFromFile": "Importovat ze souboru",
     "pbImportLoaded": "Nastavení načteno ze souboru – uložte ho",
     "pbImportInvalid": "Soubor neobsahuje nastavení serveru",

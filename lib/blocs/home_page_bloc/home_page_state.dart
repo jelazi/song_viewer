@@ -15,6 +15,8 @@ class HomePageState extends Equatable {
   /// and the displayed list stay in sync even when the list widget is remounted.
   final String currentFilter;
 
+  final bool isRefreshing;
+
   const HomePageState({
     required this.selectedSongId,
     required this.listSong,
@@ -25,11 +27,12 @@ class HomePageState extends Equatable {
     required this.listSelectedGroups,
     required this.selectedPage,
     this.currentFilter = '',
+    this.isRefreshing = false,
   });
 
   @override
   List<Object> get props =>
-      [selectedSongId, listSong, listExpandedSongs, isEditIconVisible, superuserMode, listAllGroups, listSelectedGroups, selectedPage, currentFilter];
+      [selectedSongId, listSong, listExpandedSongs, isEditIconVisible, superuserMode, listAllGroups, listSelectedGroups, selectedPage, currentFilter, isRefreshing];
 
   HomePageState copyWith({
     String? selectedSongId,
@@ -41,6 +44,7 @@ class HomePageState extends Equatable {
     List<String>? listSelectedGroups,
     String? selectedPage,
     String? currentFilter,
+    bool? isRefreshing,
   }) {
     return HomePageState(
       selectedSongId: selectedSongId ?? this.selectedSongId,
@@ -52,6 +56,7 @@ class HomePageState extends Equatable {
       listSelectedGroups: listSelectedGroups ?? this.listSelectedGroups,
       selectedPage: selectedPage ?? this.selectedPage,
       currentFilter: currentFilter ?? this.currentFilter,
+      isRefreshing: isRefreshing ?? this.isRefreshing,
     );
   }
 }

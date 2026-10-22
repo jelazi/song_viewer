@@ -712,22 +712,26 @@ class _HomePageTabletState extends State<HomePageTablet> {
   }
 
   Widget getPreviewBody(HomePageState state) {
-    return ListView.builder(
-      shrinkWrap: true,
-      itemCount: state.listSong.length,
-      itemBuilder: (context, index) {
-        final song = state.listSong[index];
-        return RepaintBoundary(
-          child: SongCardTablet(
-            key: ValueKey(song.id),
-            song: song,
-            index: index,
-            isEditIconVisible: state.isEditIconVisible,
-            isSelectedSong: state.selectedSongId == song.id,
-            superuserMode: state.superuserMode,
-          ),
-        );
-      },
+    return RefreshIndicator(
+      onRefresh: () => context.read<HomePageBloc>().refreshFromServer(),
+      child: ListView.builder(
+        shrinkWrap: true,
+        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+        itemCount: state.listSong.length,
+        itemBuilder: (context, index) {
+          final song = state.listSong[index];
+          return RepaintBoundary(
+            child: SongCardTablet(
+              key: ValueKey(song.id),
+              song: song,
+              index: index,
+              isEditIconVisible: state.isEditIconVisible,
+              isSelectedSong: state.selectedSongId == song.id,
+              superuserMode: state.superuserMode,
+            ),
+          );
+        },
+      ),
     );
   }
 

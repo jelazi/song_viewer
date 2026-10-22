@@ -140,3 +140,7 @@ class DeleteSong extends HomePageEvent {
   @override
   List<Object> get props => [song];
 }
+
+class RefreshSongsFromServer extends HomePageEvent {
+  const RefreshSongsFromServer();
+}

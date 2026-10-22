@@ -216,6 +216,43 @@ void main() {
       });
     });
 
+    group('Refresh From Server', () {
+      test('fetches songs and groups when connected', () async {
+        when(mockPocketBaseProvider.isConnected).thenReturn(true);
+        when(mockPocketBaseProvider.getListSongs()).thenAnswer((_) async => [Song(id: '1', title: 'New Song', lyrics: 'Lyrics')]);
+        when(mockPocketBaseProvider.getListGroups()).thenAnswer((_) async => ['Band']);
+
+        final result = await songsRepository.refreshFromServer();
+
+        expect(result, isTrue);
+        expect(songsRepository.songs.map((song) => song.title), ['New Song']);
+        expect(songsRepository.listAllGroups, ['Band']);
+        verifyNever(mockPocketBaseProvider.authenticate());
+      });
+
+      test('reconnects first when not connected', () async {
+        when(mockPocketBaseProvider.isConnected).thenReturn(false);
+        when(mockPocketBaseProvider.authenticate()).thenAnswer((_) async => true);
+
+        final result = await songsRepository.refreshFromServer();
+
+        expect(result, isTrue);
+        verify(mockPocketBaseProvider.authenticate()).called(1);
+        verify(mockPocketBaseProvider.getListSongs()).called(1);
+      });
+
+      test('returns false and fetches nothing when the server is unreachable', () async {
+        when(mockPocketBaseProvider.isConnected).thenReturn(false);
+        when(mockPocketBaseProvider.authenticate()).thenAnswer((_) async => false);
+
+        final result = await songsRepository.refreshFromServer();
+
+        expect(result, isFalse);
+        verifyNever(mockPocketBaseProvider.getListSongs());
+        verifyNever(mockPocketBaseProvider.getListGroups());
+      });
+    });
+
     group('Groups', () {
       test('should load groups from server', () async {
         final testGroups = ['Group 1', 'Group 2', 'Group 3'];
