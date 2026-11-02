@@ -1,5 +1,27 @@
 # Development Log
 
+## 2026-11-02 (part 5) — Claude review: the stored secret is not a token
+
+### What was done
+
+- Added a temporary `Check token shape` step (run `41432347720`, commit `97f9285`), then removed it.
+  It printed only the length, whitespace count and prefix match, never the value.
+
+### What was fixed
+
+- Explained the repeated 401: `CLAUDE_CODE_OAUTH_TOKEN` holds 63 characters with 5 whitespace
+  characters and no `sk-ant-oat` prefix, so it is other text rather than a token. A rerun after the
+  secret was replaced (`41431823631`) failed the same way.
+
+### Current state
+
+- The workflow is back to its intended form. The review still has not worked and PR #1 is not merged.
+
+### Pending / next steps
+
+- Store the token from the clipboard with a command that refuses anything not starting with
+  `sk-ant-`, then rerun the review and check that the agent posts a comment.
+
 ## 2026-11-02 (part 4) — Claude review: stored Claude token rejected as invalid
 
 ### What was done
