@@ -1,5 +1,36 @@
 # Development Log
 
+## 2026-11-02 (part 2) — fix: run Claude review with the workflow token
+
+### What was done
+
+- `.github/workflows/claude-review.yml`: passes `github_token: ${{ secrets.GITHUB_TOKEN }}` and drops
+  `id-token: write`. `setupGitHubToken()` in the action uses a provided token and skips the OIDC
+  exchange, so the review no longer depends on the Claude GitHub App.
+- `CLAUDE_CODE_OAUTH_TOKEN` is still the Claude login. The workflow token only covers GitHub access,
+  is limited to the job's `permissions` and expires with the job.
+
+### What was fixed
+
+- `Claude Review` failed on PR #1 with `401 Unauthorized - Claude Code is not installed on this
+  repository`: 4 attempts, the last one after the owner saved the app's repository access. I could
+  not confirm the install from here. The same error is reported for a confirmed install on a
+  personal account in `anthropics/claude-code-action#1683` (open).
+
+### Current state
+
+- This supersedes the previous entry: `id-token: write` is no longer used, and the review is expected
+  to run on PR #1 itself because the skip applied only to the OIDC exchange.
+- `flutter analyze`/tests and the Android build passed on PR #1 before this change.
+- The workflow token path has not run yet, so the review is still unverified.
+
+### Pending / next steps
+
+- Check the `Claude Review` run on PR #1 and that the agent posts a comment; merge after that.
+- Comments will come from `github-actions[bot]`, not `claude[bot]`. The usage docs reserve
+  `github_token` for custom apps while the FAQ documents it as the alternative to the app, so
+  revisit it once `#1683` is resolved.
+
 ## 2026-11-02 — ci: add Claude pull request review
 
 ### What was done
