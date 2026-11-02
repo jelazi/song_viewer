@@ -1,5 +1,34 @@
 # Development Log
 
+## 2026-11-02 (part 3) — Claude review: corrected 401 cause, Claude login error still open
+
+### What was done
+
+- Reworded the `github_token` comment in `.github/workflows/claude-review.yml`; it no longer claims
+  the app was installed. Decision: keep `github_token` and do not install the Claude GitHub App,
+  because the review does not need the app's write access to the repository.
+
+### What was fixed
+
+- Corrected part 2: linking the 401 to `anthropics/claude-code-action#1683` was not established.
+  The owner was stopped on GitHub's "Confirm access" (sudo mode) page during the install, so the
+  install most likely never completed, and that alone explains the error.
+
+### Current state
+
+- Run `41431166370` on `7cb64d1`: the GitHub step passed ("Using provided GITHUB_TOKEN", actor
+  permission `admin`), but Claude Code ended after 1.8 s with `is_error: true`, $0 cost and no model
+  usage. The message is hidden while `show_full_output` is false, so the cause is unknown; no review
+  comment was posted.
+- CI for `7cb64d1` was not read (`gh pr checks` timed out). PR #1 is not merged.
+- This entry and the comment change are local until the next push.
+
+### Pending / next steps
+
+- Read the real error, then merge PR #1 only after the agent posts a comment.
+- `show_full_output` logs are public on this repository, so enable it for one run at most and only
+  with the owner's OK.
+
 ## 2026-11-02 (part 2) — fix: run Claude review with the workflow token
 
 ### What was done
