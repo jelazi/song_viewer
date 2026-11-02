@@ -1,5 +1,31 @@
 # Development Log
 
+## 2026-11-02 (part 6) — Claude review verified on PR #1
+
+### What was done
+
+- Replaced `CLAUDE_CODE_OAUTH_TOKEN` from the clipboard with a command that rejects text not starting
+  with `sk-ant-`, then reran `Claude Review` (run `41432492583`, commit `e6db580`).
+
+### What was fixed
+
+- Likely source of the bad secret: it had the same length and spaces as the `gh secret set` command
+  itself (63 characters, 5 spaces). Copying that command had overwritten the token in the clipboard.
+
+### Current state
+
+- First successful run: 57 s job, 6 turns, reported cost $0.11, 0 permission denials. The agent posted
+  a summary and 2 inline comments as `github-actions[bot]`.
+- Findings checked by hand:
+  - Line 21 "token blocker": false positive. It repeated DEVLOG part 5, which this run had just disproved.
+  - Oldest DEVLOG entry out of date: true, left as is because DEVLOG is append-only and parts 2-3 correct it.
+  - No `concurrency` group: true but minor for one developer; not added.
+  - Floating `@v1` tag: true; not pinned for now.
+
+### Pending / next steps
+
+- Merge PR #1 once CI is green. The review then runs on new PRs.
+
 ## 2026-11-02 (part 5) — Claude review: the stored secret is not a token
 
 ### What was done
