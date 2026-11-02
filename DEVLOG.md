@@ -1,5 +1,27 @@
 # Development Log
 
+## 2026-11-02 (part 4) — Claude review: stored Claude token rejected as invalid
+
+### What was done
+
+- Enabled `show_full_output` for one run (`41431665957`, commit `089c793`) with the owner's OK, then
+  removed it again from `.github/workflows/claude-review.yml`.
+
+### What was fixed
+
+- Found the hidden error: `Failed to authenticate. API Error: 401 OAuth access token is invalid.`
+  The problem is the value stored in `CLAUDE_CODE_OAUTH_TOKEN`, not the workflow. Why it is invalid
+  is unknown; a bad paste is possible but unconfirmed.
+
+### Current state
+
+- The debug log ended before any tool ran and has no `sk-ant-` value.
+- The review still has not worked and PR #1 is not merged.
+
+### Pending / next steps
+
+- Create a new token with `claude setup-token`, store it with `gh secret set`, rerun the review.
+
 ## 2026-11-02 (part 3) — Claude review: corrected 401 cause, Claude login error still open
 
 ### What was done
