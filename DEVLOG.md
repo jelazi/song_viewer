@@ -1,5 +1,34 @@
 # Development Log
 
+## 2026-11-02 — ci: add Claude pull request review
+
+### What was done
+
+- New `.github/workflows/claude-review.yml`, based on the official `anthropics/claude-code-action@v1`
+  review example (`docs/solutions.md`, `examples/pr-review-comprehensive.yml`). It runs on non-draft
+  pull requests, reads `AGENTS.md`, `docs/TODO.md` and the newest `DEVLOG.md` entries, and comments
+  on whether the change matches its description, can break existing behaviour and fits the project.
+- The agent can only read the PR and post comments (`gh pr view`, `gh pr diff`, `gh pr comment`,
+  inline comments), capped at `--max-turns 20`. `ci.yml` stays the deterministic check.
+
+### Design decisions
+
+- Pull requests instead of push: the action documents PR review, and comments need a PR to attach
+  to. Work therefore has to move from direct commits on `main` to branches with PRs.
+- `id-token: write` is required by the default Claude GitHub App authentication.
+- The PR title and body are not interpolated into the prompt; the agent reads them with `gh pr view`.
+
+### Current state
+
+- YAML parsed locally. The workflow has not run on GitHub yet, so the review itself is unverified.
+
+### Pending / next steps
+
+- Install the Claude GitHub App on `jelazi/song_viewer` and add the `CLAUDE_CODE_OAUTH_TOKEN` secret.
+- Merge this workflow first: the action skips itself on the PR that adds it (`src/github/token.ts`
+  reports a workflow validation error until the file is on the default branch).
+- Open a small trial PR after that merge and check that the agent posts a comment.
+
 ## 2026-10-22 (part 14) — feat: pads on macOS, pad saved per song; fix: offline start showed no songs
 
 ### What was done
