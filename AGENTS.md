@@ -49,8 +49,11 @@
 - Keep BLoCs focused on a single responsibility; split large BLoCs if needed
 
 ## Development Context Log
-- A file `DEVLOG.md` in the project root serves as a persistent development context log
-- **Before starting any task**, ALWAYS read `DEVLOG.md` first to understand the current state of the project — what has been done, what is in progress, what issues exist, and how things were implemented
+- A file `DEVLOG.md` in the project root serves as a persistent development context log holding the newest entries
+- Older entries live unchanged in `docs/devlog/YYYY-MM.md`, filed by the date in their heading, newest first
+- When adding an entry would push `DEVLOG.md` over 400 lines, move its oldest whole entries to the archive and keep at least the newest 150 lines; never empty the file when a new month starts
+- **Before starting any task**, ALWAYS read the first 150 lines of `DEVLOG.md` to understand the current state of the project — what has been done, what is in progress, what issues exist, and how things were implemented
+- Search `docs/devlog/` only when you need older history; do not read the whole archive
 - **After completing any task**, ALWAYS update `DEVLOG.md` with:
   - What was done (brief summary of changes)
   - What was fixed (any bugs or errors resolved, and how)
